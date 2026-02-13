@@ -39,6 +39,15 @@ Rails.application.routes.draw do
         resources :resource_links, only: [ :index, :create, :destroy ]
       end
 
+      resources :templates do
+        member do
+          post :create_version
+          get :versions
+          post :publish
+          post :archive
+        end
+      end
+
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
       end

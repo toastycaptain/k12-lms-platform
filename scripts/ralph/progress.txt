@@ -205,3 +205,13 @@
 - Links to /plan/units for "View all" and individual unit pages
 - Uses ProtectedRoute wrapper for auth guard
 - Quality checks: lint, typecheck, build all pass
+
+### Iteration 19 — US-022: Template and TemplateVersion models with CRUD API
+- Template model follows exact same pattern as UnitPlan: TenantScoped, VALID_STATUSES, create_version!, publish!, archive!
+- TemplateVersion model follows UnitVersion pattern: TenantScoped, belongs_to template, version_number uniqueness scoped to template_id
+- Migration creates both tables in one file with FK from templates.current_version_id → template_versions
+- TemplatePolicy: admin/curriculum_lead can CRUD, only admin can destroy, everyone can read (index/show)
+- TemplatesController index filters: admins/curriculum_leads see all templates, teachers see only published
+- Routes: resources :templates with member routes (create_version, versions, publish, archive)
+- Templates don't belong_to :course (unlike UnitPlan) — they are course-independent reusable structures
+- Quality checks: 253 examples passing, rubocop clean

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_210004) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -180,6 +180,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_210004) do
     t.index ["tenant_id"], name: "index_standards_on_tenant_id"
   end
 
+  create_table "template_versions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.text "enduring_understandings", default: [], array: true
+    t.text "essential_questions", default: [], array: true
+    t.integer "suggested_duration_weeks"
+    t.bigint "template_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
+    t.index ["template_id", "version_number"], name: "index_template_versions_on_template_id_and_version_number", unique: true
+    t.index ["template_id"], name: "index_template_versions_on_template_id"
+    t.index ["tenant_id"], name: "index_template_versions_on_tenant_id"
+  end
+
+  create_table "templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "current_version_id"
+    t.text "description"
+    t.string "grade_level"
+    t.string "name", null: false
+    t.string "status", default: "draft", null: false
+    t.string "subject"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_templates_on_created_by_id"
+    t.index ["tenant_id"], name: "index_templates_on_tenant_id"
+  end
+
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -290,6 +321,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_210004) do
   add_foreign_key "standards", "standard_frameworks"
   add_foreign_key "standards", "standards", column: "parent_id"
   add_foreign_key "standards", "tenants"
+  add_foreign_key "template_versions", "templates"
+  add_foreign_key "template_versions", "tenants"
+  add_foreign_key "templates", "template_versions", column: "current_version_id"
+  add_foreign_key "templates", "tenants"
+  add_foreign_key "templates", "users", column: "created_by_id"
   add_foreign_key "terms", "academic_years"
   add_foreign_key "terms", "tenants"
   add_foreign_key "unit_plans", "courses"

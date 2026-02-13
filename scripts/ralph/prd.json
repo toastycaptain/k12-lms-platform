@@ -1,372 +1,282 @@
 {
   "project": "k12-lms-platform",
-  "branchName": "ralph/m1-foundation",
-  "description": "M1: Auth + Tenancy + Planner Core — Phase 1 Foundation per PRD-9 and PRD-25",
+  "branchName": "ralph/m2-planning-excellence",
+  "description": "M2: Templates + Standards + Approvals — Phase 2 Planning Excellence per PRD-10 and PRD-25",
   "userStories": [
     {
-      "id": "US-001",
-      "title": "Initialize Rails API app with core gems",
-      "description": "As a developer, I need the Rails API-only app scaffolded so all subsequent stories have a working backend.",
+      "id": "US-022",
+      "title": "Template and TemplateVersion models with CRUD API",
+      "description": "As a curriculum lead, I need reusable unit plan templates so teachers can start planning from proven structures.",
       "acceptanceCriteria": [
-        "Rails 7+ API-only app created in apps/core",
-        "Gemfile includes: pg, devise, omniauth, omniauth-google-oauth2, pundit, sidekiq, active_model_serializers, rack-cors, rubocop-rails",
-        "Database.yml configured for Postgres",
-        "bundle install succeeds",
-        "rails db:create succeeds",
-        "RSpec is configured and a trivial test passes",
-        "Rubocop runs clean"
+        "Template model: id, tenant_id, name, subject, grade_level, description, created_by_id, status (enum: draft, published, archived), timestamps",
+        "TemplateVersion model: id, tenant_id, template_id, version_number, title, description, essential_questions (text array), enduring_understandings (text array), suggested_duration_weeks (integer), timestamps",
+        "Both tenant-scoped with TenantScoped concern",
+        "Template has_many template_versions, belongs_to current_version (optional)",
+        "Auto-increment version_number like UnitVersion pattern",
+        "Pundit policy: admin/curriculum_lead can CRUD, teachers can read published templates",
+        "API endpoints: CRUD for templates, create_version, list versions under /api/v1/templates",
+        "Request specs for CRUD, versioning, and authorization",
+        "Rubocop passes"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "API-only mode. No views. Postgres required."
+      "notes": "PRD-10: Templates are Phase 2 core. Follow exact same versioning pattern as UnitPlan/UnitVersion from M1."
     },
     {
-      "id": "US-002",
-      "title": "Initialize Next.js frontend app",
-      "description": "As a developer, I need the Next.js frontend scaffolded so UI stories can be built.",
+      "id": "US-023",
+      "title": "Template standards alignment",
+      "description": "As a curriculum lead, I need to attach standards to templates so units created from them inherit alignment.",
       "acceptanceCriteria": [
-        "Next.js 14+ app created in apps/web with TypeScript",
-        "Tailwind CSS configured",
-        "ESLint and Prettier configured",
-        "npm run lint passes",
-        "npm run build succeeds",
-        "Basic layout component exists with left nav placeholder matching UX §3.2 structure"
+        "TemplateVersionStandard join model: template_version_id, standard_id, tenant_id",
+        "TemplateVersion has_many standards through template_version_standards",
+        "API endpoint: POST/DELETE /api/v1/template_versions/:id/standards to attach/detach",
+        "GET /api/v1/template_versions/:id/standards lists aligned standards",
+        "Validation: standard_id unique per template_version_id",
+        "Request specs",
+        "Rubocop passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "App Router preferred. TypeScript strict mode."
+      "passes": false,
+      "notes": "Mirrors UnitVersionStandard pattern. Standards carry over when creating unit from template."
     },
     {
-      "id": "US-003",
-      "title": "Tenant and School models with multi-tenancy",
-      "description": "As a platform operator, I need tenant isolation so each school's data is separate.",
+      "id": "US-024",
+      "title": "Create unit plan from template",
+      "description": "As a teacher, I need to create a new unit plan from a template so I start with a pre-filled structure.",
       "acceptanceCriteria": [
-        "Tenant model with: id, name, slug, settings (jsonb), timestamps",
-        "School model with: id, tenant_id, name, address, timezone, timestamps",
-        "tenant_id column on schools table with NOT NULL and index",
-        "ApplicationRecord includes a concern that scopes all queries by Current.tenant",
-        "Migration runs successfully",
-        "Model specs verify tenant scoping",
+        "API endpoint: POST /api/v1/templates/:id/create_unit with params { course_id }",
+        "Creates new UnitPlan in draft status, copies template version fields (title, description, essential_questions, enduring_understandings) into first UnitVersion",
+        "Copies aligned standards from TemplateVersionStandard to UnitVersionStandard",
+        "Returns the created UnitPlan with its first version",
+        "Only published templates can be used to create units",
+        "Pundit: any teacher/curriculum_lead/admin can use a published template",
+        "Request specs verify field copying, standards copying, and authorization",
         "Rubocop passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Use Current attributes (ActiveSupport::CurrentAttributes) for tenant context. This is the foundation — every future model inherits tenant scoping."
+      "passes": false,
+      "notes": "PRD-10, PRD-17: Templates reduce time-to-first-unit. This is the critical bridge between templates and units."
     },
     {
-      "id": "US-004",
-      "title": "User model, Roles, and RBAC with Pundit",
-      "description": "As an admin, I need role-based access so teachers, students, and admins have appropriate permissions.",
+      "id": "US-025",
+      "title": "Unit version standards management API",
+      "description": "As a teacher, I need to bulk-manage standards aligned to my unit versions via API.",
       "acceptanceCriteria": [
-        "User model with: id, tenant_id, email, first_name, last_name, timestamps",
-        "Role model with: id, tenant_id, name (enum: admin, curriculum_lead, teacher, student, guardian)",
-        "UserRole join model with: user_id, role_id, tenant_id",
-        "Pundit configured with ApplicationPolicy base class",
-        "Users are tenant-scoped",
-        "RSpec tests for role assignment and policy checks",
+        "POST /api/v1/unit_versions/:id/standards with { standard_ids: [...] } bulk-attaches standards",
+        "DELETE /api/v1/unit_versions/:id/standards with { standard_ids: [...] } bulk-detaches standards",
+        "GET /api/v1/unit_versions/:id/standards returns all aligned standards with code, description, grade_band",
+        "Idempotent: attaching already-attached standard does not error",
+        "Pundit: only unit owner or admin can modify standards alignment",
+        "Request specs for attach, detach, idempotency, and authorization",
         "Rubocop passes"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "PRD-3 defines four primary user types. Guardian is optional per PRD-4."
+      "passes": false,
+      "notes": "M1 created UnitVersionStandard join model but no API. This story adds the API layer for standards management."
     },
     {
-      "id": "US-005",
-      "title": "OmniAuth Google OIDC authentication",
-      "description": "As a user, I need to sign in with Google so I can access the platform securely.",
+      "id": "US-026",
+      "title": "Standards coverage reporting API",
+      "description": "As a curriculum lead, I need to see which standards are covered across units in a course so I can identify gaps.",
       "acceptanceCriteria": [
-        "OmniAuth Google OAuth2 strategy configured",
-        "Sessions controller handles callback, creates/finds user by email within tenant",
-        "Short-lived access token + refresh token stored (or session cookie + CSRF)",
-        "Sign-out endpoint clears session",
-        "Unauthenticated requests return 401 JSON",
-        "Request specs verify auth flow",
+        "GET /api/v1/courses/:id/standards_coverage returns list of standards with coverage data",
+        "Each standard entry includes: standard_id, code, description, grade_band, covered (boolean), unit_plan_ids (array of unit plan IDs covering it)",
+        "Coverage scoped to a specific standard_framework_id query param",
+        "Only counts standards from published or draft unit versions (not archived)",
+        "GET /api/v1/academic_years/:id/standards_coverage returns coverage across all courses in that year",
+        "Pundit: admin/curriculum_lead can access coverage reports",
+        "Request specs with multi-unit, multi-course scenarios",
         "Rubocop passes"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "Tech Spec §2.3. Google OIDC is primary auth. SAML can come later."
+      "passes": false,
+      "notes": "PRD-10: Coverage reporting lets curriculum leads see gaps. This is the data API — frontend visualization in US-035."
     },
     {
-      "id": "US-006",
-      "title": "API authentication middleware and tenant resolution",
-      "description": "As a developer, I need every API request to resolve the tenant and authenticate the user so all downstream code is scoped.",
+      "id": "US-027",
+      "title": "Approval model and workflow",
+      "description": "As a curriculum lead, I need an optional approval workflow so units are reviewed before publishing.",
       "acceptanceCriteria": [
-        "ApplicationController before_action sets Current.user and Current.tenant",
-        "Tenant resolved from subdomain, header, or token claim",
-        "All /api/v1 routes require authentication",
-        "Pundit authorization enforced on all actions",
-        "Request spec: unauthenticated returns 401",
-        "Request spec: wrong tenant returns 403",
+        "Approval model: id, tenant_id, approvable_type, approvable_id (polymorphic), status (enum: pending, approved, rejected), requested_by_id, reviewed_by_id, comments (text), reviewed_at (datetime), timestamps",
+        "Tenant settings: approval_required (boolean, default false) stored in tenant.settings jsonb",
+        "Approval is tenant-scoped",
+        "Status transitions: pending → approved, pending → rejected",
+        "Polymorphic: works with UnitPlan (extensible to other models later)",
+        "Model validations and specs",
         "Rubocop passes"
       ],
       "priority": 6,
-      "passes": true,
-      "notes": "This is the security backbone. Every controller inherits this."
+      "passes": false,
+      "notes": "PRD-10: Optional approvals. The model is generic (polymorphic) but Phase 2 only uses it with UnitPlan."
     },
     {
-      "id": "US-007",
-      "title": "AcademicYear and Term models",
-      "description": "As a curriculum lead, I need academic years and terms so units can be organized by time period.",
+      "id": "US-028",
+      "title": "Approval API endpoints and publish integration",
+      "description": "As a curriculum lead, I need API endpoints to submit, review, and list approvals, integrated with the publish pipeline.",
       "acceptanceCriteria": [
-        "AcademicYear model: id, tenant_id, name, start_date, end_date, current (boolean)",
-        "Term model: id, tenant_id, academic_year_id, name, start_date, end_date",
-        "Both tenant-scoped",
-        "Validations: dates required, end > start",
-        "API endpoints: CRUD for both under /api/v1/academic_years and /api/v1/terms",
-        "Request specs for CRUD + authorization",
+        "POST /api/v1/unit_plans/:id/submit_for_approval creates a pending Approval (only when tenant.settings.approval_required is true)",
+        "When approval is not required, publish works directly as before (no behavior change)",
+        "GET /api/v1/approvals lists pending approvals (admin/curriculum_lead only)",
+        "GET /api/v1/approvals?status=pending|approved|rejected supports filtering",
+        "POST /api/v1/approvals/:id/approve transitions to approved, auto-publishes the unit plan",
+        "POST /api/v1/approvals/:id/reject transitions to rejected with required comments",
+        "UnitPlan status adds 'pending_approval' to VALID_STATUSES",
+        "Publish endpoint returns 422 when approval is required but not yet approved",
+        "Pundit: teachers submit, admin/curriculum_lead review",
+        "Request specs for full approval flow, bypass when not required, and authorization",
         "Rubocop passes"
       ],
       "priority": 7,
-      "passes": true,
-      "notes": "Tech Spec §2.4 Identity/Organization group."
+      "passes": false,
+      "notes": "PRD-10: Approvals gate publishing. When tenant has approval_required=false, publish works exactly as M1."
     },
     {
-      "id": "US-008",
-      "title": "Course and Section models with enrollments",
-      "description": "As a teacher, I need courses and sections so I can organize my classes.",
+      "id": "US-029",
+      "title": "Next.js Template Library page",
+      "description": "As a teacher, I need to browse and search templates so I can find one to start my unit plan from.",
       "acceptanceCriteria": [
-        "Course model: id, tenant_id, name, code, description, academic_year_id, timestamps",
-        "Section model: id, tenant_id, course_id, name, term_id, timestamps",
-        "Enrollment model: id, tenant_id, user_id, section_id, role (enum: teacher, student), timestamps",
-        "All tenant-scoped",
-        "API endpoints: CRUD for courses, sections, enrollments under /api/v1",
-        "Enrollment enforces one role per user per section",
-        "Request specs",
-        "Rubocop passes"
+        "Template Library page at /plan/templates",
+        "Lists all published templates for the tenant",
+        "Filter by: subject, grade level",
+        "Search by title (client-side filter)",
+        "Each template card shows: name, subject, grade level, description preview",
+        "'Use Template' button navigates to create-unit-from-template flow",
+        "Admin/curriculum_lead see a 'Create Template' button",
+        "Add 'Templates' sub-nav item under Plan section in AppShell",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 8,
-      "passes": true,
-      "notes": "Tech Spec §2.4. Enrollments connect users to sections with a role."
+      "passes": false,
+      "notes": "UX §3.4: Template Library. Teachers browse, curriculum leads manage."
     },
     {
-      "id": "US-009",
-      "title": "StandardFramework and Standard models",
-      "description": "As a curriculum lead, I need to manage standards frameworks so teachers can align units to standards.",
+      "id": "US-030",
+      "title": "Next.js Template Editor page",
+      "description": "As a curriculum lead, I need to create and edit templates so teachers have good starting points.",
       "acceptanceCriteria": [
-        "StandardFramework model: id, tenant_id, name, jurisdiction, subject, version, timestamps",
-        "Standard model: id, tenant_id, standard_framework_id, parent_id (self-referential tree), code, description, grade_band, timestamps",
-        "Both tenant-scoped",
-        "Standard supports hierarchical nesting (parent_id)",
-        "API endpoints: CRUD + tree traversal endpoint",
-        "Request specs",
-        "Rubocop passes"
+        "Template Editor page at /plan/templates/:id",
+        "Form fields: name, subject, grade level, description, essential questions (multi-input), enduring understandings (multi-input), suggested duration weeks",
+        "Save creates a new template version",
+        "Standards alignment section: search and attach standards (same UX as Unit Planner)",
+        "Publish/archive template buttons for curriculum lead/admin",
+        "Version history displayed",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 9,
-      "passes": true,
-      "notes": "PRD-5, PRD-10: standards alignment is critical to planning. Tree structure for nested standards."
+      "passes": false,
+      "notes": "UX §3.4: Template editor mirrors Unit Planner UX. Only curriculum_lead and admin can access."
     },
     {
-      "id": "US-010",
-      "title": "UnitPlan and UnitVersion models with versioning",
-      "description": "As a teacher, I need to create unit plans with version history so I can iterate on my planning.",
+      "id": "US-031",
+      "title": "Next.js create unit from template flow",
+      "description": "As a teacher, I need to select a template and create a new unit plan from it in one step.",
       "acceptanceCriteria": [
-        "UnitPlan model: id, tenant_id, course_id, created_by_id, title, status (enum: draft, published, archived), timestamps",
-        "UnitVersion model: id, tenant_id, unit_plan_id, version_number, title, description, essential_questions (text array), enduring_understandings (text array), timestamps",
-        "Creating a new version auto-increments version_number",
-        "UnitPlan has_many unit_versions, belongs_to current_version",
-        "Standards can be linked to UnitVersion via join table (unit_version_standards)",
-        "API endpoints: CRUD for unit_plans, create new version, list versions",
-        "Request specs verify versioning logic",
-        "Rubocop passes"
+        "From Template Library, 'Use Template' opens a modal or page to select a course",
+        "On confirm, calls POST /api/v1/templates/:id/create_unit with selected course_id",
+        "Redirects to the Unit Planner page for the newly created unit",
+        "Shows success toast/notification",
+        "Error handling if template is no longer published",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 10,
-      "passes": true,
-      "notes": "PRD-9, PRD-17: versioning is core to Phase 1. Teacher creates unit, each save creates a new version."
+      "passes": false,
+      "notes": "PRD-8: Time-to-first-unit < 20 minutes. This is the fastest path to creating a unit."
     },
     {
-      "id": "US-011",
-      "title": "LessonPlan and LessonVersion models with versioning",
-      "description": "As a teacher, I need lesson plans within units so I can plan day-by-day instruction.",
+      "id": "US-032",
+      "title": "Next.js Standards Browser page",
+      "description": "As a teacher, I need to browse standards frameworks and view the full standards tree.",
       "acceptanceCriteria": [
-        "LessonPlan model: id, tenant_id, unit_plan_id, created_by_id, title, position (integer for ordering), status (enum: draft, published), timestamps",
-        "LessonVersion model: id, tenant_id, lesson_plan_id, version_number, title, objectives (text), activities (text), materials (text), duration_minutes (integer), timestamps",
-        "Versioning works same as UnitVersion",
-        "Lessons ordered by position within a unit",
-        "API endpoints: CRUD nested under unit_plans",
-        "Request specs",
-        "Rubocop passes"
+        "Standards Browser page at /plan/standards",
+        "Lists all standard frameworks with name, subject, jurisdiction",
+        "Click a framework to see its full standards tree (nested, expandable)",
+        "Each standard shows code, description, grade band",
+        "Shows which units reference each standard (linked unit titles)",
+        "Search/filter standards by code or description",
+        "Add 'Standards' sub-nav item under Plan section in AppShell",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 11,
-      "passes": true,
-      "notes": "PRD-9, PRD-17. Lessons are children of units. Position field for drag-reorder later."
+      "passes": false,
+      "notes": "UX §3.4: Standards Browser. Helps teachers explore and understand available standards."
     },
     {
-      "id": "US-012",
-      "title": "ResourceLink model for Drive attachments",
-      "description": "As a teacher, I need to attach Google Drive files to units and lessons so my resources are linked.",
+      "id": "US-033",
+      "title": "Next.js Unit Planner standards alignment enhancement",
+      "description": "As a teacher, I need the Unit Planner to save and load aligned standards so alignment persists across versions.",
       "acceptanceCriteria": [
-        "ResourceLink model: id, tenant_id, linkable_type, linkable_id (polymorphic), url, title, mime_type, drive_file_id, provider (enum: google_drive, upload, url), timestamps",
-        "Polymorphic association works with UnitVersion and LessonVersion",
-        "API endpoint: create/delete resource links on a unit_version or lesson_version",
-        "Validation: URL format, drive_file_id present when provider=google_drive",
-        "Request specs",
-        "Rubocop passes"
+        "Unit Planner (/plan/units/[id]) loads aligned standards from GET /api/v1/unit_versions/:id/standards",
+        "Adding a standard calls POST to attach it to the current version",
+        "Removing a standard calls DELETE to detach it",
+        "Standards persist across page refreshes (stored server-side, not just in local state)",
+        "Standards displayed as chips with remove button",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 12,
-      "passes": true,
-      "notes": "PRD-9, PRD-20: Drive attachments are Phase 1. Actual Google API integration is Phase 5 — this is the data model and linking only."
+      "passes": false,
+      "notes": "M1 Unit Planner had client-side-only standards selection. This wires it to the real API."
     },
     {
-      "id": "US-013",
-      "title": "Publish pipeline for units",
-      "description": "As a teacher, I need to publish a unit so it becomes visible to students and locked from edits.",
+      "id": "US-034",
+      "title": "Next.js Publish Preview page",
+      "description": "As a teacher, I need to preview my unit plan before publishing so I can verify content and alignment.",
       "acceptanceCriteria": [
-        "UnitPlan status transitions: draft → published, published → archived",
-        "Publishing locks the current version (no further edits to that version)",
-        "Published units are visible in course context",
-        "Only unit owner or admin can publish",
-        "Pundit policy enforces publish permission",
-        "API endpoint: POST /api/v1/unit_plans/:id/publish",
-        "Request specs for publish flow and authorization",
-        "Rubocop passes"
+        "Publish Preview page at /plan/units/[id]/preview",
+        "Displays read-only view of: title, description, essential questions, enduring understandings",
+        "Shows aligned standards list with codes and descriptions",
+        "Shows lesson list with titles and objectives",
+        "Shows resource links",
+        "Prominent 'Publish' or 'Submit for Approval' button (depending on tenant settings)",
+        "Back button returns to Unit Planner",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 13,
-      "passes": true,
-      "notes": "PRD-17: publish is the final step in the teacher planning workflow."
+      "passes": false,
+      "notes": "UX §3.4: Publish Preview. Final checkpoint before publishing or submitting for approval."
     },
     {
-      "id": "US-014",
-      "title": "PDF export for unit plans",
-      "description": "As a teacher, I need to export a unit plan as PDF so I can share it offline.",
+      "id": "US-035",
+      "title": "Next.js Curriculum Map — standards coverage",
+      "description": "As a curriculum lead, I need a visual curriculum map showing which standards are covered across courses.",
       "acceptanceCriteria": [
-        "Sidekiq job generates PDF from unit plan + current version + lessons",
-        "PDF includes: title, description, essential questions, enduring understandings, lesson titles and objectives, linked standards",
-        "API endpoint: POST /api/v1/unit_plans/:id/export_pdf returns job ID",
-        "GET endpoint to check status and download signed URL",
-        "Active Storage stores the generated PDF",
-        "Job is idempotent",
-        "Request specs",
-        "Rubocop passes"
+        "Curriculum Map page at /admin/curriculum-map",
+        "Select academic year and standard framework to view",
+        "Displays a matrix: rows = standards, columns = courses",
+        "Cells show coverage status: covered (green), gap (red/empty)",
+        "Click a cell to see which unit plans cover that standard in that course",
+        "Summary stats: total standards, covered count, coverage percentage",
+        "Only accessible to admin and curriculum_lead roles",
+        "npm run lint passes",
+        "npm run build succeeds"
       ],
       "priority": 14,
-      "passes": true,
-      "notes": "PRD-9: PDF export is Phase 1. Use Prawn or Grover gem for generation."
+      "passes": false,
+      "notes": "PRD-10, UX §3.6: Curriculum Map. The key visibility tool for curriculum leads."
     },
     {
-      "id": "US-015",
-      "title": "Next.js auth flow — Google sign-in and session",
-      "description": "As a user, I need to sign in from the web app so I can access my dashboard.",
+      "id": "US-036",
+      "title": "Next.js Approval Queue page",
+      "description": "As a curriculum lead, I need to review and approve/reject unit plans submitted for approval.",
       "acceptanceCriteria": [
-        "Sign-in page with Google OAuth button (UX §3.3)",
-        "OAuth redirect flow to Rails backend",
-        "Access token stored in httpOnly cookie or secure storage",
-        "Authenticated API client utility (fetch wrapper with token)",
-        "Redirect to dashboard on success, error state on failure",
+        "Approval Queue page at /admin/approvals",
+        "Lists all pending approvals with: unit title, submitted by, submitted date",
+        "Click to view full unit preview (reuses Publish Preview layout)",
+        "Approve button: approves and auto-publishes the unit",
+        "Reject button: opens comments field, requires reason, rejects approval",
+        "Filter by status: pending, approved, rejected",
+        "Only accessible to admin and curriculum_lead roles",
         "npm run lint passes",
         "npm run build succeeds"
       ],
       "priority": 15,
-      "passes": true,
-      "notes": "UX §3.3: Sign in → School selection → First-time setup. Start with just sign-in."
-    },
-    {
-      "id": "US-016",
-      "title": "Next.js App Shell — left nav and layout",
-      "description": "As a user, I need the main app layout so I can navigate between sections.",
-      "acceptanceCriteria": [
-        "App shell layout with left sidebar nav matching UX §3.2",
-        "Nav items: Plan, Teach, Assess, Report, Communicate, Admin",
-        "Top bar with school name placeholder, search placeholder, notification bell placeholder",
-        "Active nav state highlighted",
-        "Responsive: sidebar collapses on mobile",
-        "Protected route wrapper redirects unauthenticated users",
-        "npm run lint passes",
-        "npm run build succeeds"
-      ],
-      "priority": 16,
-      "passes": true,
-      "notes": "UX §3.2. This is the chrome around all authenticated pages."
-    },
-    {
-      "id": "US-017",
-      "title": "Next.js Teacher Dashboard page",
-      "description": "As a teacher, I need a dashboard so I can see my units and courses at a glance.",
-      "acceptanceCriteria": [
-        "Dashboard page at /dashboard",
-        "Fetches and displays: recent unit plans, enrolled courses/sections",
-        "Empty states when no data exists",
-        "Links to unit planner and course home",
-        "Uses API client from US-015",
-        "npm run lint passes",
-        "npm run build succeeds"
-      ],
-      "priority": 17,
-      "passes": true,
-      "notes": "UX §3.4: Teacher Dashboard. Keep it simple — cards for recent units, list of courses."
-    },
-    {
-      "id": "US-018",
-      "title": "Next.js Unit Library page",
-      "description": "As a teacher, I need to browse and search my unit plans so I can find and manage them.",
-      "acceptanceCriteria": [
-        "Unit Library page at /plan/units",
-        "Lists all unit plans for current user's courses",
-        "Filter by: course, status (draft/published/archived)",
-        "Search by title (client-side filter is fine for now)",
-        "Create new unit button → navigates to unit planner",
-        "Each unit card shows: title, course, status badge, version count",
-        "npm run lint passes",
-        "npm run build succeeds"
-      ],
-      "priority": 18,
-      "passes": true,
-      "notes": "UX §3.4: Unit Library. This is under the Plan nav section."
-    },
-    {
-      "id": "US-019",
-      "title": "Next.js Unit Planner page with version editing",
-      "description": "As a teacher, I need to create and edit unit plans so I can do my core planning work.",
-      "acceptanceCriteria": [
-        "Unit Planner page at /plan/units/:id",
-        "Form fields: title, description, essential questions (multi-input), enduring understandings (multi-input)",
-        "Save creates a new version (version number displayed)",
-        "Version history sidebar or dropdown showing past versions",
-        "Standards alignment section: search and attach standards",
-        "Lesson list section showing ordered lessons with add/reorder",
-        "Publish button (calls publish endpoint)",
-        "Right context panel placeholder per UX §3.2",
-        "npm run lint passes",
-        "npm run build succeeds"
-      ],
-      "priority": 19,
-      "passes": true,
-      "notes": "UX §3.4: Unit Planner. This is the most important screen in the app. PRD-17 workflow lives here."
-    },
-    {
-      "id": "US-020",
-      "title": "Next.js Lesson Editor page",
-      "description": "As a teacher, I need to edit individual lessons within a unit so I can plan day-by-day.",
-      "acceptanceCriteria": [
-        "Lesson Editor page at /plan/units/:unitId/lessons/:lessonId",
-        "Form fields: title, objectives, activities (rich text or textarea), materials, duration",
-        "Save creates new lesson version",
-        "Resource links section: add Drive link (URL input for now), list attached resources",
-        "Back navigation to unit planner",
-        "npm run lint passes",
-        "npm run build succeeds"
-      ],
-      "priority": 20,
-      "passes": true,
-      "notes": "UX §3.4: Lesson Editor. Keep it clean. Actual Drive picker integration is Phase 5."
-    },
-    {
-      "id": "US-021",
-      "title": "Seed data script for development and demos",
-      "description": "As a developer, I need seed data so I can test the full flow without manual setup.",
-      "acceptanceCriteria": [
-        "db/seeds.rb creates: 1 tenant, 1 school, 1 academic year with 2 terms",
-        "Creates users: 1 admin, 2 teachers, 3 students with appropriate roles",
-        "Creates 2 courses with sections and enrollments",
-        "Creates 1 standard framework with ~10 nested standards",
-        "Creates 2 unit plans with versions, lessons, and resource links",
-        "Seed is idempotent (can run multiple times)",
-        "rails db:seed completes without error",
-        "Rubocop passes"
-      ],
-      "priority": 21,
-      "passes": true,
-      "notes": "This makes demos and testing possible. Run last since it depends on all models."
+      "passes": false,
+      "notes": "PRD-10, UX §3.6: Approval Queue. Only visible when tenant has approval_required enabled."
     }
   ]
 }
