@@ -155,6 +155,15 @@
 - Pattern: Use ProtectedRoute to wrap any page that requires authentication
 - Quality checks: lint, typecheck, build all pass
 
+### Iteration 17 — US-020: Next.js Lesson Editor page
+- Lesson Editor at /plan/units/[id]/lessons/[lessonId]
+- Form fields: title, objectives, activities (textarea), materials, duration_minutes
+- Save creates new lesson version
+- Resource links section: list, add (URL input), delete
+- Back navigation to unit planner
+- Forms disabled when lesson status is not "draft"
+- Quality checks: lint, typecheck, build all pass
+
 ### Iteration 16 — US-019: Next.js Unit Planner page with version editing
 - Unit Planner at /plan/units/[id] with full form editing
 - Form fields: title, description, essential questions (multi-input), enduring understandings (multi-input)

@@ -347,7 +347,7 @@
         "npm run build succeeds"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Lesson Editor. Keep it clean. Actual Drive picker integration is Phase 5."
     },
     {
