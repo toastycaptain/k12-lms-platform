@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_234153) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -70,6 +70,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
     t.index ["tenant_id"], name: "index_approvals_on_tenant_id"
   end
 
+  create_table "course_modules", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "unlock_at"
+    t.datetime "updated_at", null: false
+    t.index ["course_id", "position"], name: "index_course_modules_on_course_id_and_position"
+    t.index ["course_id"], name: "index_course_modules_on_course_id"
+    t.index ["tenant_id"], name: "index_course_modules_on_tenant_id"
+  end
+
   create_table "courses", force: :cascade do |t|
     t.bigint "academic_year_id", null: false
     t.string "code"
@@ -124,6 +139,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
     t.index ["lesson_plan_id", "version_number"], name: "index_lesson_versions_on_lesson_plan_id_and_version_number", unique: true
     t.index ["lesson_plan_id"], name: "index_lesson_versions_on_lesson_plan_id"
     t.index ["tenant_id"], name: "index_lesson_versions_on_tenant_id"
+  end
+
+  create_table "module_items", force: :cascade do |t|
+    t.bigint "course_module_id", null: false
+    t.datetime "created_at", null: false
+    t.string "item_type", null: false
+    t.bigint "itemable_id"
+    t.string "itemable_type"
+    t.integer "position", default: 0, null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_module_id", "position"], name: "index_module_items_on_course_module_id_and_position"
+    t.index ["course_module_id"], name: "index_module_items_on_course_module_id"
+    t.index ["itemable_type", "itemable_id"], name: "index_module_items_on_itemable_type_and_itemable_id"
+    t.index ["tenant_id"], name: "index_module_items_on_tenant_id"
   end
 
   create_table "resource_links", force: :cascade do |t|
@@ -332,6 +363,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
   add_foreign_key "approvals", "tenants"
   add_foreign_key "approvals", "users", column: "requested_by_id"
   add_foreign_key "approvals", "users", column: "reviewed_by_id"
+  add_foreign_key "course_modules", "courses"
+  add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"
   add_foreign_key "courses", "tenants"
   add_foreign_key "enrollments", "sections"
@@ -343,6 +376,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
   add_foreign_key "lesson_plans", "users", column: "created_by_id"
   add_foreign_key "lesson_versions", "lesson_plans"
   add_foreign_key "lesson_versions", "tenants"
+  add_foreign_key "module_items", "course_modules"
+  add_foreign_key "module_items", "tenants"
   add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "schools", "tenants"

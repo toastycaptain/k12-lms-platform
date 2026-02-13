@@ -14,7 +14,18 @@ Rails.application.routes.draw do
       resources :terms
       resources :courses do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
+        resources :modules, controller: "course_modules", only: [ :index, :create ]
       end
+
+      resources :modules, controller: "course_modules", only: [ :show, :update, :destroy ] do
+        member do
+          post :publish
+          post :archive
+          post :reorder_items
+        end
+        resources :module_items, only: [ :index, :create ]
+      end
+      resources :module_items, only: [ :show, :update, :destroy ]
       resources :sections
       resources :enrollments
 
