@@ -237,7 +237,7 @@
         "npm run build succeeds"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Publish Preview. Final checkpoint before publishing or submitting for approval."
     },
     {
