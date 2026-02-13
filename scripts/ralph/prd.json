@@ -165,7 +165,7 @@
         "npm run build succeeds"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Template editor mirrors Unit Planner UX. Only curriculum_lead and admin can access."
     },
     {
