@@ -147,7 +147,7 @@
         "npm run build succeeds"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Template Library. Teachers browse, curriculum leads manage."
     },
     {

@@ -47,8 +47,32 @@ export interface CurrentUser {
   first_name: string;
   last_name: string;
   tenant_id: number;
+  roles: string[];
+}
+
+interface MeResponse {
+  user: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    roles: string[];
+  };
+  tenant: {
+    id: number;
+    name: string;
+    slug: string;
+  };
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUser> {
-  return apiFetch<CurrentUser>("/api/v1/me");
+  const data = await apiFetch<MeResponse>("/api/v1/me");
+  return {
+    id: data.user.id,
+    email: data.user.email,
+    first_name: data.user.first_name,
+    last_name: data.user.last_name,
+    tenant_id: data.tenant.id,
+    roles: data.user.roles,
+  };
 }

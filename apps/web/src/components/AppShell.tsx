@@ -5,8 +5,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
-const NAV_ITEMS = [
-  { label: "Plan", href: "/plan" },
+interface NavItem {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: "Plan",
+    href: "/plan",
+    children: [
+      { label: "Units", href: "/plan/units" },
+      { label: "Templates", href: "/plan/templates" },
+    ],
+  },
   { label: "Teach", href: "/teach" },
   { label: "Assess", href: "/assess" },
   { label: "Report", href: "/report" },
@@ -49,18 +62,40 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {item.label}
-              </Link>
+              <div key={item.href}>
+                <Link
+                  href={item.children ? item.children[0].href : item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`rounded-md px-3 py-2 text-sm font-medium block ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+                {item.children && isActive && (
+                  <div className="ml-4 mt-1 flex flex-col gap-0.5">
+                    {item.children.map((child) => {
+                      const childActive = pathname.startsWith(child.href);
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                            childActive
+                              ? "text-blue-700 bg-blue-50"
+                              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

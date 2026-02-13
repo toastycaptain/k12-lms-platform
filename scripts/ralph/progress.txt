@@ -269,3 +269,13 @@
 - ApprovalPolicy: admin/curriculum_lead can approve/reject, index uses policy_scope
 - Gotcha: users created in different tenants — specs must use per-tenant users
 - Quality checks: 300 examples passing, rubocop clean
+
+### Iteration 26 — US-029: Next.js Template Library page
+- Template Library page at /plan/templates with filter by subject, grade level, and search
+- AppShell updated with sub-navigation: Plan section now has Units and Templates children
+- Sub-nav items only show when parent is active (uses pathname.startsWith)
+- Plan link now goes to first child (/plan/units) instead of /plan
+- CurrentUser type updated to include roles array from /api/v1/me endpoint
+- fetchCurrentUser now parses nested { user, tenant } response from me endpoint
+- "Use Template" button for published templates, "Create Template" for admin/curriculum_lead
+- Quality checks: lint, typecheck, build all pass
