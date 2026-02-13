@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_202424) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_202647) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -127,6 +127,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_202424) do
     t.index ["tenant_id"], name: "index_terms_on_tenant_id"
   end
 
+  create_table "unit_plans", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "current_version_id"
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_unit_plans_on_course_id"
+    t.index ["created_by_id"], name: "index_unit_plans_on_created_by_id"
+    t.index ["current_version_id"], name: "index_unit_plans_on_current_version_id"
+    t.index ["tenant_id"], name: "index_unit_plans_on_tenant_id"
+  end
+
+  create_table "unit_version_standards", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "standard_id", null: false
+    t.bigint "tenant_id", null: false
+    t.bigint "unit_version_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["standard_id"], name: "index_unit_version_standards_on_standard_id"
+    t.index ["tenant_id"], name: "index_unit_version_standards_on_tenant_id"
+    t.index ["unit_version_id", "standard_id"], name: "idx_on_unit_version_id_standard_id_9e61284b07", unique: true
+    t.index ["unit_version_id"], name: "index_unit_version_standards_on_unit_version_id"
+  end
+
+  create_table "unit_versions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.text "enduring_understandings", default: [], array: true
+    t.text "essential_questions", default: [], array: true
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.bigint "unit_plan_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
+    t.index ["tenant_id"], name: "index_unit_versions_on_tenant_id"
+    t.index ["unit_plan_id", "version_number"], name: "index_unit_versions_on_unit_plan_id_and_version_number", unique: true
+    t.index ["unit_plan_id"], name: "index_unit_versions_on_unit_plan_id"
+  end
+
   create_table "user_roles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "role_id", null: false
@@ -167,6 +209,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_202424) do
   add_foreign_key "standards", "tenants"
   add_foreign_key "terms", "academic_years"
   add_foreign_key "terms", "tenants"
+  add_foreign_key "unit_plans", "courses"
+  add_foreign_key "unit_plans", "tenants"
+  add_foreign_key "unit_plans", "unit_versions", column: "current_version_id"
+  add_foreign_key "unit_plans", "users", column: "created_by_id"
+  add_foreign_key "unit_version_standards", "standards"
+  add_foreign_key "unit_version_standards", "tenants"
+  add_foreign_key "unit_version_standards", "unit_versions"
+  add_foreign_key "unit_versions", "tenants"
+  add_foreign_key "unit_versions", "unit_plans"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "tenants"
   add_foreign_key "user_roles", "users"

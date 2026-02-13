@@ -1,0 +1,140 @@
+require "rails_helper"
+
+RSpec.describe "Api::V1::UnitPlans", type: :request do
+  let!(:tenant) { create(:tenant) }
+  let(:admin) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:admin)
+    Current.tenant = nil
+    u
+  end
+  let(:teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
+
+  after do
+    Current.tenant = nil
+    Current.user = nil
+  end
+
+  describe "POST /api/v1/unit_plans" do
+    it "creates a unit plan with initial version" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      expect {
+        post "/api/v1/unit_plans", params: {
+          unit_plan: { course_id: course.id, title: "My Unit" }
+        }
+      }.to change(UnitPlan.unscoped, :count).by(1)
+        .and change(UnitVersion.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body["current_version_id"]).to be_present
+      expect(body["created_by_id"]).to eq(teacher.id)
+    end
+  end
+
+  describe "POST /api/v1/unit_plans/:id/create_version" do
+    it "creates a new version" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/create_version", params: {
+        version: {
+          title: "Revised Unit",
+          description: "Updated description",
+          essential_questions: [ "Why?" ],
+          enduring_understandings: [ "Because..." ]
+        }
+      }
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["version_number"]).to eq(2)
+      expect(response.parsed_body["essential_questions"]).to eq([ "Why?" ])
+    end
+  end
+
+  describe "GET /api/v1/unit_plans/:id/versions" do
+    it "returns all versions ordered by version_number desc" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      unit_plan.create_version!(title: "v1")
+      unit_plan.create_version!(title: "v2")
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{unit_plan.id}/versions"
+
+      expect(response).to have_http_status(:ok)
+      versions = response.parsed_body
+      expect(versions.length).to eq(2)
+      expect(versions.first["version_number"]).to eq(2)
+    end
+  end
+
+  describe "GET /api/v1/unit_plans" do
+    it "returns unit plans" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+  end
+
+  describe "PATCH /api/v1/unit_plans/:id" do
+    it "updates a unit plan" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      patch "/api/v1/unit_plans/#{unit_plan.id}", params: { unit_plan: { title: "Updated Title" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["title"]).to eq("Updated Title")
+    end
+  end
+
+  describe "DELETE /api/v1/unit_plans/:id" do
+    it "deletes a unit plan" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      expect {
+        delete "/api/v1/unit_plans/#{unit_plan.id}"
+      }.to change(UnitPlan.unscoped, :count).by(-1)
+
+      expect(response).to have_http_status(:no_content)
+    end
+  end
+end
