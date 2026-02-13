@@ -292,7 +292,7 @@
         "npm run build succeeds"
       ],
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Teacher Dashboard. Keep it simple — cards for recent units, list of courses."
     },
     {

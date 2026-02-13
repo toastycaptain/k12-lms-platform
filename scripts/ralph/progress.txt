@@ -154,3 +154,12 @@
 - Updated dashboard to use ProtectedRoute wrapper
 - Pattern: Use ProtectedRoute to wrap any page that requires authentication
 - Quality checks: lint, typecheck, build all pass
+
+### Iteration 14 — US-017: Next.js Teacher Dashboard page
+- Dashboard at /dashboard fetches unit plans and courses via API client
+- Shows recent unit plans as cards with StatusBadge component (draft/published/archived)
+- Shows enrolled courses with name and code
+- Empty states with dashed border and call-to-action links
+- Links to /plan/units for "View all" and individual unit pages
+- Uses ProtectedRoute wrapper for auth guard
+- Quality checks: lint, typecheck, build all pass
