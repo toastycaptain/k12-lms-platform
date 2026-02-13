@@ -330,7 +330,7 @@
         "npm run build succeeds"
       ],
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Unit Planner. This is the most important screen in the app. PRD-17 workflow lives here."
     },
     {

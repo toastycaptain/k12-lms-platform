@@ -155,6 +155,18 @@
 - Pattern: Use ProtectedRoute to wrap any page that requires authentication
 - Quality checks: lint, typecheck, build all pass
 
+### Iteration 16 — US-019: Next.js Unit Planner page with version editing
+- Unit Planner at /plan/units/[id] with full form editing
+- Form fields: title, description, essential questions (multi-input), enduring understandings (multi-input)
+- Save creates new version (version number displayed in header)
+- Version history sidebar in right context panel (UX §3.2)
+- Standards alignment: search standards by code/description, attach as chips
+- Lesson list section with ordered lessons and links to editor
+- Publish button calls POST /publish endpoint
+- Forms disabled when status is not "draft"
+- Dynamic route via Next.js App Router [id] param
+- Quality checks: lint, typecheck, build all pass
+
 ### Iteration 15 — US-018: Next.js Unit Library page
 - Unit Library at /plan/units lists all unit plans with filters
 - Filter by: course (dropdown), status (draft/published/archived), search by title (client-side)
