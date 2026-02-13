@@ -3,6 +3,8 @@ module Api
     class SessionsController < ApplicationController
       skip_before_action :authenticate_user!, only: [ :omniauth_callback, :failure ]
 
+      private def skip_authorization? = true
+
       def omniauth_callback
         auth = request.env["omniauth.auth"]
 

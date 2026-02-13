@@ -70,3 +70,14 @@
 - spec/support/authentication_helpers.rb: sign_in_as and mock_session helpers for request specs
 - Gotcha: use `let!(:tenant)` (eager) in request specs where tenant must exist before the callback
 - Quality checks: 74 examples passing, rubocop clean
+
+### Iteration 6 — US-006: API authentication middleware and tenant resolution
+- ApplicationController enhanced: Pundit::Authorization included, authenticate_user! before_action
+- Tenant resolution chain: session → X-Tenant-Slug header → subdomain
+- User resolved from session user_id + current tenant (cross-tenant access blocked)
+- Pundit enforcement: verify_authorized/verify_policy_scoped after_actions with skip_authorization? override
+- SessionsController overrides skip_authorization? to skip Pundit checks on auth endpoints
+- Gotcha: Rails 7.1+ raises AbstractController::ActionNotFound if after_action uses only:/except: referencing actions not on the controller. Use lambda conditions instead: `unless: -> { skip_authorization? || action_name == "index" }`
+- config/environments/test.rb: `config.hosts = nil` to disable host authorization in tests
+- Request specs: unauthenticated → 401, wrong tenant → 401 (user not found in other tenant), header-based tenant resolution
+- Quality checks: 79 examples passing, rubocop clean
