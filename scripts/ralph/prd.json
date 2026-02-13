@@ -310,7 +310,7 @@
         "npm run build succeeds"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Unit Library. This is under the Plan nav section."
     },
     {
