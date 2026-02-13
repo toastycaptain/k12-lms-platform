@@ -182,7 +182,7 @@
         "npm run build succeeds"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-8: Time-to-first-unit < 20 minutes. This is the fastest path to creating a unit."
     },
     {
