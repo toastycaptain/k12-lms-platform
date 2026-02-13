@@ -8,9 +8,13 @@ Rails.application.routes.draw do
       delete "/session", to: "sessions#destroy"
       get "/me", to: "sessions#me"
 
-      resources :academic_years
+      resources :academic_years do
+        get :standards_coverage, on: :member, controller: "standards_coverage", action: "academic_year_coverage"
+      end
       resources :terms
-      resources :courses
+      resources :courses do
+        get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
+      end
       resources :sections
       resources :enrollments
 

@@ -242,3 +242,13 @@
 - Authorization uses unit_plan's update? policy (owner or admin)
 - Collection-level delete route needed because standard `destroy` expects :id param
 - Quality checks: 276 examples passing, rubocop clean
+
+### Iteration 23 — US-026: Standards coverage reporting API
+- GET /api/v1/courses/:id/standards_coverage?standard_framework_id=X
+- GET /api/v1/academic_years/:id/standards_coverage?standard_framework_id=X
+- Returns array of { standard_id, code, description, grade_band, covered, unit_plan_ids }
+- Excludes archived unit plans from coverage calculation
+- Uses current_version of each unit plan for standard lookup
+- Member routes added to existing resources :courses and :academic_years blocks
+- Authorization reuses existing CoursePolicy#show? and AcademicYearPolicy#show?
+- Quality checks: 279 examples passing, rubocop clean
