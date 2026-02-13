@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+vendor/bundle/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+tmp/
+log/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rails
+db/*.sqlite3
+db/*.sqlite3-journal
+storage/
+public/packs/
+public/packs-test/
+
+# Python
+*.egg-info/
+*.egg
+.eggs/
+.mypy_cache/
+.pytest_cache/
+
+# Coverage & test artifacts
+coverage/
+.coverage
+htmlcov/
+lcov.info
+
+# Secrets (never commit)
+*.pem
+*.key
+credentials.yml.enc
+master.key
