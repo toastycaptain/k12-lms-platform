@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "Units", href: "/plan/units" },
       { label: "Templates", href: "/plan/templates" },
+      { label: "Standards", href: "/plan/standards" },
     ],
   },
   { label: "Teach", href: "/teach" },
