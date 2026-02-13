@@ -257,7 +257,7 @@
         "npm run build succeeds"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.3: Sign in → School selection → First-time setup. Start with just sign-in."
     },
     {

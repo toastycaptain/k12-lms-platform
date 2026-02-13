@@ -134,3 +134,14 @@
 - Default URL options set in environments (host: localhost:3000) for rails_blob_url
 - Job is idempotent — reattaches PDF on re-run
 - Quality checks: 224 examples passing, rubocop clean
+
+### Iteration 12 — US-015: Next.js auth flow — Google sign-in and session
+- Created src/lib/api.ts: API client with fetch wrapper (credentials: "include" for cookies)
+- Created src/lib/auth-context.tsx: React context provider for auth state (user, loading, signOut)
+- Created src/app/login/page.tsx: Sign-in page with Google OAuth button, error state, redirect on success
+- Created src/app/dashboard/page.tsx: Placeholder dashboard with auth guard
+- Updated src/app/layout.tsx: Wrapped children with AuthProvider
+- Login uses Suspense boundary for useSearchParams() (required by Next.js 14+)
+- OAuth flow: frontend redirects to Rails /auth/google_oauth2 → callback sets session → frontend reads /api/v1/me
+- API client reads NEXT_PUBLIC_API_URL env var (defaults to localhost:3000)
+- Quality checks: lint, typecheck, build all pass
