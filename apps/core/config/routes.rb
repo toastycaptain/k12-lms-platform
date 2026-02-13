@@ -7,6 +7,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       delete "/session", to: "sessions#destroy"
       get "/me", to: "sessions#me"
+
+      resources :academic_years
+      resources :terms
     end
   end
 

@@ -118,7 +118,7 @@
         "Rubocop passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Tech Spec §2.4 Identity/Organization group."
     },
     {

@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_195018) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_201913) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "academic_years", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "current", default: false
+    t.date "end_date", null: false
+    t.string "name", null: false
+    t.date "start_date", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id"], name: "index_academic_years_on_tenant_id"
+  end
 
   create_table "roles", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -42,6 +53,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_195018) do
     t.index ["slug"], name: "index_tenants_on_slug", unique: true
   end
 
+  create_table "terms", force: :cascade do |t|
+    t.bigint "academic_year_id", null: false
+    t.datetime "created_at", null: false
+    t.date "end_date", null: false
+    t.string "name", null: false
+    t.date "start_date", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_terms_on_academic_year_id"
+    t.index ["tenant_id"], name: "index_terms_on_tenant_id"
+  end
+
   create_table "user_roles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "role_id", null: false
@@ -65,8 +88,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_195018) do
     t.index ["tenant_id"], name: "index_users_on_tenant_id"
   end
 
+  add_foreign_key "academic_years", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "schools", "tenants"
+  add_foreign_key "terms", "academic_years"
+  add_foreign_key "terms", "tenants"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "tenants"
   add_foreign_key "user_roles", "users"

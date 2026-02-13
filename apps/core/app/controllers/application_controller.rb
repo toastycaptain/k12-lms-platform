@@ -12,6 +12,14 @@ class ApplicationController < ActionController::API
 
   private
 
+  def current_user
+    Current.user
+  end
+
+  def pundit_user
+    Current.user
+  end
+
   def authenticate_user!
     resolve_tenant
     resolve_user
