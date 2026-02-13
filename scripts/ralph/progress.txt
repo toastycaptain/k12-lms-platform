@@ -46,3 +46,16 @@
 - Specs verify tenant scoping: queries auto-filtered by Current.tenant, auto-assignment on create
 - Pattern: Tenant is NOT tenant-scoped (top-level entity), all other models should include TenantScoped
 - Quality checks: 17 examples passing, rubocop clean, migrations successful
+
+### Iteration 4 — US-004: User model, Roles, and RBAC with Pundit
+- User model: id, tenant_id, email, first_name, last_name (TenantScoped)
+- Role model: id, tenant_id, name (enum: admin, curriculum_lead, teacher, student, guardian)
+- UserRole join model: user_id, role_id, tenant_id with unique constraint on [user_id, role_id]
+- User#has_role?(role_name) checks role membership
+- User#add_role(role_name) idempotently creates/finds role and assigns
+- ApplicationPolicy base class with default deny-all, Scope pattern
+- UserPolicy: admin can CRUD all users, users can view/update self, curriculum_lead can index
+- Pundit RSpec support: added `require "pundit/rspec"` to rails_helper.rb for `permissions` matcher
+- Tenant model updated with `has_many :users` and `has_many :roles`
+- Gotcha: `build(:role)` without explicit tenant results in nil tenant_id — always pass tenant in tests
+- Quality checks: 67 examples passing, rubocop clean, migrations successful

@@ -63,6 +63,52 @@ end
 - Includes TenantScoped
 - Belongs to Tenant
 
+### User
+- Fields: email, first_name, last_name, tenant_id
+- Includes TenantScoped
+- has_many :user_roles, has_many :roles through: :user_roles
+- `has_role?(role_name)` — checks role membership
+- `add_role(role_name)` — idempotent role assignment (finds/creates Role, creates UserRole)
+- Email unique within tenant scope
+
+### Role
+- Fields: name, tenant_id
+- Includes TenantScoped
+- Valid names: admin, curriculum_lead, teacher, student, guardian
+- Name unique within tenant scope
+
+### UserRole
+- Join model: user_id, role_id, tenant_id
+- Includes TenantScoped
+- Unique constraint on [user_id, role_id]
+- Auto-sets tenant from user on create
+
+## Authorization (Pundit)
+
+### Setup
+- `require "pundit/rspec"` in spec/rails_helper.rb for `permissions` matcher
+- ApplicationPolicy: default deny-all, Scope base class
+- Each model gets its own policy in app/policies/
+
+### Policy Pattern
+```ruby
+class ModelPolicy < ApplicationPolicy
+  def index?
+    user.has_role?(:admin)
+  end
+
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      scope.all
+    end
+  end
+end
+```
+
+### Testing Gotcha
+- `build(:model)` without explicit tenant results in nil tenant_id
+- Always pass `tenant: tenant` when building records in tests
+
 ## Quality Checks
 Run from apps/core with proper PATH:
 ```bash

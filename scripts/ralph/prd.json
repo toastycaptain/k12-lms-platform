@@ -67,7 +67,7 @@
         "Rubocop passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-3 defines four primary user types. Guardian is optional per PRD-4."
     },
     {
