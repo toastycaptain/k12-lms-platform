@@ -180,6 +180,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
     t.index ["tenant_id"], name: "index_standards_on_tenant_id"
   end
 
+  create_table "template_version_standards", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "standard_id", null: false
+    t.bigint "template_version_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["standard_id"], name: "index_template_version_standards_on_standard_id"
+    t.index ["template_version_id", "standard_id"], name: "idx_tmpl_ver_std_unique", unique: true
+    t.index ["template_version_id"], name: "index_template_version_standards_on_template_version_id"
+    t.index ["tenant_id"], name: "index_template_version_standards_on_tenant_id"
+  end
+
   create_table "template_versions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -321,6 +333,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
   add_foreign_key "standards", "standard_frameworks"
   add_foreign_key "standards", "standards", column: "parent_id"
   add_foreign_key "standards", "tenants"
+  add_foreign_key "template_version_standards", "standards"
+  add_foreign_key "template_version_standards", "template_versions"
+  add_foreign_key "template_version_standards", "tenants"
   add_foreign_key "template_versions", "templates"
   add_foreign_key "template_versions", "tenants"
   add_foreign_key "templates", "template_versions", column: "current_version_id"

@@ -215,3 +215,12 @@
 - Routes: resources :templates with member routes (create_version, versions, publish, archive)
 - Templates don't belong_to :course (unlike UnitPlan) — they are course-independent reusable structures
 - Quality checks: 253 examples passing, rubocop clean
+
+### Iteration 20 — US-023: Template standards alignment
+- TemplateVersionStandard join model follows UnitVersionStandard pattern exactly
+- TemplateVersion updated with has_many :template_version_standards and has_many :standards through
+- TemplateVersionPolicy: show? for everyone, update? for admin/curriculum_lead
+- Controller uses policy_scope(Standard) for index to satisfy verify_policy_scoped after_action
+- Routes: nested standards under template_versions (only: [:index, :create, :destroy])
+- Index FK name truncated to avoid PG identifier length limit: idx_tmpl_ver_std_unique
+- Quality checks: 263 examples passing, rubocop clean

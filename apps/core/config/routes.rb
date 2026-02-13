@@ -48,6 +48,10 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :template_versions, only: [] do
+        resources :standards, only: [ :index, :create, :destroy ], controller: "template_version_standards"
+      end
+
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
       end

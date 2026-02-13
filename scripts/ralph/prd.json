@@ -36,7 +36,7 @@
         "Rubocop passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Mirrors UnitVersionStandard pattern. Standards carry over when creating unit from template."
     },
     {
