@@ -53,6 +53,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "approvals", force: :cascade do |t|
+    t.bigint "approvable_id", null: false
+    t.string "approvable_type", null: false
+    t.text "comments"
+    t.datetime "created_at", null: false
+    t.bigint "requested_by_id", null: false
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.string "status", default: "pending", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approvable_type", "approvable_id"], name: "index_approvals_on_approvable_type_and_approvable_id"
+    t.index ["requested_by_id"], name: "index_approvals_on_requested_by_id"
+    t.index ["reviewed_by_id"], name: "index_approvals_on_reviewed_by_id"
+    t.index ["tenant_id"], name: "index_approvals_on_tenant_id"
+  end
+
   create_table "courses", force: :cascade do |t|
     t.bigint "academic_year_id", null: false
     t.string "code"
@@ -312,6 +329,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_225330) do
   add_foreign_key "academic_years", "tenants"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "approvals", "tenants"
+  add_foreign_key "approvals", "users", column: "requested_by_id"
+  add_foreign_key "approvals", "users", column: "reviewed_by_id"
   add_foreign_key "courses", "academic_years"
   add_foreign_key "courses", "tenants"
   add_foreign_key "enrollments", "sections"

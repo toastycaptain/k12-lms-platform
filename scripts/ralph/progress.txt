@@ -252,3 +252,10 @@
 - Member routes added to existing resources :courses and :academic_years blocks
 - Authorization reuses existing CoursePolicy#show? and AcademicYearPolicy#show?
 - Quality checks: 279 examples passing, rubocop clean
+
+### Iteration 24 — US-027: Approval model and workflow
+- Polymorphic Approval model: approvable_type, approvable_id, status (pending/approved/rejected)
+- belongs_to :requested_by (User), belongs_to :reviewed_by (User, optional)
+- approve!(reviewer:) and reject!(reviewer:, comments:) methods with status guard
+- TenantScoped, reviewed_at timestamp set on review
+- Quality checks: 289 examples passing, rubocop clean

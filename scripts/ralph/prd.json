@@ -106,7 +106,7 @@
         "Rubocop passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-10: Optional approvals. The model is generic (polymorphic) but Phase 2 only uses it with UnitPlan."
     },
     {
