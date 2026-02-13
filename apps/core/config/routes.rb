@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       resources :courses
       resources :sections
       resources :enrollments
+
+      resources :standard_frameworks do
+        get :tree, on: :member, controller: "standards", action: "tree"
+      end
+      resources :standards
     end
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_202210) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_202424) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_202210) do
     t.index ["term_id"], name: "index_sections_on_term_id"
   end
 
+  create_table "standard_frameworks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "jurisdiction"
+    t.string "name", null: false
+    t.string "subject"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "version"
+    t.index ["tenant_id"], name: "index_standard_frameworks_on_tenant_id"
+  end
+
+  create_table "standards", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "grade_band"
+    t.bigint "parent_id"
+    t.bigint "standard_framework_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_standards_on_parent_id"
+    t.index ["standard_framework_id"], name: "index_standards_on_standard_framework_id"
+    t.index ["tenant_id"], name: "index_standards_on_tenant_id"
+  end
+
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -136,6 +161,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_202210) do
   add_foreign_key "sections", "courses"
   add_foreign_key "sections", "tenants"
   add_foreign_key "sections", "terms"
+  add_foreign_key "standard_frameworks", "tenants"
+  add_foreign_key "standards", "standard_frameworks"
+  add_foreign_key "standards", "standards", column: "parent_id"
+  add_foreign_key "standards", "tenants"
   add_foreign_key "terms", "academic_years"
   add_foreign_key "terms", "tenants"
   add_foreign_key "user_roles", "roles"

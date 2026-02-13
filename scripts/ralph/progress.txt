@@ -101,3 +101,13 @@
 - All three include TenantScoped with CRUD API endpoints
 - Enrollment enforces one role per user per section via uniqueness constraint
 - Quality checks: 139 examples passing, rubocop clean
+
+### Iteration 9 — US-009: StandardFramework and Standard models
+- StandardFramework: name, jurisdiction, subject, version, tenant_id — has_many :standards
+- Standard: code, description, grade_band, standard_framework_id, parent_id (self-ref), tenant_id
+- Self-referential tree: parent/children associations via parent_id FK to standards table
+- Standard#tree recursively builds nested hash for API tree endpoint
+- Standard.roots scope returns standards with nil parent_id
+- Tree endpoint: GET /api/v1/standard_frameworks/:id/tree — member route on standard_frameworks resource
+- Gotcha: member route passes params[:id] not params[:standard_framework_id]
+- Quality checks: 158 examples passing, rubocop clean
