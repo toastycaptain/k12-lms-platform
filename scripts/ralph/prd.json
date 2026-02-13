@@ -256,7 +256,7 @@
         "npm run build succeeds"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-10, UX §3.6: Curriculum Map. The key visibility tool for curriculum leads."
     },
     {
