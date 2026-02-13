@@ -26,6 +26,7 @@ Rails.application.routes.draw do
           post :archive
           post :export_pdf
           get :export_pdf_status
+          post :submit_for_approval
         end
 
         resources :lesson_plans do
@@ -60,6 +61,13 @@ Rails.application.routes.draw do
 
       resources :template_versions, only: [] do
         resources :standards, only: [ :index, :create, :destroy ], controller: "template_version_standards"
+      end
+
+      resources :approvals, only: [ :index ] do
+        member do
+          post :approve
+          post :reject
+        end
       end
 
       resources :standard_frameworks do

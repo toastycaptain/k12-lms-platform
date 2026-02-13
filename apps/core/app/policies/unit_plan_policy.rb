@@ -33,6 +33,10 @@ class UnitPlanPolicy < ApplicationPolicy
     publish?
   end
 
+  def submit_for_approval?
+    publish?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

@@ -259,3 +259,13 @@
 - approve!(reviewer:) and reject!(reviewer:, comments:) methods with status guard
 - TenantScoped, reviewed_at timestamp set on review
 - Quality checks: 289 examples passing, rubocop clean
+
+### Iteration 25 — US-028: Approval API endpoints and publish integration
+- UnitPlan.VALID_STATUSES now includes "pending_approval"
+- submit_for_approval! creates Approval and transitions to pending_approval
+- Publish checks tenant.settings["approval_required"] — if true and status==draft, returns 422
+- When approval_required is false, publish works exactly as M1 (no behavior change)
+- ApprovalsController: index (with status filter), approve (auto-publishes), reject (reverts to draft, requires comments)
+- ApprovalPolicy: admin/curriculum_lead can approve/reject, index uses policy_scope
+- Gotcha: users created in different tenants — specs must use per-tenant users
+- Quality checks: 300 examples passing, rubocop clean

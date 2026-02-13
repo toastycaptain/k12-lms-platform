@@ -2,7 +2,7 @@ module Api
   module V1
     class UnitPlansController < ApplicationController
       before_action :set_unit_plan, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive,
-                                          :export_pdf, :export_pdf_status ]
+                                          :export_pdf, :export_pdf_status, :submit_for_approval ]
 
       def index
         @unit_plans = policy_scope(UnitPlan)
@@ -54,10 +54,27 @@ module Api
 
       def publish
         authorize @unit_plan
+        if approval_required? && @unit_plan.status == "draft"
+          return render json: { errors: [ "Approval is required. Use submit_for_approval instead." ] },
+                        status: :unprocessable_content
+        end
         @unit_plan.publish!
         render json: @unit_plan
       rescue ActiveRecord::RecordInvalid
         render json: { errors: [ "Cannot publish: unit must be in draft status with a current version" ] },
+               status: :unprocessable_content
+      end
+
+      def submit_for_approval
+        authorize @unit_plan
+        unless approval_required?
+          return render json: { errors: [ "Approval is not required for this tenant" ] },
+                        status: :unprocessable_content
+        end
+        @unit_plan.submit_for_approval!(user: Current.user)
+        render json: @unit_plan
+      rescue ActiveRecord::RecordInvalid
+        render json: { errors: [ "Cannot submit: unit must be in draft status with a current version" ] },
                status: :unprocessable_content
       end
 
@@ -92,7 +109,7 @@ module Api
 
       def set_unit_plan
         @unit_plan = UnitPlan.find(params[:id])
-        authorize @unit_plan unless %w[create_version versions publish archive export_pdf export_pdf_status].include?(action_name)
+        authorize @unit_plan unless %w[create_version versions publish archive export_pdf export_pdf_status submit_for_approval].include?(action_name)
       end
 
       def unit_plan_params
@@ -101,6 +118,10 @@ module Api
 
       def version_params
         params.require(:version).permit(:title, :description, essential_questions: [], enduring_understandings: [])
+      end
+
+      def approval_required?
+        Current.tenant&.settings&.dig("approval_required") == true
       end
     end
   end

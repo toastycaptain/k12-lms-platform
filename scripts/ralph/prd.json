@@ -127,7 +127,7 @@
         "Rubocop passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-10: Approvals gate publishing. When tenant has approval_required=false, publish works exactly as M1."
     },
     {

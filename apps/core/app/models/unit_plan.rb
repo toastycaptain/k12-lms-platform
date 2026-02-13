@@ -1,13 +1,14 @@
 class UnitPlan < ApplicationRecord
   include TenantScoped
 
-  VALID_STATUSES = %w[draft published archived].freeze
+  VALID_STATUSES = %w[draft pending_approval published archived].freeze
 
   belongs_to :course
   belongs_to :created_by, class_name: "User"
   belongs_to :current_version, class_name: "UnitVersion", optional: true
   has_many :unit_versions, dependent: :destroy
   has_many :lesson_plans, dependent: :destroy
+  has_many :approvals, as: :approvable, dependent: :destroy
   has_one_attached :exported_pdf
 
   validates :title, presence: true
@@ -27,8 +28,20 @@ class UnitPlan < ApplicationRecord
     version
   end
 
-  def publish!
+  def submit_for_approval!(user:)
     raise ActiveRecord::RecordInvalid, self unless status == "draft"
+    raise ActiveRecord::RecordInvalid, self unless current_version.present?
+
+    update!(status: "pending_approval")
+    approvals.create!(
+      tenant: tenant,
+      requested_by: user,
+      status: "pending"
+    )
+  end
+
+  def publish!
+    raise ActiveRecord::RecordInvalid, self unless %w[draft pending_approval].include?(status)
     raise ActiveRecord::RecordInvalid, self unless current_version.present?
 
     update!(status: "published")
