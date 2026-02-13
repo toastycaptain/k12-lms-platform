@@ -110,7 +110,18 @@ export default function UnitPlannerPage() {
       // Fetch all standards for search
       const stdList = await apiFetch<Standard[]>("/api/v1/standards");
       setAllStandards(stdList);
-      // TODO: fetch linked standards from version
+
+      // Fetch aligned standards from current version
+      if (vers.length > 0) {
+        try {
+          const aligned = await apiFetch<Standard[]>(
+            `/api/v1/unit_versions/${vers[0].id}/standards`,
+          );
+          setStandards(aligned);
+        } catch {
+          // May not have standards yet
+        }
+      }
     } catch {
       // Handle error
     } finally {
@@ -388,8 +399,21 @@ export default function UnitPlannerPage() {
                     <li
                       key={std.id}
                       className="cursor-pointer border-b border-gray-100 px-3 py-2 text-sm hover:bg-blue-50 last:border-0"
-                      onClick={() => {
+                      onClick={async () => {
                         if (!standards.find((s) => s.id === std.id)) {
+                          if (currentVersion) {
+                            try {
+                              await apiFetch(
+                                `/api/v1/unit_versions/${currentVersion.id}/standards`,
+                                {
+                                  method: "POST",
+                                  body: JSON.stringify({ standard_ids: [std.id] }),
+                                },
+                              );
+                            } catch {
+                              // May already be attached
+                            }
+                          }
                           setStandards([...standards, std]);
                         }
                         setStandardSearch("");
@@ -409,7 +433,22 @@ export default function UnitPlannerPage() {
                     >
                       {std.code}
                       <button
-                        onClick={() => setStandards(standards.filter((s) => s.id !== std.id))}
+                        onClick={async () => {
+                          if (currentVersion) {
+                            try {
+                              await apiFetch(
+                                `/api/v1/unit_versions/${currentVersion.id}/standards/bulk_destroy`,
+                                {
+                                  method: "DELETE",
+                                  body: JSON.stringify({ standard_ids: [std.id] }),
+                                },
+                              );
+                            } catch {
+                              // Handle error
+                            }
+                          }
+                          setStandards(standards.filter((s) => s.id !== std.id));
+                        }}
                         className="ml-1 text-blue-600 hover:text-blue-900"
                       >
                         &times;

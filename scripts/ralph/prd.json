@@ -218,7 +218,7 @@
         "npm run build succeeds"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "M1 Unit Planner had client-side-only standards selection. This wires it to the real API."
     },
     {
