@@ -19,6 +19,13 @@ Rails.application.routes.draw do
           post :create_version
           get :versions
         end
+
+        resources :lesson_plans do
+          member do
+            post :create_version
+            get :versions
+          end
+        end
       end
 
       resources :standard_frameworks do
