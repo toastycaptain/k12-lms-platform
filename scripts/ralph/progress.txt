@@ -9,6 +9,18 @@
 - See docs/ for full PRD, Tech Spec, and UX Spec
 
 ## Codebase Patterns
-(Ralph will add patterns here as it discovers them)
+- Ruby 4.0.1 via Homebrew at /opt/homebrew/opt/ruby/bin
+- PostgreSQL 16 via Homebrew, service: `brew services start postgresql@16`
+- PATH must include: /opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:/opt/homebrew/opt/postgresql@16/bin
+- All rails/bundle commands must be run from apps/core with above PATH set
+- Rails 8.1.2 API-only, RSpec 8.0.2, rubocop-rails-omakase for linting
+- RSpec configured with FactoryBot, shoulda-matchers, database_cleaner
+- spec/support/ directory auto-loaded via glob in rails_helper.rb
+- CORS configured in config/initializers/cors.rb with CORS_ORIGINS env var
 
 ## Iteration Log
+### Iteration 1 — US-001: Initialize Rails API app
+- Created Rails 8.1.2 API-only app in apps/core
+- Installed gems: pg, devise, omniauth, omniauth-google-oauth2, pundit, sidekiq, active_model_serializers, rack-cors, rubocop-rails-omakase, rspec-rails, factory_bot_rails, faker, shoulda-matchers
+- Configured RSpec, CORS, PostgreSQL databases
+- Trivial test passing, rubocop clean

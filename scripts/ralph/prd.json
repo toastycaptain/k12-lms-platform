@@ -17,7 +17,7 @@
         "Rubocop runs clean"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "API-only mode. No views. Postgres required."
     },
     {
