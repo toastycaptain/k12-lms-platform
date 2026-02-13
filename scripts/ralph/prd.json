@@ -275,7 +275,7 @@
         "npm run build succeeds"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.2. This is the chrome around all authenticated pages."
     },
     {

@@ -145,3 +145,12 @@
 - OAuth flow: frontend redirects to Rails /auth/google_oauth2 → callback sets session → frontend reads /api/v1/me
 - API client reads NEXT_PUBLIC_API_URL env var (defaults to localhost:3000)
 - Quality checks: lint, typecheck, build all pass
+
+### Iteration 13 — US-016: Next.js App Shell — left nav and layout
+- Enhanced AppShell component: active nav state (blue highlight), responsive sidebar (overlay on mobile), hamburger menu, sign-out button
+- Uses Next.js Link component and usePathname() for active state detection
+- Mobile: sidebar slides in from left with backdrop overlay, close button
+- Created ProtectedRoute component: redirects unauthenticated users to /login
+- Updated dashboard to use ProtectedRoute wrapper
+- Pattern: Use ProtectedRoute to wrap any page that requires authentication
+- Quality checks: lint, typecheck, build all pass
