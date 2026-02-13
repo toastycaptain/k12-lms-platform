@@ -34,3 +34,15 @@
 - All quality checks pass: lint, typecheck, build
 - Path alias: @/* maps to ./src/*
 - Frontend commands run from apps/web directory
+
+### Iteration 3 — US-003: Tenant and School models with multi-tenancy
+- Created Current class (ActiveSupport::CurrentAttributes) with :tenant and :user attributes
+- Created TenantScoped concern in app/models/concerns/tenant_scoped.rb
+- TenantScoped includes: default_scope with Current.tenant, before_validation callback, validations
+- Tenant model: name, slug (unique, lowercase-hyphenated), settings (jsonb defaults to {})
+- School model: includes TenantScoped, belongs_to :tenant, validates name and timezone
+- Migrations: tenant slug has unique index, schools.tenant_id has NOT NULL + index + FK
+- Factories use sequences for name/slug to avoid uniqueness conflicts
+- Specs verify tenant scoping: queries auto-filtered by Current.tenant, auto-assignment on create
+- Pattern: Tenant is NOT tenant-scoped (top-level entity), all other models should include TenantScoped
+- Quality checks: 17 examples passing, rubocop clean, migrations successful
