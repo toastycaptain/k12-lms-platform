@@ -93,3 +93,11 @@
 - Added current_user and pundit_user methods to ApplicationController (required by Pundit)
 - Use :unprocessable_content instead of :unprocessable_entity (Rack deprecation in Rails 8.1)
 - Quality checks: 112 examples passing, rubocop clean
+
+### Iteration 8 — US-008: Course, Section, and Enrollment models
+- Course: name, code, description, academic_year_id, tenant_id — has_many :sections
+- Section: name, course_id, term_id, tenant_id — has_many :enrollments, has_many :users through enrollments
+- Enrollment: user_id, section_id, role (enum: teacher/student), tenant_id — unique on [user_id, section_id]
+- All three include TenantScoped with CRUD API endpoints
+- Enrollment enforces one role per user per section via uniqueness constraint
+- Quality checks: 139 examples passing, rubocop clean

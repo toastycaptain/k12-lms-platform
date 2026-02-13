@@ -136,7 +136,7 @@
         "Rubocop passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Tech Spec §2.4. Enrollments connect users to sections with a role."
     },
     {

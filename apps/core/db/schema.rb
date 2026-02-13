@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_201913) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_202210) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_201913) do
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_academic_years_on_tenant_id"
+  end
+
+  create_table "courses", force: :cascade do |t|
+    t.bigint "academic_year_id", null: false
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
+    t.index ["tenant_id"], name: "index_courses_on_tenant_id"
+  end
+
+  create_table "enrollments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "role", null: false
+    t.bigint "section_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["section_id"], name: "index_enrollments_on_section_id"
+    t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
+    t.index ["user_id", "section_id"], name: "index_enrollments_on_user_id_and_section_id", unique: true
+    t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -42,6 +67,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_201913) do
     t.string "timezone"
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_schools_on_tenant_id"
+  end
+
+  create_table "sections", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "tenant_id", null: false
+    t.bigint "term_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_sections_on_course_id"
+    t.index ["tenant_id"], name: "index_sections_on_tenant_id"
+    t.index ["term_id"], name: "index_sections_on_term_id"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -89,8 +126,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_201913) do
   end
 
   add_foreign_key "academic_years", "tenants"
+  add_foreign_key "courses", "academic_years"
+  add_foreign_key "courses", "tenants"
+  add_foreign_key "enrollments", "sections"
+  add_foreign_key "enrollments", "tenants"
+  add_foreign_key "enrollments", "users"
   add_foreign_key "roles", "tenants"
   add_foreign_key "schools", "tenants"
+  add_foreign_key "sections", "courses"
+  add_foreign_key "sections", "tenants"
+  add_foreign_key "sections", "terms"
   add_foreign_key "terms", "academic_years"
   add_foreign_key "terms", "tenants"
   add_foreign_key "user_roles", "roles"

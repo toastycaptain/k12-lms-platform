@@ -10,6 +10,9 @@ Rails.application.routes.draw do
 
       resources :academic_years
       resources :terms
+      resources :courses
+      resources :sections
+      resources :enrollments
     end
   end
 
