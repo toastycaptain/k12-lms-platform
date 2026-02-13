@@ -122,3 +122,15 @@
 - Routes added as member routes on unit_plans resource
 - Gotcha: actions that call authorize explicitly must be excluded from set_unit_plan's authorize call to avoid double-authorization
 - Quality checks: 218 examples passing, rubocop clean
+
+### Iteration 11 — US-014: PDF export for unit plans
+- Added prawn + prawn-table + matrix gems (matrix required for Ruby 4.0+ compatibility)
+- Enabled Active Storage: uncommented engine in application.rb, added storage.yml, set service in environments
+- PdfExportJob: generates PDF with unit title, version details, essential questions, enduring understandings, standards, and lessons
+- POST /api/v1/unit_plans/:id/export_pdf enqueues job, returns 202 with job_id
+- GET /api/v1/unit_plans/:id/export_pdf_status returns processing/completed with download_url
+- UnitPlan has_one_attached :exported_pdf for Active Storage
+- Prawn::Fonts::AFM.hide_m17n_warning = true to suppress internationalization warning
+- Default URL options set in environments (host: localhost:3000) for rails_blob_url
+- Job is idempotent — reattaches PDF on re-run
+- Quality checks: 224 examples passing, rubocop clean

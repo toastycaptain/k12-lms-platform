@@ -19,6 +19,11 @@ gem "sidekiq"
 # API serialization
 gem "active_model_serializers"
 
+# PDF generation
+gem "matrix" # Required by prawn on Ruby 4.0+
+gem "prawn"
+gem "prawn-table"
+
 # CORS
 gem "rack-cors"
 

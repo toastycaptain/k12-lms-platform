@@ -8,6 +8,7 @@ class UnitPlan < ApplicationRecord
   belongs_to :current_version, class_name: "UnitVersion", optional: true
   has_many :unit_versions, dependent: :destroy
   has_many :lesson_plans, dependent: :destroy
+  has_one_attached :exported_pdf
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

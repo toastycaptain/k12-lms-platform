@@ -201,6 +201,60 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
     end
   end
 
+  describe "POST /api/v1/unit_plans/:id/export_pdf" do
+    it "enqueues a PDF export job" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      expect {
+        post "/api/v1/unit_plans/#{unit_plan.id}/export_pdf"
+      }.to have_enqueued_job(PdfExportJob).with(unit_plan.id)
+
+      expect(response).to have_http_status(:accepted)
+      expect(response.parsed_body["status"]).to eq("queued")
+    end
+  end
+
+  describe "GET /api/v1/unit_plans/:id/export_pdf_status" do
+    it "returns processing when no PDF is attached" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{unit_plan.id}/export_pdf_status"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("processing")
+    end
+
+    it "returns completed with download URL when PDF is attached" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      unit_plan.create_version!(title: "v1")
+
+      PdfExportJob.perform_now(unit_plan.id)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{unit_plan.id}/export_pdf_status"
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["status"]).to eq("completed")
+      expect(body["download_url"]).to be_present
+    end
+  end
+
   describe "POST /api/v1/unit_plans/:id/archive" do
     it "archives a published unit plan" do
       mock_session(teacher, tenant: tenant)

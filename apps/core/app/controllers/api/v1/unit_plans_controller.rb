@@ -1,7 +1,8 @@
 module Api
   module V1
     class UnitPlansController < ApplicationController
-      before_action :set_unit_plan, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive ]
+      before_action :set_unit_plan, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive,
+                                          :export_pdf, :export_pdf_status ]
 
       def index
         @unit_plans = policy_scope(UnitPlan)
@@ -69,11 +70,29 @@ module Api
                status: :unprocessable_content
       end
 
+      def export_pdf
+        authorize @unit_plan, :show?
+        job = PdfExportJob.perform_later(@unit_plan.id)
+        render json: { job_id: job.provider_job_id, status: "queued" }, status: :accepted
+      end
+
+      def export_pdf_status
+        authorize @unit_plan, :show?
+        if @unit_plan.exported_pdf.attached?
+          render json: {
+            status: "completed",
+            download_url: rails_blob_url(@unit_plan.exported_pdf, disposition: "attachment")
+          }
+        else
+          render json: { status: "processing" }
+        end
+      end
+
       private
 
       def set_unit_plan
         @unit_plan = UnitPlan.find(params[:id])
-        authorize @unit_plan unless %w[create_version versions publish archive].include?(action_name)
+        authorize @unit_plan unless %w[create_version versions publish archive export_pdf export_pdf_status].include?(action_name)
       end
 
       def unit_plan_params

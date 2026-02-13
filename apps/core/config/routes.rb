@@ -20,6 +20,8 @@ Rails.application.routes.draw do
           get :versions
           post :publish
           post :archive
+          post :export_pdf
+          get :export_pdf_status
         end
 
         resources :lesson_plans do

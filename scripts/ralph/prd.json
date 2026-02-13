@@ -240,7 +240,7 @@
         "Rubocop passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-9: PDF export is Phase 1. Use Prawn or Grover gem for generation."
     },
     {
