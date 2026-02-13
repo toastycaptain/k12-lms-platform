@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_235407) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_235720) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -252,6 +252,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_235407) do
     t.index ["tenant_id"], name: "index_standards_on_tenant_id"
   end
 
+  create_table "submissions", force: :cascade do |t|
+    t.bigint "assignment_id", null: false
+    t.integer "attempt_number", default: 1
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.text "feedback"
+    t.decimal "grade"
+    t.datetime "graded_at"
+    t.bigint "graded_by_id"
+    t.string "status", default: "draft", null: false
+    t.string "submission_type"
+    t.datetime "submitted_at"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.bigint "user_id", null: false
+    t.index ["assignment_id", "user_id"], name: "index_submissions_on_assignment_id_and_user_id", unique: true
+    t.index ["assignment_id"], name: "index_submissions_on_assignment_id"
+    t.index ["graded_by_id"], name: "index_submissions_on_graded_by_id"
+    t.index ["tenant_id"], name: "index_submissions_on_tenant_id"
+    t.index ["user_id"], name: "index_submissions_on_user_id"
+  end
+
   create_table "template_version_standards", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "standard_id", null: false
@@ -415,6 +438,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_235407) do
   add_foreign_key "standards", "standard_frameworks"
   add_foreign_key "standards", "standards", column: "parent_id"
   add_foreign_key "standards", "tenants"
+  add_foreign_key "submissions", "assignments"
+  add_foreign_key "submissions", "tenants"
+  add_foreign_key "submissions", "users"
+  add_foreign_key "submissions", "users", column: "graded_by_id"
   add_foreign_key "template_version_standards", "standards"
   add_foreign_key "template_version_standards", "template_versions"
   add_foreign_key "template_version_standards", "tenants"

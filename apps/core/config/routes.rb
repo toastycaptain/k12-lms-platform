@@ -23,7 +23,9 @@ Rails.application.routes.draw do
           post :publish
           post :close
         end
+        resources :submissions, only: [ :index, :create ]
       end
+      resources :submissions, only: [ :show ]
 
       resources :modules, controller: "course_modules", only: [ :show, :update, :destroy ] do
         member do
