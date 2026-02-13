@@ -59,3 +59,14 @@
 - Tenant model updated with `has_many :users` and `has_many :roles`
 - Gotcha: `build(:role)` without explicit tenant results in nil tenant_id — always pass tenant in tests
 - Quality checks: 67 examples passing, rubocop clean, migrations successful
+
+### Iteration 5 — US-005: OmniAuth Google OIDC authentication
+- Added session/cookie middleware back to API-only app in config/application.rb
+- OmniAuth initializer: config/initializers/omniauth.rb with Google OAuth2 strategy
+- Api::V1::SessionsController handles: omniauth_callback, failure, destroy (sign-out), me (current user)
+- ApplicationController: authenticate_user! before_action, sets Current.tenant and Current.user from session
+- Routes: /auth/:provider/callback, /auth/failure, /api/v1/session (DELETE), /api/v1/me (GET)
+- Tenant resolution: matches email domain slug to tenant slug, falls back to first tenant
+- spec/support/authentication_helpers.rb: sign_in_as and mock_session helpers for request specs
+- Gotcha: use `let!(:tenant)` (eager) in request specs where tenant must exist before the callback
+- Quality checks: 74 examples passing, rubocop clean

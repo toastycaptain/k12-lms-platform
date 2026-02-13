@@ -84,7 +84,7 @@
         "Rubocop passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Tech Spec §2.3. Google OIDC is primary auth. SAML can come later."
     },
     {
