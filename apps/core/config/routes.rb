@@ -34,6 +34,11 @@ Rails.application.routes.draw do
 
       resources :unit_versions, only: [] do
         resources :resource_links, only: [ :index, :create, :destroy ]
+        resources :standards, only: [ :index, :create ], controller: "unit_version_standards" do
+          collection do
+            delete :bulk_destroy, action: :destroy
+          end
+        end
       end
       resources :lesson_versions, only: [] do
         resources :resource_links, only: [ :index, :create, :destroy ]

@@ -233,3 +233,12 @@
 - Only published templates can create units (controller validates status before calling model method)
 - TemplatePolicy#create_unit? allows admin, curriculum_lead, and teacher roles
 - Quality checks: 269 examples passing, rubocop clean
+
+### Iteration 22 — US-025: Unit version standards management API
+- Bulk attach: POST /api/v1/unit_versions/:id/standards with { standard_ids: [...] }
+- Bulk detach: DELETE /api/v1/unit_versions/:id/standards/bulk_destroy with { standard_ids: [...] }
+- GET /api/v1/unit_versions/:id/standards returns aligned standards
+- Attach is idempotent via find_or_create_by!
+- Authorization uses unit_plan's update? policy (owner or admin)
+- Collection-level delete route needed because standard `destroy` expects :id param
+- Quality checks: 276 examples passing, rubocop clean

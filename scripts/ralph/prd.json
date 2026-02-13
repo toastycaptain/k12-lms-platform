@@ -71,7 +71,7 @@
         "Rubocop passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "M1 created UnitVersionStandard join model but no API. This story adds the API layer for standards management."
     },
     {
