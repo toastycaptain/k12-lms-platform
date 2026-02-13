@@ -155,6 +155,18 @@
 - Pattern: Use ProtectedRoute to wrap any page that requires authentication
 - Quality checks: lint, typecheck, build all pass
 
+### Iteration 18 — US-021: Seed data script for development and demos
+- db/seeds.rb creates full demo dataset using find_or_create_by! for idempotency
+- 1 tenant (Demo School District), 1 school (Lincoln Elementary)
+- 6 users: 1 admin (Alice), 2 teachers (Bob, Carol), 3 students (David, Emma, Frank)
+- 1 academic year (2025-2026) with 2 terms (Fall/Spring)
+- 2 courses (5th Grade Math, 5th Grade ELA) with sections and enrollments
+- 1 standard framework (Common Core Math) with 10 nested standards (3 root + 7 child)
+- 2 unit plans with versions: "Understanding Fractions" (published) and "Exploring Geometry" (draft)
+- 3 lesson plans with versions and 1 resource link
+- Seed is idempotent: runs multiple times without error or duplicate data
+- Quality checks: 224 examples passing, rubocop clean, seed runs clean
+
 ### Iteration 17 — US-020: Next.js Lesson Editor page
 - Lesson Editor at /plan/units/[id]/lessons/[lessonId]
 - Form fields: title, objectives, activities (textarea), materials, duration_minutes
