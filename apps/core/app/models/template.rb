@@ -25,6 +25,34 @@ class Template < ApplicationRecord
     version
   end
 
+  def create_unit_from_template!(course:, user:)
+    version = current_version
+    unit_plan = UnitPlan.create!(
+      tenant: tenant,
+      course: course,
+      created_by: user,
+      title: version.title,
+      status: "draft"
+    )
+
+    unit_version = unit_plan.create_version!(
+      title: version.title,
+      description: version.description,
+      essential_questions: version.essential_questions,
+      enduring_understandings: version.enduring_understandings
+    )
+
+    version.template_version_standards.find_each do |tvs|
+      UnitVersionStandard.create!(
+        tenant: tenant,
+        unit_version: unit_version,
+        standard: tvs.standard
+      )
+    end
+
+    unit_plan
+  end
+
   def publish!
     raise ActiveRecord::RecordInvalid, self unless status == "draft"
     raise ActiveRecord::RecordInvalid, self unless current_version.present?

@@ -54,7 +54,7 @@
         "Rubocop passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-10, PRD-17: Templates reduce time-to-first-unit. This is the critical bridge between templates and units."
     },
     {

@@ -45,6 +45,7 @@ Rails.application.routes.draw do
           get :versions
           post :publish
           post :archive
+          post :create_unit
         end
       end
 

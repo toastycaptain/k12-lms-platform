@@ -1,7 +1,7 @@
 module Api
   module V1
     class TemplatesController < ApplicationController
-      before_action :set_template, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive ]
+      before_action :set_template, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive, :create_unit ]
 
       def index
         @templates = policy_scope(Template)
@@ -68,11 +68,23 @@ module Api
                status: :unprocessable_content
       end
 
+      def create_unit
+        authorize @template
+        unless @template.status == "published"
+          return render json: { errors: [ "Only published templates can be used to create units" ] },
+                        status: :unprocessable_content
+        end
+
+        course = Course.find(params[:course_id])
+        unit_plan = @template.create_unit_from_template!(course: course, user: Current.user)
+        render json: unit_plan, status: :created
+      end
+
       private
 
       def set_template
         @template = Template.find(params[:id])
-        authorize @template unless %w[create_version versions publish archive].include?(action_name)
+        authorize @template unless %w[create_version versions publish archive create_unit].include?(action_name)
       end
 
       def template_params
