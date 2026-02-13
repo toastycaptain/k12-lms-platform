@@ -33,7 +33,7 @@
         "Basic layout component exists with left nav placeholder matching UX §3.2 structure"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "App Router preferred. TypeScript strict mode."
     },
     {

@@ -24,3 +24,13 @@
 - Installed gems: pg, devise, omniauth, omniauth-google-oauth2, pundit, sidekiq, active_model_serializers, rack-cors, rubocop-rails-omakase, rspec-rails, factory_bot_rails, faker, shoulda-matchers
 - Configured RSpec, CORS, PostgreSQL databases
 - Trivial test passing, rubocop clean
+
+### Iteration 2 — US-002: Initialize Next.js frontend app
+- Next.js 16.1.6 with TypeScript strict mode, App Router
+- Tailwind CSS v4 via @tailwindcss/postcss plugin
+- ESLint: eslint-config-next (core-web-vitals + typescript) + eslint-config-prettier
+- Prettier: semi, double quotes, trailing commas, 2-space tabs, 100 print width
+- AppShell component with left nav (Plan, Teach, Assess, Report, Communicate, Admin) per UX §3.2
+- All quality checks pass: lint, typecheck, build
+- Path alias: @/* maps to ./src/*
+- Frontend commands run from apps/web directory
