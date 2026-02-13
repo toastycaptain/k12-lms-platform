@@ -1,0 +1,14 @@
+# Ralph Progress Log — K-12 Planning + LMS Platform
+# This file is append-only. Each iteration adds learnings below.
+
+## Project Context
+- Monorepo: apps/web (Next.js), apps/core (Rails API-only), apps/ai-gateway (FastAPI)
+- Multi-tenant: every table has tenant_id
+- Auth: OmniAuth Google OIDC + SAML
+- API: JSON REST under /api/v1
+- See docs/ for full PRD, Tech Spec, and UX Spec
+
+## Codebase Patterns
+(Ralph will add patterns here as it discovers them)
+
+## Iteration Log
