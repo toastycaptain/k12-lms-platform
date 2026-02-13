@@ -204,7 +204,7 @@
         "Rubocop passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-9, PRD-20: Drive attachments are Phase 1. Actual Google API integration is Phase 5 — this is the data model and linking only."
     },
     {

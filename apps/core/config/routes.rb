@@ -28,6 +28,13 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :unit_versions, only: [] do
+        resources :resource_links, only: [ :index, :create, :destroy ]
+      end
+      resources :lesson_versions, only: [] do
+        resources :resource_links, only: [ :index, :create, :destroy ]
+      end
+
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
       end

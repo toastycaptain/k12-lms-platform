@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_210002) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_210003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -79,6 +79,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_210002) do
     t.index ["lesson_plan_id", "version_number"], name: "index_lesson_versions_on_lesson_plan_id_and_version_number", unique: true
     t.index ["lesson_plan_id"], name: "index_lesson_versions_on_lesson_plan_id"
     t.index ["tenant_id"], name: "index_lesson_versions_on_tenant_id"
+  end
+
+  create_table "resource_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "drive_file_id"
+    t.bigint "linkable_id", null: false
+    t.string "linkable_type", null: false
+    t.string "mime_type"
+    t.string "provider", default: "url", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.index ["linkable_type", "linkable_id"], name: "index_resource_links_on_linkable"
+    t.index ["tenant_id"], name: "index_resource_links_on_tenant_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -235,6 +250,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_210002) do
   add_foreign_key "lesson_plans", "users", column: "created_by_id"
   add_foreign_key "lesson_versions", "lesson_plans"
   add_foreign_key "lesson_versions", "tenants"
+  add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "schools", "tenants"
   add_foreign_key "sections", "courses"
