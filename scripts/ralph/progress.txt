@@ -279,3 +279,63 @@
 - fetchCurrentUser now parses nested { user, tenant } response from me endpoint
 - "Use Template" button for published templates, "Create Template" for admin/curriculum_lead
 - Quality checks: lint, typecheck, build all pass
+
+### Iteration 27 — US-030: Next.js Template Editor page
+- Template Editor at /plan/templates/[id] with full form fields
+- Multi-input for essential questions and enduring understandings (add/remove)
+- Standards alignment section with search and attach/detach
+- Version history, publish/archive buttons for admin/curriculum_lead
+- New template creation at /plan/templates/new
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 28 — US-031: Create unit from template flow
+- Use Template page at /plan/templates/[id]/use
+- Course selection dropdown, calls POST /api/v1/templates/:id/create_unit
+- Success notification, redirects to unit planner for new unit
+- Error handling for unpublished templates
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 29 — US-032: Next.js Standards Browser page
+- Standards Browser at /plan/standards with framework selection
+- Expandable tree using recursive StandardNode component
+- Search/filter by code or description
+- Shows which units reference each standard
+- Added Standards to AppShell sub-navigation under Plan
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 30 — US-033: Unit Planner standards alignment enhancement
+- Unit Planner loads aligned standards from GET /api/v1/unit_versions/:id/standards on page load
+- Adding standard calls POST /api/v1/unit_versions/:id/standards (server-side persistence)
+- Removing standard calls DELETE /api/v1/unit_versions/:id/standards/bulk_destroy
+- Standards now persist across page refreshes (no longer client-side only)
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 31 — US-034: Next.js Publish Preview page
+- Publish Preview at /plan/units/[id]/preview
+- Read-only view: title, description, essential questions, enduring understandings
+- Aligned standards with codes and descriptions
+- Lesson list with ordered positions
+- Publish and Submit for Approval buttons (depending on unit status)
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 32 — US-035: Next.js Curriculum Map
+- Curriculum Map at /admin/curriculum-map
+- Academic year and standard framework selectors
+- Coverage matrix: rows=standards, columns=courses
+- Cells show Covered (green) or Gap (red)
+- Click cell to see detail: standard info, course name, unit plan IDs
+- Summary stats: total, covered, gaps, coverage percentage
+- Role-restricted to admin and curriculum_lead
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 33 — US-036: Next.js Approval Queue page
+- Approval Queue at /admin/approvals
+- Lists approvals with StatusBadge (pending/approved/rejected)
+- Filter by status: pending, approved, rejected, all
+- Approve button calls POST /api/v1/approvals/:id/approve
+- Reject button opens comments textarea, calls POST /api/v1/approvals/:id/reject with required comments
+- Link to unit preview for UnitPlan approvals
+- Role-restricted to admin and curriculum_lead
+- Quality checks: lint, typecheck, build all pass
+
+## M2 COMPLETE — All 15 stories (US-022 through US-036) passing
