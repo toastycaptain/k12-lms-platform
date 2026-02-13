@@ -44,4 +44,66 @@ RSpec.describe UnitPlan, type: :model do
       expect(unit_plan.reload.current_version).to eq(version)
     end
   end
+
+  describe "#publish!" do
+    let(:tenant) { create(:tenant) }
+
+    before { Current.tenant = tenant }
+    after { Current.tenant = nil }
+
+    it "transitions status from draft to published" do
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      user = create(:user, tenant: tenant)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: user, status: "draft")
+      unit_plan.create_version!(title: "v1")
+
+      unit_plan.publish!
+      expect(unit_plan.reload.status).to eq("published")
+    end
+
+    it "raises error when status is not draft" do
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      user = create(:user, tenant: tenant)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: user, status: "published")
+
+      expect { unit_plan.publish! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it "raises error when no current version exists" do
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      user = create(:user, tenant: tenant)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: user, status: "draft")
+
+      expect { unit_plan.publish! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
+
+  describe "#archive!" do
+    let(:tenant) { create(:tenant) }
+
+    before { Current.tenant = tenant }
+    after { Current.tenant = nil }
+
+    it "transitions status from published to archived" do
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      user = create(:user, tenant: tenant)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: user, status: "published")
+
+      unit_plan.archive!
+      expect(unit_plan.reload.status).to eq("archived")
+    end
+
+    it "raises error when status is not published" do
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      user = create(:user, tenant: tenant)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: user, status: "draft")
+
+      expect { unit_plan.archive! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
 end

@@ -222,7 +222,7 @@
         "Rubocop passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-17: publish is the final step in the teacher planning workflow."
     },
     {

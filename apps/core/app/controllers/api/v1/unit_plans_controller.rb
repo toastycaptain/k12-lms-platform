@@ -1,7 +1,7 @@
 module Api
   module V1
     class UnitPlansController < ApplicationController
-      before_action :set_unit_plan, only: [ :show, :update, :destroy, :create_version, :versions ]
+      before_action :set_unit_plan, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive ]
 
       def index
         @unit_plans = policy_scope(UnitPlan)
@@ -51,11 +51,29 @@ module Api
         render json: @unit_plan.unit_versions.order(version_number: :desc)
       end
 
+      def publish
+        authorize @unit_plan
+        @unit_plan.publish!
+        render json: @unit_plan
+      rescue ActiveRecord::RecordInvalid
+        render json: { errors: [ "Cannot publish: unit must be in draft status with a current version" ] },
+               status: :unprocessable_content
+      end
+
+      def archive
+        authorize @unit_plan
+        @unit_plan.archive!
+        render json: @unit_plan
+      rescue ActiveRecord::RecordInvalid
+        render json: { errors: [ "Cannot archive: unit must be in published status" ] },
+               status: :unprocessable_content
+      end
+
       private
 
       def set_unit_plan
         @unit_plan = UnitPlan.find(params[:id])
-        authorize @unit_plan unless %w[create_version versions].include?(action_name)
+        authorize @unit_plan unless %w[create_version versions publish archive].include?(action_name)
       end
 
       def unit_plan_params

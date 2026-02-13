@@ -18,6 +18,8 @@ Rails.application.routes.draw do
         member do
           post :create_version
           get :versions
+          post :publish
+          post :archive
         end
 
         resources :lesson_plans do

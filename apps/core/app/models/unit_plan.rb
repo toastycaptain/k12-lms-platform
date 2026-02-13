@@ -25,4 +25,17 @@ class UnitPlan < ApplicationRecord
     update!(current_version: version)
     version
   end
+
+  def publish!
+    raise ActiveRecord::RecordInvalid, self unless status == "draft"
+    raise ActiveRecord::RecordInvalid, self unless current_version.present?
+
+    update!(status: "published")
+  end
+
+  def archive!
+    raise ActiveRecord::RecordInvalid, self unless status == "published"
+
+    update!(status: "archived")
+  end
 end

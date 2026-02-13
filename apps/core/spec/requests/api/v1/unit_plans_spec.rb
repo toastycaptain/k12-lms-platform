@@ -137,4 +137,96 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
       expect(response).to have_http_status(:no_content)
     end
   end
+
+  describe "POST /api/v1/unit_plans/:id/publish" do
+    it "publishes a draft unit plan with a current version" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/publish"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("published")
+    end
+
+    it "returns error when unit plan is already published" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "published")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/publish"
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "denies publish for non-owner non-admin" do
+      other_teacher = nil
+      Current.tenant = tenant
+      other_teacher = create(:user, tenant: tenant)
+      other_teacher.add_role(:teacher)
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      mock_session(other_teacher, tenant: tenant)
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/publish"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "allows admin to publish any unit plan" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/publish"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("published")
+    end
+  end
+
+  describe "POST /api/v1/unit_plans/:id/archive" do
+    it "archives a published unit plan" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "published")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/archive"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("archived")
+    end
+
+    it "returns error when unit plan is not published" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/archive"
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
 end

@@ -25,6 +25,14 @@ class UnitPlanPolicy < ApplicationPolicy
     update?
   end
 
+  def publish?
+    user.has_role?(:admin) || record.created_by_id == user.id
+  end
+
+  def archive?
+    publish?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

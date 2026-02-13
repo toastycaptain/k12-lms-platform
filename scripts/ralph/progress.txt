@@ -111,3 +111,14 @@
 - Tree endpoint: GET /api/v1/standard_frameworks/:id/tree — member route on standard_frameworks resource
 - Gotcha: member route passes params[:id] not params[:standard_framework_id]
 - Quality checks: 158 examples passing, rubocop clean
+
+### Iteration 10 — US-013: Publish pipeline for units
+- UnitPlan#publish! transitions draft → published (requires current_version)
+- UnitPlan#archive! transitions published → archived
+- POST /api/v1/unit_plans/:id/publish and POST /api/v1/unit_plans/:id/archive endpoints
+- Controller rescues ActiveRecord::RecordInvalid for invalid transitions, returns 422
+- Pundit: publish? and archive? check owner (created_by_id) or admin role
+- Non-owner non-admin gets 403 Forbidden on publish/archive
+- Routes added as member routes on unit_plans resource
+- Gotcha: actions that call authorize explicitly must be excluded from set_unit_plan's authorize call to avoid double-authorization
+- Quality checks: 218 examples passing, rubocop clean
