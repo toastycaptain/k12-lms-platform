@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_234153) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_13_235407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,6 +68,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_234153) do
     t.index ["requested_by_id"], name: "index_approvals_on_requested_by_id"
     t.index ["reviewed_by_id"], name: "index_approvals_on_reviewed_by_id"
     t.index ["tenant_id"], name: "index_approvals_on_tenant_id"
+  end
+
+  create_table "assignments", force: :cascade do |t|
+    t.boolean "allow_late_submission", default: true
+    t.string "assignment_type", null: false
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.datetime "due_at"
+    t.text "instructions"
+    t.datetime "lock_at"
+    t.decimal "points_possible"
+    t.bigint "rubric_id"
+    t.string "status", default: "draft", null: false
+    t.text "submission_types", default: [], array: true
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "unlock_at"
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_assignments_on_course_id"
+    t.index ["created_by_id"], name: "index_assignments_on_created_by_id"
+    t.index ["rubric_id"], name: "index_assignments_on_rubric_id"
+    t.index ["tenant_id"], name: "index_assignments_on_tenant_id"
   end
 
   create_table "course_modules", force: :cascade do |t|
@@ -363,6 +387,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_234153) do
   add_foreign_key "approvals", "tenants"
   add_foreign_key "approvals", "users", column: "requested_by_id"
   add_foreign_key "approvals", "users", column: "reviewed_by_id"
+  add_foreign_key "assignments", "courses"
+  add_foreign_key "assignments", "tenants"
+  add_foreign_key "assignments", "users", column: "created_by_id"
   add_foreign_key "course_modules", "courses"
   add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"

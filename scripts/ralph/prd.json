@@ -23,7 +23,7 @@
         "Rubocop passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11: Modules are the top-level organizational unit for course delivery. Use 'CourseModule' as model name since 'Module' is reserved in Ruby. Course already exists from M1."
     },
     {
@@ -43,7 +43,7 @@
         "Rubocop passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11: Assignments are the core delivery artifact. Keep model lean — rubric_id is optional FK, file attachments handled via Active Storage on Submission."
     },
     {
