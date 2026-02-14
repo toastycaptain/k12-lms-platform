@@ -27,6 +27,14 @@ class AssignmentPolicy < ApplicationPolicy
     create?
   end
 
+  def push_to_classroom?
+    user.has_role?(:admin) || user.has_role?(:teacher)
+  end
+
+  def sync_grades?
+    user.has_role?(:admin) || user.has_role?(:teacher)
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all
