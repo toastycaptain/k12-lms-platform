@@ -29,7 +29,14 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Submissions", href: "/teach/submissions" },
     ],
   },
-  { label: "Assess", href: "/assess" },
+  {
+    label: "Assess",
+    href: "/assess",
+    children: [
+      { label: "Question Banks", href: "/assess/banks" },
+      { label: "Quizzes", href: "/assess/quizzes" },
+    ],
+  },
   { label: "Report", href: "/report" },
   { label: "Communicate", href: "/communicate" },
   { label: "Admin", href: "/admin" },

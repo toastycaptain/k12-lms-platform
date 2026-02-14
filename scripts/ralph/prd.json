@@ -239,7 +239,7 @@
         "npm run build succeeds"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, UX: Question Bank management is the teacher's content authoring tool. The type-specific form fields are the most complex part \u2014 each question type needs different input controls."
     },
     {
