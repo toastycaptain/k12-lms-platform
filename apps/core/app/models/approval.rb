@@ -1,0 +1,27 @@
+class Approval < ApplicationRecord
+  include TenantScoped
+
+  VALID_STATUSES = %w[pending approved rejected].freeze
+
+  belongs_to :approvable, polymorphic: true
+  belongs_to :requested_by, class_name: "User"
+  belongs_to :reviewed_by, class_name: "User", optional: true
+
+  validates :status, presence: true, inclusion: { in: VALID_STATUSES }
+  validates :approvable_type, presence: true
+  validates :approvable_id, presence: true
+
+  scope :pending, -> { where(status: "pending") }
+
+  def approve!(reviewer:)
+    raise ActiveRecord::RecordInvalid, self unless status == "pending"
+
+    update!(status: "approved", reviewed_by: reviewer, reviewed_at: Time.current)
+  end
+
+  def reject!(reviewer:, comments:)
+    raise ActiveRecord::RecordInvalid, self unless status == "pending"
+
+    update!(status: "rejected", reviewed_by: reviewer, reviewed_at: Time.current, comments: comments)
+  end
+end

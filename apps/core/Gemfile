@@ -1,0 +1,73 @@
+source "https://rubygems.org"
+
+gem "rails", "~> 8.1.2"
+gem "pg", "~> 1.1"
+gem "puma", ">= 5.0"
+
+# Authentication
+gem "devise"
+gem "omniauth"
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection"
+
+# Authorization
+gem "pundit"
+
+# Background jobs
+gem "sidekiq"
+
+# API serialization
+gem "active_model_serializers"
+
+# PDF generation
+gem "matrix" # Required by prawn on Ruby 4.0+
+gem "prawn"
+gem "prawn-table"
+
+# Google APIs
+gem "google-apis-classroom_v1"
+gem "google-apis-drive_v3"
+
+# HTTP client
+gem "faraday"
+
+# ZIP file processing
+gem "rubyzip", require: "zip"
+gem "csv"
+
+# JWT signing/verification
+gem "jwt"
+
+
+# CORS
+gem "rack-cors"
+
+# Rate limiting
+gem "rack-attack"
+
+# Windows timezone data
+gem "tzinfo-data", platforms: %i[windows jruby]
+
+# Caching / Queue
+gem "solid_cache"
+gem "solid_queue"
+
+gem "bootsnap", require: false
+gem "kamal", require: false
+gem "thruster", require: false
+
+group :development, :test do
+  gem "debug", platforms: %i[mri windows], require: "debug/prelude"
+  gem "bundler-audit", require: false
+  gem "brakeman", require: false
+  gem "rubocop-rails-omakase", require: false
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+end
+
+group :test do
+  gem "shoulda-matchers"
+  gem "database_cleaner-active_record"
+  gem "webmock"
+end

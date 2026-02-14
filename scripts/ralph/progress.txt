@@ -9,6 +9,714 @@
 - See docs/ for full PRD, Tech Spec, and UX Spec
 
 ## Codebase Patterns
-(Ralph will add patterns here as it discovers them)
+- Ruby 4.0.1 via Homebrew at /opt/homebrew/opt/ruby/bin
+- PostgreSQL 16 via Homebrew, service: `brew services start postgresql@16`
+- PATH must include: /opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:/opt/homebrew/opt/postgresql@16/bin
+- All rails/bundle commands must be run from apps/core with above PATH set
+- Rails 8.1.2 API-only, RSpec 8.0.2, rubocop-rails-omakase for linting
+- RSpec configured with FactoryBot, shoulda-matchers, database_cleaner
+- spec/support/ directory auto-loaded via glob in rails_helper.rb
+- CORS configured in config/initializers/cors.rb with CORS_ORIGINS env var
 
 ## Iteration Log
+### Iteration 1 — US-001: Initialize Rails API app
+- Created Rails 8.1.2 API-only app in apps/core
+- Installed gems: pg, devise, omniauth, omniauth-google-oauth2, pundit, sidekiq, active_model_serializers, rack-cors, rubocop-rails-omakase, rspec-rails, factory_bot_rails, faker, shoulda-matchers
+- Configured RSpec, CORS, PostgreSQL databases
+- Trivial test passing, rubocop clean
+
+### Iteration 2 — US-002: Initialize Next.js frontend app
+- Next.js 16.1.6 with TypeScript strict mode, App Router
+- Tailwind CSS v4 via @tailwindcss/postcss plugin
+- ESLint: eslint-config-next (core-web-vitals + typescript) + eslint-config-prettier
+- Prettier: semi, double quotes, trailing commas, 2-space tabs, 100 print width
+- AppShell component with left nav (Plan, Teach, Assess, Report, Communicate, Admin) per UX §3.2
+- All quality checks pass: lint, typecheck, build
+- Path alias: @/* maps to ./src/*
+- Frontend commands run from apps/web directory
+
+### Iteration 3 — US-003: Tenant and School models with multi-tenancy
+- Created Current class (ActiveSupport::CurrentAttributes) with :tenant and :user attributes
+- Created TenantScoped concern in app/models/concerns/tenant_scoped.rb
+- TenantScoped includes: default_scope with Current.tenant, before_validation callback, validations
+- Tenant model: name, slug (unique, lowercase-hyphenated), settings (jsonb defaults to {})
+- School model: includes TenantScoped, belongs_to :tenant, validates name and timezone
+- Migrations: tenant slug has unique index, schools.tenant_id has NOT NULL + index + FK
+- Factories use sequences for name/slug to avoid uniqueness conflicts
+- Specs verify tenant scoping: queries auto-filtered by Current.tenant, auto-assignment on create
+- Pattern: Tenant is NOT tenant-scoped (top-level entity), all other models should include TenantScoped
+- Quality checks: 17 examples passing, rubocop clean, migrations successful
+
+### Iteration 4 — US-004: User model, Roles, and RBAC with Pundit
+- User model: id, tenant_id, email, first_name, last_name (TenantScoped)
+- Role model: id, tenant_id, name (enum: admin, curriculum_lead, teacher, student, guardian)
+- UserRole join model: user_id, role_id, tenant_id with unique constraint on [user_id, role_id]
+- User#has_role?(role_name) checks role membership
+- User#add_role(role_name) idempotently creates/finds role and assigns
+- ApplicationPolicy base class with default deny-all, Scope pattern
+- UserPolicy: admin can CRUD all users, users can view/update self, curriculum_lead can index
+- Pundit RSpec support: added `require "pundit/rspec"` to rails_helper.rb for `permissions` matcher
+- Tenant model updated with `has_many :users` and `has_many :roles`
+- Gotcha: `build(:role)` without explicit tenant results in nil tenant_id — always pass tenant in tests
+- Quality checks: 67 examples passing, rubocop clean, migrations successful
+
+### Iteration 5 — US-005: OmniAuth Google OIDC authentication
+- Added session/cookie middleware back to API-only app in config/application.rb
+- OmniAuth initializer: config/initializers/omniauth.rb with Google OAuth2 strategy
+- Api::V1::SessionsController handles: omniauth_callback, failure, destroy (sign-out), me (current user)
+- ApplicationController: authenticate_user! before_action, sets Current.tenant and Current.user from session
+- Routes: /auth/:provider/callback, /auth/failure, /api/v1/session (DELETE), /api/v1/me (GET)
+- Tenant resolution: matches email domain slug to tenant slug, falls back to first tenant
+- spec/support/authentication_helpers.rb: sign_in_as and mock_session helpers for request specs
+- Gotcha: use `let!(:tenant)` (eager) in request specs where tenant must exist before the callback
+- Quality checks: 74 examples passing, rubocop clean
+
+### Iteration 6 — US-006: API authentication middleware and tenant resolution
+- ApplicationController enhanced: Pundit::Authorization included, authenticate_user! before_action
+- Tenant resolution chain: session → X-Tenant-Slug header → subdomain
+- User resolved from session user_id + current tenant (cross-tenant access blocked)
+- Pundit enforcement: verify_authorized/verify_policy_scoped after_actions with skip_authorization? override
+- SessionsController overrides skip_authorization? to skip Pundit checks on auth endpoints
+- Gotcha: Rails 7.1+ raises AbstractController::ActionNotFound if after_action uses only:/except: referencing actions not on the controller. Use lambda conditions instead: `unless: -> { skip_authorization? || action_name == "index" }`
+- config/environments/test.rb: `config.hosts = nil` to disable host authorization in tests
+- Request specs: unauthenticated → 401, wrong tenant → 401 (user not found in other tenant), header-based tenant resolution
+- Quality checks: 79 examples passing, rubocop clean
+
+### Iteration 7 — US-007: AcademicYear and Term models
+- AcademicYear: name, start_date, end_date, current (boolean), tenant_id — TenantScoped, has_many :terms
+- Term: name, start_date, end_date, academic_year_id, tenant_id — TenantScoped, belongs_to :academic_year
+- Both validate end_date > start_date with custom validator
+- Policies: all authenticated users can read; admin/curriculum_lead can create/update; admin can destroy
+- CRUD controllers: Api::V1::AcademicYearsController, Api::V1::TermsController
+- Terms index supports filtering by academic_year_id param
+- AMS adapter is :attributes (no root key wrapping) — index returns array, show returns flat object
+- Added current_user and pundit_user methods to ApplicationController (required by Pundit)
+- Use :unprocessable_content instead of :unprocessable_entity (Rack deprecation in Rails 8.1)
+- Quality checks: 112 examples passing, rubocop clean
+
+### Iteration 8 — US-008: Course, Section, and Enrollment models
+- Course: name, code, description, academic_year_id, tenant_id — has_many :sections
+- Section: name, course_id, term_id, tenant_id — has_many :enrollments, has_many :users through enrollments
+- Enrollment: user_id, section_id, role (enum: teacher/student), tenant_id — unique on [user_id, section_id]
+- All three include TenantScoped with CRUD API endpoints
+- Enrollment enforces one role per user per section via uniqueness constraint
+- Quality checks: 139 examples passing, rubocop clean
+
+### Iteration 9 — US-009: StandardFramework and Standard models
+- StandardFramework: name, jurisdiction, subject, version, tenant_id — has_many :standards
+- Standard: code, description, grade_band, standard_framework_id, parent_id (self-ref), tenant_id
+- Self-referential tree: parent/children associations via parent_id FK to standards table
+- Standard#tree recursively builds nested hash for API tree endpoint
+- Standard.roots scope returns standards with nil parent_id
+- Tree endpoint: GET /api/v1/standard_frameworks/:id/tree — member route on standard_frameworks resource
+- Gotcha: member route passes params[:id] not params[:standard_framework_id]
+- Quality checks: 158 examples passing, rubocop clean
+
+### Iteration 10 — US-013: Publish pipeline for units
+- UnitPlan#publish! transitions draft → published (requires current_version)
+- UnitPlan#archive! transitions published → archived
+- POST /api/v1/unit_plans/:id/publish and POST /api/v1/unit_plans/:id/archive endpoints
+- Controller rescues ActiveRecord::RecordInvalid for invalid transitions, returns 422
+- Pundit: publish? and archive? check owner (created_by_id) or admin role
+- Non-owner non-admin gets 403 Forbidden on publish/archive
+- Routes added as member routes on unit_plans resource
+- Gotcha: actions that call authorize explicitly must be excluded from set_unit_plan's authorize call to avoid double-authorization
+- Quality checks: 218 examples passing, rubocop clean
+
+### Iteration 11 — US-014: PDF export for unit plans
+- Added prawn + prawn-table + matrix gems (matrix required for Ruby 4.0+ compatibility)
+- Enabled Active Storage: uncommented engine in application.rb, added storage.yml, set service in environments
+- PdfExportJob: generates PDF with unit title, version details, essential questions, enduring understandings, standards, and lessons
+- POST /api/v1/unit_plans/:id/export_pdf enqueues job, returns 202 with job_id
+- GET /api/v1/unit_plans/:id/export_pdf_status returns processing/completed with download_url
+- UnitPlan has_one_attached :exported_pdf for Active Storage
+- Prawn::Fonts::AFM.hide_m17n_warning = true to suppress internationalization warning
+- Default URL options set in environments (host: localhost:3000) for rails_blob_url
+- Job is idempotent — reattaches PDF on re-run
+- Quality checks: 224 examples passing, rubocop clean
+
+### Iteration 12 — US-015: Next.js auth flow — Google sign-in and session
+- Created src/lib/api.ts: API client with fetch wrapper (credentials: "include" for cookies)
+- Created src/lib/auth-context.tsx: React context provider for auth state (user, loading, signOut)
+- Created src/app/login/page.tsx: Sign-in page with Google OAuth button, error state, redirect on success
+- Created src/app/dashboard/page.tsx: Placeholder dashboard with auth guard
+- Updated src/app/layout.tsx: Wrapped children with AuthProvider
+- Login uses Suspense boundary for useSearchParams() (required by Next.js 14+)
+- OAuth flow: frontend redirects to Rails /auth/google_oauth2 → callback sets session → frontend reads /api/v1/me
+- API client reads NEXT_PUBLIC_API_URL env var (defaults to localhost:3000)
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 13 — US-016: Next.js App Shell — left nav and layout
+- Enhanced AppShell component: active nav state (blue highlight), responsive sidebar (overlay on mobile), hamburger menu, sign-out button
+- Uses Next.js Link component and usePathname() for active state detection
+- Mobile: sidebar slides in from left with backdrop overlay, close button
+- Created ProtectedRoute component: redirects unauthenticated users to /login
+- Updated dashboard to use ProtectedRoute wrapper
+- Pattern: Use ProtectedRoute to wrap any page that requires authentication
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 18 — US-021: Seed data script for development and demos
+- db/seeds.rb creates full demo dataset using find_or_create_by! for idempotency
+- 1 tenant (Demo School District), 1 school (Lincoln Elementary)
+- 6 users: 1 admin (Alice), 2 teachers (Bob, Carol), 3 students (David, Emma, Frank)
+- 1 academic year (2025-2026) with 2 terms (Fall/Spring)
+- 2 courses (5th Grade Math, 5th Grade ELA) with sections and enrollments
+- 1 standard framework (Common Core Math) with 10 nested standards (3 root + 7 child)
+- 2 unit plans with versions: "Understanding Fractions" (published) and "Exploring Geometry" (draft)
+- 3 lesson plans with versions and 1 resource link
+- Seed is idempotent: runs multiple times without error or duplicate data
+- Quality checks: 224 examples passing, rubocop clean, seed runs clean
+
+### Iteration 17 — US-020: Next.js Lesson Editor page
+- Lesson Editor at /plan/units/[id]/lessons/[lessonId]
+- Form fields: title, objectives, activities (textarea), materials, duration_minutes
+- Save creates new lesson version
+- Resource links section: list, add (URL input), delete
+- Back navigation to unit planner
+- Forms disabled when lesson status is not "draft"
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 16 — US-019: Next.js Unit Planner page with version editing
+- Unit Planner at /plan/units/[id] with full form editing
+- Form fields: title, description, essential questions (multi-input), enduring understandings (multi-input)
+- Save creates new version (version number displayed in header)
+- Version history sidebar in right context panel (UX §3.2)
+- Standards alignment: search standards by code/description, attach as chips
+- Lesson list section with ordered lessons and links to editor
+- Publish button calls POST /publish endpoint
+- Forms disabled when status is not "draft"
+- Dynamic route via Next.js App Router [id] param
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 15 — US-018: Next.js Unit Library page
+- Unit Library at /plan/units lists all unit plans with filters
+- Filter by: course (dropdown), status (draft/published/archived), search by title (client-side)
+- Each card shows: title, course name, status badge, version count
+- "New Unit Plan" button navigates to /plan/units/new
+- StatusBadge extracted as reusable component (used in both dashboard and library)
+- Version counts fetched per unit via /api/v1/unit_plans/:id/versions
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 14 — US-017: Next.js Teacher Dashboard page
+- Dashboard at /dashboard fetches unit plans and courses via API client
+- Shows recent unit plans as cards with StatusBadge component (draft/published/archived)
+- Shows enrolled courses with name and code
+- Empty states with dashed border and call-to-action links
+- Links to /plan/units for "View all" and individual unit pages
+- Uses ProtectedRoute wrapper for auth guard
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 19 — US-022: Template and TemplateVersion models with CRUD API
+- Template model follows exact same pattern as UnitPlan: TenantScoped, VALID_STATUSES, create_version!, publish!, archive!
+- TemplateVersion model follows UnitVersion pattern: TenantScoped, belongs_to template, version_number uniqueness scoped to template_id
+- Migration creates both tables in one file with FK from templates.current_version_id → template_versions
+- TemplatePolicy: admin/curriculum_lead can CRUD, only admin can destroy, everyone can read (index/show)
+- TemplatesController index filters: admins/curriculum_leads see all templates, teachers see only published
+- Routes: resources :templates with member routes (create_version, versions, publish, archive)
+- Templates don't belong_to :course (unlike UnitPlan) — they are course-independent reusable structures
+- Quality checks: 253 examples passing, rubocop clean
+
+### Iteration 20 — US-023: Template standards alignment
+- TemplateVersionStandard join model follows UnitVersionStandard pattern exactly
+- TemplateVersion updated with has_many :template_version_standards and has_many :standards through
+- TemplateVersionPolicy: show? for everyone, update? for admin/curriculum_lead
+- Controller uses policy_scope(Standard) for index to satisfy verify_policy_scoped after_action
+- Routes: nested standards under template_versions (only: [:index, :create, :destroy])
+- Index FK name truncated to avoid PG identifier length limit: idx_tmpl_ver_std_unique
+- Quality checks: 263 examples passing, rubocop clean
+
+### Iteration 21 — US-024: Create unit plan from template
+- Template#create_unit_from_template!(course:, user:) creates UnitPlan + first UnitVersion from current_version fields
+- Copies essential_questions, enduring_understandings, title, description from TemplateVersion to UnitVersion
+- Does NOT copy suggested_duration_weeks (UnitVersion doesn't have that column — only TemplateVersion does)
+- Copies TemplateVersionStandards → UnitVersionStandards
+- Only published templates can create units (controller validates status before calling model method)
+- TemplatePolicy#create_unit? allows admin, curriculum_lead, and teacher roles
+- Quality checks: 269 examples passing, rubocop clean
+
+### Iteration 22 — US-025: Unit version standards management API
+- Bulk attach: POST /api/v1/unit_versions/:id/standards with { standard_ids: [...] }
+- Bulk detach: DELETE /api/v1/unit_versions/:id/standards/bulk_destroy with { standard_ids: [...] }
+- GET /api/v1/unit_versions/:id/standards returns aligned standards
+- Attach is idempotent via find_or_create_by!
+- Authorization uses unit_plan's update? policy (owner or admin)
+- Collection-level delete route needed because standard `destroy` expects :id param
+- Quality checks: 276 examples passing, rubocop clean
+
+### Iteration 23 — US-026: Standards coverage reporting API
+- GET /api/v1/courses/:id/standards_coverage?standard_framework_id=X
+- GET /api/v1/academic_years/:id/standards_coverage?standard_framework_id=X
+- Returns array of { standard_id, code, description, grade_band, covered, unit_plan_ids }
+- Excludes archived unit plans from coverage calculation
+- Uses current_version of each unit plan for standard lookup
+- Member routes added to existing resources :courses and :academic_years blocks
+- Authorization reuses existing CoursePolicy#show? and AcademicYearPolicy#show?
+- Quality checks: 279 examples passing, rubocop clean
+
+### Iteration 24 — US-027: Approval model and workflow
+- Polymorphic Approval model: approvable_type, approvable_id, status (pending/approved/rejected)
+- belongs_to :requested_by (User), belongs_to :reviewed_by (User, optional)
+- approve!(reviewer:) and reject!(reviewer:, comments:) methods with status guard
+- TenantScoped, reviewed_at timestamp set on review
+- Quality checks: 289 examples passing, rubocop clean
+
+### Iteration 25 — US-028: Approval API endpoints and publish integration
+- UnitPlan.VALID_STATUSES now includes "pending_approval"
+- submit_for_approval! creates Approval and transitions to pending_approval
+- Publish checks tenant.settings["approval_required"] — if true and status==draft, returns 422
+- When approval_required is false, publish works exactly as M1 (no behavior change)
+- ApprovalsController: index (with status filter), approve (auto-publishes), reject (reverts to draft, requires comments)
+- ApprovalPolicy: admin/curriculum_lead can approve/reject, index uses policy_scope
+- Gotcha: users created in different tenants — specs must use per-tenant users
+- Quality checks: 300 examples passing, rubocop clean
+
+### Iteration 26 — US-029: Next.js Template Library page
+- Template Library page at /plan/templates with filter by subject, grade level, and search
+- AppShell updated with sub-navigation: Plan section now has Units and Templates children
+- Sub-nav items only show when parent is active (uses pathname.startsWith)
+- Plan link now goes to first child (/plan/units) instead of /plan
+- CurrentUser type updated to include roles array from /api/v1/me endpoint
+- fetchCurrentUser now parses nested { user, tenant } response from me endpoint
+- "Use Template" button for published templates, "Create Template" for admin/curriculum_lead
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 27 — US-030: Next.js Template Editor page
+- Template Editor at /plan/templates/[id] with full form fields
+- Multi-input for essential questions and enduring understandings (add/remove)
+- Standards alignment section with search and attach/detach
+- Version history, publish/archive buttons for admin/curriculum_lead
+- New template creation at /plan/templates/new
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 28 — US-031: Create unit from template flow
+- Use Template page at /plan/templates/[id]/use
+- Course selection dropdown, calls POST /api/v1/templates/:id/create_unit
+- Success notification, redirects to unit planner for new unit
+- Error handling for unpublished templates
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 29 — US-032: Next.js Standards Browser page
+- Standards Browser at /plan/standards with framework selection
+- Expandable tree using recursive StandardNode component
+- Search/filter by code or description
+- Shows which units reference each standard
+- Added Standards to AppShell sub-navigation under Plan
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 30 — US-033: Unit Planner standards alignment enhancement
+- Unit Planner loads aligned standards from GET /api/v1/unit_versions/:id/standards on page load
+- Adding standard calls POST /api/v1/unit_versions/:id/standards (server-side persistence)
+- Removing standard calls DELETE /api/v1/unit_versions/:id/standards/bulk_destroy
+- Standards now persist across page refreshes (no longer client-side only)
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 31 — US-034: Next.js Publish Preview page
+- Publish Preview at /plan/units/[id]/preview
+- Read-only view: title, description, essential questions, enduring understandings
+- Aligned standards with codes and descriptions
+- Lesson list with ordered positions
+- Publish and Submit for Approval buttons (depending on unit status)
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 32 — US-035: Next.js Curriculum Map
+- Curriculum Map at /admin/curriculum-map
+- Academic year and standard framework selectors
+- Coverage matrix: rows=standards, columns=courses
+- Cells show Covered (green) or Gap (red)
+- Click cell to see detail: standard info, course name, unit plan IDs
+- Summary stats: total, covered, gaps, coverage percentage
+- Role-restricted to admin and curriculum_lead
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 33 — US-036: Next.js Approval Queue page
+- Approval Queue at /admin/approvals
+- Lists approvals with StatusBadge (pending/approved/rejected)
+- Filter by status: pending, approved, rejected, all
+- Approve button calls POST /api/v1/approvals/:id/approve
+- Reject button opens comments textarea, calls POST /api/v1/approvals/:id/reject with required comments
+- Link to unit preview for UnitPlan approvals
+- Role-restricted to admin and curriculum_lead
+- Quality checks: lint, typecheck, build all pass
+
+## M2 COMPLETE — All 15 stories (US-022 through US-036) passing
+
+### Iteration 34 — US-037: CourseModule and ModuleItem models with CRUD API
+- (Completed in prior session, committed before M3 iterations began)
+
+### Iteration 35 — US-038: Assignment model with CRUD API
+- Assignment model with VALID_STATUSES (draft/published/closed/archived) and VALID_TYPES (written/file_upload/url/discussion)
+- Gotcha: rubric_id FK fails if rubrics table doesn't exist yet — use `t.bigint :rubric_id` without FK constraint, add FK in later migration
+- Gotcha: has_many :submissions on Assignment fails if Submission model doesn't exist — add association when Submission model is created
+- publish!/close!/archive! state transition methods
+- Quality checks: 323 examples passing, rubocop clean
+
+### Iteration 36 — US-039: Submission model with submit/list API
+- Submission model with unique constraint on [assignment_id, user_id]
+- has_one_attached :attachment via Active Storage
+- submit! validates assignment is published and not locked
+- Student creates submission, teacher can view all for an assignment
+- Quality checks: 330 examples passing, rubocop clean
+
+### Iteration 37 — US-040: Submission grading and feedback API
+- SubmissionGradingController: grade (0 to max points), return (graded→returned)
+- GradebookController: GET /courses/:id/gradebook returns [{user_id, assignment_id, grade, status}]
+- Gotcha: member route passes params[:id] not params[:course_id] for gradebook
+- Quality checks: 338 examples passing, rubocop clean
+
+### Iteration 38 — US-041: Rubric, RubricCriterion, RubricRating models
+- Three-level hierarchy: Rubric → RubricCriterion → RubricRating
+- Gotcha: Rails inflects "criterion" → "criterions" instead of "criteria" — add inflection rule `inflect.irregular "criterion", "criteria"` in config/initializers/inflections.rb
+- Gotcha: Migration FK to rubric_criteria table needs explicit `foreign_key: { to_table: :rubric_criteria }`
+- Gotcha: AMS nested serialization needs explicit `include: ["rubric_criteria", "rubric_criteria.rubric_ratings"]` in show action for deep nesting
+- Migration also adds FK from assignments.rubric_id → rubrics
+- Quality checks: 353 examples passing, rubocop clean
+
+### Iteration 39 — US-042: RubricScore API
+- Bulk create/update via find_or_initialize_by on [submission_id, rubric_criterion_id]
+- Auto-calculates total grade from sum of points_awarded
+- Quality checks: 360 examples passing, rubocop clean
+
+### Iteration 40 — US-043: Discussion and DiscussionPost models
+- Discussion: open/locked/archived statuses, belongs_to course and created_by
+- DiscussionPost: self-referential threading via parent_post_id
+- Validates discussion must be "open" before posting
+- Quality checks: 369 examples passing, rubocop clean
+
+### Iteration 41 — US-044: Announcement model with CRUD API
+- Announcement: published and pinned_first scopes
+- Policy scope: teachers see all, students see only published
+- Quality checks: 369 examples passing (shared spec count), rubocop clean
+
+### Iteration 42 — US-045: Next.js Course List and Course Home pages
+- Course List at /teach/courses with enrollment details and role badge
+- Course Home at /teach/courses/[courseId] with modules, announcements (latest 3), upcoming assignments (next 5)
+- AppShell updated with Teach section children: Courses, Submissions
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 43 — US-046: Next.js Module Editor page
+- New module form at /teach/courses/[courseId]/modules/new
+- Edit module at /teach/courses/[courseId]/modules/[moduleId] with items list, add/remove/reorder, publish/archive
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 44 — US-047: Next.js Assignment Editor page
+- New assignment form at /teach/courses/[courseId]/assignments/new
+- Edit assignment at /teach/courses/[courseId]/assignments/[assignmentId] with rubric search/attach/detach, publish/close
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 45 — US-048: Next.js Student Submission page
+- Submit page at /teach/courses/[courseId]/assignments/[assignmentId]/submit
+- Assignment details, rubric preview, text/URL submission, grade/feedback display
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 46 — US-049: Next.js Submissions Inbox page
+- Table at /teach/submissions with filters by course/assignment/status and search by student
+- Summary stats: pending, graded, needs review
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 47 — US-050: Next.js Grading View with rubric scoring
+- Two-panel grading at /teach/submissions/[submissionId]/grade
+- Rubric mode: click rating buttons, auto-total; Manual mode: number input
+- Feedback textarea, save grade, return to student
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 48 — US-051: Next.js Discussion Board page
+- Discussion List at /teach/courses/[courseId]/discussions with create form, pinned sorting, teacher vs student visibility
+- Discussion Thread at /teach/courses/[courseId]/discussions/[discussionId] with recursive threaded posts (up to 3 levels indent)
+- Inline reply forms, top-level post form, teacher lock/archive controls
+- Locked discussions show read-only indicator
+- Quality checks: lint, typecheck, build all pass
+
+## M3 COMPLETE — All 15 stories (US-037 through US-051) passing
+
+### Iteration 49 — US-052 through US-061: M4 Backend + Question Bank Editor
+- All backend models complete: QuestionBank, Question, Quiz, QuizItem, QuizAttempt, AttemptAnswer, QuizAccommodation
+- Manual grading API, QTI import/export jobs, Question Bank List/Editor pages
+- (Completed in prior session)
+
+### Iteration 50 — US-062: Next.js Quiz Builder page
+- Two-column layout: Settings panel + Questions panel
+- Add questions from bank with checkbox multi-select, reorder with up/down, inline points editing
+- Publish/Close buttons, New Quiz page with Suspense for useSearchParams
+- Quizzes section added to Course Home page
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 51 — US-063: Next.js Student Quiz Attempt page
+- Quiz Start page at /assess/quizzes/[quizId]/take with attempt limit checking
+- Attempt page with countdown timer (MM:SS), auto-submit on expiry
+- Type-specific answer inputs for all 6 question types
+- Debounced auto-save (2s), question sidebar with answered/unanswered indicators
+- Results page with conditional display based on show_results setting
+- Gotcha: matching question choices use Record<string, string> not {text, key} interface
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 52 — US-064: Next.js Quiz Grading and Results pages
+- Quiz Results at /assess/quizzes/[quizId]/results with summary stats and attempts table
+- Attempt Grading at /assess/attempts/[attemptId]/grade with per-question scoring
+- Previous/Next navigation for batch grading
+- Filter by status and sort by student/score
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 53 — US-065: Next.js Quiz Accommodations management UI
+- Collapsible accommodations panel added to Quiz Builder page
+- List, add, edit, remove accommodations with user ID, extra time, extra attempts, notes
+- Student count badge visible on collapsed header
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 54 — US-066: Next.js QTI Import/Export UI
+- Export QTI button on Bank Editor with polling for async completion
+- Import QTI file upload on Bank Editor with FormData multipart upload
+- Export/Import buttons also added to Bank List page per-card
+- Quality checks: lint, typecheck, build all pass
+
+## M4 COMPLETE — All 15 stories (US-052 through US-066) passing
+
+### Iteration 55 — US-067: IntegrationConfig model with CRUD API
+- IntegrationConfig: provider, status, settings (JSONB), created_by
+- Unique constraint on [tenant_id, provider]
+- activate!/deactivate! status transitions
+- Admin-only policy with scope
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 56 — US-068: Google OAuth token storage and refresh service
+- Rails encrypted attributes for google_access_token and google_refresh_token
+- OmniAuth callback updated to store tokens; only updates refresh_token if new one provided
+- GoogleTokenService: valid_token?, refresh!, access_token, credentials methods
+- google_connected? on User, google_connected boolean in /me response
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 57 — US-069: SyncMapping model with CRUD API
+- Bidirectional ID map: local_type/local_id ↔ external_type/external_id
+- Two unique indexes for one-to-one mapping in both directions
+- find_local/find_external class methods, for_local/for_external scopes
+- Read/delete-only API (sync jobs create/update mappings)
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 58 — US-070: SyncRun and SyncLog models
+- SyncRun lifecycle: start!/complete!/fail! with timestamps
+- SyncLog convenience methods: log_info/log_warn/log_error
+- Nested index: GET /sync_runs/:id/sync_logs
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 59 — US-071: Google Classroom and Drive API service layer
+- google-apis-classroom_v1 and google-apis-drive_v3 gems
+- GoogleClassroomService: list_courses, get_course, list_students, create_coursework, update_coursework, list_student_submissions, update_student_submission_grade
+- GoogleDriveService: create_document, create_presentation, get_file
+- GoogleApiError custom error class with status_code
+- Gotcha: Google API uses list_course_students not list_students, patch_course_course_work not patch_course_work
+- Gotcha: Test doubles need both authorization= setter and authorization getter stubbed
+- Quality checks: 494 examples passing, rubocop clean
+
+### Iteration 60 — US-077: Admin Integrations configuration page (Next.js)
+- Updated api.ts CurrentUser with google_connected: boolean
+- AppShell Admin nav updated with children: Curriculum Map, Approvals, Integrations
+- Setup form for new integration, management view for existing
+- Activate/Deactivate toggle, manual sync trigger
+- Quality checks: lint, build pass
+
+### Iteration 61 — US-078: Sync Dashboard page (Next.js)
+- Sync run history table with expandable log rows
+- Summary stats, filter by sync_type/status/level
+- Sync Mappings tab with delete capability
+- Quality checks: lint, build pass
+
+### Iteration 62 — US-079: Teacher Classroom Sync UI (Next.js)
+- Course home: Google Classroom section with course linking, roster sync, assignment sync
+- Only shown when integration active and user has google_connected
+- Quality checks: lint, build pass
+
+### Iteration 63 — US-080: Google Drive Picker and document creation (Next.js)
+- GoogleDrivePicker component loads Google Picker API dynamically
+- Assignment Editor: Push/Update to Classroom, Sync Grades, Drive creation buttons
+- Lesson Editor: Drive creation buttons and picker integration
+- Quality checks: lint, build pass
+
+### Iteration 64 — US-072: ClassroomCourseSyncJob
+- Pulls courses from Google Classroom, creates local Course + SyncMapping
+- Updates existing course names when changed
+- sync_courses controller action on IntegrationConfigsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 65 — US-073: ClassroomRosterSyncJob
+- Pulls students, creates User/Enrollment/SyncMapping with domain filtering
+- sync_roster action on SyncMappingsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 66 — US-074: ClassroomCourseworkPushJob
+- Idempotent create/update of Classroom coursework from published assignments
+- push_to_classroom action on AssignmentsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 67 — US-075: ClassroomGradePassbackJob
+- Pushes grades for graded/returned submissions to Classroom
+- sync_grades action on AssignmentsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 68 — US-076: Google Drive API endpoints
+- DriveController: create_document, create_presentation, show_file, picker_token
+- Auto-creates ResourceLink when linkable params provided
+- Requires google_connected via before_action
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 69 — US-081: Workspace Add-on API
+- AddonController: unit_plans, lessons, attach, me for sidebar integration
+- rack-attack rate limiting: 60 req/min for /api/v1/addon
+- AddonPolicy requires teacher/admin role
+- Quality checks: 535 examples passing, rubocop clean
+
+## M5 COMPLETE — All 15 stories (US-067 through US-081) passing
+
+### Iteration 70 — US-082-085: FastAPI ai-gateway service
+- Initialized FastAPI ai-gateway with health endpoint, CORS, request logging, error handling middleware
+- Provider adapter layer: BaseProvider ABC, OpenAIProvider, AnthropicProvider with httpx async clients
+- ProviderRegistry for dynamic provider registration
+- SafetyFilter with regex injection detection
+- System prompts per task type
+- POST /v1/generate and POST /v1/generate_stream (SSE) endpoints
+- 24 pytest tests passing
+- Quality checks: all pass
+
+### Iteration 71 — US-086-089: Rails AI models
+- AiProviderConfig: encrypts :api_key, activate!/deactivate!, admin-only CRUD
+- AiTaskPolicy: allowed_for?(user) with JSONB role filtering, effective_model
+- AiTemplate: render(vars) with {{variable}} mustache substitution, activate!/archive!
+- AiInvocation: start!/complete!/fail! lifecycle with duration_ms tracking
+- Routes for all AI resources
+- 93 new specs (628 total), rubocop clean
+
+### Iteration 72 — US-090: AiGatewayClient service
+- Faraday-based HTTP client for FastAPI gateway
+- Methods: generate, generate_stream (SSE parsing), health, providers
+- AiGatewayError custom error class
+- Admin-only health proxy endpoint
+- 15 specs passing
+
+### Iteration 73 — US-091: AI generation endpoints and unit generation job
+- AiGenerationsController with 5 task-type endpoints + result polling
+- Each endpoint: Pundit check + AiTaskPolicy.allowed_for? + AiInvocation creation + job enqueue
+- AiUnitGenerationJob: template rendering, gateway invocation, JSON result caching
+- Gotcha: test env uses :null_store cache — use MemoryStore in specs
+- 21 specs for endpoint + 8 for job
+
+### Iteration 74 — US-092: AI lesson generation job
+- AiLessonGenerationJob with UnitPlan context injection (title, essential questions, existing lessons)
+- 4 specs passing
+
+### Iteration 75 — US-093: AI differentiation, assessment, and rewrite jobs
+- AiDifferentiationJob, AiAssessmentGenerationJob, AiRewriteJob
+- All follow same pattern: template support, gateway invocation, result caching
+- 12 specs (4 per job)
+- Full suite: 676 examples, 0 failures, rubocop clean (408 files, 0 offenses)
+
+### Iteration 76 — US-094: Admin AI management pages (Next.js)
+- AI Registry: provider CRUD with activate/deactivate, inline edit
+- AI Policies: task-type access control, role multi-checkbox, enable/disable toggle
+- AI Usage: invocations dashboard with summary stats and filters
+- AppShell updated with AI nav items under Admin
+
+### Iteration 77 — US-095: AI Assistant Panel component (Next.js)
+- AiAssistantPanel: slide-out panel from right side
+- 5 tabs: Unit, Lesson, Differentiate, Assessment, Rewrite
+- Async generation with polling (2s intervals, 60 max attempts)
+- Result preview in JSON format, Apply to Editor callback
+- Configurable default tab and context pass-through
+
+### Iteration 78 — US-096: AI integration in planners and quiz builder (Next.js)
+- Unit Planner: AI Assist button, auto-fills title/description/questions/understandings
+- Lesson Editor: AI Assist with unit context (unitPlanId), auto-fills all fields
+- Quiz Builder: AI Assist for assessment generation
+
+## M6 COMPLETE — All 15 stories (US-082 through US-096) passing
+
+### Iteration 79 — US-097: OneRoster 1.1 REST client service
+- Faraday-based HTTP client with OAuth 2.0 client_credentials auth
+- Token caching with expiry, auto-refresh on 401
+- Pagination via Link headers, filter param support
+- All 5 OneRoster endpoints: orgs, users, classes, enrollments, academicSessions
+- OneRosterError custom error class with status_code and response_body
+- Gotcha: test env uses :null_store cache — stub Rails.cache with MemoryStore in specs
+
+### Iteration 80 — US-098: OneRoster configuration and provider registration
+- Extended IntegrationConfig VALID_PROVIDERS with 'oneroster'
+- test_connection endpoint verifies OneRoster connectivity
+- Added all OneRoster sync trigger routes as member routes on integration_configs
+- has_one_attached :import_file for CSV import
+
+### Iteration 81 — US-099: OneRoster org and academic session sync job
+- Extended SyncMapping VALID_LOCAL_TYPES: School, AcademicYear, Term, User
+- Extended SyncMapping VALID_EXTERNAL_TYPES: oneroster_org, oneroster_academic_session, oneroster_class, oneroster_user, oneroster_enrollment
+- Extended SyncRun VALID_SYNC_TYPES: oneroster_org_sync, oneroster_user_sync, oneroster_class_sync, oneroster_enrollment_sync, oneroster_csv_import
+- Maps org type='school' to School, schoolYear to AcademicYear, term/semester/gradingPeriod to Term
+
+### Iteration 82 — US-100: OneRoster user and enrollment sync jobs
+- Three sync jobs: user, class, enrollment
+- Role mapping: teacher→teacher, student→student, administrator→admin
+- Class sync creates Course records; enrollment sync creates Section+Enrollment
+- Resolves cross-entity references via SyncMapping lookups
+
+### Iteration 83 — US-101: OneRoster CSV bulk import job
+- Added rubyzip and csv gems
+- Processes ZIP in dependency order: orgs → academicSessions → users → classes → enrollments
+- Validates OneRoster CSV headers, skips tobedeleted rows
+- Reuses same mapping logic as REST sync jobs
+
+### Iteration 84 — US-102: LTI 1.3 tool registration model
+- Added jwt gem for JWT signing/verification
+- LtiRegistration: TenantScoped, VALID_STATUSES, activate!/deactivate!
+- LtiResourceLink: belongs_to :lti_registration, optional :course
+- Admin-only CRUD for registrations, teacher read access for resource links
+
+### Iteration 85 — US-103: LTI 1.3 launch and deep linking
+- LtiService: build_login_request, validate_id_token, build_launch_message, build_deep_link_response
+- Platform JWKS endpoint (public, no auth required)
+- OIDC login initiation, JWT-signed launch messages
+- Deep linking creates LtiResourceLink records from content_items
+
+### Iteration 86 — US-104: LTI Assignment and Grade Services (AGS)
+- LtiAgsService: token validation, line item mapping, score posting
+- AGS endpoints: lineitems CRUD, results, scores
+- Score posting auto-creates Submission if none exists
+- Bearer token validation for tool access
+
+### Iteration 87 — US-105: AuditLog model with event logging
+- Polymorphic audit_logs table with JSONB changes and metadata
+- AuditLogger service: extracts ip_address, user_agent from request
+- Auditable concern for auto-logging create/update/destroy (not yet included in controllers)
+- Admin API with filters (user_id, auditable_type, action, date range) and summary endpoint
+
+### Iteration 88 — US-106: Data retention policy model and enforcement job
+- DataRetentionPolicy: VALID_ENTITY_TYPES (audit_log, sync_log, ai_invocation), VALID_ACTIONS (archive/anonymize/delete)
+- Minimum 30-day retention validation
+- Enforcement job with batch processing (find_each)
+- Added archived_at column to audit_logs and sync_logs
+
+### Iteration 89 — US-107: Tenant data export job
+- Exports 10 model types to ZIP with per-model JSON files
+- metadata.json with tenant info, timestamp, record counts
+- Sanitizes sensitive fields (api keys, tokens)
+- Active Storage attachment on Tenant model
+
+### Iteration 90 — US-108: Row-Level Security for PostgreSQL
+- RLS policies on all 48 tenant-scoped tables
+- RlsTenant concern: SET LOCAL app.current_tenant_id
+- Conditionally enabled via ENABLE_RLS env var (disabled in dev/test)
+- All existing specs continue to pass with RLS disabled
+
+### Iteration 91 — US-109: Admin OneRoster page (Next.js)
+- Configuration form with test connection
+- Sync triggers for orgs, users, classes, enrollments
+- CSV import with file upload
+- Sync history table with expandable logs
+
+### Iteration 92 — US-110: Admin LTI tool management page (Next.js)
+- Tool list with status badges, add/edit/delete
+- Platform info section for tool registration
+- Resource links management per tool
+- Launch test button
+
+### Iteration 93 — US-111: Admin Governance Dashboard (Next.js)
+- Three-tab layout: Audit Log, Data Retention, Data Export
+- Audit log with filters, pagination, expandable changes
+- Retention policy CRUD with manual enforcement trigger
+- Data export with status polling and download link
+
+## M7 COMPLETE — All 15 stories (US-097 through US-111) passing
