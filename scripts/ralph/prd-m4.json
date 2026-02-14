@@ -262,7 +262,7 @@
         "npm run build succeeds"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, PRD-19: Quiz Builder is the teacher's primary quiz authoring tool. Two-panel layout (settings + questions) mirrors common quiz builder UX."
     },
     {
@@ -283,7 +283,7 @@
         "npm run build succeeds"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "UX 3.5: Student Quiz Attempt is the most complex student-facing page. Timer, auto-save, question navigation, and results display. Keep auto-submit on timer expiry simple."
     },
     {
@@ -306,7 +306,7 @@
         "npm run build succeeds"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-19: The analyze step. Teacher reviews results at quiz level (analytics) and attempt level (per-student grading). Batch navigation mirrors M3 Grading View."
     },
     {
@@ -325,7 +325,7 @@
         "npm run build succeeds"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12: Accommodations management integrated into quiz builder. Teachers set extra time/attempts per student without navigating away from quiz setup."
     },
     {
@@ -342,7 +342,7 @@
         "npm run build succeeds"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12: QTI import/export interoperability feature. Polling pattern for async export follows PDF export UX. Keep UI minimal — file picker for import, download link for export."
     }
   ]

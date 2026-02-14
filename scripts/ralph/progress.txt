@@ -427,3 +427,45 @@
 - Quality checks: lint, typecheck, build all pass
 
 ## M3 COMPLETE — All 15 stories (US-037 through US-051) passing
+
+### Iteration 49 — US-052 through US-061: M4 Backend + Question Bank Editor
+- All backend models complete: QuestionBank, Question, Quiz, QuizItem, QuizAttempt, AttemptAnswer, QuizAccommodation
+- Manual grading API, QTI import/export jobs, Question Bank List/Editor pages
+- (Completed in prior session)
+
+### Iteration 50 — US-062: Next.js Quiz Builder page
+- Two-column layout: Settings panel + Questions panel
+- Add questions from bank with checkbox multi-select, reorder with up/down, inline points editing
+- Publish/Close buttons, New Quiz page with Suspense for useSearchParams
+- Quizzes section added to Course Home page
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 51 — US-063: Next.js Student Quiz Attempt page
+- Quiz Start page at /assess/quizzes/[quizId]/take with attempt limit checking
+- Attempt page with countdown timer (MM:SS), auto-submit on expiry
+- Type-specific answer inputs for all 6 question types
+- Debounced auto-save (2s), question sidebar with answered/unanswered indicators
+- Results page with conditional display based on show_results setting
+- Gotcha: matching question choices use Record<string, string> not {text, key} interface
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 52 — US-064: Next.js Quiz Grading and Results pages
+- Quiz Results at /assess/quizzes/[quizId]/results with summary stats and attempts table
+- Attempt Grading at /assess/attempts/[attemptId]/grade with per-question scoring
+- Previous/Next navigation for batch grading
+- Filter by status and sort by student/score
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 53 — US-065: Next.js Quiz Accommodations management UI
+- Collapsible accommodations panel added to Quiz Builder page
+- List, add, edit, remove accommodations with user ID, extra time, extra attempts, notes
+- Student count badge visible on collapsed header
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 54 — US-066: Next.js QTI Import/Export UI
+- Export QTI button on Bank Editor with polling for async completion
+- Import QTI file upload on Bank Editor with FormData multipart upload
+- Export/Import buttons also added to Bank List page per-card
+- Quality checks: lint, typecheck, build all pass
+
+## M4 COMPLETE — All 15 stories (US-052 through US-066) passing
