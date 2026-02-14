@@ -18,7 +18,10 @@ Rails.application.routes.draw do
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :assignments, only: [ :index, :create ]
         resources :discussions, only: [ :index, :create ]
+        resources :announcements, only: [ :index, :create ]
       end
+
+      resources :announcements, only: [ :update, :destroy ]
 
       resources :discussions, only: [ :show, :update, :destroy ] do
         resources :posts, controller: "discussion_posts", only: [ :index, :create ]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_000550) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_000729) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000550) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "announcements", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "message", null: false
+    t.boolean "pinned", default: false
+    t.datetime "published_at"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_announcements_on_course_id"
+    t.index ["created_by_id"], name: "index_announcements_on_created_by_id"
+    t.index ["tenant_id"], name: "index_announcements_on_tenant_id"
   end
 
   create_table "approvals", force: :cascade do |t|
@@ -490,6 +505,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000550) do
   add_foreign_key "academic_years", "tenants"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "announcements", "courses"
+  add_foreign_key "announcements", "tenants"
+  add_foreign_key "announcements", "users", column: "created_by_id"
   add_foreign_key "approvals", "tenants"
   add_foreign_key "approvals", "users", column: "requested_by_id"
   add_foreign_key "approvals", "users", column: "reviewed_by_id"

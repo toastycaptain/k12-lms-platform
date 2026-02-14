@@ -172,7 +172,7 @@
         "Rubocop passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Announcements are a natural companion to course delivery. Simple model — no comments or reactions in M3."
     },
     {
