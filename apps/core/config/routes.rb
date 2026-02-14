@@ -120,6 +120,7 @@ Rails.application.routes.draw do
       resources :quiz_items, only: [ :update, :destroy ]
       resources :quiz_attempts, only: [ :show ] do
         post :submit, on: :member
+        resources :answers, controller: "attempt_answers", only: [ :index, :create ]
       end
 
       resources :question_banks do

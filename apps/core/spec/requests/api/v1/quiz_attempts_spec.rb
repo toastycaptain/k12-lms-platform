@@ -108,7 +108,7 @@ RSpec.describe "Api::V1::QuizAttempts" do
 
       post "/api/v1/quiz_attempts/#{attempt.id}/submit"
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["status"]).to eq("submitted")
+      expect(response.parsed_body["status"]).to be_in(%w[submitted graded])
       expect(response.parsed_body["submitted_at"]).to be_present
       expect(response.parsed_body["time_spent_seconds"]).to be > 0
     end

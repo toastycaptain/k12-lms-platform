@@ -5,6 +5,7 @@ class QuizAttempt < ApplicationRecord
 
   belongs_to :quiz
   belongs_to :user
+  has_many :attempt_answers, dependent: :destroy
 
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
   validates :attempt_number, numericality: { greater_than: 0 }
@@ -20,9 +21,26 @@ class QuizAttempt < ApplicationRecord
       submitted_at: Time.current,
       time_spent_seconds: (Time.current - started_at).to_i
     )
+    grade_auto_gradable_answers!
+  end
+
+  def calculate_score!
+    awarded = attempt_answers.where.not(points_awarded: nil).sum(:points_awarded)
+    total = quiz.points_possible.to_d
+    pct = total > 0 ? (awarded / total * 100).round(2) : 0
+    attrs = { score: awarded, percentage: pct }
+    attrs[:status] = "graded" if attempt_answers.where(points_awarded: nil).none?
+    update!(attrs)
   end
 
   private
+
+  def grade_auto_gradable_answers!
+    attempt_answers.includes(:question).find_each do |aa|
+      aa.auto_grade!
+    end
+    calculate_score!
+  end
 
   def within_attempt_limit
     return unless quiz

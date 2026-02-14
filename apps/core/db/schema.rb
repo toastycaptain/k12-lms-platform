@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_005000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_005200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -107,6 +107,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005000) do
     t.index ["created_by_id"], name: "index_assignments_on_created_by_id"
     t.index ["rubric_id"], name: "index_assignments_on_rubric_id"
     t.index ["tenant_id"], name: "index_assignments_on_tenant_id"
+  end
+
+  create_table "attempt_answers", force: :cascade do |t|
+    t.jsonb "answer", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.text "feedback"
+    t.datetime "graded_at"
+    t.bigint "graded_by_id"
+    t.boolean "is_correct"
+    t.decimal "points_awarded"
+    t.bigint "question_id", null: false
+    t.bigint "quiz_attempt_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["graded_by_id"], name: "index_attempt_answers_on_graded_by_id"
+    t.index ["question_id"], name: "index_attempt_answers_on_question_id"
+    t.index ["quiz_attempt_id", "question_id"], name: "idx_attempt_answers_unique", unique: true
+    t.index ["quiz_attempt_id"], name: "index_attempt_answers_on_quiz_attempt_id"
+    t.index ["tenant_id"], name: "index_attempt_answers_on_tenant_id"
   end
 
   create_table "course_modules", force: :cascade do |t|
@@ -606,6 +625,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005000) do
   add_foreign_key "assignments", "rubrics"
   add_foreign_key "assignments", "tenants"
   add_foreign_key "assignments", "users", column: "created_by_id"
+  add_foreign_key "attempt_answers", "questions"
+  add_foreign_key "attempt_answers", "quiz_attempts"
+  add_foreign_key "attempt_answers", "tenants"
+  add_foreign_key "attempt_answers", "users", column: "graded_by_id"
   add_foreign_key "course_modules", "courses"
   add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"

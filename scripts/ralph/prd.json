@@ -155,7 +155,7 @@
         "Request specs: save answers during attempt, save to completed attempt (422), auto-grade on submit for MC/TF/short_answer, essay left ungraded, score and percentage calculated, all-auto transitions to graded, teacher sees all answers, Rubocop passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, PRD-19: AttemptAnswer + auto-grading is the core engine. Submit flow: save answers \u2192 submit attempt \u2192 auto_grade! each auto-gradable answer \u2192 calculate score \u2192 if all auto, mark graded. Essay requires manual grading (US-058)."
     },
     {
