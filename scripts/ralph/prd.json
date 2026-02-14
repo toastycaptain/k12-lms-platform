@@ -81,7 +81,7 @@
         "Request specs: list, create (teacher 201, student 403), show, update, delete, publish, close, invalid status transitions (422), filter by status, Rubocop passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, PRD-19: Quiz is the assessment container assigned to a course. quiz_type distinguishes graded vs practice vs survey. show_results controls when students see answers. Same lifecycle pattern as Assignment (draft→published→closed→archived)."
     },
     {

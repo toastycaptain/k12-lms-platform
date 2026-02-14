@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_004256) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_004443) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -257,6 +257,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004256) do
     t.index ["created_by_id"], name: "index_questions_on_created_by_id"
     t.index ["question_bank_id"], name: "index_questions_on_question_bank_id"
     t.index ["tenant_id"], name: "index_questions_on_tenant_id"
+  end
+
+  create_table "quizzes", force: :cascade do |t|
+    t.integer "attempts_allowed", default: 1, null: false
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.datetime "due_at"
+    t.text "instructions"
+    t.datetime "lock_at"
+    t.decimal "points_possible"
+    t.string "quiz_type", default: "standard", null: false
+    t.string "show_results", default: "after_submit", null: false
+    t.boolean "shuffle_choices", default: false, null: false
+    t.boolean "shuffle_questions", default: false, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.integer "time_limit_minutes"
+    t.string "title", null: false
+    t.datetime "unlock_at"
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_quizzes_on_course_id"
+    t.index ["created_by_id"], name: "index_quizzes_on_created_by_id"
+    t.index ["tenant_id"], name: "index_quizzes_on_tenant_id"
   end
 
   create_table "resource_links", force: :cascade do |t|
@@ -575,6 +600,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004256) do
   add_foreign_key "questions", "question_banks"
   add_foreign_key "questions", "tenants"
   add_foreign_key "questions", "users", column: "created_by_id"
+  add_foreign_key "quizzes", "courses"
+  add_foreign_key "quizzes", "tenants"
+  add_foreign_key "quizzes", "users", column: "created_by_id"
   add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "rubric_criteria", "rubrics"

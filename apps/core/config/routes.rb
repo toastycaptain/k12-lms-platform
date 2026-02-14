@@ -19,6 +19,7 @@ Rails.application.routes.draw do
         resources :assignments, only: [ :index, :create ]
         resources :discussions, only: [ :index, :create ]
         resources :announcements, only: [ :index, :create ]
+        resources :quizzes, only: [ :index, :create ]
       end
 
       resources :announcements, only: [ :update, :destroy ]
@@ -104,6 +105,13 @@ Rails.application.routes.draw do
         member do
           post :approve
           post :reject
+        end
+      end
+
+      resources :quizzes, only: [ :show, :update, :destroy ] do
+        member do
+          post :publish
+          post :close
         end
       end
 
