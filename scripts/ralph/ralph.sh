@@ -1,113 +1,137 @@
 #!/bin/bash
-# Ralph Wiggum - Long-running AI agent loop
-# Usage: ./ralph.sh [--tool amp|claude] [max_iterations]
+set -euo pipefail
 
-set -e
-
-# Parse arguments
-TOOL="amp"  # Default to amp for backwards compatibility
+# ── Configuration ──
+TOOL="amp"
 MAX_ITERATIONS=10
 
+# Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     --tool)
       TOOL="$2"
       shift 2
       ;;
-    --tool=*)
-      TOOL="${1#*=}"
-      shift
-      ;;
     *)
-      # Assume it's max_iterations if it's a number
-      if [[ "$1" =~ ^[0-9]+$ ]]; then
-        MAX_ITERATIONS="$1"
-      fi
+      MAX_ITERATIONS="$1"
       shift
       ;;
   esac
 done
 
-# Validate tool choice
-if [[ "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
-  echo "Error: Invalid tool '$TOOL'. Must be 'amp' or 'claude'."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+echo "╔══════════════════════════════════════════════╗"
+echo "║  Ralph — Autonomous Agent Loop               ║"
+echo "║  Tool: $TOOL                                  "
+echo "║  Max iterations: $MAX_ITERATIONS              "
+echo "║  Project: $PROJECT_ROOT                       "
+echo "╚══════════════════════════════════════════════╝"
+
+# Verify prerequisites
+if [[ "$TOOL" == "claude" ]]; then
+  if ! command -v claude &> /dev/null; then
+    echo "ERROR: claude command not found. Install with: npm install -g @anthropic-ai/claude-code"
+    exit 1
+  fi
+fi
+
+if ! command -v jq &> /dev/null; then
+  echo "ERROR: jq not found. Install with: brew install jq"
   exit 1
 fi
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRD_FILE="$SCRIPT_DIR/prd.json"
-PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
-ARCHIVE_DIR="$SCRIPT_DIR/archive"
+
+if [[ ! -f "$SCRIPT_DIR/prd.json" ]]; then
+  echo "ERROR: $SCRIPT_DIR/prd.json not found"
+  exit 1
+fi
+
+if [[ "$TOOL" == "claude" && ! -f "$SCRIPT_DIR/CLAUDE.md" ]]; then
+  echo "ERROR: $SCRIPT_DIR/CLAUDE.md not found"
+  exit 1
+fi
+
+# Check if all stories are already complete
+REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$SCRIPT_DIR/prd.json")
+if [[ "$REMAINING" -eq 0 ]]; then
+  echo "All stories already pass! Nothing to do."
+  exit 0
+fi
+echo "Stories remaining: $REMAINING"
+echo ""
+
+# ── Archive previous runs if branch changed ──
+BRANCH_NAME=$(jq -r '.branchName' "$SCRIPT_DIR/prd.json")
 LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
 
-# Archive previous run if branch changed
-if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
-  LAST_BRANCH=$(cat "$LAST_BRANCH_FILE" 2>/dev/null || echo "")
-  
-  if [ -n "$CURRENT_BRANCH" ] && [ -n "$LAST_BRANCH" ] && [ "$CURRENT_BRANCH" != "$LAST_BRANCH" ]; then
-    # Archive the previous run
-    DATE=$(date +%Y-%m-%d)
-    # Strip "ralph/" prefix from branch name for folder
-    FOLDER_NAME=$(echo "$LAST_BRANCH" | sed 's|^ralph/||')
-    ARCHIVE_FOLDER="$ARCHIVE_DIR/$DATE-$FOLDER_NAME"
-    
-    echo "Archiving previous run: $LAST_BRANCH"
-    mkdir -p "$ARCHIVE_FOLDER"
-    [ -f "$PRD_FILE" ] && cp "$PRD_FILE" "$ARCHIVE_FOLDER/"
-    [ -f "$PROGRESS_FILE" ] && cp "$PROGRESS_FILE" "$ARCHIVE_FOLDER/"
-    echo "   Archived to: $ARCHIVE_FOLDER"
-    
-    # Reset progress file for new run
-    echo "# Ralph Progress Log" > "$PROGRESS_FILE"
-    echo "Started: $(date)" >> "$PROGRESS_FILE"
-    echo "---" >> "$PROGRESS_FILE"
+if [[ -f "$LAST_BRANCH_FILE" ]]; then
+  LAST_BRANCH=$(cat "$LAST_BRANCH_FILE")
+  if [[ "$LAST_BRANCH" != "$BRANCH_NAME" ]]; then
+    ARCHIVE_DIR="$SCRIPT_DIR/archive/$(date +%Y-%m-%d)-${LAST_BRANCH##*/}"
+    echo "Archiving previous run to $ARCHIVE_DIR"
+    mkdir -p "$ARCHIVE_DIR"
+    cp "$SCRIPT_DIR/prd.json" "$ARCHIVE_DIR/" 2>/dev/null || true
+    cp "$SCRIPT_DIR/progress.txt" "$ARCHIVE_DIR/" 2>/dev/null || true
   fi
 fi
+echo "$BRANCH_NAME" > "$LAST_BRANCH_FILE"
 
-# Track current branch
-if [ -f "$PRD_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
-  if [ -n "$CURRENT_BRANCH" ]; then
-    echo "$CURRENT_BRANCH" > "$LAST_BRANCH_FILE"
-  fi
-fi
+# ── Main Loop ──
+cd "$PROJECT_ROOT"
 
-# Initialize progress file if it doesn't exist
-if [ ! -f "$PROGRESS_FILE" ]; then
-  echo "# Ralph Progress Log" > "$PROGRESS_FILE"
-  echo "Started: $(date)" >> "$PROGRESS_FILE"
-  echo "---" >> "$PROGRESS_FILE"
-fi
-
-echo "Starting Ralph - Tool: $TOOL - Max iterations: $MAX_ITERATIONS"
-
-for i in $(seq 1 $MAX_ITERATIONS); do
+for i in $(seq 1 "$MAX_ITERATIONS"); do
   echo ""
-  echo "==============================================================="
-  echo "  Ralph Iteration $i of $MAX_ITERATIONS ($TOOL)"
-  echo "==============================================================="
+  echo "═══════════════════════════════════════════════"
+  echo "  ITERATION $i of $MAX_ITERATIONS"
+  echo "  $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "═══════════════════════════════════════════════"
 
-  # Run the selected tool with the ralph prompt
-  if [[ "$TOOL" == "amp" ]]; then
-    OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
-  else
-    # Claude Code: use --dangerously-skip-permissions for autonomous operation, --print for output
-    OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
+  # Check remaining stories
+  REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$SCRIPT_DIR/prd.json")
+  if [[ "$REMAINING" -eq 0 ]]; then
+    echo ""
+    echo "✅ ALL STORIES COMPLETE!"
+    exit 0
   fi
-  
+
+  NEXT_STORY=$(jq -r '[.userStories[] | select(.passes == false)] | sort_by(.priority) | .[0] | "\(.id): \(.title)"' "$SCRIPT_DIR/prd.json")
+  echo "  Next story: $NEXT_STORY"
+  echo "  Remaining: $REMAINING stories"
+  echo ""
+
+  # Run the AI tool
+  OUTPUT=""
+  if [[ "$TOOL" == "claude" ]]; then
+    # Use -p flag with file contents as argument (avoids stdin hanging)
+    PROMPT_CONTENT=$(cat "$SCRIPT_DIR/CLAUDE.md")
+    OUTPUT=$(claude --dangerously-skip-permissions -p "$PROMPT_CONTENT" 2>&1 | tee /dev/stderr) || true
+  else
+    OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
+  fi
+
   # Check for completion signal
   if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
     echo ""
-    echo "Ralph completed all tasks!"
-    echo "Completed at iteration $i of $MAX_ITERATIONS"
+    echo "✅ Ralph reports ALL STORIES COMPLETE!"
     exit 0
   fi
-  
-  echo "Iteration $i complete. Continuing..."
-  sleep 2
+
+  # Check for stuck signal
+  if echo "$OUTPUT" | grep -q "STUCK\|BLOCKED\|FAILED"; then
+    echo ""
+    echo "⚠️  Ralph may be stuck. Check progress.txt and prd.json."
+    echo "  Continuing to next iteration..."
+  fi
+
+  echo ""
+  echo "  Iteration $i finished. Sleeping 3s..."
+  sleep 3
 done
 
 echo ""
-echo "Ralph reached max iterations ($MAX_ITERATIONS) without completing all tasks."
-echo "Check $PROGRESS_FILE for status."
-exit 1
+echo "═══════════════════════════════════════════════"
+echo "  Max iterations ($MAX_ITERATIONS) reached."
+echo "  Check progress:"
+echo "    cat $SCRIPT_DIR/prd.json | jq '.userStories[] | {id, title, passes}'"
+echo "═══════════════════════════════════════════════"
