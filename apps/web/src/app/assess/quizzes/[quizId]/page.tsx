@@ -45,6 +45,14 @@ interface Question {
   points: number;
 }
 
+interface Accommodation {
+  id: number;
+  user_id: number;
+  extra_time_minutes: number;
+  extra_attempts: number;
+  notes: string | null;
+}
+
 export default function QuizBuilderPage() {
   const params = useParams();
   const quizId = params.quizId as string;
@@ -74,6 +82,15 @@ export default function QuizBuilderPage() {
   const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set());
 
+  // Accommodations
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [showAccommodations, setShowAccommodations] = useState(false);
+  const [accomUserId, setAccomUserId] = useState("");
+  const [accomExtraTime, setAccomExtraTime] = useState("0");
+  const [accomExtraAttempts, setAccomExtraAttempts] = useState("0");
+  const [accomNotes, setAccomNotes] = useState("");
+  const [editingAccomId, setEditingAccomId] = useState<number | null>(null);
+
   const fetchItems = useCallback(async () => {
     try {
       const data = await apiFetch<QuizItem[]>(`/api/v1/quizzes/${quizId}/quiz_items`);
@@ -101,8 +118,12 @@ export default function QuizBuilderPage() {
         setUnlockAt(quizData.unlock_at || "");
         setLockAt(quizData.lock_at || "");
         await fetchItems();
-        const banksData = await apiFetch<QuestionBank[]>("/api/v1/question_banks");
+        const [banksData, accomData] = await Promise.all([
+          apiFetch<QuestionBank[]>("/api/v1/question_banks"),
+          apiFetch<Accommodation[]>(`/api/v1/quizzes/${quizId}/accommodations`).catch(() => []),
+        ]);
         setBanks(banksData);
+        setAccommodations(accomData);
       } catch {
         // ignore
       } finally {
@@ -204,6 +225,70 @@ export default function QuizBuilderPage() {
         body: JSON.stringify({ item_ids: itemIds }),
       });
       await fetchItems();
+    } catch {
+      // ignore
+    }
+  }
+
+  async function fetchAccommodations() {
+    try {
+      const data = await apiFetch<Accommodation[]>(`/api/v1/quizzes/${quizId}/accommodations`);
+      setAccommodations(data);
+    } catch {
+      // ignore
+    }
+  }
+
+  async function saveAccommodation() {
+    if (!accomUserId) return;
+    setSaving(true);
+    try {
+      if (editingAccomId) {
+        await apiFetch(`/api/v1/quiz_accommodations/${editingAccomId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            extra_time_minutes: parseInt(accomExtraTime),
+            extra_attempts: parseInt(accomExtraAttempts),
+            notes: accomNotes || null,
+          }),
+        });
+      } else {
+        await apiFetch(`/api/v1/quizzes/${quizId}/accommodations`, {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: parseInt(accomUserId),
+            extra_time_minutes: parseInt(accomExtraTime),
+            extra_attempts: parseInt(accomExtraAttempts),
+            notes: accomNotes || null,
+          }),
+        });
+      }
+      setAccomUserId("");
+      setAccomExtraTime("0");
+      setAccomExtraAttempts("0");
+      setAccomNotes("");
+      setEditingAccomId(null);
+      await fetchAccommodations();
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function startEditAccom(a: Accommodation) {
+    setEditingAccomId(a.id);
+    setAccomUserId(a.user_id.toString());
+    setAccomExtraTime(a.extra_time_minutes.toString());
+    setAccomExtraAttempts(a.extra_attempts.toString());
+    setAccomNotes(a.notes || "");
+  }
+
+  async function removeAccommodation(id: number) {
+    if (!confirm("Remove this accommodation?")) return;
+    try {
+      await apiFetch(`/api/v1/quiz_accommodations/${id}`, { method: "DELETE" });
+      await fetchAccommodations();
     } catch {
       // ignore
     }
@@ -413,6 +498,124 @@ export default function QuizBuilderPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Accommodations Panel */}
+          <div className="rounded-lg border border-gray-200 bg-white">
+            <button
+              onClick={() => setShowAccommodations(!showAccommodations)}
+              className="flex w-full items-center justify-between px-6 py-4"
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900">Accommodations</h2>
+                {accommodations.length > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                    {accommodations.length} student{accommodations.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <span className="text-gray-400 text-sm">{showAccommodations ? "Hide" : "Show"}</span>
+            </button>
+
+            {showAccommodations && (
+              <div className="border-t border-gray-200 px-6 pb-6 space-y-4">
+                {/* List */}
+                {accommodations.length > 0 && (
+                  <div className="divide-y divide-gray-100 mt-2">
+                    {accommodations.map((a) => (
+                      <div key={a.id} className="flex items-center justify-between py-2">
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-900">User #{a.user_id}</span>
+                          <span className="ml-3 text-gray-500">
+                            +{a.extra_time_minutes}min, +{a.extra_attempts} attempts
+                          </span>
+                          {a.notes && <span className="ml-2 text-gray-400">({a.notes})</span>}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => startEditAccom(a)}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => removeAccommodation(a.id)}
+                            className="text-xs text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add/Edit Form */}
+                <div className="rounded-md border border-gray-200 p-4 space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    {editingAccomId ? "Edit Accommodation" : "Add Accommodation"}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600">Student User ID</label>
+                      <input
+                        type="number"
+                        value={accomUserId}
+                        onChange={(e) => setAccomUserId(e.target.value)}
+                        disabled={!!editingAccomId}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600">Extra Time (min)</label>
+                      <input
+                        type="number"
+                        value={accomExtraTime}
+                        onChange={(e) => setAccomExtraTime(e.target.value)}
+                        min="0"
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600">Extra Attempts</label>
+                      <input
+                        type="number"
+                        value={accomExtraAttempts}
+                        onChange={(e) => setAccomExtraAttempts(e.target.value)}
+                        min="0"
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600">Notes</label>
+                      <textarea
+                        value={accomNotes}
+                        onChange={(e) => setAccomNotes(e.target.value)}
+                        rows={1}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveAccommodation}
+                      disabled={!accomUserId || saving}
+                      className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {editingAccomId ? "Update" : "Add"}
+                    </button>
+                    {editingAccomId && (
+                      <button
+                        onClick={() => { setEditingAccomId(null); setAccomUserId(""); setAccomExtraTime("0"); setAccomExtraAttempts("0"); setAccomNotes(""); }}
+                        className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </AppShell>
