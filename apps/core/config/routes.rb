@@ -117,6 +117,7 @@ Rails.application.routes.draw do
         end
         resources :quiz_items, only: [ :index, :create ]
         resources :quiz_attempts, only: [ :index, :create ], path: "attempts"
+        resources :quiz_accommodations, only: [ :index, :create ], path: "accommodations"
       end
       resources :quiz_items, only: [ :update, :destroy ]
       resources :quiz_attempts, only: [ :show ] do
@@ -126,6 +127,7 @@ Rails.application.routes.draw do
         end
         resources :answers, controller: "attempt_answers", only: [ :index, :create ]
       end
+      resources :quiz_accommodations, only: [ :update, :destroy ]
       resources :attempt_answers, only: [] do
         post :grade, on: :member, controller: "attempt_answer_grading"
       end

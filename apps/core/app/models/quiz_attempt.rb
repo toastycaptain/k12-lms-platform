@@ -24,6 +24,16 @@ class QuizAttempt < ApplicationRecord
     grade_auto_gradable_answers!
   end
 
+  def accommodation
+    @accommodation ||= QuizAccommodation.find_by(quiz_id: quiz_id, user_id: user_id)
+  end
+
+  def effective_time_limit
+    return nil unless quiz.time_limit_minutes.present?
+
+    quiz.time_limit_minutes + (accommodation&.extra_time_minutes || 0)
+  end
+
   def calculate_score!
     awarded = attempt_answers.where.not(points_awarded: nil).sum(:points_awarded)
     total = quiz.points_possible.to_d
@@ -45,8 +55,10 @@ class QuizAttempt < ApplicationRecord
   def within_attempt_limit
     return unless quiz
 
+    extra = QuizAccommodation.find_by(quiz_id: quiz_id, user_id: user_id)&.extra_attempts || 0
+    max_attempts = quiz.attempts_allowed + extra
     existing_count = QuizAttempt.where(quiz_id: quiz_id, user_id: user_id).count
-    if existing_count >= quiz.attempts_allowed
+    if existing_count >= max_attempts
       errors.add(:base, "Maximum attempts reached")
     end
   end

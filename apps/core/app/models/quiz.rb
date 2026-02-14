@@ -10,6 +10,7 @@ class Quiz < ApplicationRecord
   has_many :quiz_items, dependent: :destroy
   has_many :questions, through: :quiz_items
   has_many :quiz_attempts, dependent: :destroy
+  has_many :quiz_accommodations, dependent: :destroy
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

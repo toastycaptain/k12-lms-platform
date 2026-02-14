@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_005200) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_005400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -276,6 +276,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005200) do
     t.index ["created_by_id"], name: "index_questions_on_created_by_id"
     t.index ["question_bank_id"], name: "index_questions_on_question_bank_id"
     t.index ["tenant_id"], name: "index_questions_on_tenant_id"
+  end
+
+  create_table "quiz_accommodations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "extra_attempts", default: 0, null: false
+    t.integer "extra_time_minutes", default: 0, null: false
+    t.text "notes"
+    t.bigint "quiz_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["quiz_id", "user_id"], name: "index_quiz_accommodations_on_quiz_id_and_user_id", unique: true
+    t.index ["quiz_id"], name: "index_quiz_accommodations_on_quiz_id"
+    t.index ["tenant_id"], name: "index_quiz_accommodations_on_tenant_id"
+    t.index ["user_id"], name: "index_quiz_accommodations_on_user_id"
   end
 
   create_table "quiz_attempts", force: :cascade do |t|
@@ -656,6 +671,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005200) do
   add_foreign_key "questions", "question_banks"
   add_foreign_key "questions", "tenants"
   add_foreign_key "questions", "users", column: "created_by_id"
+  add_foreign_key "quiz_accommodations", "quizzes"
+  add_foreign_key "quiz_accommodations", "tenants"
+  add_foreign_key "quiz_accommodations", "users"
   add_foreign_key "quiz_attempts", "quizzes"
   add_foreign_key "quiz_attempts", "tenants"
   add_foreign_key "quiz_attempts", "users"
