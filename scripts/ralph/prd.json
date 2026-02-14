@@ -316,7 +316,7 @@
         "npm run build succeeds"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11: Discussions with threading. Keep it simple — no rating, no media uploads, no moderation queue in M3. Just text posts with threaded replies."
     }
   ]
