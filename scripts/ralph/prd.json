@@ -50,7 +50,7 @@
         "Request specs: list questions under a bank, create each question type as teacher, create as student (403), show, update, delete, filter by question_type, Rubocop passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12: Questions are the atomic unit of assessment. JSONB fields store type-specific data (choices, correct answers). The auto_gradable? method will be used when scoring attempts. Factory traits for each question type simplify testing."
     },
     {

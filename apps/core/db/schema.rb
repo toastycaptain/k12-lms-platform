@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_004052) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_004256) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -238,6 +238,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004052) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_question_banks_on_created_by_id"
     t.index ["tenant_id"], name: "index_question_banks_on_tenant_id"
+  end
+
+  create_table "questions", force: :cascade do |t|
+    t.jsonb "choices", default: {}
+    t.jsonb "correct_answer", default: {}
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "explanation"
+    t.decimal "points", default: "1.0", null: false
+    t.integer "position", default: 0, null: false
+    t.text "prompt", null: false
+    t.bigint "question_bank_id", null: false
+    t.string "question_type", null: false
+    t.string "status", default: "active", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_questions_on_created_by_id"
+    t.index ["question_bank_id"], name: "index_questions_on_question_bank_id"
+    t.index ["tenant_id"], name: "index_questions_on_tenant_id"
   end
 
   create_table "resource_links", force: :cascade do |t|
@@ -553,6 +572,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004052) do
   add_foreign_key "module_items", "tenants"
   add_foreign_key "question_banks", "tenants"
   add_foreign_key "question_banks", "users", column: "created_by_id"
+  add_foreign_key "questions", "question_banks"
+  add_foreign_key "questions", "tenants"
+  add_foreign_key "questions", "users", column: "created_by_id"
   add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "rubric_criteria", "rubrics"
