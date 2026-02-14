@@ -6,6 +6,8 @@ class IntegrationConfig < ApplicationRecord
 
   belongs_to :created_by, class_name: "User"
 
+  has_many :sync_mappings, dependent: :destroy
+
   validates :provider, presence: true, inclusion: { in: VALID_PROVIDERS }
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
   validates :provider, uniqueness: { scope: :tenant_id }

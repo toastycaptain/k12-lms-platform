@@ -156,6 +156,12 @@ Rails.application.routes.draw do
           post :activate
           post :deactivate
         end
+        resources :sync_mappings, only: [ :index ]
+        resources :sync_runs, only: [ :index ]
+      end
+      resources :sync_mappings, only: [ :show, :destroy ]
+      resources :sync_runs, only: [ :show ] do
+        resources :sync_logs, only: [ :index ]
       end
 
       resources :standard_frameworks do
