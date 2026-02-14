@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 
 interface UnitPlan {
   id: number;
@@ -72,6 +73,7 @@ export default function UnitPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -244,6 +246,12 @@ export default function UnitPlannerPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setAiPanelOpen(true)}
+                  className="rounded-md border border-purple-300 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100"
+                >
+                  AI Assist
+                </button>
                 {isEditable && (
                   <>
                     <button
@@ -519,6 +527,21 @@ export default function UnitPlannerPage() {
             </div>
           </div>
         </div>
+
+        <AiAssistantPanel
+          open={aiPanelOpen}
+          onClose={() => setAiPanelOpen(false)}
+          defaultTab="unit_generation"
+          context={{ subject: title, topic: title }}
+          onResultApply={(taskType, result) => {
+            if (taskType === "unit_generation") {
+              if (result.title && typeof result.title === "string") setTitle(result.title);
+              if (result.description && typeof result.description === "string") setDescription(result.description);
+              if (Array.isArray(result.essential_questions)) setEssentialQuestions(result.essential_questions as string[]);
+              if (Array.isArray(result.enduring_understandings)) setEnduringUnderstandings(result.enduring_understandings as string[]);
+            }
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 
 interface Quiz {
   id: number;
@@ -90,6 +91,7 @@ export default function QuizBuilderPage() {
   const [accomExtraAttempts, setAccomExtraAttempts] = useState("0");
   const [accomNotes, setAccomNotes] = useState("");
   const [editingAccomId, setEditingAccomId] = useState<number | null>(null);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -337,6 +339,12 @@ export default function QuizBuilderPage() {
               )}
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => setAiPanelOpen(true)}
+                className="rounded-md border border-purple-300 bg-purple-50 px-3 py-1.5 text-sm font-medium text-purple-700 hover:bg-purple-100"
+              >
+                AI Assist
+              </button>
               {quiz?.status === "draft" && (
                 <button onClick={publishQuiz} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">Publish</button>
               )}
@@ -618,6 +626,16 @@ export default function QuizBuilderPage() {
             )}
           </div>
         </div>
+
+        <AiAssistantPanel
+          open={aiPanelOpen}
+          onClose={() => setAiPanelOpen(false)}
+          defaultTab="assessment_generation"
+          context={{ topic: title }}
+          onResultApply={() => {
+            // AI-generated assessment results are displayed in panel for review
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

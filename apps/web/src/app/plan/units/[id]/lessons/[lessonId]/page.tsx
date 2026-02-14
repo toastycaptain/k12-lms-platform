@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 
 interface LessonPlan {
   id: number;
@@ -54,6 +55,9 @@ export default function LessonEditorPage() {
   const [activities, setActivities] = useState("");
   const [materials, setMaterials] = useState("");
   const [durationMinutes, setDurationMinutes] = useState<string>("");
+
+  // AI panel
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   // Resource link form
   const [newResourceUrl, setNewResourceUrl] = useState("");
@@ -198,6 +202,12 @@ export default function LessonEditorPage() {
                 <span className="text-sm text-gray-400">v{currentVersion.version_number}</span>
               )}
             </div>
+            <button
+              onClick={() => setAiPanelOpen(true)}
+              className="rounded-md border border-purple-300 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100"
+            >
+              AI Assist
+            </button>
             {isEditable && (
               <button
                 onClick={handleSave}
@@ -411,6 +421,25 @@ export default function LessonEditorPage() {
             )}
           </div>
         </div>
+
+        <AiAssistantPanel
+          open={aiPanelOpen}
+          onClose={() => setAiPanelOpen(false)}
+          defaultTab="lesson_generation"
+          context={{ subject: title, topic: title, unitPlanId: parseInt(unitId, 10) }}
+          onResultApply={(taskType, result) => {
+            if (taskType === "lesson_generation" || taskType === "rewrite") {
+              if (result.title && typeof result.title === "string") setTitle(result.title);
+              if (result.objectives && typeof result.objectives === "string") setObjectives(result.objectives);
+              if (result.activities && typeof result.activities === "string") setActivities(result.activities);
+              if (result.materials && typeof result.materials === "string") setMaterials(result.materials);
+              if (result.duration_minutes) setDurationMinutes(String(result.duration_minutes));
+            }
+            if (taskType === "differentiation") {
+              if (result.raw_content && typeof result.raw_content === "string") setActivities(result.raw_content);
+            }
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );
