@@ -1,9 +1,10 @@
 class SyncMapping < ApplicationRecord
   include TenantScoped
 
-  VALID_LOCAL_TYPES = %w[Course Section Enrollment Assignment Submission].freeze
+  VALID_LOCAL_TYPES = %w[Course Section Enrollment Assignment Submission School AcademicYear Term User].freeze
   VALID_EXTERNAL_TYPES = %w[classroom_course classroom_section classroom_student classroom_coursework
-    classroom_submission].freeze
+    classroom_submission oneroster_org oneroster_academic_session oneroster_class oneroster_user
+    oneroster_enrollment].freeze
 
   belongs_to :integration_config
 

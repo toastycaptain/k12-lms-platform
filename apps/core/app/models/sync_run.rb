@@ -1,7 +1,9 @@
 class SyncRun < ApplicationRecord
   include TenantScoped
 
-  VALID_SYNC_TYPES = %w[course_sync roster_sync coursework_push grade_passback].freeze
+  VALID_SYNC_TYPES = %w[course_sync roster_sync coursework_push grade_passback
+    oneroster_org_sync oneroster_user_sync oneroster_class_sync
+    oneroster_enrollment_sync oneroster_csv_import].freeze
   VALID_DIRECTIONS = %w[push pull bidirectional].freeze
   VALID_STATUSES = %w[pending running completed failed].freeze
 
