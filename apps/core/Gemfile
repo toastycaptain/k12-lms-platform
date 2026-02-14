@@ -31,6 +31,9 @@ gem "google-apis-drive_v3"
 # CORS
 gem "rack-cors"
 
+# Rate limiting
+gem "rack-attack"
+
 # Windows timezone data
 gem "tzinfo-data", platforms: %i[windows jruby]
 

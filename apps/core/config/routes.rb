@@ -33,6 +33,8 @@ Rails.application.routes.draw do
         member do
           post :publish
           post :close
+          post :push_to_classroom
+          post :sync_grades
         end
         resources :submissions, only: [ :index, :create ]
       end
@@ -155,11 +157,16 @@ Rails.application.routes.draw do
         member do
           post :activate
           post :deactivate
+          post :sync_courses
         end
         resources :sync_mappings, only: [ :index ]
         resources :sync_runs, only: [ :index ]
       end
-      resources :sync_mappings, only: [ :show, :destroy ]
+      resources :sync_mappings, only: [ :show, :destroy ] do
+        member do
+          post :sync_roster
+        end
+      end
       resources :sync_runs, only: [ :show ] do
         resources :sync_logs, only: [ :index ]
       end
@@ -168,6 +175,20 @@ Rails.application.routes.draw do
         get :tree, on: :member, controller: "standards", action: "tree"
       end
       resources :standards
+
+      namespace :drive do
+        post :documents, action: :create_document
+        post :presentations, action: :create_presentation
+        get "files/:file_id", action: :show_file, as: :file
+        post :picker_token
+      end
+
+      namespace :addon do
+        get :unit_plans
+        get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons
+        post :attach
+        get :me
+      end
     end
   end
 
