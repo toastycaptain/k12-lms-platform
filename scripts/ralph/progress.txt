@@ -339,3 +339,91 @@
 - Quality checks: lint, typecheck, build all pass
 
 ## M2 COMPLETE — All 15 stories (US-022 through US-036) passing
+
+### Iteration 34 — US-037: CourseModule and ModuleItem models with CRUD API
+- (Completed in prior session, committed before M3 iterations began)
+
+### Iteration 35 — US-038: Assignment model with CRUD API
+- Assignment model with VALID_STATUSES (draft/published/closed/archived) and VALID_TYPES (written/file_upload/url/discussion)
+- Gotcha: rubric_id FK fails if rubrics table doesn't exist yet — use `t.bigint :rubric_id` without FK constraint, add FK in later migration
+- Gotcha: has_many :submissions on Assignment fails if Submission model doesn't exist — add association when Submission model is created
+- publish!/close!/archive! state transition methods
+- Quality checks: 323 examples passing, rubocop clean
+
+### Iteration 36 — US-039: Submission model with submit/list API
+- Submission model with unique constraint on [assignment_id, user_id]
+- has_one_attached :attachment via Active Storage
+- submit! validates assignment is published and not locked
+- Student creates submission, teacher can view all for an assignment
+- Quality checks: 330 examples passing, rubocop clean
+
+### Iteration 37 — US-040: Submission grading and feedback API
+- SubmissionGradingController: grade (0 to max points), return (graded→returned)
+- GradebookController: GET /courses/:id/gradebook returns [{user_id, assignment_id, grade, status}]
+- Gotcha: member route passes params[:id] not params[:course_id] for gradebook
+- Quality checks: 338 examples passing, rubocop clean
+
+### Iteration 38 — US-041: Rubric, RubricCriterion, RubricRating models
+- Three-level hierarchy: Rubric → RubricCriterion → RubricRating
+- Gotcha: Rails inflects "criterion" → "criterions" instead of "criteria" — add inflection rule `inflect.irregular "criterion", "criteria"` in config/initializers/inflections.rb
+- Gotcha: Migration FK to rubric_criteria table needs explicit `foreign_key: { to_table: :rubric_criteria }`
+- Gotcha: AMS nested serialization needs explicit `include: ["rubric_criteria", "rubric_criteria.rubric_ratings"]` in show action for deep nesting
+- Migration also adds FK from assignments.rubric_id → rubrics
+- Quality checks: 353 examples passing, rubocop clean
+
+### Iteration 39 — US-042: RubricScore API
+- Bulk create/update via find_or_initialize_by on [submission_id, rubric_criterion_id]
+- Auto-calculates total grade from sum of points_awarded
+- Quality checks: 360 examples passing, rubocop clean
+
+### Iteration 40 — US-043: Discussion and DiscussionPost models
+- Discussion: open/locked/archived statuses, belongs_to course and created_by
+- DiscussionPost: self-referential threading via parent_post_id
+- Validates discussion must be "open" before posting
+- Quality checks: 369 examples passing, rubocop clean
+
+### Iteration 41 — US-044: Announcement model with CRUD API
+- Announcement: published and pinned_first scopes
+- Policy scope: teachers see all, students see only published
+- Quality checks: 369 examples passing (shared spec count), rubocop clean
+
+### Iteration 42 — US-045: Next.js Course List and Course Home pages
+- Course List at /teach/courses with enrollment details and role badge
+- Course Home at /teach/courses/[courseId] with modules, announcements (latest 3), upcoming assignments (next 5)
+- AppShell updated with Teach section children: Courses, Submissions
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 43 — US-046: Next.js Module Editor page
+- New module form at /teach/courses/[courseId]/modules/new
+- Edit module at /teach/courses/[courseId]/modules/[moduleId] with items list, add/remove/reorder, publish/archive
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 44 — US-047: Next.js Assignment Editor page
+- New assignment form at /teach/courses/[courseId]/assignments/new
+- Edit assignment at /teach/courses/[courseId]/assignments/[assignmentId] with rubric search/attach/detach, publish/close
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 45 — US-048: Next.js Student Submission page
+- Submit page at /teach/courses/[courseId]/assignments/[assignmentId]/submit
+- Assignment details, rubric preview, text/URL submission, grade/feedback display
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 46 — US-049: Next.js Submissions Inbox page
+- Table at /teach/submissions with filters by course/assignment/status and search by student
+- Summary stats: pending, graded, needs review
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 47 — US-050: Next.js Grading View with rubric scoring
+- Two-panel grading at /teach/submissions/[submissionId]/grade
+- Rubric mode: click rating buttons, auto-total; Manual mode: number input
+- Feedback textarea, save grade, return to student
+- Quality checks: lint, typecheck, build all pass
+
+### Iteration 48 — US-051: Next.js Discussion Board page
+- Discussion List at /teach/courses/[courseId]/discussions with create form, pinned sorting, teacher vs student visibility
+- Discussion Thread at /teach/courses/[courseId]/discussions/[discussionId] with recursive threaded posts (up to 3 levels indent)
+- Inline reply forms, top-level post form, teacher lock/archive controls
+- Locked discussions show read-only indicator
+- Quality checks: lint, typecheck, build all pass
+
+## M3 COMPLETE — All 15 stories (US-037 through US-051) passing
