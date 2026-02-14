@@ -206,6 +206,16 @@ Rails.application.routes.draw do
         end
       end
 
+      namespace :ai do
+        get :health
+        post :generate_unit, controller: "ai_generations"
+        post :generate_lesson, controller: "ai_generations"
+        post :differentiate, controller: "ai_generations"
+        post :generate_assessment, controller: "ai_generations"
+        post :rewrite, controller: "ai_generations"
+        get "invocations/:id/result", controller: "ai_generations", action: "result", as: :invocation_result
+      end
+
       namespace :addon do
         get :unit_plans
         get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons
