@@ -1,7 +1,11 @@
 module Api
   module V1
     class IntegrationConfigsController < ApplicationController
-      before_action :set_integration_config, only: [ :show, :update, :destroy, :activate, :deactivate, :sync_courses ]
+      before_action :set_integration_config, only: [
+        :show, :update, :destroy, :activate, :deactivate, :sync_courses,
+        :test_connection, :sync_orgs, :sync_users, :sync_classes, :sync_enrollments,
+        :import_csv, :import_status
+      ]
 
       def index
         authorize IntegrationConfig
@@ -57,6 +61,76 @@ module Api
         authorize @integration_config
         ClassroomCourseSyncJob.perform_later(@integration_config.id, Current.user.id)
         render json: { message: "Sync triggered" }, status: :accepted
+      end
+
+      def test_connection
+        authorize @integration_config
+        settings = @integration_config.settings
+        client = OneRosterClient.new(
+          base_url: settings["base_url"],
+          client_id: settings["client_id"],
+          client_secret: settings["client_secret"]
+        )
+        orgs = client.get_all_orgs(limit: 1)
+        render json: { status: "ok", org_count: orgs.length }
+      rescue OneRosterError => e
+        render json: { status: "error", message: e.message }
+      end
+
+      def sync_orgs
+        authorize @integration_config
+        OneRosterOrgSyncJob.perform_later(@integration_config.id, Current.user.id)
+        render json: { message: "Org sync triggered" }, status: :accepted
+      end
+
+      def sync_users
+        authorize @integration_config
+        OneRosterUserSyncJob.perform_later(@integration_config.id, Current.user.id)
+        render json: { message: "User sync triggered" }, status: :accepted
+      end
+
+      def sync_classes
+        authorize @integration_config
+        OneRosterClassSyncJob.perform_later(@integration_config.id, Current.user.id)
+        render json: { message: "Class sync triggered" }, status: :accepted
+      end
+
+      def sync_enrollments
+        authorize @integration_config
+        OneRosterEnrollmentSyncJob.perform_later(@integration_config.id, Current.user.id)
+        render json: { message: "Enrollment sync triggered" }, status: :accepted
+      end
+
+      def import_csv
+        authorize @integration_config
+        file = params[:file]
+        unless file
+          render json: { error: "No file provided" }, status: :unprocessable_content
+          return
+        end
+
+        @integration_config.import_file.attach(file)
+        OneRosterCsvImportJob.perform_later(@integration_config.id, @integration_config.import_file.blob.id, Current.user.id)
+        render json: { message: "CSV import triggered" }, status: :accepted
+      end
+
+      def import_status
+        authorize @integration_config
+        sync_run = @integration_config.sync_runs.where(sync_type: "oneroster_csv_import").order(created_at: :desc).first
+
+        if sync_run
+          render json: {
+            status: sync_run.status,
+            records_processed: sync_run.records_processed,
+            records_succeeded: sync_run.records_succeeded,
+            records_failed: sync_run.records_failed,
+            error_message: sync_run.error_message,
+            started_at: sync_run.started_at,
+            completed_at: sync_run.completed_at
+          }
+        else
+          render json: { status: "none", message: "No CSV import has been run" }
+        end
       end
 
       private

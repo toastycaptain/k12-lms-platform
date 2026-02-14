@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Discussion {
   id: number;
@@ -26,19 +27,6 @@ interface DiscussionPost {
   created_by_id: number;
   content: string;
   created_at: string;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    open: "bg-green-100 text-green-800",
-    locked: "bg-yellow-100 text-yellow-800",
-    archived: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
 }
 
 interface PostNodeProps {

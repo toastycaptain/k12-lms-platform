@@ -10,6 +10,17 @@ class ApplicationController < ActionController::API
     render json: { error: "Forbidden" }, status: :forbidden
   end
 
+  rescue_from GoogleApiError do |exception|
+    status = case exception.status_code
+             when 401 then :unauthorized
+             when 403 then :forbidden
+             when 404 then :not_found
+             when 429 then :too_many_requests
+             else :bad_gateway
+             end
+    render json: { error: exception.message }, status: status
+  end
+
   private
 
   def current_user
@@ -37,12 +48,13 @@ class ApplicationController < ActionController::API
   def resolve_tenant
     tenant = tenant_from_session || tenant_from_header || tenant_from_subdomain
     Current.tenant = tenant
+    RlsTenant.set_current_tenant(tenant.id) if tenant
   end
 
   def resolve_user
     return unless Current.tenant && session[:user_id]
 
-    Current.user = User.unscoped.find_by(id: session[:user_id], tenant_id: Current.tenant.id)
+    Current.user = User.unscoped.includes(:roles).find_by(id: session[:user_id], tenant_id: Current.tenant.id)
   end
 
   def tenant_from_session

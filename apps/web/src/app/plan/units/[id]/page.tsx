@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface UnitPlan {
   id: number;
@@ -39,26 +40,6 @@ interface Standard {
   description: string;
 }
 
-interface StandardFramework {
-  id: number;
-  name: string;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    published: "bg-green-100 text-green-800",
-    archived: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
-}
-
 export default function UnitPlannerPage() {
   const params = useParams();
   const unitId = params.id as string;
@@ -69,7 +50,6 @@ export default function UnitPlannerPage() {
   const [lessons, setLessons] = useState<LessonPlan[]>([]);
   const [standards, setStandards] = useState<Standard[]>([]);
   const [allStandards, setAllStandards] = useState<Standard[]>([]);
-  const [, setFrameworks] = useState<StandardFramework[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -84,17 +64,15 @@ export default function UnitPlannerPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [unit, vers, lessonList, frameworkList] = await Promise.all([
+      const [unit, vers, lessonList] = await Promise.all([
         apiFetch<UnitPlan>(`/api/v1/unit_plans/${unitId}`),
         apiFetch<UnitVersion[]>(`/api/v1/unit_plans/${unitId}/versions`),
         apiFetch<LessonPlan[]>(`/api/v1/unit_plans/${unitId}/lesson_plans`),
-        apiFetch<StandardFramework[]>("/api/v1/standard_frameworks"),
       ]);
 
       setUnitPlan(unit);
       setVersions(vers);
       setLessons(lessonList.sort((a, b) => a.position - b.position));
-      setFrameworks(frameworkList);
 
       if (vers.length > 0) {
         const cv = vers[0]; // sorted desc by version_number

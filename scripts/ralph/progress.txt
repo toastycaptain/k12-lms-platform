@@ -626,3 +626,97 @@
 - Quiz Builder: AI Assist for assessment generation
 
 ## M6 COMPLETE — All 15 stories (US-082 through US-096) passing
+
+### Iteration 79 — US-097: OneRoster 1.1 REST client service
+- Faraday-based HTTP client with OAuth 2.0 client_credentials auth
+- Token caching with expiry, auto-refresh on 401
+- Pagination via Link headers, filter param support
+- All 5 OneRoster endpoints: orgs, users, classes, enrollments, academicSessions
+- OneRosterError custom error class with status_code and response_body
+- Gotcha: test env uses :null_store cache — stub Rails.cache with MemoryStore in specs
+
+### Iteration 80 — US-098: OneRoster configuration and provider registration
+- Extended IntegrationConfig VALID_PROVIDERS with 'oneroster'
+- test_connection endpoint verifies OneRoster connectivity
+- Added all OneRoster sync trigger routes as member routes on integration_configs
+- has_one_attached :import_file for CSV import
+
+### Iteration 81 — US-099: OneRoster org and academic session sync job
+- Extended SyncMapping VALID_LOCAL_TYPES: School, AcademicYear, Term, User
+- Extended SyncMapping VALID_EXTERNAL_TYPES: oneroster_org, oneroster_academic_session, oneroster_class, oneroster_user, oneroster_enrollment
+- Extended SyncRun VALID_SYNC_TYPES: oneroster_org_sync, oneroster_user_sync, oneroster_class_sync, oneroster_enrollment_sync, oneroster_csv_import
+- Maps org type='school' to School, schoolYear to AcademicYear, term/semester/gradingPeriod to Term
+
+### Iteration 82 — US-100: OneRoster user and enrollment sync jobs
+- Three sync jobs: user, class, enrollment
+- Role mapping: teacher→teacher, student→student, administrator→admin
+- Class sync creates Course records; enrollment sync creates Section+Enrollment
+- Resolves cross-entity references via SyncMapping lookups
+
+### Iteration 83 — US-101: OneRoster CSV bulk import job
+- Added rubyzip and csv gems
+- Processes ZIP in dependency order: orgs → academicSessions → users → classes → enrollments
+- Validates OneRoster CSV headers, skips tobedeleted rows
+- Reuses same mapping logic as REST sync jobs
+
+### Iteration 84 — US-102: LTI 1.3 tool registration model
+- Added jwt gem for JWT signing/verification
+- LtiRegistration: TenantScoped, VALID_STATUSES, activate!/deactivate!
+- LtiResourceLink: belongs_to :lti_registration, optional :course
+- Admin-only CRUD for registrations, teacher read access for resource links
+
+### Iteration 85 — US-103: LTI 1.3 launch and deep linking
+- LtiService: build_login_request, validate_id_token, build_launch_message, build_deep_link_response
+- Platform JWKS endpoint (public, no auth required)
+- OIDC login initiation, JWT-signed launch messages
+- Deep linking creates LtiResourceLink records from content_items
+
+### Iteration 86 — US-104: LTI Assignment and Grade Services (AGS)
+- LtiAgsService: token validation, line item mapping, score posting
+- AGS endpoints: lineitems CRUD, results, scores
+- Score posting auto-creates Submission if none exists
+- Bearer token validation for tool access
+
+### Iteration 87 — US-105: AuditLog model with event logging
+- Polymorphic audit_logs table with JSONB changes and metadata
+- AuditLogger service: extracts ip_address, user_agent from request
+- Auditable concern for auto-logging create/update/destroy (not yet included in controllers)
+- Admin API with filters (user_id, auditable_type, action, date range) and summary endpoint
+
+### Iteration 88 — US-106: Data retention policy model and enforcement job
+- DataRetentionPolicy: VALID_ENTITY_TYPES (audit_log, sync_log, ai_invocation), VALID_ACTIONS (archive/anonymize/delete)
+- Minimum 30-day retention validation
+- Enforcement job with batch processing (find_each)
+- Added archived_at column to audit_logs and sync_logs
+
+### Iteration 89 — US-107: Tenant data export job
+- Exports 10 model types to ZIP with per-model JSON files
+- metadata.json with tenant info, timestamp, record counts
+- Sanitizes sensitive fields (api keys, tokens)
+- Active Storage attachment on Tenant model
+
+### Iteration 90 — US-108: Row-Level Security for PostgreSQL
+- RLS policies on all 48 tenant-scoped tables
+- RlsTenant concern: SET LOCAL app.current_tenant_id
+- Conditionally enabled via ENABLE_RLS env var (disabled in dev/test)
+- All existing specs continue to pass with RLS disabled
+
+### Iteration 91 — US-109: Admin OneRoster page (Next.js)
+- Configuration form with test connection
+- Sync triggers for orgs, users, classes, enrollments
+- CSV import with file upload
+- Sync history table with expandable logs
+
+### Iteration 92 — US-110: Admin LTI tool management page (Next.js)
+- Tool list with status badges, add/edit/delete
+- Platform info section for tool registration
+- Resource links management per tool
+- Launch test button
+
+### Iteration 93 — US-111: Admin Governance Dashboard (Next.js)
+- Three-tab layout: Audit Log, Data Retention, Data Export
+- Audit log with filters, pagination, expandable changes
+- Retention policy CRUD with manual enforcement trigger
+- Data export with status polling and download link
+
+## M7 COMPLETE — All 15 stories (US-097 through US-111) passing

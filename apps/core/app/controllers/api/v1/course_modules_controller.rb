@@ -59,9 +59,16 @@ module Api
       def reorder_items
         authorize @course_module
         item_ids = params[:item_ids] || []
+        return render json: @course_module.module_items.ordered if item_ids.empty?
+
+        # Build a single CASE-based UPDATE instead of N individual updates
+        case_sql = "CASE id "
         item_ids.each_with_index do |id, index|
-          @course_module.module_items.where(id: id).update_all(position: index) # rubocop:disable Rails/SkipsModelValidations
+          case_sql += "WHEN #{ActiveRecord::Base.connection.quote(id)} THEN #{index} "
         end
+        case_sql += "END"
+
+        @course_module.module_items.where(id: item_ids).update_all("position = #{case_sql}") # rubocop:disable Rails/SkipsModelValidations
         render json: @course_module.module_items.ordered
       end
 

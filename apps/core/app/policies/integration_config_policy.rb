@@ -31,6 +31,34 @@ class IntegrationConfigPolicy < ApplicationPolicy
     user.has_role?(:admin) || user.has_role?(:teacher)
   end
 
+  def test_connection?
+    user.has_role?(:admin)
+  end
+
+  def sync_orgs?
+    user.has_role?(:admin)
+  end
+
+  def sync_users?
+    user.has_role?(:admin)
+  end
+
+  def sync_classes?
+    user.has_role?(:admin)
+  end
+
+  def sync_enrollments?
+    user.has_role?(:admin)
+  end
+
+  def import_csv?
+    user.has_role?(:admin)
+  end
+
+  def import_status?
+    user.has_role?(:admin)
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.has_role?(:admin)

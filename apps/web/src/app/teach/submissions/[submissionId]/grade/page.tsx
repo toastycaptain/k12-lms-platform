@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Submission {
   id: number;
@@ -46,19 +47,6 @@ interface RubricScore {
   comments: string;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    submitted: "bg-blue-100 text-blue-800",
-    graded: "bg-purple-100 text-purple-800",
-    returned: "bg-green-100 text-green-800",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
-}
-
 export default function GradingViewPage() {
   const params = useParams();
   const submissionId = params.submissionId as string;
@@ -88,27 +76,24 @@ export default function GradingViewPage() {
       setAssignment(asn);
 
       if (asn.rubric_id) {
-        const rubricData = await apiFetch<Rubric>(`/api/v1/rubrics/${asn.rubric_id}`);
+        const [rubricData, existingScores] = await Promise.all([
+          apiFetch<Rubric>(`/api/v1/rubrics/${asn.rubric_id}`),
+          apiFetch<{ rubric_criterion_id: number; rubric_rating_id: number | null; points_awarded: string; comments: string }[]>(
+            `/api/v1/submissions/${submissionId}/rubric_scores`,
+          ).catch(() => [] as { rubric_criterion_id: number; rubric_rating_id: number | null; points_awarded: string; comments: string }[]),
+        ]);
         setRubric(rubricData);
 
-        // Load existing rubric scores
-        try {
-          const existingScores = await apiFetch<{ rubric_criterion_id: number; rubric_rating_id: number | null; points_awarded: string; comments: string }[]>(
-            `/api/v1/submissions/${submissionId}/rubric_scores`,
-          );
-          const scoreMap = new Map<number, RubricScore>();
-          for (const s of existingScores) {
-            scoreMap.set(s.rubric_criterion_id, {
-              rubric_criterion_id: s.rubric_criterion_id,
-              rubric_rating_id: s.rubric_rating_id,
-              points_awarded: Number(s.points_awarded),
-              comments: s.comments || "",
-            });
-          }
-          setRubricScores(scoreMap);
-        } catch {
-          // No scores yet
+        const scoreMap = new Map<number, RubricScore>();
+        for (const s of existingScores) {
+          scoreMap.set(s.rubric_criterion_id, {
+            rubric_criterion_id: s.rubric_criterion_id,
+            rubric_rating_id: s.rubric_rating_id,
+            points_awarded: Number(s.points_awarded),
+            comments: s.comments || "",
+          });
         }
+        setRubricScores(scoreMap);
       }
     } catch {
       // handle error

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_040007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.bigint "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["course_id", "pinned", "published_at"], name: "idx_announcements_course_pinned_pub"
     t.index ["course_id"], name: "index_announcements_on_course_id"
     t.index ["created_by_id"], name: "index_announcements_on_created_by_id"
     t.index ["tenant_id"], name: "index_announcements_on_tenant_id"
@@ -164,6 +165,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.index ["approvable_type", "approvable_id"], name: "index_approvals_on_approvable_type_and_approvable_id"
     t.index ["requested_by_id"], name: "index_approvals_on_requested_by_id"
     t.index ["reviewed_by_id"], name: "index_approvals_on_reviewed_by_id"
+    t.index ["tenant_id", "status"], name: "idx_approvals_tenant_status"
     t.index ["tenant_id"], name: "index_approvals_on_tenant_id"
   end
 
@@ -185,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.string "title", null: false
     t.datetime "unlock_at"
     t.datetime "updated_at", null: false
+    t.index ["course_id", "status"], name: "idx_assignments_course_status"
     t.index ["course_id"], name: "index_assignments_on_course_id"
     t.index ["created_by_id"], name: "index_assignments_on_created_by_id"
     t.index ["rubric_id"], name: "index_assignments_on_rubric_id"
@@ -208,6 +211,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.index ["quiz_attempt_id", "question_id"], name: "idx_attempt_answers_unique", unique: true
     t.index ["quiz_attempt_id"], name: "index_attempt_answers_on_quiz_attempt_id"
     t.index ["tenant_id"], name: "index_attempt_answers_on_tenant_id"
+  end
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "archived_at"
+    t.bigint "auditable_id"
+    t.string "auditable_type"
+    t.jsonb "changes_data", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.string "user_agent"
+    t.bigint "user_id"
+    t.index ["tenant_id", "action", "created_at"], name: "idx_audit_logs_tenant_action_date"
+    t.index ["tenant_id", "auditable_type", "auditable_id"], name: "index_audit_logs_on_tenant_and_auditable"
+    t.index ["tenant_id", "created_at"], name: "index_audit_logs_on_tenant_id_and_created_at"
+    t.index ["tenant_id"], name: "index_audit_logs_on_tenant_id"
+    t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
   create_table "course_modules", force: :cascade do |t|
@@ -235,6 +257,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
+  end
+
+  create_table "data_retention_policies", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.boolean "enabled", default: true, null: false
+    t.string "entity_type", null: false
+    t.string "name", null: false
+    t.integer "retention_days", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_data_retention_policies_on_created_by_id"
+    t.index ["tenant_id"], name: "index_data_retention_policies_on_tenant_id"
   end
 
   create_table "discussion_posts", force: :cascade do |t|
@@ -305,6 +342,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_lesson_plans_on_created_by_id"
     t.index ["tenant_id"], name: "index_lesson_plans_on_tenant_id"
+    t.index ["unit_plan_id", "position"], name: "idx_lesson_plans_unit_position"
     t.index ["unit_plan_id"], name: "index_lesson_plans_on_unit_plan_id"
   end
 
@@ -322,6 +360,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.index ["lesson_plan_id", "version_number"], name: "index_lesson_versions_on_lesson_plan_id_and_version_number", unique: true
     t.index ["lesson_plan_id"], name: "index_lesson_versions_on_lesson_plan_id"
     t.index ["tenant_id"], name: "index_lesson_versions_on_tenant_id"
+  end
+
+  create_table "lti_registrations", force: :cascade do |t|
+    t.string "auth_login_url", null: false
+    t.string "auth_token_url", null: false
+    t.string "client_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "deployment_id", null: false
+    t.text "description"
+    t.string "issuer", null: false
+    t.string "jwks_url", null: false
+    t.string "name", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "inactive", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_lti_registrations_on_created_by_id"
+    t.index ["tenant_id", "client_id"], name: "idx_lti_registrations_tenant_client"
+    t.index ["tenant_id"], name: "index_lti_registrations_on_tenant_id"
+  end
+
+  create_table "lti_resource_links", force: :cascade do |t|
+    t.bigint "course_id"
+    t.datetime "created_at", null: false
+    t.jsonb "custom_params", default: {}, null: false
+    t.text "description"
+    t.bigint "lti_registration_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.index ["course_id"], name: "index_lti_resource_links_on_course_id"
+    t.index ["lti_registration_id"], name: "index_lti_resource_links_on_lti_registration_id"
+    t.index ["tenant_id"], name: "index_lti_resource_links_on_tenant_id"
   end
 
   create_table "module_items", force: :cascade do |t|
@@ -353,6 +426,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_question_banks_on_created_by_id"
+    t.index ["tenant_id", "subject"], name: "idx_question_banks_tenant_subject"
     t.index ["tenant_id"], name: "index_question_banks_on_tenant_id"
   end
 
@@ -443,6 +517,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.string "title", null: false
     t.datetime "unlock_at"
     t.datetime "updated_at", null: false
+    t.index ["course_id", "status"], name: "idx_quizzes_course_status"
     t.index ["course_id"], name: "index_quizzes_on_course_id"
     t.index ["created_by_id"], name: "index_quizzes_on_created_by_id"
     t.index ["tenant_id"], name: "index_quizzes_on_tenant_id"
@@ -459,6 +534,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.string "url", null: false
+    t.index ["drive_file_id"], name: "idx_resource_links_drive_file_id", where: "(drive_file_id IS NOT NULL)"
     t.index ["linkable_type", "linkable_id"], name: "index_resource_links_on_linkable"
     t.index ["tenant_id"], name: "index_resource_links_on_tenant_id"
   end
@@ -568,6 +644,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["parent_id"], name: "index_standards_on_parent_id"
+    t.index ["standard_framework_id", "parent_id"], name: "idx_standards_framework_parent"
     t.index ["standard_framework_id"], name: "index_standards_on_standard_framework_id"
     t.index ["tenant_id"], name: "index_standards_on_tenant_id"
   end
@@ -588,6 +665,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.datetime "updated_at", null: false
     t.string "url"
     t.bigint "user_id", null: false
+    t.index ["assignment_id", "status"], name: "idx_submissions_assignment_status"
     t.index ["assignment_id", "user_id"], name: "index_submissions_on_assignment_id_and_user_id", unique: true
     t.index ["assignment_id"], name: "index_submissions_on_assignment_id"
     t.index ["graded_by_id"], name: "index_submissions_on_graded_by_id"
@@ -596,6 +674,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
   end
 
   create_table "sync_logs", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "entity_id"
     t.string "entity_type"
@@ -606,6 +685,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.bigint "sync_run_id", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["sync_run_id", "level"], name: "idx_sync_logs_run_level"
     t.index ["sync_run_id"], name: "index_sync_logs_on_sync_run_id"
     t.index ["tenant_id"], name: "index_sync_logs_on_tenant_id"
   end
@@ -642,6 +722,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.bigint "tenant_id", null: false
     t.bigint "triggered_by_id"
     t.datetime "updated_at", null: false
+    t.index ["integration_config_id", "sync_type", "created_at"], name: "idx_sync_runs_config_type_date"
     t.index ["integration_config_id"], name: "index_sync_runs_on_integration_config_id"
     t.index ["tenant_id"], name: "index_sync_runs_on_tenant_id"
     t.index ["triggered_by_id"], name: "index_sync_runs_on_triggered_by_id"
@@ -687,6 +768,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_templates_on_created_by_id"
+    t.index ["tenant_id", "status"], name: "idx_templates_tenant_status"
     t.index ["tenant_id"], name: "index_templates_on_tenant_id"
   end
 
@@ -723,6 +805,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
     t.index ["course_id"], name: "index_unit_plans_on_course_id"
     t.index ["created_by_id"], name: "index_unit_plans_on_created_by_id"
     t.index ["current_version_id"], name: "index_unit_plans_on_current_version_id"
+    t.index ["tenant_id", "status"], name: "idx_unit_plans_tenant_status"
     t.index ["tenant_id"], name: "index_unit_plans_on_tenant_id"
   end
 
@@ -808,10 +891,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
   add_foreign_key "attempt_answers", "quiz_attempts"
   add_foreign_key "attempt_answers", "tenants"
   add_foreign_key "attempt_answers", "users", column: "graded_by_id"
+  add_foreign_key "audit_logs", "tenants"
+  add_foreign_key "audit_logs", "users"
   add_foreign_key "course_modules", "courses"
   add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"
   add_foreign_key "courses", "tenants"
+  add_foreign_key "data_retention_policies", "tenants"
+  add_foreign_key "data_retention_policies", "users", column: "created_by_id"
   add_foreign_key "discussion_posts", "discussion_posts", column: "parent_post_id"
   add_foreign_key "discussion_posts", "discussions"
   add_foreign_key "discussion_posts", "tenants"
@@ -830,6 +917,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
   add_foreign_key "lesson_plans", "users", column: "created_by_id"
   add_foreign_key "lesson_versions", "lesson_plans"
   add_foreign_key "lesson_versions", "tenants"
+  add_foreign_key "lti_registrations", "tenants"
+  add_foreign_key "lti_registrations", "users", column: "created_by_id"
+  add_foreign_key "lti_resource_links", "courses"
+  add_foreign_key "lti_resource_links", "lti_registrations"
+  add_foreign_key "lti_resource_links", "tenants"
   add_foreign_key "module_items", "course_modules"
   add_foreign_key "module_items", "tenants"
   add_foreign_key "question_banks", "tenants"

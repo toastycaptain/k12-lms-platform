@@ -11,11 +11,14 @@ module Api
 
       def approve
         authorize @approval
-        @approval.approve!(reviewer: Current.user)
 
-        # Auto-publish the unit plan
-        approvable = @approval.approvable
-        approvable.publish! if approvable.respond_to?(:publish!)
+        ActiveRecord::Base.transaction do
+          @approval.approve!(reviewer: Current.user)
+
+          # Auto-publish the unit plan
+          approvable = @approval.approvable
+          approvable.publish! if approvable.respond_to?(:publish!)
+        end
 
         render json: @approval
       rescue ActiveRecord::RecordInvalid
@@ -31,11 +34,13 @@ module Api
                         status: :unprocessable_content
         end
 
-        @approval.reject!(reviewer: Current.user, comments: comments)
+        ActiveRecord::Base.transaction do
+          @approval.reject!(reviewer: Current.user, comments: comments)
 
-        # Revert unit plan status back to draft
-        approvable = @approval.approvable
-        approvable.update!(status: "draft") if approvable.respond_to?(:status)
+          # Revert unit plan status back to draft
+          approvable = @approval.approvable
+          approvable.update!(status: "draft") if approvable.respond_to?(:status)
+        end
 
         render json: @approval
       rescue ActiveRecord::RecordInvalid
@@ -46,7 +51,7 @@ module Api
       private
 
       def set_approval
-        @approval = Approval.find(params[:id])
+        @approval = Approval.includes(:approvable).find(params[:id])
       end
     end
   end

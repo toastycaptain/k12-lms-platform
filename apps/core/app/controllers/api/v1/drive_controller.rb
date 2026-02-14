@@ -5,6 +5,13 @@ module Api
 
       def create_document
         authorize :drive
+        if params[:linkable_type].present? && params[:linkable_id].present?
+          unless VALID_LINKABLE_TYPES.include?(params[:linkable_type])
+            render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
+            return
+          end
+        end
+
         drive_service = GoogleDriveService.new(Current.user)
         result = drive_service.create_document(params[:title])
 
@@ -17,6 +24,13 @@ module Api
 
       def create_presentation
         authorize :drive
+        if params[:linkable_type].present? && params[:linkable_id].present?
+          unless VALID_LINKABLE_TYPES.include?(params[:linkable_type])
+            render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
+            return
+          end
+        end
+
         drive_service = GoogleDriveService.new(Current.user)
         result = drive_service.create_presentation(params[:title])
 

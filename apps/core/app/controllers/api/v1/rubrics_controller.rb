@@ -4,7 +4,7 @@ module Api
       before_action :set_rubric, only: [ :show, :update, :destroy ]
 
       def index
-        rubrics = policy_scope(Rubric)
+        rubrics = policy_scope(Rubric).includes(rubric_criteria: :rubric_ratings)
         render json: rubrics
       end
 
@@ -43,7 +43,7 @@ module Api
       private
 
       def set_rubric
-        @rubric = Rubric.find(params[:id])
+        @rubric = Rubric.includes(rubric_criteria: :rubric_ratings).find(params[:id])
       end
 
       def rubric_params

@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Assignment {
   id: number;
@@ -41,20 +42,6 @@ interface Rubric {
   }[];
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    submitted: "bg-blue-100 text-blue-800",
-    graded: "bg-purple-100 text-purple-800",
-    returned: "bg-green-100 text-green-800",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
-}
-
 export default function StudentSubmissionPage() {
   const params = useParams();
   const courseId = params.courseId as string;
@@ -74,20 +61,30 @@ export default function StudentSubmissionPage() {
       const assignmentData = await apiFetch<Assignment>(`/api/v1/assignments/${assignmentId}`);
       setAssignment(assignmentData);
 
+      const fetches: Promise<void>[] = [];
+
       if (assignmentData.rubric_id) {
-        const rubricData = await apiFetch<Rubric>(`/api/v1/rubrics/${assignmentData.rubric_id}`);
-        setRubric(rubricData);
+        fetches.push(
+          apiFetch<Rubric>(`/api/v1/rubrics/${assignmentData.rubric_id}`).then((rubricData) => {
+            setRubric(rubricData);
+          }),
+        );
       }
 
       // Check for existing submission
-      try {
-        const submissions = await apiFetch<Submission[]>(`/api/v1/assignments/${assignmentId}/submissions`);
-        if (submissions.length > 0) {
-          setSubmission(submissions[0]);
-        }
-      } catch {
-        // No submissions yet
-      }
+      fetches.push(
+        apiFetch<Submission[]>(`/api/v1/assignments/${assignmentId}/submissions`)
+          .then((submissions) => {
+            if (submissions.length > 0) {
+              setSubmission(submissions[0]);
+            }
+          })
+          .catch(() => {
+            // No submissions yet
+          }),
+      );
+
+      await Promise.all(fetches);
     } catch {
       // handle error
     } finally {

@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface IntegrationConfig {
   id: number;
@@ -45,22 +46,6 @@ interface SyncMapping {
   external_type: string;
   external_id: string;
   last_synced_at: string | null;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: "bg-gray-100 text-gray-600",
-    running: "bg-blue-100 text-blue-800",
-    completed: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
 }
 
 function SyncTypeBadge({ type }: { type: string }) {

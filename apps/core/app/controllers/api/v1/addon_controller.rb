@@ -1,6 +1,8 @@
 module Api
   module V1
     class AddonController < ApplicationController
+      VALID_LINKABLE_TYPES = %w[LessonVersion UnitVersion CourseModule Assignment].freeze
+
       def unit_plans
         authorize :addon
         plans = policy_scope(UnitPlan).order(updated_at: :desc).limit(50)
@@ -29,6 +31,10 @@ module Api
 
       def attach
         authorize :addon
+        unless VALID_LINKABLE_TYPES.include?(params[:linkable_type])
+          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
+          return
+        end
         linkable = params[:linkable_type].constantize.find(params[:linkable_id])
         resource_link = ResourceLink.create!(
           tenant: Current.tenant,

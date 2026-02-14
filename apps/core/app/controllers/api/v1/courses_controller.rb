@@ -4,7 +4,7 @@ module Api
       before_action :set_course, only: [ :show, :update, :destroy ]
 
       def index
-        @courses = policy_scope(Course)
+        @courses = policy_scope(Course).includes(:sections)
         render json: @courses
       end
 

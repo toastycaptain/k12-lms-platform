@@ -39,8 +39,15 @@ module Api
         @quiz = Quiz.find(params[:id])
         authorize @quiz, :update?
         item_ids = params[:item_ids] || []
-        item_ids.each_with_index do |id, index|
-          QuizItem.where(id: id, quiz_id: @quiz.id).update_all(position: index)
+        if item_ids.any?
+          # Build a single CASE-based UPDATE instead of N individual updates
+          case_sql = "CASE id "
+          item_ids.each_with_index do |id, index|
+            case_sql += "WHEN #{ActiveRecord::Base.connection.quote(id)} THEN #{index} "
+          end
+          case_sql += "END"
+
+          QuizItem.where(id: item_ids, quiz_id: @quiz.id).update_all("position = #{case_sql}") # rubocop:disable Rails/SkipsModelValidations
         end
         render json: policy_scope(QuizItem).where(quiz: @quiz).order(:position)
       end

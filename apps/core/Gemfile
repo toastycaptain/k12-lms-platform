@@ -31,6 +31,14 @@ gem "google-apis-drive_v3"
 # HTTP client
 gem "faraday"
 
+# ZIP file processing
+gem "rubyzip", require: "zip"
+gem "csv"
+
+# JWT signing/verification
+gem "jwt"
+
+
 # CORS
 gem "rack-cors"
 

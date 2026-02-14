@@ -5,7 +5,7 @@ module Api
       before_action :set_quiz_attempt, only: [ :show, :submit, :grade_all ]
 
       def index
-        attempts = policy_scope(QuizAttempt).where(quiz: @quiz)
+        attempts = policy_scope(QuizAttempt).where(quiz: @quiz).includes(:quiz)
         render json: attempts
       end
 
@@ -40,8 +40,13 @@ module Api
         authorize @quiz_attempt, :show?
 
         grades = params[:grades] || []
+        answer_ids = grades.map { |g| g[:attempt_answer_id] }
+        answers_by_id = @quiz_attempt.attempt_answers.where(id: answer_ids).index_by(&:id)
+
         grades.each do |g|
-          answer = @quiz_attempt.attempt_answers.find(g[:attempt_answer_id])
+          answer = answers_by_id[g[:attempt_answer_id].to_i] || answers_by_id[g[:attempt_answer_id]]
+          raise ActiveRecord::RecordNotFound, "Couldn't find AttemptAnswer with id=#{g[:attempt_answer_id]}" unless answer
+
           authorize answer, :grade?
           answer.update!(
             points_awarded: g[:points_awarded],

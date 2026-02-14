@@ -49,6 +49,9 @@ const NAV_ITEMS: NavItem[] = [
       { label: "AI Registry", href: "/admin/ai-registry" },
       { label: "AI Policies", href: "/admin/ai-policies" },
       { label: "AI Usage", href: "/admin/ai-usage" },
+      { label: "SIS / OneRoster", href: "/admin/oneroster" },
+      { label: "LTI Tools", href: "/admin/lti" },
+      { label: "Governance", href: "/admin/governance" },
     ],
   },
 ];

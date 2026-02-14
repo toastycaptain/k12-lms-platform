@@ -39,7 +39,7 @@ module Api
       private
 
       def set_submission
-        @submission = Submission.find(params[:id])
+        @submission = Submission.includes(:assignment).find(params[:id])
       end
     end
   end

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface UnitPlan {
   id: number;
@@ -12,6 +13,7 @@ interface UnitPlan {
   status: string;
   course_id: number;
   current_version_id: number | null;
+  version_count: number;
   created_at: string;
 }
 
@@ -21,30 +23,9 @@ interface Course {
   code: string;
 }
 
-interface UnitVersion {
-  id: number;
-  version_number: number;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    published: "bg-green-100 text-green-800",
-    archived: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
-}
-
 export default function UnitLibraryPage() {
   const [unitPlans, setUnitPlans] = useState<UnitPlan[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [versionCounts, setVersionCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -59,22 +40,6 @@ export default function UnitLibraryPage() {
         ]);
         setUnitPlans(units);
         setCourses(allCourses);
-
-        // Fetch version counts for each unit
-        const counts: Record<number, number> = {};
-        await Promise.all(
-          units.map(async (unit) => {
-            try {
-              const versions = await apiFetch<UnitVersion[]>(
-                `/api/v1/unit_plans/${unit.id}/versions`,
-              );
-              counts[unit.id] = versions.length;
-            } catch {
-              counts[unit.id] = 0;
-            }
-          }),
-        );
-        setVersionCounts(counts);
       } catch {
         // API may not be available
       } finally {
@@ -175,8 +140,8 @@ export default function UnitLibraryPage() {
                   <div className="mt-3 flex items-center justify-between">
                     <StatusBadge status={unit.status} />
                     <span className="text-xs text-gray-400">
-                      {versionCounts[unit.id] ?? 0} version
-                      {(versionCounts[unit.id] ?? 0) !== 1 ? "s" : ""}
+                      {unit.version_count} version
+                      {unit.version_count !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </Link>

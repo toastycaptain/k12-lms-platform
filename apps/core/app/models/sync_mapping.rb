@@ -1,9 +1,10 @@
 class SyncMapping < ApplicationRecord
   include TenantScoped
 
-  VALID_LOCAL_TYPES = %w[Course Section Enrollment Assignment Submission].freeze
+  VALID_LOCAL_TYPES = %w[Course Section Enrollment Assignment Submission School AcademicYear Term User].freeze
   VALID_EXTERNAL_TYPES = %w[classroom_course classroom_section classroom_student classroom_coursework
-    classroom_submission].freeze
+    classroom_submission oneroster_org oneroster_academic_session oneroster_class oneroster_user
+    oneroster_enrollment].freeze
 
   belongs_to :integration_config
 
@@ -17,10 +18,10 @@ class SyncMapping < ApplicationRecord
   scope :for_external, ->(type, id) { where(external_type: type, external_id: id) }
 
   def self.find_local(integration_config, local_type, local_id)
-    where(integration_config: integration_config, local_type: local_type, local_id: local_id).first
+    find_by(integration_config: integration_config, local_type: local_type, local_id: local_id)
   end
 
   def self.find_external(integration_config, external_type, external_id)
-    where(integration_config: integration_config, external_type: external_type, external_id: external_id).first
+    find_by(integration_config: integration_config, external_type: external_type, external_id: external_id)
   end
 end
