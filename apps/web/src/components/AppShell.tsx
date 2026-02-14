@@ -39,7 +39,15 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "Report", href: "/report" },
   { label: "Communicate", href: "/communicate" },
-  { label: "Admin", href: "/admin" },
+  {
+    label: "Admin",
+    href: "/admin",
+    children: [
+      { label: "Curriculum Map", href: "/admin/curriculum-map" },
+      { label: "Approvals", href: "/admin/approvals" },
+      { label: "Integrations", href: "/admin/integrations" },
+    ],
+  },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

@@ -48,6 +48,7 @@ export interface CurrentUser {
   last_name: string;
   tenant_id: number;
   roles: string[];
+  google_connected: boolean;
 }
 
 interface MeResponse {
@@ -57,6 +58,7 @@ interface MeResponse {
     first_name: string;
     last_name: string;
     roles: string[];
+    google_connected?: boolean;
   };
   tenant: {
     id: number;
@@ -74,5 +76,6 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
     last_name: data.user.last_name,
     tenant_id: data.tenant.id,
     roles: data.user.roles,
+    google_connected: data.user.google_connected ?? false,
   };
 }
