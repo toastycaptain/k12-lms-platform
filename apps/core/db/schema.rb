@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_031100) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_031104) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,88 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031100) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ai_invocations", force: :cascade do |t|
+    t.bigint "ai_provider_config_id", null: false
+    t.bigint "ai_task_policy_id"
+    t.bigint "ai_template_id"
+    t.datetime "completed_at"
+    t.integer "completion_tokens"
+    t.jsonb "context", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.integer "duration_ms"
+    t.text "error_message"
+    t.string "input_hash"
+    t.string "model", null: false
+    t.integer "prompt_tokens"
+    t.string "provider_name", null: false
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.string "task_type", null: false
+    t.bigint "tenant_id", null: false
+    t.integer "total_tokens"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["ai_provider_config_id"], name: "index_ai_invocations_on_ai_provider_config_id"
+    t.index ["ai_task_policy_id"], name: "index_ai_invocations_on_ai_task_policy_id"
+    t.index ["ai_template_id"], name: "index_ai_invocations_on_ai_template_id"
+    t.index ["tenant_id", "task_type", "created_at"], name: "index_ai_invocations_on_tenant_id_and_task_type_and_created_at"
+    t.index ["tenant_id"], name: "index_ai_invocations_on_tenant_id"
+    t.index ["user_id"], name: "index_ai_invocations_on_user_id"
+  end
+
+  create_table "ai_provider_configs", force: :cascade do |t|
+    t.text "api_key"
+    t.jsonb "available_models", default: [], null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "default_model", null: false
+    t.string "display_name", null: false
+    t.string "provider_name", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "inactive", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ai_provider_configs_on_created_by_id"
+    t.index ["tenant_id", "provider_name"], name: "index_ai_provider_configs_on_tenant_id_and_provider_name", unique: true
+    t.index ["tenant_id"], name: "index_ai_provider_configs_on_tenant_id"
+  end
+
+  create_table "ai_task_policies", force: :cascade do |t|
+    t.bigint "ai_provider_config_id", null: false
+    t.jsonb "allowed_roles", default: [], null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "max_tokens_limit", default: 4096
+    t.string "model_override"
+    t.boolean "requires_approval", default: false, null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "task_type", null: false
+    t.float "temperature_limit", default: 1.0
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ai_provider_config_id"], name: "index_ai_task_policies_on_ai_provider_config_id"
+    t.index ["created_by_id"], name: "index_ai_task_policies_on_created_by_id"
+    t.index ["tenant_id", "task_type"], name: "index_ai_task_policies_on_tenant_id_and_task_type", unique: true
+    t.index ["tenant_id"], name: "index_ai_task_policies_on_tenant_id"
+  end
+
+  create_table "ai_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "name", null: false
+    t.string "status", default: "draft", null: false
+    t.text "system_prompt", null: false
+    t.string "task_type", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "user_prompt_template", null: false
+    t.jsonb "variables", default: [], null: false
+    t.index ["created_by_id"], name: "index_ai_templates_on_created_by_id"
+    t.index ["tenant_id", "task_type", "status"], name: "index_ai_templates_on_tenant_id_and_task_type_and_status"
+    t.index ["tenant_id"], name: "index_ai_templates_on_tenant_id"
   end
 
   create_table "announcements", force: :cascade do |t|
@@ -700,6 +782,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_031100) do
   add_foreign_key "academic_years", "tenants"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_invocations", "ai_provider_configs"
+  add_foreign_key "ai_invocations", "ai_task_policies"
+  add_foreign_key "ai_invocations", "ai_templates"
+  add_foreign_key "ai_invocations", "tenants"
+  add_foreign_key "ai_invocations", "users"
+  add_foreign_key "ai_provider_configs", "tenants"
+  add_foreign_key "ai_provider_configs", "users", column: "created_by_id"
+  add_foreign_key "ai_task_policies", "ai_provider_configs"
+  add_foreign_key "ai_task_policies", "tenants"
+  add_foreign_key "ai_task_policies", "users", column: "created_by_id"
+  add_foreign_key "ai_templates", "tenants"
+  add_foreign_key "ai_templates", "users", column: "created_by_id"
   add_foreign_key "announcements", "courses"
   add_foreign_key "announcements", "tenants"
   add_foreign_key "announcements", "users", column: "created_by_id"

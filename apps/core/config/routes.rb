@@ -183,6 +183,29 @@ Rails.application.routes.draw do
         post :picker_token
       end
 
+
+      resources :ai_provider_configs do
+        member do
+          post :activate
+          post :deactivate
+        end
+      end
+
+      resources :ai_task_policies
+
+      resources :ai_templates do
+        member do
+          post :activate
+          post :archive
+        end
+      end
+
+      resources :ai_invocations, only: [ :index, :show ] do
+        collection do
+          get :summary
+        end
+      end
+
       namespace :addon do
         get :unit_plans
         get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons
