@@ -272,7 +272,7 @@
         "npm run build succeeds"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-18: Submissions Inbox is the teacher's grading command center. Lists across all courses for efficiency."
     },
     {
