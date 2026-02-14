@@ -214,7 +214,7 @@
         "npm run build succeeds"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "UX §3.4: Module Editor organizes content within a course. Items are links to assignments, discussions, or external URLs."
     },
     {
