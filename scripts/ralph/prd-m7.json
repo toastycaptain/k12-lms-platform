@@ -1,7 +1,7 @@
 {
   "project": "k12-lms-platform",
   "branchName": "ralph/m7-institutional-hardening",
-  "description": "M7: Institutional Hardening \u2014 OneRoster SIS integration, LTI 1.3 (optional), audit logging, data governance, and disaster recovery per PRD-15, PRD-23, and PRD-25",
+  "description": "M7: Institutional Hardening — OneRoster SIS integration, LTI 1.3 (optional), audit logging, data governance, and disaster recovery per PRD-15, PRD-23, and PRD-25",
   "userStories": [
     {
       "id": "US-097",
@@ -11,11 +11,11 @@
         "Create app/services/one_roster_client.rb with Faraday-based HTTP client",
         "Constructor accepts: base_url, client_id, client_secret (OAuth 2.0 client credentials flow)",
         "authenticate! method: POST to /token endpoint with client_credentials grant_type, caches access_token with expiry",
-        "get_all_orgs: GET /ims/oneroster/v1p1/orgs \u2014 returns organizations (schools/districts)",
-        "get_all_users: GET /ims/oneroster/v1p1/users \u2014 returns users with roles (teacher/student/administrator)",
-        "get_all_classes: GET /ims/oneroster/v1p1/classes \u2014 returns classes with subject codes and terms",
-        "get_all_enrollments: GET /ims/oneroster/v1p1/enrollments \u2014 returns class enrollments with role",
-        "get_all_academic_sessions: GET /ims/oneroster/v1p1/academicSessions \u2014 returns terms/semesters",
+        "get_all_orgs: GET /ims/oneroster/v1p1/orgs — returns organizations (schools/districts)",
+        "get_all_users: GET /ims/oneroster/v1p1/users — returns users with roles (teacher/student/administrator)",
+        "get_all_classes: GET /ims/oneroster/v1p1/classes — returns classes with subject codes and terms",
+        "get_all_enrollments: GET /ims/oneroster/v1p1/enrollments — returns class enrollments with role",
+        "get_all_academic_sessions: GET /ims/oneroster/v1p1/academicSessions — returns terms/semesters",
         "All list endpoints support pagination via offset/limit params and follow Link headers for next page",
         "All list endpoints support filtering via filter param (e.g., filter=role='student')",
         "OneRosterError custom error class in app/errors/one_roster_error.rb with status_code and response_body",
@@ -25,7 +25,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15: OneRoster is the core SIS integration standard for M7. OneRoster 1.1 REST is the most widely supported version. The client wraps the IMS Global OneRoster 1.1 REST API specification."
     },
     {
@@ -37,14 +37,14 @@
         "IntegrationConfig settings JSONB stores OneRoster-specific config: base_url, client_id (encrypted), client_secret (encrypted), auto_sync_enabled (boolean), sync_interval_hours (integer, default 24)",
         "Add encrypts :settings_client_id, :settings_client_secret via custom accessor methods that read/write from settings JSONB",
         "POST /api/v1/integration_configs with provider='oneroster' validates required settings: base_url, client_id, client_secret",
-        "POST /api/v1/integration_configs/:id/test_connection \u2014 new member route that instantiates OneRosterClient and calls get_all_orgs with limit=1 to verify connectivity, returns { status: 'ok', org_count: N } or { status: 'error', message: '...' }",
+        "POST /api/v1/integration_configs/:id/test_connection — new member route that instantiates OneRosterClient and calls get_all_orgs with limit=1 to verify connectivity, returns { status: 'ok', org_count: N } or { status: 'error', message: '...' }",
         "Admin-only access via IntegrationConfigPolicy",
         "Factory: :oneroster_integration_config trait with valid settings",
         "spec/requests/api/v1/integration_configs_oneroster_spec.rb with tests for create, test_connection success/failure",
         "All specs pass, rubocop clean"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": "Extends the existing IntegrationConfig model from M5 to support OneRoster as a new provider type alongside google_classroom."
     },
     {
@@ -55,9 +55,9 @@
         "Create app/jobs/one_roster_org_sync_job.rb that syncs organizations and academic sessions",
         "Job accepts integration_config_id and optional triggered_by_id",
         "Creates SyncRun with sync_type='oneroster_org_sync', direction='pull'",
-        "Syncs OneRoster orgs \u2192 School records: maps sourcedId\u2192external_id, name\u2192name, type\u2192metadata",
+        "Syncs OneRoster orgs → School records: maps sourcedId→external_id, name→name, type→metadata",
         "Only syncs orgs where type='school' (skips districts, departments)",
-        "Syncs OneRoster academicSessions \u2192 AcademicYear/Term records: maps dateLastModified, startDate, endDate",
+        "Syncs OneRoster academicSessions → AcademicYear/Term records: maps dateLastModified, startDate, endDate",
         "Sessions with type='schoolYear' map to AcademicYear, type='term'/'semester'/'gradingPeriod' map to Term",
         "Creates SyncMapping for each synced entity (local_type='School'/'AcademicYear'/'Term', external_type='oneroster_org'/'oneroster_academic_session')",
         "Update SyncMapping::VALID_LOCAL_TYPES to include 'School', 'AcademicYear', 'Term'",
@@ -65,12 +65,12 @@
         "Update SyncRun::VALID_SYNC_TYPES to include 'oneroster_org_sync', 'oneroster_user_sync', 'oneroster_class_sync', 'oneroster_enrollment_sync'",
         "Idempotent: updates existing records if SyncMapping already exists, creates new if not",
         "Logs info/warn/error via SyncRun#log_info/log_warn/log_error",
-        "POST /api/v1/integration_configs/:id/sync_orgs \u2014 triggers the job, returns 202",
+        "POST /api/v1/integration_configs/:id/sync_orgs — triggers the job, returns 202",
         "spec/jobs/one_roster_org_sync_job_spec.rb with mocked OneRosterClient",
         "All specs pass, rubocop clean"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": "Uses existing SyncRun/SyncLog/SyncMapping infrastructure from M5. The job is idempotent per Tech Spec 2.7."
     },
     {
@@ -79,27 +79,27 @@
       "description": "As an admin, I need to sync users and class enrollments from our SIS via OneRoster so teachers and students are automatically provisioned in the platform.",
       "acceptanceCriteria": [
         "Create app/jobs/one_roster_user_sync_job.rb that syncs users from OneRoster",
-        "Maps OneRoster user fields: sourcedId, givenName\u2192first_name, familyName\u2192last_name, email, roles",
-        "OneRoster role mapping: 'teacher'\u2192teacher role, 'student'\u2192student role, 'administrator'\u2192admin role",
+        "Maps OneRoster user fields: sourcedId, givenName→first_name, familyName→last_name, email, roles",
+        "OneRoster role mapping: 'teacher'→teacher role, 'student'→student role, 'administrator'→admin role",
         "Creates User record with tenant, assigns appropriate role via user.add_role",
         "Skips users without email addresses (logs warning)",
         "Creates SyncMapping for each user (local_type='User', external_type='oneroster_user')",
-        "Create app/jobs/one_roster_class_sync_job.rb that syncs classes\u2192Courses and enrollments",
-        "Maps OneRoster class fields: sourcedId, title\u2192name, classCode\u2192code, subjects, terms",
+        "Create app/jobs/one_roster_class_sync_job.rb that syncs classes→Courses and enrollments",
+        "Maps OneRoster class fields: sourcedId, title→name, classCode→code, subjects, terms",
         "Links course to AcademicYear via term's academic session SyncMapping",
         "Create app/jobs/one_roster_enrollment_sync_job.rb that syncs enrollments",
-        "Maps OneRoster enrollment: class sourcedId\u2192course (via SyncMapping), user sourcedId\u2192user (via SyncMapping), role\u2192enrollment role",
+        "Maps OneRoster enrollment: class sourcedId→course (via SyncMapping), user sourcedId→user (via SyncMapping), role→enrollment role",
         "Creates Section if needed (one default section per course), then creates Enrollment",
         "All three jobs use SyncRun lifecycle (start!/complete!/fail!) and logging",
         "All three jobs are idempotent (update existing, skip duplicates)",
-        "POST /api/v1/integration_configs/:id/sync_users \u2014 triggers user sync, returns 202",
-        "POST /api/v1/integration_configs/:id/sync_classes \u2014 triggers class sync, returns 202",
-        "POST /api/v1/integration_configs/:id/sync_enrollments \u2014 triggers enrollment sync, returns 202",
+        "POST /api/v1/integration_configs/:id/sync_users — triggers user sync, returns 202",
+        "POST /api/v1/integration_configs/:id/sync_classes — triggers class sync, returns 202",
+        "POST /api/v1/integration_configs/:id/sync_enrollments — triggers enrollment sync, returns 202",
         "Comprehensive specs for all three jobs with mocked OneRosterClient",
         "All specs pass, rubocop clean"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15: OneRoster user/enrollment sync is the primary value of SIS integration. Users are created with email-based lookup to avoid duplicates. Enrollments require both user and class sync to have run first."
     },
     {
@@ -110,20 +110,20 @@
         "Create app/jobs/one_roster_csv_import_job.rb that processes a ZIP file of OneRoster CSVs",
         "Accepts integration_config_id and Active Storage blob_id for the uploaded ZIP",
         "Expects standard OneRoster CSV filenames: orgs.csv, users.csv, classes.csv, enrollments.csv, academicSessions.csv",
-        "Parses CSV files in dependency order: orgs \u2192 academicSessions \u2192 users \u2192 classes \u2192 enrollments",
+        "Parses CSV files in dependency order: orgs → academicSessions → users → classes → enrollments",
         "Reuses the same mapping logic as the REST sync jobs (creates SyncMappings, idempotent)",
         "Validates CSV headers match OneRoster 1.1 spec (sourcedId, status, dateLastModified, etc.)",
         "Skips rows with status='tobedeleted' (logs info)",
         "Creates SyncRun with sync_type='oneroster_csv_import', direction='pull'",
-        "POST /api/v1/integration_configs/:id/import_csv \u2014 accepts multipart file upload, validates ZIP, enqueues job, returns 202",
-        "GET /api/v1/integration_configs/:id/import_status \u2014 returns latest CSV import SyncRun status",
+        "POST /api/v1/integration_configs/:id/import_csv — accepts multipart file upload, validates ZIP, enqueues job, returns 202",
+        "GET /api/v1/integration_configs/:id/import_status — returns latest CSV import SyncRun status",
         "IntegrationConfig has_one_attached :import_file via Active Storage",
         "spec/jobs/one_roster_csv_import_job_spec.rb with fixture ZIP containing sample CSVs",
         "Create spec/fixtures/oneroster_sample.zip with minimal valid CSVs (2 orgs, 3 users, 2 classes, 4 enrollments, 2 sessions)",
         "All specs pass, rubocop clean"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": "Many smaller schools use OneRoster CSV export from their SIS rather than REST API. The CSV format follows IMS Global OneRoster 1.1 CSV specification."
     },
     {
@@ -145,7 +145,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15: LTI is marked optional but is essential for tool interoperability. LTI 1.3 uses OpenID Connect for authentication and JWT for message signing."
     },
     {
@@ -156,10 +156,10 @@
         "Create app/services/lti_service.rb with methods: build_login_request, validate_id_token, build_launch_message, build_deep_link_response",
         "Add jwt gem to Gemfile for JWT signing/verification",
         "Generate RSA keypair for platform: store in Rails credentials (or env vars) as LTI_PLATFORM_PRIVATE_KEY",
-        "GET /api/v1/lti/jwks \u2014 returns platform's JWKS (public key set) for tool verification",
-        "POST /api/v1/lti/login \u2014 OIDC login initiation: validates registration, builds auth redirect URL with nonce/state",
-        "POST /api/v1/lti/launch \u2014 receives id_token from tool's OIDC redirect, validates JWT signature against tool's JWKS, creates LTI launch context with user claims and course context, returns launch URL with signed JWT",
-        "POST /api/v1/lti/deep_link \u2014 handles deep linking response: validates content_items JWT from tool, creates LtiResourceLink records for selected items",
+        "GET /api/v1/lti/jwks — returns platform's JWKS (public key set) for tool verification",
+        "POST /api/v1/lti/login — OIDC login initiation: validates registration, builds auth redirect URL with nonce/state",
+        "POST /api/v1/lti/launch — receives id_token from tool's OIDC redirect, validates JWT signature against tool's JWKS, creates LTI launch context with user claims and course context, returns launch URL with signed JWT",
+        "POST /api/v1/lti/deep_link — handles deep linking response: validates content_items JWT from tool, creates LtiResourceLink records for selected items",
         "LTI launch message includes required claims: iss, sub, aud, exp, iat, nonce, deployment_id, target_link_uri, roles (mapped from platform roles), context (course info)",
         "LtiLaunch model (non-persisted) encapsulates launch state for the redirect flow",
         "spec/services/lti_service_spec.rb with JWT signing/verification tests",
@@ -167,7 +167,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": "LTI 1.3 uses a two-step OIDC flow: 1) platform initiates login to tool, 2) tool redirects back with id_token. The platform acts as both LTI Platform (launching tools) and optionally Tool Provider."
     },
     {
@@ -176,11 +176,11 @@
       "description": "As a teacher, I need grades from LTI tools to flow back into the platform gradebook so all scores are in one place.",
       "acceptanceCriteria": [
         "Create app/services/lti_ags_service.rb implementing LTI AGS (Assignment and Grade Services) 2.0",
-        "GET /api/v1/lti/ags/lineitems \u2014 returns line items (grade columns) for the course context, maps to local Assignment records",
-        "POST /api/v1/lti/ags/lineitems \u2014 tool creates a new line item (creates Assignment with lti_source flag)",
-        "GET /api/v1/lti/ags/lineitems/:id \u2014 returns single line item",
-        "GET /api/v1/lti/ags/lineitems/:id/results \u2014 returns scores/results for a line item",
-        "POST /api/v1/lti/ags/lineitems/:id/scores \u2014 tool posts score for a user, creates/updates Submission grade",
+        "GET /api/v1/lti/ags/lineitems — returns line items (grade columns) for the course context, maps to local Assignment records",
+        "POST /api/v1/lti/ags/lineitems — tool creates a new line item (creates Assignment with lti_source flag)",
+        "GET /api/v1/lti/ags/lineitems/:id — returns single line item",
+        "GET /api/v1/lti/ags/lineitems/:id/results — returns scores/results for a line item",
+        "POST /api/v1/lti/ags/lineitems/:id/scores — tool posts score for a user, creates/updates Submission grade",
         "All AGS endpoints validate the LTI access token (OAuth 2.0 bearer token with scope validation)",
         "LTI scopes: lineitem (read/write), result (read), score (write)",
         "LtiAccessToken model or service that validates and caches tool access tokens via client_credentials grant",
@@ -189,7 +189,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": "LTI AGS is the grade passback mechanism in LTI 1.3, replacing the older Basic Outcomes service. Tools use OAuth 2.0 client_credentials to get access tokens for AGS endpoints."
     },
     {
@@ -206,16 +206,16 @@
         "Include Auditable concern in key controllers: UnitPlansController, AssignmentsController, QuizzesController, IntegrationConfigsController, AiProviderConfigsController, AiTaskPoliciesController",
         "Log sign_in/sign_out events in SessionsController",
         "Log AI generation events in AiGenerationsController",
-        "GET /api/v1/audit_logs \u2014 admin-only index with filters: user_id, auditable_type, action, date range (start_date, end_date)",
-        "GET /api/v1/audit_logs \u2014 supports pagination via page/per_page params (default 50 per page)",
-        "GET /api/v1/audit_logs/summary \u2014 returns counts by action type and by day for last 30 days",
+        "GET /api/v1/audit_logs — admin-only index with filters: user_id, auditable_type, action, date range (start_date, end_date)",
+        "GET /api/v1/audit_logs — supports pagination via page/per_page params (default 50 per page)",
+        "GET /api/v1/audit_logs/summary — returns counts by action type and by day for last 30 days",
         "AuditLogPolicy: admin-only for all actions",
         "Database index on [tenant_id, created_at] and [tenant_id, auditable_type, auditable_id]",
         "Factory and comprehensive specs: model spec, service spec, request spec",
         "All specs pass, rubocop clean"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.11: Audit logs are a core security and observability requirement. The polymorphic design allows logging changes to any model. JSONB changes column stores before/after values."
     },
     {
@@ -233,12 +233,12 @@
         "Job creates AuditLog entry for each enforcement run with count of affected records",
         "Job is safe: processes in batches of 1000 to avoid memory issues",
         "CRUD API for data_retention_policies: admin-only",
-        "POST /api/v1/data_retention_policies/:id/run \u2014 manually trigger enforcement for a single policy, returns 202",
+        "POST /api/v1/data_retention_policies/:id/run — manually trigger enforcement for a single policy, returns 202",
         "Factory, model spec, job spec, request spec",
         "All specs pass, rubocop clean"
       ],
       "priority": 10,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15 Governance: Data retention is essential for FERPA/COPPA compliance in K-12 settings. The 30-day minimum prevents accidental data loss."
     },
     {
@@ -252,8 +252,8 @@
         "Excludes sensitive fields: encrypted tokens, API keys, password digests",
         "Includes metadata.json with: tenant info, export timestamp, record counts per model, platform version",
         "ZIP file attached to tenant via has_one_attached :data_export on Tenant model",
-        "POST /api/v1/tenant/export \u2014 admin-only, enqueues job, returns 202 with { job_id: id }",
-        "GET /api/v1/tenant/export_status \u2014 returns { status: processing/completed/failed, download_url: signed_url }",
+        "POST /api/v1/tenant/export — admin-only, enqueues job, returns 202 with { job_id: id }",
+        "GET /api/v1/tenant/export_status — returns { status: processing/completed/failed, download_url: signed_url }",
         "Export runs within tenant scope (only exports current tenant's data)",
         "Job creates AuditLog entry on completion",
         "Large tables (submissions, quiz_attempts) exported in streaming fashion to avoid memory issues",
@@ -262,7 +262,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 11,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15 DR: Tenant data export provides data portability and supports disaster recovery. The export format is designed for re-import or archival."
     },
     {
@@ -285,7 +285,7 @@
         "All specs pass, rubocop clean"
       ],
       "priority": 12,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.3: 'Optional: Postgres Row-Level Security (later phase)'. RLS provides defense-in-depth for tenant isolation beyond application-level scoping. Disabled by default in dev/test."
     },
     {
@@ -296,7 +296,7 @@
         "Create apps/web/src/app/admin/oneroster/page.tsx",
         "Configuration section: form for base_url, client_id (password field), client_secret (password field), auto_sync toggle, sync_interval_hours",
         "Test Connection button: calls POST /integration_configs/:id/test_connection, shows success/failure status",
-        "Sync Actions section: buttons for Sync Organizations, Sync Users, Sync Classes, Sync Enrollments \u2014 each triggers respective POST endpoint",
+        "Sync Actions section: buttons for Sync Organizations, Sync Users, Sync Classes, Sync Enrollments — each triggers respective POST endpoint",
         "CSV Import section: file upload input (accepts .zip), calls POST /integration_configs/:id/import_csv",
         "Sync History section: table of SyncRuns for this integration with status badges, timestamps, and expandable log rows",
         "Shows sync mapping counts: total users synced, courses synced, enrollments synced",
@@ -305,7 +305,7 @@
         "Next.js lint, typecheck, and build all pass"
       ],
       "priority": 13,
-      "passes": true,
+      "passes": false,
       "notes": "Extends the Admin section with OneRoster management. Reuses the sync dashboard patterns from M5 Google integrations."
     },
     {
@@ -325,7 +325,7 @@
         "Next.js lint, typecheck, and build all pass"
       ],
       "priority": 14,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15: LTI management UI. The platform info section helps admins register the platform with external tool vendors."
     },
     {
@@ -335,7 +335,7 @@
       "acceptanceCriteria": [
         "Create apps/web/src/app/admin/governance/page.tsx",
         "Three-tab layout: Audit Log, Data Retention, Data Export",
-        "Audit Log tab: table of audit_logs with filters \u2014 action type dropdown, auditable_type dropdown, user search, date range picker",
+        "Audit Log tab: table of audit_logs with filters — action type dropdown, auditable_type dropdown, user search, date range picker",
         "Audit Log tab: summary stats cards showing counts by action type for last 30 days (from /audit_logs/summary)",
         "Audit Log tab: pagination controls (previous/next) with 50 items per page",
         "Audit Log tab: each row shows timestamp, user email, action, entity type, entity ID, expandable changes JSON",
@@ -349,7 +349,7 @@
         "Next.js lint, typecheck, and build all pass"
       ],
       "priority": 15,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-15 Governance and DR: This dashboard provides the admin UI for all governance, compliance, and disaster recovery features. Combines audit logging, retention policies, and data export in one location."
     }
   ]
