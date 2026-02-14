@@ -11,6 +11,7 @@ module Api
       def create
         authorize RubricScore.new(tenant: Current.tenant)
         scores_params = params[:scores] || []
+        total_grade = nil
 
         saved_scores = ActiveRecord::Base.transaction do
           scores = scores_params.map do |score_data|
@@ -37,6 +38,14 @@ module Api
           scores
         end
 
+        audit_event(
+          "rubric_scores.applied",
+          auditable: @submission,
+          metadata: {
+            rubric_score_count: saved_scores.length,
+            total_grade: total_grade.to_s
+          }
+        )
         render json: saved_scores, status: :created
       end
 

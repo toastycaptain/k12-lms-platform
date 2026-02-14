@@ -70,13 +70,17 @@ RSpec.describe "Api::V1::ManualGrading" do
       mock_session(teacher, tenant: tenant)
       essay_answer = attempt.attempt_answers.find_by(question_id: essay_question.id)
 
-      post "/api/v1/attempt_answers/#{essay_answer.id}/grade", params: {
-        points_awarded: 8.0,
-        feedback: "Good work but could be more detailed"
-      }
+      expect {
+        post "/api/v1/attempt_answers/#{essay_answer.id}/grade", params: {
+          points_awarded: 8.0,
+          feedback: "Good work but could be more detailed"
+        }
+      }.to change(AuditLog.unscoped, :count).by(1)
+
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["points_awarded"]).to eq("8.0")
       expect(response.parsed_body["feedback"]).to eq("Good work but could be more detailed")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("attempt_answer.graded")
 
       attempt.reload
       expect(attempt.score.to_f).to eq(13.0)

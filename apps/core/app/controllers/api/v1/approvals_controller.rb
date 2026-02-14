@@ -16,6 +16,14 @@ module Api
         # Auto-publish the unit plan
         approvable = @approval.approvable
         approvable.publish! if approvable.respond_to?(:publish!)
+        audit_event(
+          "approval.approved",
+          auditable: @approval,
+          metadata: {
+            approvable_type: @approval.approvable_type,
+            approvable_id: @approval.approvable_id
+          }
+        )
 
         render json: @approval
       rescue ActiveRecord::RecordInvalid
@@ -36,6 +44,14 @@ module Api
         # Revert unit plan status back to draft
         approvable = @approval.approvable
         approvable.update!(status: "draft") if approvable.respond_to?(:status)
+        audit_event(
+          "approval.rejected",
+          auditable: @approval,
+          metadata: {
+            approvable_type: @approval.approvable_type,
+            approvable_id: @approval.approvable_id
+          }
+        )
 
         render json: @approval
       rescue ActiveRecord::RecordInvalid

@@ -58,14 +58,18 @@ RSpec.describe "Api::V1::RubricScores", type: :request do
       criterion1
       criterion2
 
-      post "/api/v1/submissions/#{submission.id}/rubric_scores", params: {
-        scores: [
-          { rubric_criterion_id: criterion1.id, points_awarded: 40, comments: "Good content" },
-          { rubric_criterion_id: criterion2.id, points_awarded: 35, comments: "Decent style" }
-        ]
-      }
+      expect {
+        post "/api/v1/submissions/#{submission.id}/rubric_scores", params: {
+          scores: [
+            { rubric_criterion_id: criterion1.id, points_awarded: 40, comments: "Good content" },
+            { rubric_criterion_id: criterion2.id, points_awarded: 35, comments: "Decent style" }
+          ]
+        }
+      }.to change(AuditLog.unscoped, :count).by(1)
+
       expect(response).to have_http_status(:created)
       expect(response.parsed_body.length).to eq(2)
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("rubric_scores.applied")
 
       # Check auto-grade
       submission.reload

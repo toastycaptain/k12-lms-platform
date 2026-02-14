@@ -56,6 +56,11 @@ module Api
       def sync_courses
         authorize @integration_config
         ClassroomCourseSyncJob.perform_later(@integration_config.id, Current.user.id)
+        audit_event(
+          "integration.sync_courses_triggered",
+          auditable: @integration_config,
+          metadata: { provider: @integration_config.provider }
+        )
         render json: { message: "Sync triggered" }, status: :accepted
       end
 

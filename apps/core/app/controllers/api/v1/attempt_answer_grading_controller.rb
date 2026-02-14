@@ -22,6 +22,15 @@ module Api
         )
 
         @answer.quiz_attempt.calculate_score!
+        audit_event(
+          "attempt_answer.graded",
+          auditable: @answer,
+          metadata: {
+            quiz_attempt_id: @answer.quiz_attempt_id,
+            question_id: @answer.question_id,
+            points_awarded: points_awarded.to_s
+          }
+        )
         render json: @answer
       end
     end

@@ -22,6 +22,14 @@ module Api
           graded_at: Time.current,
           graded_by: Current.user
         )
+        audit_event(
+          "submission.graded",
+          auditable: @submission,
+          metadata: {
+            assignment_id: @submission.assignment_id,
+            grade: grade_val.to_s
+          }
+        )
         render json: @submission
       end
 
@@ -33,6 +41,11 @@ module Api
         end
 
         @submission.update!(status: "returned")
+        audit_event(
+          "submission.returned",
+          auditable: @submission,
+          metadata: { assignment_id: @submission.assignment_id }
+        )
         render json: @submission
       end
 

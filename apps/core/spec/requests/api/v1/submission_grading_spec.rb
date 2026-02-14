@@ -37,13 +37,17 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
     it "grades a submission" do
       mock_session(teacher, tenant: tenant)
 
-      post "/api/v1/submissions/#{submission.id}/grade", params: { grade: 85, feedback: "Good work!" }
+      expect {
+        post "/api/v1/submissions/#{submission.id}/grade", params: { grade: 85, feedback: "Good work!" }
+      }.to change(AuditLog.unscoped, :count).by(1)
+
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["grade"]).to eq("85.0")
       expect(response.parsed_body["feedback"]).to eq("Good work!")
       expect(response.parsed_body["status"]).to eq("graded")
       expect(response.parsed_body["graded_by_id"]).to eq(teacher.id)
       expect(response.parsed_body["graded_at"]).to be_present
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("submission.graded")
     end
 
     it "re-grades an already graded submission" do

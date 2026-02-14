@@ -68,6 +68,16 @@ class ApplicationController < ActionController::API
     Tenant.unscoped.find_by(slug: subdomain)
   end
 
+  def audit_event(event_type, auditable: nil, actor: Current.user, metadata: {})
+    AuditLogger.log(
+      event_type: event_type,
+      actor: actor,
+      auditable: auditable,
+      metadata: metadata,
+      request: request
+    )
+  end
+
   def skip_authorization?
     false
   end

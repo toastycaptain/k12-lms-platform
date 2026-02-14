@@ -29,6 +29,14 @@ module Api
           Current.user.id,
           @sync_mapping.id
         )
+        audit_event(
+          "integration.sync_roster_triggered",
+          auditable: @sync_mapping,
+          metadata: {
+            local_type: @sync_mapping.local_type,
+            external_type: @sync_mapping.external_type
+          }
+        )
         render json: { message: "Roster sync triggered" }, status: :accepted
       end
 

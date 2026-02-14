@@ -157,10 +157,13 @@ RSpec.describe "Api::V1::Approvals", type: :request do
       approval = create(:approval, tenant: tenant_with_approval, approvable: unit_plan, requested_by: teacher, status: "pending")
       Current.tenant = nil
 
-      post "/api/v1/approvals/#{approval.id}/approve"
+      expect {
+        post "/api/v1/approvals/#{approval.id}/approve"
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]).to eq("approved")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("approval.approved")
 
       Current.tenant = tenant_with_approval
       expect(unit_plan.reload.status).to eq("published")
@@ -192,11 +195,14 @@ RSpec.describe "Api::V1::Approvals", type: :request do
       approval = create(:approval, tenant: tenant_with_approval, approvable: unit_plan, requested_by: teacher, status: "pending")
       Current.tenant = nil
 
-      post "/api/v1/approvals/#{approval.id}/reject", params: { comments: "Needs more detail on assessments" }
+      expect {
+        post "/api/v1/approvals/#{approval.id}/reject", params: { comments: "Needs more detail on assessments" }
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]).to eq("rejected")
       expect(response.parsed_body["comments"]).to eq("Needs more detail on assessments")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("approval.rejected")
 
       Current.tenant = tenant_with_approval
       expect(unit_plan.reload.status).to eq("draft")
