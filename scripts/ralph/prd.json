@@ -252,7 +252,7 @@
         "npm run build succeeds"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11, PRD-18: Student submission is the core LMS interaction. Keep it simple — one submission per student per assignment."
     },
     {
