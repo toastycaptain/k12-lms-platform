@@ -21,6 +21,7 @@ module Api
 
         Current.tenant = tenant
         user = find_or_create_user(auth, tenant)
+        store_google_tokens(user, auth)
 
         session[:user_id] = user.id
         session[:tenant_id] = tenant.id
@@ -45,7 +46,8 @@ module Api
             email: Current.user.email,
             first_name: Current.user.first_name,
             last_name: Current.user.last_name,
-            roles: Current.user.roles.pluck(:name)
+            roles: Current.user.roles.pluck(:name),
+            google_connected: Current.user.google_connected?
           },
           tenant: {
             id: Current.tenant.id,
@@ -69,6 +71,16 @@ module Api
           user.last_name = auth.info.last_name
           user.save!
         end
+      end
+
+      def store_google_tokens(user, auth)
+        return unless auth.credentials
+
+        attrs = { google_access_token: auth.credentials.token }
+        attrs[:google_refresh_token] = auth.credentials.refresh_token if auth.credentials.refresh_token.present?
+        attrs[:google_token_expires_at] = Time.at(auth.credentials.expires_at) if auth.credentials.expires_at.present?
+
+        user.update!(attrs)
       end
     end
   end

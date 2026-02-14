@@ -58,6 +58,30 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(existing_user.first_name).to eq("Jane")
         expect(existing_user.last_name).to eq("Smith")
       end
+
+      it "stores Google OAuth tokens from the auth hash" do
+        OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+          provider: "google_oauth2",
+          uid: "123456789",
+          info: {
+            email: "teacher@example.com",
+            first_name: "Jane",
+            last_name: "Smith"
+          },
+          credentials: {
+            token: "google-access-token",
+            refresh_token: "google-refresh-token",
+            expires_at: 1.hour.from_now.to_i
+          }
+        )
+
+        get "/auth/google_oauth2/callback"
+
+        user = User.unscoped.find_by(email: "teacher@example.com")
+        expect(user.google_access_token).to eq("google-access-token")
+        expect(user.google_refresh_token).to eq("google-refresh-token")
+        expect(user.google_token_expires_at).to be_present
+      end
     end
 
     context "with failed OmniAuth response" do
@@ -103,6 +127,33 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(body["user"]["first_name"]).to eq("John")
         expect(body["user"]["roles"]).to include("teacher")
         expect(body["tenant"]["name"]).to eq(tenant.name)
+      end
+
+      it "returns google_connected as false when no refresh token" do
+        Current.tenant = tenant
+        user = create(:user, email: "nogoogle@example.com", tenant: tenant)
+        Current.tenant = nil
+
+        mock_session(user, tenant: tenant)
+
+        get "/api/v1/me"
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["user"]["google_connected"]).to be false
+      end
+
+      it "returns google_connected as true when refresh token is present" do
+        Current.tenant = tenant
+        user = create(:user, email: "hasgoogle@example.com", tenant: tenant,
+          google_refresh_token: "some-refresh-token")
+        Current.tenant = nil
+
+        mock_session(user, tenant: tenant)
+
+        get "/api/v1/me"
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body["user"]["google_connected"]).to be true
       end
     end
 

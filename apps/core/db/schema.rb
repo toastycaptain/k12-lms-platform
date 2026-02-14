@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_020340) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_031100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -513,6 +513,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_020340) do
     t.index ["user_id"], name: "index_submissions_on_user_id"
   end
 
+  create_table "sync_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "entity_id"
+    t.string "entity_type"
+    t.string "external_id"
+    t.string "level", default: "info", null: false
+    t.text "message", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "sync_run_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sync_run_id"], name: "index_sync_logs_on_sync_run_id"
+    t.index ["tenant_id"], name: "index_sync_logs_on_tenant_id"
+  end
+
+  create_table "sync_mappings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.string "external_type", null: false
+    t.bigint "integration_config_id", null: false
+    t.datetime "last_synced_at"
+    t.bigint "local_id", null: false
+    t.string "local_type", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["integration_config_id", "external_type", "external_id"], name: "idx_sync_mappings_external_unique", unique: true
+    t.index ["integration_config_id", "local_type", "local_id"], name: "idx_sync_mappings_local_unique", unique: true
+    t.index ["integration_config_id"], name: "index_sync_mappings_on_integration_config_id"
+    t.index ["tenant_id"], name: "index_sync_mappings_on_tenant_id"
+  end
+
+  create_table "sync_runs", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.string "direction", default: "push", null: false
+    t.text "error_message"
+    t.bigint "integration_config_id", null: false
+    t.integer "records_failed", default: 0, null: false
+    t.integer "records_processed", default: 0, null: false
+    t.integer "records_succeeded", default: 0, null: false
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.string "sync_type", null: false
+    t.bigint "tenant_id", null: false
+    t.bigint "triggered_by_id"
+    t.datetime "updated_at", null: false
+    t.index ["integration_config_id"], name: "index_sync_runs_on_integration_config_id"
+    t.index ["tenant_id"], name: "index_sync_runs_on_tenant_id"
+    t.index ["triggered_by_id"], name: "index_sync_runs_on_triggered_by_id"
+  end
+
   create_table "template_version_standards", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "standard_id", null: false
@@ -635,6 +687,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_020340) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "first_name"
+    t.text "google_access_token"
+    t.text "google_refresh_token"
+    t.datetime "google_token_expires_at"
     t.string "last_name"
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
@@ -724,6 +779,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_020340) do
   add_foreign_key "submissions", "tenants"
   add_foreign_key "submissions", "users"
   add_foreign_key "submissions", "users", column: "graded_by_id"
+  add_foreign_key "sync_logs", "sync_runs"
+  add_foreign_key "sync_logs", "tenants"
+  add_foreign_key "sync_mappings", "integration_configs"
+  add_foreign_key "sync_mappings", "tenants"
+  add_foreign_key "sync_runs", "integration_configs"
+  add_foreign_key "sync_runs", "tenants"
+  add_foreign_key "sync_runs", "users", column: "triggered_by_id"
   add_foreign_key "template_version_standards", "standards"
   add_foreign_key "template_version_standards", "template_versions"
   add_foreign_key "template_version_standards", "tenants"
