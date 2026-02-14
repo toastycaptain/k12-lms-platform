@@ -69,8 +69,9 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
-          bundler-cache: true
+          ruby-version: apps/core/.ruby-version
+      - name: Install Gems
+        run: bundle install --jobs 4 --retry 3
       - name: RuboCop
         run: bundle exec rubocop
       - name: Brakeman
