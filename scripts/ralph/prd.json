@@ -129,7 +129,7 @@
         "Request specs: start attempt as student (201), start when quiz not published (422), start when locked (422), start when max attempts reached (422), submit attempt, show own attempt, teacher sees all attempts, Rubocop passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, PRD-19: QuizAttempt tracks each student's take of a quiz. attempt_number auto-increments. The within_attempt_limit validation will be updated in US-059 to account for QuizAccommodation extra_attempts."
     },
     {

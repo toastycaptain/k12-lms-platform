@@ -115,8 +115,12 @@ Rails.application.routes.draw do
           post :reorder_items, controller: "quiz_items"
         end
         resources :quiz_items, only: [ :index, :create ]
+        resources :quiz_attempts, only: [ :index, :create ], path: "attempts"
       end
       resources :quiz_items, only: [ :update, :destroy ]
+      resources :quiz_attempts, only: [ :show ] do
+        post :submit, on: :member
+      end
 
       resources :question_banks do
         post :archive, on: :member
