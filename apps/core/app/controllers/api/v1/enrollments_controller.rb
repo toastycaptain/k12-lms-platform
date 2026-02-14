@@ -46,7 +46,10 @@ module Api
       end
 
       def enrollment_params
-        params.require(:enrollment).permit(:section_id, :role)
+        enrollment = params.require(:enrollment)
+        permitted = enrollment.permit(:section_id)
+        permitted[:role] = enrollment[:role] if enrollment.key?(:role)
+        permitted
       end
     end
   end
