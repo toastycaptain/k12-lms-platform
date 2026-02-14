@@ -1,7 +1,7 @@
 module Api
   module V1
     class IntegrationConfigsController < ApplicationController
-      before_action :set_integration_config, only: [ :show, :update, :destroy, :activate, :deactivate ]
+      before_action :set_integration_config, only: [ :show, :update, :destroy, :activate, :deactivate, :sync_courses ]
 
       def index
         authorize IntegrationConfig
@@ -51,6 +51,12 @@ module Api
         authorize @integration_config
         @integration_config.deactivate!
         render json: @integration_config
+      end
+
+      def sync_courses
+        authorize @integration_config
+        ClassroomCourseSyncJob.perform_later(@integration_config.id, Current.user.id)
+        render json: { message: "Sync triggered" }, status: :accepted
       end
 
       private
