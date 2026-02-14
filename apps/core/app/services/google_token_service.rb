@@ -16,6 +16,16 @@ class GoogleTokenService
     user.google_access_token
   end
 
+  def credentials
+    refresh! unless valid_token?
+    {
+      access_token: user.google_access_token,
+      refresh_token: user.google_refresh_token,
+      client_id: ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+      client_secret: ENV.fetch("GOOGLE_CLIENT_SECRET", "test-client-secret")
+    }
+  end
+
   def refresh!
     raise "No refresh token available" unless user.google_refresh_token.present?
 

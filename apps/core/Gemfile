@@ -24,6 +24,10 @@ gem "matrix" # Required by prawn on Ruby 4.0+
 gem "prawn"
 gem "prawn-table"
 
+# Google APIs
+gem "google-apis-classroom_v1"
+gem "google-apis-drive_v3"
+
 # CORS
 gem "rack-cors"
 
