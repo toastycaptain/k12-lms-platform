@@ -158,6 +158,13 @@ Rails.application.routes.draw do
           post :activate
           post :deactivate
           post :sync_courses
+          post :test_connection
+          post :sync_orgs
+          post :sync_users
+          post :sync_classes
+          post :sync_enrollments
+          post :import_csv
+          get :import_status
         end
         resources :sync_mappings, only: [ :index ]
         resources :sync_runs, only: [ :index ]
@@ -221,6 +228,47 @@ Rails.application.routes.draw do
         get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons
         post :attach
         get :me
+      end
+
+      # ── US-102..108: LTI, Audit, Retention, Export ──
+      resources :lti_registrations do
+        member do
+          post :activate
+          post :deactivate
+        end
+        resources :lti_resource_links
+      end
+
+      namespace :lti do
+        get :jwks, controller: "lti"
+        post :login, controller: "lti"
+        post :launch, controller: "lti"
+        post :deep_link, controller: "lti"
+
+        namespace :ags do
+          get "lineitems", action: :index_lineitems
+          post "lineitems", action: :create_lineitem
+          get "lineitems/:id", action: :show_lineitem, as: :lineitem
+          get "lineitems/:id/results", action: :results, as: :lineitem_results
+          post "lineitems/:id/scores", action: :scores, as: :lineitem_scores
+        end
+      end
+
+      resources :audit_logs, only: [ :index ] do
+        collection do
+          get :summary
+        end
+      end
+
+      resources :data_retention_policies do
+        member do
+          post :run
+        end
+      end
+
+      scope :tenant, as: :tenant do
+        post :export, controller: "tenant_exports"
+        get :export_status, controller: "tenant_exports"
       end
     end
   end

@@ -1,13 +1,15 @@
 class IntegrationConfig < ApplicationRecord
   include TenantScoped
 
-  VALID_PROVIDERS = %w[google_classroom].freeze
+  VALID_PROVIDERS = %w[google_classroom oneroster].freeze
   VALID_STATUSES = %w[inactive active error].freeze
 
   belongs_to :created_by, class_name: "User"
 
   has_many :sync_mappings, dependent: :destroy
   has_many :sync_runs, dependent: :destroy
+
+  has_one_attached :import_file
 
   validates :provider, presence: true, inclusion: { in: VALID_PROVIDERS }
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
