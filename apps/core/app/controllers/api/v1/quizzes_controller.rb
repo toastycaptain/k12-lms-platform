@@ -2,7 +2,7 @@ module Api
   module V1
     class QuizzesController < ApplicationController
       before_action :set_course, only: [ :index, :create ]
-      before_action :set_quiz, only: [ :show, :update, :destroy, :publish, :close ]
+      before_action :set_quiz, only: [ :show, :update, :destroy, :publish, :close, :results ]
 
       def index
         quizzes = policy_scope(Quiz).where(course: @course)
@@ -56,6 +56,24 @@ module Api
         render json: @quiz
       rescue ActiveRecord::RecordInvalid
         render json: { errors: [ "Cannot close a #{@quiz.status} quiz" ] }, status: :unprocessable_content
+      end
+
+      def results
+        authorize @quiz, :results?
+        attempts = QuizAttempt.where(quiz_id: @quiz.id).order(:user_id, :attempt_number)
+        render json: {
+          quiz: QuizSerializer.new(@quiz).as_json,
+          attempts: attempts.map { |a|
+            {
+              id: a.id,
+              user_id: a.user_id,
+              attempt_number: a.attempt_number,
+              score: a.score,
+              percentage: a.percentage,
+              status: a.status
+            }
+          }
+        }
       end
 
       private

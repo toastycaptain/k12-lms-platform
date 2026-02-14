@@ -175,7 +175,7 @@
         "Request specs: grade essay answer, recalculate score, all-answers-graded transitions attempt to graded, override auto-grade, results endpoint returns all attempts, student cannot grade (403), Rubocop passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12, PRD-19: Manual grading completes the assessment workflow for essay questions. The grade_all endpoint enables batch grading. The results endpoint is the teacher's analytics view."
     },
     {

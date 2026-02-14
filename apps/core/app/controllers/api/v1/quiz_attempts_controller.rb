@@ -2,7 +2,7 @@ module Api
   module V1
     class QuizAttemptsController < ApplicationController
       before_action :set_quiz, only: [ :index, :create ]
-      before_action :set_quiz_attempt, only: [ :show, :submit ]
+      before_action :set_quiz_attempt, only: [ :show, :submit, :grade_all ]
 
       def index
         attempts = policy_scope(QuizAttempt).where(quiz: @quiz)
@@ -33,6 +33,25 @@ module Api
       def submit
         authorize @quiz_attempt
         @quiz_attempt.submit!
+        render json: @quiz_attempt
+      end
+
+      def grade_all
+        authorize @quiz_attempt, :show?
+
+        grades = params[:grades] || []
+        grades.each do |g|
+          answer = @quiz_attempt.attempt_answers.find(g[:attempt_answer_id])
+          authorize answer, :grade?
+          answer.update!(
+            points_awarded: g[:points_awarded],
+            feedback: g[:feedback],
+            graded_at: Time.current,
+            graded_by: Current.user
+          )
+        end
+
+        @quiz_attempt.calculate_score!
         render json: @quiz_attempt
       end
 
