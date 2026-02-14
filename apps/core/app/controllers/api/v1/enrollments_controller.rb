@@ -15,6 +15,7 @@ module Api
 
       def create
         @enrollment = Enrollment.new(enrollment_params)
+        @enrollment.user_id = params.require(:enrollment)[:user_id]
         authorize @enrollment
 
         if @enrollment.save
@@ -45,7 +46,7 @@ module Api
       end
 
       def enrollment_params
-        params.require(:enrollment).permit(:user_id, :section_id, :role)
+        params.require(:enrollment).permit(:section_id, :role)
       end
     end
   end
