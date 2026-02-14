@@ -12,26 +12,30 @@ module Api
         authorize RubricScore.new(tenant: Current.tenant)
         scores_params = params[:scores] || []
 
-        saved_scores = scores_params.map do |score_data|
-          score = @submission.rubric_scores.find_or_initialize_by(
-            rubric_criterion_id: score_data[:rubric_criterion_id]
-          )
-          score.tenant = Current.tenant
-          score.rubric_rating_id = score_data[:rubric_rating_id]
-          score.points_awarded = score_data[:points_awarded]
-          score.comments = score_data[:comments]
-          score.save!
-          score
-        end
+        saved_scores = ActiveRecord::Base.transaction do
+          scores = scores_params.map do |score_data|
+            score = @submission.rubric_scores.find_or_initialize_by(
+              rubric_criterion_id: score_data[:rubric_criterion_id]
+            )
+            score.tenant = Current.tenant
+            score.rubric_rating_id = score_data[:rubric_rating_id]
+            score.points_awarded = score_data[:points_awarded]
+            score.comments = score_data[:comments]
+            score.save!
+            score
+          end
 
-        # Auto-calculate total grade from rubric scores sum
-        total_grade = @submission.rubric_scores.reload.sum(:points_awarded)
-        @submission.update!(
-          grade: total_grade,
-          status: "graded",
-          graded_at: Time.current,
-          graded_by: Current.user
-        )
+          # Auto-calculate total grade from rubric scores sum
+          total_grade = @submission.rubric_scores.reload.sum(:points_awarded)
+          @submission.update!(
+            grade: total_grade,
+            status: "graded",
+            graded_at: Time.current,
+            graded_by: Current.user
+          )
+
+          scores
+        end
 
         render json: saved_scores, status: :created
       end

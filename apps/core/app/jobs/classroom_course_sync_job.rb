@@ -19,8 +19,12 @@ class ClassroomCourseSyncJob < ApplicationJob
       classroom_service = GoogleClassroomService.new(user)
       courses = classroom_service.list_courses
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       courses.each do |classroom_course|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           mapping = SyncMapping.find_external(config, "classroom_course", classroom_course.id)
 
@@ -31,7 +35,7 @@ class ClassroomCourseSyncJob < ApplicationJob
               sync_run.log_info("Updated course name", entity_type: "Course", entity_id: local_course.id, external_id: classroom_course.id)
             end
           else
-            academic_year = AcademicYear.first
+            academic_year = AcademicYear.order(start_date: :desc).first
             local_course = Course.create!(
               name: classroom_course.name,
               code: classroom_course.id,
@@ -51,13 +55,14 @@ class ClassroomCourseSyncJob < ApplicationJob
           end
 
           mapping&.update!(last_synced_at: Time.current)
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to sync course: #{e.message}", external_id: classroom_course.id)
         end
       end
 
+      sync_run.update!(records_processed: sync_run.records_processed + processed, records_succeeded: sync_run.records_succeeded + succeeded, records_failed: sync_run.records_failed + failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

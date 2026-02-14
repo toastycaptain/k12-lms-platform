@@ -37,11 +37,12 @@ class QtiImportJob < ApplicationJob
       return
     end
 
+    prompt_text = item.at_xpath(".//presentation/material/mattext")&.text || title
     attrs = build_question_attrs(item, question_type, title)
     bank.questions.create!(
       tenant: bank.tenant,
       created_by: user,
-      prompt: title,
+      prompt: prompt_text,
       question_type: question_type,
       points: attrs[:points],
       choices: attrs[:choices],

@@ -10,18 +10,21 @@ module Api
       end
 
       def create
-        attempt_number = QuizAttempt.where(quiz_id: @quiz.id, user_id: Current.user.id).count + 1
-        @quiz_attempt = @quiz.quiz_attempts.build(
-          tenant: Current.tenant,
-          user: Current.user,
-          attempt_number: attempt_number,
-          started_at: Time.current
-        )
-        authorize @quiz_attempt
-        if @quiz_attempt.save
-          render json: @quiz_attempt, status: :created
-        else
-          render json: { errors: @quiz_attempt.errors.full_messages }, status: :unprocessable_content
+        QuizAttempt.transaction do
+          attempt_number = QuizAttempt.where(quiz_id: @quiz.id, user_id: Current.user.id)
+                                       .lock("FOR UPDATE").count + 1
+          @quiz_attempt = @quiz.quiz_attempts.build(
+            tenant: Current.tenant,
+            user: Current.user,
+            attempt_number: attempt_number,
+            started_at: Time.current
+          )
+          authorize @quiz_attempt
+          if @quiz_attempt.save
+            render json: @quiz_attempt, status: :created
+          else
+            render json: { errors: @quiz_attempt.errors.full_messages }, status: :unprocessable_content
+          end
         end
       end
 
@@ -37,7 +40,7 @@ module Api
       end
 
       def grade_all
-        authorize @quiz_attempt, :show?
+        authorize @quiz_attempt, :grade_all?
 
         grades = params[:grades] || []
         grades.each do |g|

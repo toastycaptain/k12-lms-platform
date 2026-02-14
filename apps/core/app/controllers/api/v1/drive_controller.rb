@@ -55,6 +55,7 @@ module Api
 
       def create_resource_link(drive_result)
         unless VALID_LINKABLE_TYPES.include?(params[:linkable_type])
+          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
           return
         end
 

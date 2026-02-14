@@ -10,6 +10,8 @@ class ApplicationController < ActionController::API
     render json: { error: "Forbidden" }, status: :forbidden
   end
 
+  rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+
   private
 
   def current_user
@@ -67,5 +69,9 @@ class ApplicationController < ActionController::API
 
   def skip_authorization?
     false
+  end
+
+  def record_not_found
+    render json: { error: "Not found" }, status: :not_found
   end
 end

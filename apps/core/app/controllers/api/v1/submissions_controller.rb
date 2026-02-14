@@ -15,6 +15,15 @@ module Api
       end
 
       def create
+        unless @assignment.status == "published"
+          render json: { error: "Assignment is not published" }, status: :unprocessable_entity
+          return
+        end
+        if @assignment.lock_at.present? && Time.current > @assignment.lock_at
+          render json: { error: "Assignment is locked" }, status: :unprocessable_entity
+          return
+        end
+
         @submission = @assignment.submissions.build(submission_params)
         @submission.tenant = Current.tenant
         @submission.user = Current.user

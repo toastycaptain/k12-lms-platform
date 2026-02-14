@@ -26,31 +26,31 @@ class Template < ApplicationRecord
   end
 
   def create_unit_from_template!(course:, user:)
-    version = current_version
-    unit_plan = UnitPlan.create!(
-      tenant: tenant,
-      course: course,
-      created_by: user,
-      title: version.title,
-      status: "draft"
-    )
-
-    unit_version = unit_plan.create_version!(
-      title: version.title,
-      description: version.description,
-      essential_questions: version.essential_questions,
-      enduring_understandings: version.enduring_understandings
-    )
-
-    version.template_version_standards.find_each do |tvs|
-      UnitVersionStandard.create!(
+    ActiveRecord::Base.transaction do
+      version = current_version
+      unit_plan = UnitPlan.create!(
         tenant: tenant,
-        unit_version: unit_version,
-        standard: tvs.standard
+        course: course,
+        created_by: user,
+        title: version.title,
+        status: "draft"
       )
-    end
 
-    unit_plan
+      unit_version = unit_plan.create_version!(
+        title: version.title,
+        description: version.description,
+        essential_questions: version.essential_questions,
+        enduring_understandings: version.enduring_understandings
+      )
+
+      records = version.template_version_standards.pluck(:standard_id).map do |sid|
+        { tenant_id: Current.tenant.id, unit_version_id: unit_version.id, standard_id: sid,
+          created_at: Time.current, updated_at: Time.current }
+      end
+      UnitVersionStandard.insert_all(records) if records.any?
+
+      unit_plan
+    end
   end
 
   def publish!

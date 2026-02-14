@@ -33,7 +33,11 @@ class QuizPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      if user.has_role?(:admin) || user.has_role?(:teacher)
+        scope.all
+      else
+        scope.where(status: "published")
+      end
     end
   end
 end

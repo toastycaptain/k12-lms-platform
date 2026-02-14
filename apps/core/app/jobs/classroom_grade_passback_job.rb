@@ -31,8 +31,12 @@ class ClassroomGradePassbackJob < ApplicationJob
 
       graded_submissions = assignment.submissions.where(status: %w[graded returned]).where.not(grade: nil)
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       graded_submissions.each do |submission|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           student_mapping = SyncMapping.where(
             integration_config: config,
@@ -59,13 +63,14 @@ class ClassroomGradePassbackJob < ApplicationJob
           )
 
           sync_run.log_info("Pushed grade", entity_type: "Submission", entity_id: submission.id, external_id: classroom_sub.id)
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to push grade: #{e.message}", entity_type: "Submission", entity_id: submission.id)
         end
       end
 
+      sync_run.update!(records_processed: sync_run.records_processed + processed, records_succeeded: sync_run.records_succeeded + succeeded, records_failed: sync_run.records_failed + failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

@@ -10,12 +10,28 @@ class Standard < ApplicationRecord
   scope :roots, -> { where(parent_id: nil) }
 
   def tree
-    {
-      id: id,
-      code: code,
-      description: description,
-      grade_band: grade_band,
-      children: children.includes(:children).map(&:tree)
-    }
+    all_descendants = Standard.where(standard_framework_id: standard_framework_id).to_a
+    self.class.build_subtree(all_descendants, id)
+  end
+
+  def self.build_tree(standards)
+    grouped = standards.group_by(&:parent_id)
+    build_nodes(grouped, nil)
+  end
+
+  def self.build_nodes(grouped, parent_id)
+    (grouped[parent_id] || []).map do |standard|
+      { id: standard.id, code: standard.code, description: standard.description,
+        grade_band: standard.grade_band, children: build_nodes(grouped, standard.id) }
+    end
+  end
+
+  def self.build_subtree(standards, root_id)
+    root = standards.find { |s| s.id == root_id }
+    return nil unless root
+
+    grouped = standards.group_by(&:parent_id)
+    { id: root.id, code: root.code, description: root.description,
+      grade_band: root.grade_band, children: build_nodes(grouped, root.id) }
   end
 end

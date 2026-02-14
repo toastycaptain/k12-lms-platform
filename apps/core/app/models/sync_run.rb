@@ -14,14 +14,17 @@ class SyncRun < ApplicationRecord
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
 
   def start!
+    raise ActiveRecord::RecordInvalid, self unless status == "pending"
     update!(started_at: Time.current, status: "running")
   end
 
   def complete!
+    raise ActiveRecord::RecordInvalid, self unless status == "running"
     update!(completed_at: Time.current, status: "completed")
   end
 
   def fail!(message)
+    raise ActiveRecord::RecordInvalid, self unless status == "running"
     update!(completed_at: Time.current, status: "failed", error_message: message)
   end
 

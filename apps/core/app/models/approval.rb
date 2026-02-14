@@ -10,6 +10,7 @@ class Approval < ApplicationRecord
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
   validates :approvable_type, presence: true
   validates :approvable_id, presence: true
+  validate :no_duplicate_pending, on: :create
 
   scope :pending, -> { where(status: "pending") }
 
@@ -23,5 +24,13 @@ class Approval < ApplicationRecord
     raise ActiveRecord::RecordInvalid, self unless status == "pending"
 
     update!(status: "rejected", reviewed_by: reviewer, reviewed_at: Time.current, comments: comments)
+  end
+
+  private
+
+  def no_duplicate_pending
+    if Approval.where(approvable: approvable, status: "pending").exists?
+      errors.add(:base, "A pending approval already exists for this item")
+    end
   end
 end
