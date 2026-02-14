@@ -39,6 +39,14 @@ interface Assignment {
   points_possible: string | null;
 }
 
+interface Quiz {
+  id: number;
+  title: string;
+  status: string;
+  points_possible: number | null;
+  due_at: string | null;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     draft: "bg-yellow-100 text-yellow-800",
@@ -65,17 +73,19 @@ export default function CourseHomePage() {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isTeacher = user?.roles?.includes("teacher") || user?.roles?.includes("admin");
 
   const fetchData = useCallback(async () => {
     try {
-      const [courseData, modulesData, announcementsData, assignmentsData] = await Promise.all([
+      const [courseData, modulesData, announcementsData, assignmentsData, quizzesData] = await Promise.all([
         apiFetch<Course>(`/api/v1/courses/${courseId}`),
         apiFetch<CourseModule[]>(`/api/v1/courses/${courseId}/modules`),
         apiFetch<Announcement[]>(`/api/v1/courses/${courseId}/announcements`),
         apiFetch<Assignment[]>(`/api/v1/courses/${courseId}/assignments`),
+        apiFetch<Quiz[]>(`/api/v1/courses/${courseId}/quizzes`),
       ]);
       setCourse(courseData);
       setModules(modulesData);
@@ -86,6 +96,7 @@ export default function CourseHomePage() {
         .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
         .slice(0, 5);
       setAssignments(upcoming);
+      setQuizzes(quizzesData);
     } catch {
       // silently fail
     } finally {
@@ -225,6 +236,49 @@ export default function CourseHomePage() {
                         Due {new Date(asn.due_at).toLocaleDateString()}
                       </span>
                     )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Quizzes */}
+          <section>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Quizzes</h2>
+              {isTeacher && (
+                <Link
+                  href={`/assess/quizzes/new?courseId=${courseId}`}
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  New Quiz
+                </Link>
+              )}
+            </div>
+            {quizzes.length === 0 ? (
+              <p className="mt-3 text-sm text-gray-500">No quizzes yet</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {quizzes.map((qz) => (
+                  <Link
+                    key={qz.id}
+                    href={`/assess/quizzes/${qz.id}`}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:shadow-sm transition-shadow"
+                  >
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">{qz.title}</span>
+                      {qz.points_possible != null && (
+                        <span className="ml-2 text-xs text-gray-400">{qz.points_possible} pts</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {qz.due_at && (
+                        <span className="text-xs text-gray-500">
+                          Due {new Date(qz.due_at).toLocaleDateString()}
+                        </span>
+                      )}
+                      <StatusBadge status={qz.status} />
+                    </div>
                   </Link>
                 ))}
               </div>
