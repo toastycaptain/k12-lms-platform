@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 
 interface Assignment {
   id: number;
@@ -48,6 +50,7 @@ export default function AssignmentEditorPage() {
   const courseId = params.courseId as string;
   const assignmentId = params.assignmentId as string;
   const router = useRouter();
+  const { user } = useAuth();
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [rubric, setRubric] = useState<Rubric | null>(null);
@@ -67,6 +70,15 @@ export default function AssignmentEditorPage() {
   const [rubricSearch, setRubricSearch] = useState("");
   const [rubricResults, setRubricResults] = useState<{ id: number; title: string }[]>([]);
 
+  // Google Classroom state
+  const [classroomPushing, setClassroomPushing] = useState(false);
+  const [classroomMessage, setClassroomMessage] = useState<string | null>(null);
+  const [hasCourseMapping, setHasCourseMapping] = useState(false);
+  const [hasAssignmentMapping, setHasAssignmentMapping] = useState(false);
+
+  // Drive state
+  const [creatingDoc, setCreatingDoc] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       const data = await apiFetch<Assignment>(`/api/v1/assignments/${assignmentId}`);
@@ -85,12 +97,36 @@ export default function AssignmentEditorPage() {
         const rubricData = await apiFetch<Rubric>(`/api/v1/rubrics/${data.rubric_id}`);
         setRubric(rubricData);
       }
+
+      // Check for Google Classroom mappings
+      try {
+        const configs = await apiFetch<{ id: number; status: string }[]>(
+          "/api/v1/integration_configs",
+        );
+        if (configs.length > 0 && configs[0].status === "active") {
+          const mappingsData = await apiFetch<{ local_type: string; local_id: number }[]>(
+            `/api/v1/integration_configs/${configs[0].id}/sync_mappings`,
+          );
+          setHasCourseMapping(
+            mappingsData.some(
+              (m) => m.local_type === "Course" && m.local_id === Number(courseId),
+            ),
+          );
+          setHasAssignmentMapping(
+            mappingsData.some(
+              (m) => m.local_type === "Assignment" && m.local_id === Number(assignmentId),
+            ),
+          );
+        }
+      } catch {
+        // Integration not available
+      }
     } catch {
       // handle error
     } finally {
       setLoading(false);
     }
-  }, [assignmentId]);
+  }, [assignmentId, courseId]);
 
   useEffect(() => {
     fetchData();
@@ -261,6 +297,157 @@ export default function AssignmentEditorPage() {
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
+
+          {/* Google Classroom Section */}
+          {hasCourseMapping && assignment?.status === "published" && (
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-gray-900">Google Classroom</h2>
+              {classroomMessage && (
+                <div className="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-700">
+                  {classroomMessage}
+                </div>
+              )}
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    setClassroomPushing(true);
+                    setClassroomMessage(null);
+                    try {
+                      await apiFetch(
+                        `/api/v1/assignments/${assignmentId}/push_to_classroom`,
+                        { method: "POST" },
+                      );
+                      setClassroomMessage("Assignment pushed to Classroom.");
+                      setHasAssignmentMapping(true);
+                    } catch {
+                      setClassroomMessage("Failed to push to Classroom.");
+                    } finally {
+                      setClassroomPushing(false);
+                    }
+                  }}
+                  disabled={classroomPushing}
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {classroomPushing
+                    ? "Pushing..."
+                    : hasAssignmentMapping
+                      ? "Update in Classroom"
+                      : "Push to Google Classroom"}
+                </button>
+                {hasAssignmentMapping && (
+                  <button
+                    onClick={async () => {
+                      setClassroomPushing(true);
+                      setClassroomMessage(null);
+                      try {
+                        await apiFetch(
+                          `/api/v1/assignments/${assignmentId}/sync_grades`,
+                          { method: "POST" },
+                        );
+                        setClassroomMessage("Grade sync triggered.");
+                      } catch {
+                        setClassroomMessage("Failed to sync grades.");
+                      } finally {
+                        setClassroomPushing(false);
+                      }
+                    }}
+                    disabled={classroomPushing}
+                    className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Sync Grades
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Google Drive Section */}
+          {user?.google_connected && (
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-gray-900">Google Drive</h2>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    setCreatingDoc(true);
+                    try {
+                      const result = await apiFetch<{ id: string; title: string; url: string }>(
+                        "/api/v1/drive/documents",
+                        {
+                          method: "POST",
+                          body: JSON.stringify({
+                            title: title || "Untitled Document",
+                            linkable_type: "Assignment",
+                            linkable_id: Number(assignmentId),
+                          }),
+                        },
+                      );
+                      window.open(result.url, "_blank");
+                    } catch {
+                      // Handle error
+                    } finally {
+                      setCreatingDoc(false);
+                    }
+                  }}
+                  disabled={creatingDoc}
+                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  New Google Doc
+                </button>
+                <button
+                  onClick={async () => {
+                    setCreatingDoc(true);
+                    try {
+                      const result = await apiFetch<{ id: string; title: string; url: string }>(
+                        "/api/v1/drive/presentations",
+                        {
+                          method: "POST",
+                          body: JSON.stringify({
+                            title: title || "Untitled Presentation",
+                            linkable_type: "Assignment",
+                            linkable_id: Number(assignmentId),
+                          }),
+                        },
+                      );
+                      window.open(result.url, "_blank");
+                    } catch {
+                      // Handle error
+                    } finally {
+                      setCreatingDoc(false);
+                    }
+                  }}
+                  disabled={creatingDoc}
+                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  New Google Slides
+                </button>
+                <GoogleDrivePicker
+                  onSelect={async (file) => {
+                    try {
+                      await apiFetch(
+                        `/api/v1/drive/documents`,
+                        {
+                          method: "POST",
+                          body: JSON.stringify({
+                            title: file.name,
+                            linkable_type: "Assignment",
+                            linkable_id: Number(assignmentId),
+                            drive_file_id: file.id,
+                            drive_file_url: file.url,
+                          }),
+                        },
+                      );
+                    } catch {
+                      // Handle error
+                    }
+                  }}
+                >
+                  <span className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Attach from Drive
+                  </span>
+                </GoogleDrivePicker>
+              </div>
+            </div>
+          )}
 
           {/* Rubric Section */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">

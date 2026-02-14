@@ -4,8 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 
 interface LessonPlan {
   id: number;
@@ -37,6 +39,8 @@ export default function LessonEditorPage() {
   const params = useParams();
   const unitId = params.id as string;
   const lessonId = params.lessonId as string;
+
+  const { user } = useAuth();
 
   const [lesson, setLesson] = useState<LessonPlan | null>(null);
   const [currentVersion, setCurrentVersion] = useState<LessonVersion | null>(null);
@@ -300,28 +304,109 @@ export default function LessonEditorPage() {
               </ul>
             )}
             {isEditable && currentVersion && (
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Resource title"
-                  value={newResourceTitle}
-                  onChange={(e) => setNewResourceTitle(e.target.value)}
-                  className="block w-40 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <input
-                  type="url"
-                  placeholder="URL (e.g., https://drive.google.com/...)"
-                  value={newResourceUrl}
-                  onChange={(e) => setNewResourceUrl(e.target.value)}
-                  className="block flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleAddResource}
-                  disabled={!newResourceUrl.trim()}
-                  className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                >
-                  Add
-                </button>
+              <div className="mt-3 space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Resource title"
+                    value={newResourceTitle}
+                    onChange={(e) => setNewResourceTitle(e.target.value)}
+                    className="block w-40 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <input
+                    type="url"
+                    placeholder="URL (e.g., https://drive.google.com/...)"
+                    value={newResourceUrl}
+                    onChange={(e) => setNewResourceUrl(e.target.value)}
+                    className="block flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleAddResource}
+                    disabled={!newResourceUrl.trim()}
+                    className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+                {user?.google_connected && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result = await apiFetch<{ id: string; title: string; url: string }>(
+                            "/api/v1/drive/documents",
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                title: title || "Untitled Document",
+                                linkable_type: "LessonVersion",
+                                linkable_id: currentVersion.id,
+                              }),
+                            },
+                          );
+                          window.open(result.url, "_blank");
+                          await fetchData();
+                        } catch {
+                          // Handle error
+                        }
+                      }}
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      New Google Doc
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result = await apiFetch<{ id: string; title: string; url: string }>(
+                            "/api/v1/drive/presentations",
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                title: title || "Untitled Presentation",
+                                linkable_type: "LessonVersion",
+                                linkable_id: currentVersion.id,
+                              }),
+                            },
+                          );
+                          window.open(result.url, "_blank");
+                          await fetchData();
+                        } catch {
+                          // Handle error
+                        }
+                      }}
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      New Google Slides
+                    </button>
+                    <GoogleDrivePicker
+                      onSelect={async (file) => {
+                        try {
+                          await apiFetch(
+                            `/api/v1/lesson_versions/${currentVersion.id}/resource_links`,
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                resource_link: {
+                                  url: file.url,
+                                  title: file.name,
+                                  provider: "google_drive",
+                                  drive_file_id: file.id,
+                                },
+                              }),
+                            },
+                          );
+                          await fetchData();
+                        } catch {
+                          // Handle error
+                        }
+                      }}
+                    >
+                      <span className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                        Attach from Drive
+                      </span>
+                    </GoogleDrivePicker>
+                  </div>
+                )}
               </div>
             )}
           </div>
