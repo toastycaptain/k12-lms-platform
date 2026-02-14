@@ -294,7 +294,7 @@
         "npm run build succeeds"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11, PRD-18: Grading View is the most complex M3 page. Two modes: rubric-based (click ratings, auto-total) and manual (enter points). Save & navigate pattern for efficient batch grading."
     },
     {
