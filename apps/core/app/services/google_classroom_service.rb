@@ -4,15 +4,7 @@ class GoogleClassroomService
   def initialize(user)
     @user = user
     @service = Google::Apis::ClassroomV1::ClassroomService.new
-    token_service = GoogleTokenService.new(user)
-    @service.authorization = Google::Auth::UserRefreshCredentials.new(
-      client_id: ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
-      client_secret: ENV.fetch("GOOGLE_CLIENT_SECRET", "test-client-secret"),
-      scope: [],
-      additional_parameters: {}
-    )
-    @service.authorization.access_token = token_service.access_token
-    @service.authorization.refresh_token = user.google_refresh_token
+    @service.authorization = GoogleTokenService.new(user).google_credentials
   end
 
   def list_courses

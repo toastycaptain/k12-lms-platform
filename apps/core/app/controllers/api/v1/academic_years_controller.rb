@@ -39,7 +39,7 @@ module Api
       private
 
       def set_academic_year
-        @academic_year = AcademicYear.find(params[:id])
+        @academic_year = AcademicYear.includes(:terms).find(params[:id])
         authorize @academic_year
       end
 

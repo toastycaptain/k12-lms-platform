@@ -9,6 +9,10 @@ module Api
       end
 
       def create
+        unless @quiz_attempt.user == Current.user
+          render json: { error: "Forbidden" }, status: :forbidden
+          return
+        end
         authorize @quiz_attempt, :show?
 
         unless @quiz_attempt.status == "in_progress"

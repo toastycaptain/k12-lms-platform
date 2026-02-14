@@ -61,8 +61,7 @@ module Api
 
       def resolve_tenant_from_auth(auth)
         email_domain = auth.info.email.split("@").last
-        Tenant.unscoped.find_by(slug: email_domain.split(".").first) ||
-          Tenant.unscoped.first
+        Tenant.unscoped.find_by(slug: email_domain.split(".").first)
       end
 
       def find_or_create_user(auth, tenant)

@@ -34,8 +34,12 @@ class ClassroomRosterSyncJob < ApplicationJob
       students = classroom_service.list_students(course_mapping.external_id)
       domain = config.settings&.dig("domain")
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       students.each do |student|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           email = student.profile&.email_address
           next unless email.present?
@@ -69,13 +73,14 @@ class ClassroomRosterSyncJob < ApplicationJob
           end
 
           sync_run.log_info("Synced student", entity_type: "Enrollment", entity_id: enrollment.id, external_id: student.user_id)
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to sync student: #{e.message}", external_id: student.user_id)
         end
       end
 
+      sync_run.update!(records_processed: sync_run.records_processed + processed, records_succeeded: sync_run.records_succeeded + succeeded, records_failed: sync_run.records_failed + failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

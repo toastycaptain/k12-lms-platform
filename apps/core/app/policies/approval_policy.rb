@@ -15,7 +15,11 @@ class ApprovalPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      if user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+        scope.all
+      else
+        scope.none
+      end
     end
   end
 end

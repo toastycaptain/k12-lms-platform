@@ -12,6 +12,6 @@ class DrivePolicy < ApplicationPolicy
   end
 
   def picker_token?
-    true
+    user.has_role?(:teacher) || user.has_role?(:admin) || user.has_role?(:curriculum_lead)
   end
 end

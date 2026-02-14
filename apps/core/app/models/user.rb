@@ -5,12 +5,17 @@ class User < ApplicationRecord
 
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
+  has_many :enrollments, dependent: :destroy
 
   validates :email, presence: true, uniqueness: { scope: :tenant_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
 
+  def cached_role_names
+    @cached_role_names ||= roles.loaded? ? roles.map(&:name) : roles.pluck(:name)
+  end
+
   def has_role?(role_name)
-    roles.exists?(name: role_name.to_s)
+    cached_role_names.include?(role_name.to_s)
   end
 
   def add_role(role_name)

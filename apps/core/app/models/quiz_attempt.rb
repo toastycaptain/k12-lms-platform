@@ -46,8 +46,9 @@ class QuizAttempt < ApplicationRecord
   private
 
   def grade_auto_gradable_answers!
+    quiz_items_by_question = quiz.quiz_items.index_by(&:question_id)
     attempt_answers.includes(:question).find_each do |aa|
-      aa.auto_grade!
+      aa.auto_grade!(quiz_items_by_question[aa.question_id]) if aa.question.auto_gradable?
     end
     calculate_score!
   end

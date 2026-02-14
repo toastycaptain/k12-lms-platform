@@ -49,7 +49,7 @@ module Api
 
       def versions
         authorize @unit_plan, :show?
-        render json: @unit_plan.unit_versions.order(version_number: :desc)
+        render json: @unit_plan.unit_versions.includes(:standards).order(version_number: :desc)
       end
 
       def publish

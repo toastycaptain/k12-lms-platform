@@ -7,4 +7,12 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       methods: %i[get post put patch delete options head],
       credentials: true
   end
+
+  allow do
+    origins(/\Ahttps:\/\/.*\.google\.com\z/)
+    resource "/api/v1/addon/*",
+      headers: :any,
+      methods: %i[get post options],
+      credentials: true
+  end
 end

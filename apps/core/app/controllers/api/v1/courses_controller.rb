@@ -39,7 +39,7 @@ module Api
       private
 
       def set_course
-        @course = Course.find(params[:id])
+        @course = Course.includes(:sections).find(params[:id])
         authorize @course
       end
 

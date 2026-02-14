@@ -29,6 +29,13 @@ module Api
 
       def attach
         authorize :addon
+
+        valid_types = %w[LessonVersion UnitVersion CourseModule Assignment]
+        unless valid_types.include?(params[:linkable_type])
+          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
+          return
+        end
+
         linkable = params[:linkable_type].constantize.find(params[:linkable_id])
         resource_link = ResourceLink.create!(
           tenant: Current.tenant,

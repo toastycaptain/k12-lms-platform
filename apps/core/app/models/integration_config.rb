@@ -14,6 +14,10 @@ class IntegrationConfig < ApplicationRecord
   validates :provider, uniqueness: { scope: :tenant_id }
 
   def activate!
+    unless settings.present? && settings.is_a?(Hash)
+      errors.add(:settings, "must be configured before activation")
+      raise ActiveRecord::RecordInvalid, self
+    end
     update!(status: "active")
   end
 

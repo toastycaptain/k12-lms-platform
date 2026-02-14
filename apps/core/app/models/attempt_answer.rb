@@ -7,11 +7,11 @@ class AttemptAnswer < ApplicationRecord
 
   validates :question_id, uniqueness: { scope: :quiz_attempt_id }
 
-  def auto_grade!
+  def auto_grade!(quiz_item = nil)
     return unless question.auto_gradable?
 
     correct = check_answer
-    quiz_item = QuizItem.find_by(quiz_id: quiz_attempt.quiz_id, question_id: question_id)
+    quiz_item ||= QuizItem.find_by(quiz_id: quiz_attempt.quiz_id, question_id: question_id)
     awarded = correct ? quiz_item&.points.to_d : 0
 
     update!(

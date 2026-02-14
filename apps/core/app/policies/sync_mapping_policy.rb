@@ -17,7 +17,7 @@ class SyncMappingPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      if user.has_role?(:admin) || user.has_role?(:teacher)
+      if user.has_role?(:admin)
         scope.all
       else
         scope.none
