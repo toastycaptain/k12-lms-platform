@@ -2,7 +2,7 @@ module Api
   module V1
     class SyncMappingsController < ApplicationController
       before_action :set_integration_config, only: [ :index ]
-      before_action :set_sync_mapping, only: [ :show, :destroy ]
+      before_action :set_sync_mapping, only: [ :show, :destroy, :sync_roster ]
 
       def index
         authorize SyncMapping
@@ -20,6 +20,16 @@ module Api
         authorize @sync_mapping
         @sync_mapping.destroy!
         head :no_content
+      end
+
+      def sync_roster
+        authorize @sync_mapping
+        ClassroomRosterSyncJob.perform_later(
+          @sync_mapping.integration_config_id,
+          Current.user.id,
+          @sync_mapping.id
+        )
+        render json: { message: "Roster sync triggered" }, status: :accepted
       end
 
       private
