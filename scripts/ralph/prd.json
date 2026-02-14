@@ -219,7 +219,7 @@
         "Request specs: trigger export (202), check status, trigger import with file (202), student access (403), Rubocop passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-12: QTI 2.1 is the standard interchange format for assessment items. Follow the PdfExportJob pattern exactly. Keep QTI support pragmatic \u2014 MC, short answer, T/F are the most common types to support."
     },
     {

@@ -5,6 +5,7 @@ class QuestionBank < ApplicationRecord
 
   belongs_to :created_by, class_name: "User"
   has_many :questions, dependent: :destroy
+  has_one_attached :qti_export
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

@@ -133,7 +133,12 @@ Rails.application.routes.draw do
       end
 
       resources :question_banks do
-        post :archive, on: :member
+        member do
+          post :archive
+          post :export_qti
+          get :export_qti_status
+          post :import_qti
+        end
         resources :questions, only: [ :index, :create ]
       end
       resources :questions, only: [ :show, :update, :destroy ]

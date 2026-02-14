@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_005400) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_005600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -250,6 +250,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005400) do
     t.bigint "created_by_id", null: false
     t.text "description"
     t.string "grade_level"
+    t.jsonb "import_errors", default: []
+    t.string "import_status"
     t.string "status", default: "active", null: false
     t.string "subject"
     t.bigint "tenant_id", null: false
