@@ -1,0 +1,708 @@
+openapi: 3.1.0
+info:
+  title: K-12 LMS Core API
+  version: 1.0.0
+  description: Baseline contract for high-traffic Core API v1 endpoints used by web.
+servers:
+  - url: http://localhost:3001
+security:
+  - cookieAuth: []
+paths:
+  /api/v1/courses:
+    get:
+      summary: List courses
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Courses visible to the current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Create course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [course]
+              properties:
+                course:
+                  $ref: "#/components/schemas/CourseCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/courses/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show course
+      responses:
+        "200":
+          description: Course
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [course]
+              properties:
+                course:
+                  $ref: "#/components/schemas/CourseUpdateInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+    delete:
+      summary: Delete course
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/enrollments:
+    get:
+      summary: List enrollments
+      parameters:
+        - in: query
+          name: section_id
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Enrollments visible to current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enrollment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Create enrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enrollment]
+              properties:
+                enrollment:
+                  $ref: "#/components/schemas/EnrollmentCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/enrollments/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show enrollment
+      responses:
+        "200":
+          description: Enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete enrollment
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/unit_plans:
+    get:
+      summary: List unit plans
+      parameters:
+        - in: query
+          name: course_id
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Unit plans visible to current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnitPlan"
+    post:
+      summary: Create unit plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unit_plan]
+              properties:
+                unit_plan:
+                  $ref: "#/components/schemas/UnitPlanCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/unit_plans/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show unit plan
+      responses:
+        "200":
+          description: Unit plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update unit plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unit_plan]
+              properties:
+                unit_plan:
+                  $ref: "#/components/schemas/UnitPlanUpdateInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+    delete:
+      summary: Delete unit plan
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/unit_plans/{id}/create_version:
+    post:
+      summary: Create unit plan version
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version:
+                  $ref: "#/components/schemas/UnitVersionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitVersion"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/unit_plans/{id}/publish:
+    post:
+      summary: Publish a unit plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/unit_plans/{id}/submit_for_approval:
+    post:
+      summary: Submit a unit plan for approval
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/unit_plans/{id}/archive:
+    post:
+      summary: Archive a unit plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitPlan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/submissions/{id}/grade:
+    post:
+      summary: Grade submission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grade]
+              properties:
+                grade:
+                  type: number
+                feedback:
+                  type: string
+      responses:
+        "200":
+          description: Graded submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/submissions/{id}/return:
+    post:
+      summary: Return graded submission to learner
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Returned submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+  /api/v1/integration_configs/{id}/sync_courses:
+    post:
+      summary: Trigger classroom course sync
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Sync accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/sync_mappings/{id}/sync_roster:
+    post:
+      summary: Trigger roster sync for a mapping
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Sync accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: _session_id
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationErrors:
+      description: Validation errors
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorsResponse"
+  schemas:
+    Course:
+      type: object
+      required: [id, academic_year_id, name, tenant_id]
+      properties:
+        id:
+          type: integer
+        academic_year_id:
+          type: integer
+        tenant_id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CourseCreateInput:
+      type: object
+      required: [academic_year_id, name]
+      properties:
+        academic_year_id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+    CourseUpdateInput:
+      type: object
+      properties:
+        academic_year_id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+    Enrollment:
+      type: object
+      required: [id, user_id, section_id, role, tenant_id]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        section_id:
+          type: integer
+        role:
+          type: string
+          enum: [teacher, student]
+        tenant_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EnrollmentCreateInput:
+      type: object
+      required: [user_id, section_id]
+      properties:
+        user_id:
+          type: integer
+        section_id:
+          type: integer
+        role:
+          type: string
+          enum: [teacher, student]
+    UnitPlan:
+      type: object
+      required: [id, course_id, created_by_id, title, status, tenant_id]
+      properties:
+        id:
+          type: integer
+        course_id:
+          type: integer
+        created_by_id:
+          type: integer
+        current_version_id:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        status:
+          type: string
+          enum: [draft, pending_approval, published, archived]
+        tenant_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UnitPlanCreateInput:
+      type: object
+      required: [course_id, title]
+      properties:
+        course_id:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          enum: [draft, pending_approval, published, archived]
+    UnitPlanUpdateInput:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [draft, pending_approval, published, archived]
+    UnitVersionInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        essential_questions:
+          type: array
+          items:
+            type: string
+        enduring_understandings:
+          type: array
+          items:
+            type: string
+    UnitVersion:
+      type: object
+      required: [id, unit_plan_id, version_number, title, tenant_id]
+      properties:
+        id:
+          type: integer
+        unit_plan_id:
+          type: integer
+        version_number:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        essential_questions:
+          type: array
+          items:
+            type: string
+        enduring_understandings:
+          type: array
+          items:
+            type: string
+        tenant_id:
+          type: integer
+    Submission:
+      type: object
+      required: [id, assignment_id, user_id, status, tenant_id]
+      properties:
+        id:
+          type: integer
+        assignment_id:
+          type: integer
+        user_id:
+          type: integer
+        grade:
+          type: string
+          nullable: true
+        feedback:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, submitted, graded, returned]
+        graded_by_id:
+          type: integer
+          nullable: true
+        graded_at:
+          type: string
+          format: date-time
+          nullable: true
+        tenant_id:
+          type: integer
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+    ErrorsResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string

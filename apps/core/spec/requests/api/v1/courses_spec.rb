@@ -1,0 +1,134 @@
+require "rails_helper"
+
+RSpec.describe "Api::V1::Courses", type: :request do
+  let!(:tenant) { create(:tenant) }
+  let(:admin) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:admin)
+    Current.tenant = nil
+    u
+  end
+  let(:student) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:student)
+    Current.tenant = nil
+    u
+  end
+
+  after do
+    Current.tenant = nil
+    Current.user = nil
+  end
+
+  describe "GET /api/v1/courses" do
+    it "returns all courses" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      create_list(:course, 2, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      get "/api/v1/courses"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(2)
+    end
+
+    it "supports optional pagination params" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      create_list(:course, 3, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      get "/api/v1/courses", params: { page: 2, per_page: 1 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+
+    it "returns only enrolled courses for students" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      enrolled_course = create(:course, tenant: tenant, academic_year: ay)
+      hidden_course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      enrolled_section = create(:section, tenant: tenant, course: enrolled_course, term: term)
+      hidden_section = create(:section, tenant: tenant, course: hidden_course, term: term)
+      create(:enrollment, tenant: tenant, user: student, section: enrolled_section, role: "student")
+      create(:enrollment, tenant: tenant, section: hidden_section, role: "student")
+      Current.tenant = nil
+
+      get "/api/v1/courses"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["id"]).to eq(enrolled_course.id)
+    end
+  end
+
+  describe "GET /api/v1/courses/:id" do
+    it "returns forbidden for students not enrolled in the course" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "POST /api/v1/courses" do
+    it "creates a course for admin" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      Current.tenant = nil
+
+      expect {
+        post "/api/v1/courses", params: {
+          course: { academic_year_id: ay.id, name: "Math 101", code: "MATH101", description: "Intro to Math" }
+        }
+      }.to change(Course.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+  end
+
+  describe "PATCH /api/v1/courses/:id" do
+    it "updates a course" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      patch "/api/v1/courses/#{course.id}", params: { course: { name: "Updated Course" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["name"]).to eq("Updated Course")
+    end
+  end
+
+  describe "DELETE /api/v1/courses/:id" do
+    it "deletes a course" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      expect {
+        delete "/api/v1/courses/#{course.id}"
+      }.to change(Course.unscoped, :count).by(-1)
+
+      expect(response).to have_http_status(:no_content)
+    end
+  end
+end

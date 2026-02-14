@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: K-12 LMS AI Gateway API
+  version: 1.0.0
+  description: Baseline contract for AI generation and provider discovery endpoints.
+servers:
+  - url: http://localhost:8000
+paths:
+  /v1/health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /v1/providers:
+    get:
+      summary: List registered providers
+      responses:
+        "200":
+          description: Providers sorted by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderDescriptor"
+  /v1/generate:
+    post:
+      summary: Generate response from selected provider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRequest"
+      responses:
+        "200":
+          description: Generated output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+        "502":
+          $ref: "#/components/responses/Error"
+  /v1/generate_stream:
+    post:
+      summary: Stream generated output as SSE frames
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRequest"
+      responses:
+        "200":
+          description: Streaming event frames
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+  responses:
+    Error:
+      description: Error payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, version, timestamp]
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+          example: 1.0.0
+        timestamp:
+          type: string
+          format: date-time
+    ProviderDescriptor:
+      type: object
+      required: [name, models]
+      properties:
+        name:
+          type: string
+        models:
+          type: array
+          items:
+            type: string
+    GenerateRequest:
+      type: object
+      required: [provider, model, prompt]
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 32000
+        system_prompt:
+          type: string
+          nullable: true
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 16384
+          default: 2048
+        task_type:
+          type: string
+          nullable: true
+        context:
+          type: object
+          nullable: true
+          additionalProperties: true
+    GenerateResponse:
+      type: object
+      required: [id, content, model, provider, usage, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        model:
+          type: string
+        provider:
+          type: string
+        usage:
+          $ref: "#/components/schemas/Usage"
+        finish_reason:
+          type: string
+          nullable: true
+        task_type:
+          type: string
+          nullable: true
+        tenant_id:
+          type: string
+          nullable: true
+        user_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    Usage:
+      type: object
+      required: [prompt_tokens, completion_tokens, total_tokens]
+      properties:
+        prompt_tokens:
+          type: integer
+        completion_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string

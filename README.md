@@ -1,59 +1,89 @@
-# K–12 Planning + LMS Platform
+# K-12 Planning + LMS Platform
 
-A K–12 web application that combines curriculum planning, course delivery, assessment, Google Workspace integration, and admin-controlled AI assistance into a single, planner-first experience.
+Monorepo for a planner-first K-12 platform spanning curriculum planning, instruction delivery, assessment, integrations, and AI assistance.
 
-## Architecture
+## Services
 
-| Service | Stack | Purpose |
-|---------|-------|---------|
-| `apps/web` | Next.js (React) | Frontend SPA |
-| `apps/core` | Ruby on Rails (API-only) | System of record, REST API |
-| `apps/ai-gateway` | FastAPI | Model adapters, prompts, safety layer |
+| Path | Stack | Responsibility |
+| --- | --- | --- |
+| `apps/web` | Next.js + TypeScript | Teacher/admin/student UI |
+| `apps/core` | Rails API-only | System of record, auth, policies, background jobs |
+| `apps/ai-gateway` | FastAPI | LLM provider routing, safety checks, prompt orchestration |
 
-## Repository Layout
+## Shared Artifacts
 
-```
-k12-lms-platform/
-├── spec/                  # PRD, Tech Spec, UX Spec (authoritative)
-├── apps/
-│   ├── web/               # Next.js frontend
-│   ├── core/              # Rails API
-│   └── ai-gateway/        # FastAPI service
-├── packages/
-│   ├── ui/                # Shared design system
-│   └── contracts/         # OpenAPI + JSON Schemas
-├── docs/
-│   ├── TRACEABILITY.md    # Spec → implementation mapping
-│   └── BLOCKERS.md        # Known blockers & decisions needed
-├── .github/
-│   ├── PULL_REQUEST_TEMPLATE.md
-│   └── workflows/         # CI/CD pipelines
-└── README.md
-```
+| Path | Purpose |
+| --- | --- |
+| `spec/` | Authoritative PRD/Tech/UX documents |
+| `docs/TRACEABILITY.md` | Spec-to-implementation tracking |
+| `docs/BLOCKERS.md` | Open decisions and blockers |
+| `packages/contracts` | API contracts and schemas |
+| `packages/ui` | Shared UI components |
 
-## Getting Started
+## Local Prerequisites
 
-> **Prerequisites:** Node.js 20+, Ruby 3.3+, Python 3.11+, PostgreSQL 15+, Redis
+- Node.js 20+
+- Ruby 4.0+
+- Python 3.11+
+- PostgreSQL 15+
+- Redis 7+
+
+## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/<org>/k12-lms-platform.git
+git clone https://github.com/toastycaptain/k12-lms-platform.git
 cd k12-lms-platform
 
-# Start each service (see individual READMEs in apps/)
+# Web
+cd apps/web
+npm ci
+npm run dev
+
+# Core API (new terminal)
+cd apps/core
+bundle install
+bundle exec rails db:prepare
+bundle exec rails server -p 3001
+
+# AI Gateway (new terminal)
+cd apps/ai-gateway
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+uvicorn app.main:app --reload --port 8000
 ```
 
-## Specification Documents
+## Quality Commands
 
-All authoritative product and technical specifications live in `spec/`. Read `spec/00_README_FOR_AI.md` for document hierarchy and execution rules.
+```bash
+# Full web checks
+cd apps/web && npm run ci
 
-## Contributing
+# Core static checks
+cd apps/core && bundle exec rubocop && bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error
 
-1. Create a feature branch from `main`
-2. Follow the PR template in `.github/PULL_REQUEST_TEMPLATE.md`
-3. Ensure CI passes before requesting review
-4. Reference spec requirement IDs (e.g. `PRD-7`, `TECH-2.4`) in commits and PRs
+# AI gateway tests
+cd apps/ai-gateway && pytest
+
+# Optional root shortcuts
+make web-ci
+make ai-ci
+```
+
+## Non-Negotiables
+
+- Multi-tenancy must be preserved in all persisted domain entities.
+- Authorization uses Pundit and must be enforced at every API action.
+- All API endpoints live under `/api/v1` (JSON only).
+- Features outside the PRD are out of scope.
+
+## Contribution Workflow
+
+1. Branch from `main`.
+2. Reference requirement IDs in commits/PR (`PRD-*`, `TECH-*`, `UX-*`).
+3. Keep `docs/TRACEABILITY.md` current.
+4. Ensure CI and local checks pass before requesting review.
 
 ## License
 
-Proprietary — All rights reserved.
+Proprietary - all rights reserved.

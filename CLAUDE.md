@@ -3,7 +3,8 @@
 ## Quick Reference
 - Rails app: apps/core
 - Next.js app: apps/web
-- Specs: docs/PRD_K12_Planning_LMS_AI_Optimized.md, docs/TECH_SPEC_K12_Planning_LMS.md, docs/UX_SPEC_K12_Planning_LMS.md
+- AI Gateway: apps/ai-gateway
+- Specs: spec/PRD_K12_Planning_LMS_AI_Optimized.md, spec/TECH_SPEC_K12_Planning_LMS.md, spec/UX_SPEC_K12_Planning_LMS.md
 
 ## Patterns
 - Tenant scoping: use `Current.tenant` from `ActiveSupport::CurrentAttributes`
