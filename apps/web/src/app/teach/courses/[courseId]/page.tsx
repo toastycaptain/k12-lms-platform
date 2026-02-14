@@ -47,6 +47,22 @@ interface Quiz {
   due_at: string | null;
 }
 
+interface SyncMapping {
+  id: number;
+  local_type: string;
+  local_id: number;
+  external_type: string;
+  external_id: string;
+  metadata: Record<string, string>;
+  last_synced_at: string | null;
+}
+
+interface IntegrationConfig {
+  id: number;
+  provider: string;
+  status: string;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     draft: "bg-yellow-100 text-yellow-800",
@@ -76,6 +92,12 @@ export default function CourseHomePage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Google Classroom state
+  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
+  const [courseMapping, setCourseMapping] = useState<SyncMapping | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
   const isTeacher = user?.roles?.includes("teacher") || user?.roles?.includes("admin");
 
   const fetchData = useCallback(async () => {
@@ -97,6 +119,24 @@ export default function CourseHomePage() {
         .slice(0, 5);
       setAssignments(upcoming);
       setQuizzes(quizzesData);
+
+      // Fetch integration config for Google Classroom
+      try {
+        const configs = await apiFetch<IntegrationConfig[]>("/api/v1/integration_configs");
+        if (configs.length > 0 && configs[0].status === "active") {
+          const ic = configs[0];
+          setIntegrationConfig(ic);
+          const mappingsData = await apiFetch<SyncMapping[]>(
+            `/api/v1/integration_configs/${ic.id}/sync_mappings?local_type=Course`,
+          );
+          const match = mappingsData.find(
+            (m) => m.local_type === "Course" && m.local_id === Number(courseId),
+          );
+          if (match) setCourseMapping(match);
+        }
+      } catch {
+        // Integration not available
+      }
     } catch {
       // silently fail
     } finally {
@@ -241,6 +281,115 @@ export default function CourseHomePage() {
               </div>
             )}
           </section>
+
+          {/* Google Classroom Section */}
+          {isTeacher && integrationConfig && user?.google_connected && (
+            <section className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-gray-900">Google Classroom</h2>
+              {syncMessage && (
+                <div className="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-700">
+                  {syncMessage}
+                </div>
+              )}
+              {courseMapping ? (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">
+                      Linked to Classroom course
+                    </span>
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                      Synced
+                    </span>
+                  </div>
+                  {courseMapping.last_synced_at && (
+                    <p className="text-xs text-gray-400">
+                      Last synced: {new Date(courseMapping.last_synced_at).toLocaleString()}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        setSyncing(true);
+                        setSyncMessage(null);
+                        try {
+                          await apiFetch(
+                            `/api/v1/sync_mappings/${courseMapping.id}/sync_roster`,
+                            { method: "POST" },
+                          );
+                          setSyncMessage("Roster sync triggered.");
+                        } catch {
+                          setSyncMessage("Failed to trigger roster sync.");
+                        } finally {
+                          setSyncing(false);
+                        }
+                      }}
+                      disabled={syncing}
+                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Sync Roster
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setSyncing(true);
+                        setSyncMessage(null);
+                        try {
+                          const publishedAssignments = assignments.filter(
+                            (a) => a.status === "published",
+                          );
+                          for (const asn of publishedAssignments) {
+                            await apiFetch(
+                              `/api/v1/assignments/${asn.id}/push_to_classroom`,
+                              { method: "POST" },
+                            );
+                          }
+                          setSyncMessage(
+                            `Pushed ${publishedAssignments.length} assignment(s) to Classroom.`,
+                          );
+                        } catch {
+                          setSyncMessage("Failed to push assignments.");
+                        } finally {
+                          setSyncing(false);
+                        }
+                      }}
+                      disabled={syncing}
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Sync All Assignments
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-500">
+                    This course is not linked to Google Classroom.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      setSyncing(true);
+                      setSyncMessage(null);
+                      try {
+                        await apiFetch(
+                          `/api/v1/integration_configs/${integrationConfig.id}/sync_courses`,
+                          { method: "POST" },
+                        );
+                        setSyncMessage(
+                          "Course sync triggered. Refresh this page after a moment to see the mapping.",
+                        );
+                      } catch {
+                        setSyncMessage("Failed to trigger course sync.");
+                      } finally {
+                        setSyncing(false);
+                      }
+                    }}
+                    disabled={syncing}
+                    className="mt-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {syncing ? "Syncing..." : "Link to Google Classroom"}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Quizzes */}
           <section>
