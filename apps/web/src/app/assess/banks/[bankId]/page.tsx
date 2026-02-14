@@ -64,6 +64,12 @@ export default function QuestionBankEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // QTI state
+  const [exporting, setExporting] = useState(false);
+  const [exportUrl, setExportUrl] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string | null>(null);
+
   // Bank edit form
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -129,6 +135,64 @@ export default function QuestionBankEditorPage() {
       // ignore
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function exportQti() {
+    setExporting(true);
+    setExportUrl(null);
+    try {
+      await apiFetch(`/api/v1/question_banks/${bankId}/export_qti`, { method: "POST" });
+      // Poll for completion
+      const poll = async () => {
+        for (let i = 0; i < 30; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            const status = await apiFetch<{ status: string; download_url?: string }>(
+              `/api/v1/question_banks/${bankId}/export_qti_status`,
+            );
+            if (status.status === "completed" && status.download_url) {
+              setExportUrl(status.download_url);
+              return;
+            }
+          } catch {
+            // keep polling
+          }
+        }
+      };
+      await poll();
+    } catch {
+      // ignore
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function importQti(file: File) {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const res = await fetch(`${API_BASE}/api/v1/question_banks/${bankId}/import_qti`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (res.ok) {
+        setImportResult("Import started. Questions will appear shortly.");
+        // Wait a moment then refresh questions
+        await new Promise((r) => setTimeout(r, 3000));
+        await fetchQuestions();
+        setImportResult("Import complete.");
+      } else {
+        setImportResult("Import failed.");
+      }
+    } catch {
+      setImportResult("Import failed.");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -312,6 +376,51 @@ export default function QuestionBankEditorPage() {
               >
                 {saving ? "Saving..." : "Save Bank"}
               </button>
+            </div>
+          </div>
+
+          {/* QTI Import/Export */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">QTI Import / Export</h2>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={exportQti}
+                  disabled={exporting}
+                  className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {exporting ? "Exporting..." : "Export QTI"}
+                </button>
+                {exportUrl && (
+                  <a
+                    href={exportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Download
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                  {importing ? "Importing..." : "Import QTI"}
+                  <input
+                    type="file"
+                    accept=".xml,.zip"
+                    className="hidden"
+                    disabled={importing}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) importQti(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {importResult && (
+                  <span className="text-sm text-gray-600">{importResult}</span>
+                )}
+              </div>
             </div>
           </div>
 

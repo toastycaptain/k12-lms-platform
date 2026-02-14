@@ -19,6 +19,7 @@ export default function QuestionBankListPage() {
   const [banks, setBanks] = useState<QuestionBank[]>([]);
   const [loading, setLoading] = useState(true);
   const [subjectFilter, setSubjectFilter] = useState("");
+  const [exportingId, setExportingId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchBanks() {
@@ -36,6 +37,49 @@ export default function QuestionBankListPage() {
   }, [subjectFilter]);
 
   const subjects = [...new Set(banks.map((b) => b.subject).filter(Boolean))];
+
+  async function handleExport(bankId: number, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setExportingId(bankId);
+    try {
+      await apiFetch(`/api/v1/question_banks/${bankId}/export_qti`, { method: "POST" });
+      // Poll
+      for (let i = 0; i < 30; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const status = await apiFetch<{ status: string; download_url?: string }>(
+            `/api/v1/question_banks/${bankId}/export_qti_status`,
+          );
+          if (status.status === "completed" && status.download_url) {
+            window.open(status.download_url, "_blank");
+            break;
+          }
+        } catch {
+          // keep polling
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setExportingId(null);
+    }
+  }
+
+  async function handleImport(bankId: number, file: File) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      await fetch(`${API_BASE}/api/v1/question_banks/${bankId}/import_qti`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <ProtectedRoute>
@@ -104,6 +148,31 @@ export default function QuestionBankListPage() {
                   {bank.description && (
                     <p className="mt-2 text-sm text-gray-500 line-clamp-2">{bank.description}</p>
                   )}
+                  <div className="mt-3 flex gap-2" onClick={(e) => e.preventDefault()}>
+                    <button
+                      onClick={(e) => handleExport(bank.id, e)}
+                      disabled={exportingId === bank.id}
+                      className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {exportingId === bank.id ? "Exporting..." : "Export QTI"}
+                    </button>
+                    <label
+                      className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-50 cursor-pointer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Import QTI
+                      <input
+                        type="file"
+                        accept=".xml,.zip"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImport(bank.id, file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
                 </Link>
               ))}
             </div>
