@@ -28,6 +28,9 @@ gem "prawn-table"
 gem "google-apis-classroom_v1"
 gem "google-apis-drive_v3"
 
+# HTTP client
+gem "faraday"
+
 # CORS
 gem "rack-cors"
 
@@ -58,4 +61,5 @@ end
 group :test do
   gem "shoulda-matchers"
   gem "database_cleaner-active_record"
+  gem "webmock"
 end
