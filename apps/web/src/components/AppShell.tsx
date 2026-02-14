@@ -46,6 +46,9 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Curriculum Map", href: "/admin/curriculum-map" },
       { label: "Approvals", href: "/admin/approvals" },
       { label: "Integrations", href: "/admin/integrations" },
+      { label: "AI Registry", href: "/admin/ai-registry" },
+      { label: "AI Policies", href: "/admin/ai-policies" },
+      { label: "AI Usage", href: "/admin/ai-usage" },
     ],
   },
 ];
