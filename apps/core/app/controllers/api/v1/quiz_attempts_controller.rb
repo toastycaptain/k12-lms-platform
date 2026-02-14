@@ -12,8 +12,12 @@ module Api
 
       def create
         QuizAttempt.transaction do
-          attempt_number = QuizAttempt.where(quiz_id: @quiz.id, user_id: Current.user.id)
-                                       .lock("FOR UPDATE").count + 1
+          # Lock existing attempts for this quiz/user to keep attempt numbering monotonic.
+          existing_attempt_numbers = QuizAttempt.where(quiz_id: @quiz.id, user_id: Current.user.id)
+                                                .lock("FOR UPDATE")
+                                                .order(:attempt_number)
+                                                .pluck(:attempt_number)
+          attempt_number = existing_attempt_numbers.last.to_i + 1
           @quiz_attempt = @quiz.quiz_attempts.build(
             tenant: Current.tenant,
             user: Current.user,

@@ -43,17 +43,19 @@ RSpec.describe "Api::V1::IntegrationConfigs Sync", type: :request do
       expect {
         post "/api/v1/integration_configs/#{config.id}/sync_courses"
       }.to have_enqueued_job(ClassroomCourseSyncJob).with(config.id, admin.id)
+        .and change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:accepted)
       expect(response.parsed_body["message"]).to eq("Sync triggered")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("integration.sync_courses_triggered")
     end
 
-    it "triggers sync for teacher" do
+    it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
 
       post "/api/v1/integration_configs/#{config.id}/sync_courses"
 
-      expect(response).to have_http_status(:accepted)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 403 for student" do

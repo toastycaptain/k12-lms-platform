@@ -16,6 +16,13 @@ RSpec.describe "Api::V1::QuestionBanks" do
     Current.tenant = nil
     u
   end
+  let(:other_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
 
   after { Current.tenant = nil }
 
@@ -81,6 +88,16 @@ RSpec.describe "Api::V1::QuestionBanks" do
       get "/api/v1/question_banks/#{bank.id}"
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["id"]).to eq(bank.id)
+    end
+
+    it "returns 403 for teachers who do not own the bank" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      bank = create(:question_bank, tenant: tenant, created_by: other_teacher)
+      Current.tenant = nil
+
+      get "/api/v1/question_banks/#{bank.id}"
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

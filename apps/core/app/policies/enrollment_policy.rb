@@ -6,7 +6,7 @@ class EnrollmentPolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    privileged_user? || owns_enrollment? || teaches_section?(record.section_id)
   end
 
   def create?
@@ -23,7 +23,41 @@ class EnrollmentPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      return scope.all if privileged_user?
+
+      return teacher_scope if user.has_role?(:teacher)
+
+      scope.where(user_id: user.id)
     end
+
+    private
+
+    def privileged_user?
+      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+    end
+
+    def teacher_scope
+      scope.where(user_id: user.id)
+        .or(scope.where(section_id: taught_section_ids))
+        .distinct
+    end
+
+    def taught_section_ids
+      Enrollment.where(user_id: user.id, role: "teacher").select(:section_id)
+    end
+  end
+
+  private
+
+  def privileged_user?
+    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+  end
+
+  def owns_enrollment?
+    record.user_id == user.id
+  end
+
+  def teaches_section?(section_id)
+    Enrollment.exists?(user_id: user.id, section_id: section_id, role: "teacher")
   end
 end

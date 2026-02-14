@@ -16,11 +16,30 @@ RSpec.describe "Api::V1::Quizzes" do
     Current.tenant = nil
     u
   end
+  let(:other_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
   let(:course) do
     Current.tenant = tenant
     c = create(:course, tenant: tenant)
     Current.tenant = nil
     c
+  end
+  let(:term) do
+    Current.tenant = tenant
+    t = create(:term, tenant: tenant, academic_year: course.academic_year)
+    Current.tenant = nil
+    t
+  end
+  let(:section) do
+    Current.tenant = tenant
+    s = create(:section, tenant: tenant, course: course, term: term)
+    Current.tenant = nil
+    s
   end
 
   after { Current.tenant = nil }
@@ -49,11 +68,25 @@ RSpec.describe "Api::V1::Quizzes" do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
     end
+
+    it "does not expose quizzes for courses the teacher does not own or teach" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:quiz, tenant: tenant, course: course, created_by: other_teacher, title: "Restricted Quiz")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}/quizzes"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
   end
 
   describe "POST /api/v1/courses/:course_id/quizzes" do
     it "creates a quiz as teacher" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/courses/#{course.id}/quizzes", params: {
         title: "Chapter 1 Quiz",

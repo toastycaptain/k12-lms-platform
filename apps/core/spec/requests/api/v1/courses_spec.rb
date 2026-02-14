@@ -9,6 +9,13 @@ RSpec.describe "Api::V1::Courses", type: :request do
     Current.tenant = nil
     u
   end
+  let(:student) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:student)
+    Current.tenant = nil
+    u
+  end
 
   after do
     Current.tenant = nil
@@ -40,6 +47,40 @@ RSpec.describe "Api::V1::Courses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
+    end
+
+    it "returns only enrolled courses for students" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      enrolled_course = create(:course, tenant: tenant, academic_year: ay)
+      hidden_course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      enrolled_section = create(:section, tenant: tenant, course: enrolled_course, term: term)
+      hidden_section = create(:section, tenant: tenant, course: hidden_course, term: term)
+      create(:enrollment, tenant: tenant, user: student, section: enrolled_section, role: "student")
+      create(:enrollment, tenant: tenant, section: hidden_section, role: "student")
+      Current.tenant = nil
+
+      get "/api/v1/courses"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["id"]).to eq(enrolled_course.id)
+    end
+  end
+
+  describe "GET /api/v1/courses/:id" do
+    it "returns forbidden for students not enrolled in the course" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}"
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

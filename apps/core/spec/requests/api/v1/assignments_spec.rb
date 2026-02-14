@@ -23,8 +23,17 @@ RSpec.describe "Api::V1::Assignments", type: :request do
     Current.tenant = nil
     u
   end
+  let(:other_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
   after { Current.tenant = nil }
 
@@ -53,11 +62,25 @@ RSpec.describe "Api::V1::Assignments", type: :request do
       expect(response.parsed_body.length).to eq(1)
       expect(response.parsed_body.first["status"]).to eq("published")
     end
+
+    it "does not expose assignments from untaught courses to teachers" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:assignment, tenant: tenant, course: course, created_by: other_teacher, title: "Restricted")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}/assignments"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
   end
 
   describe "POST /api/v1/courses/:course_id/assignments" do
     it "creates an assignment" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/courses/#{course.id}/assignments", params: {
         title: "New Essay",
@@ -68,6 +91,17 @@ RSpec.describe "Api::V1::Assignments", type: :request do
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to eq("New Essay")
       expect(response.parsed_body["created_by_id"]).to eq(teacher.id)
+    end
+
+    it "returns 403 when teacher is not assigned to the course" do
+      mock_session(teacher, tenant: tenant)
+
+      post "/api/v1/courses/#{course.id}/assignments", params: {
+        title: "Unauthorized Essay",
+        assignment_type: "written",
+      }
+
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 403 for students" do
@@ -82,6 +116,9 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
     it "returns 422 for invalid assignment_type" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/courses/#{course.id}/assignments", params: {
         title: "Bad Type",

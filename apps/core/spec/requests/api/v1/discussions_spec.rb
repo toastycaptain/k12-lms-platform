@@ -16,8 +16,17 @@ RSpec.describe "Api::V1::Discussions", type: :request do
     Current.tenant = nil
     u
   end
+  let(:other_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
   after { Current.tenant = nil }
 
@@ -32,11 +41,25 @@ RSpec.describe "Api::V1::Discussions", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
     end
+
+    it "does not expose discussions in courses the teacher does not own or teach" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:discussion, tenant: tenant, course: course, created_by: other_teacher, title: "Restricted Discussion")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}/discussions"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
   end
 
   describe "POST /api/v1/courses/:course_id/discussions" do
     it "creates a discussion" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/courses/#{course.id}/discussions", params: { title: "Week 1 Discussion", description: "Discuss the reading" }
       expect(response).to have_http_status(:created)
@@ -78,6 +101,9 @@ RSpec.describe "Api::V1::Discussions", type: :request do
 
     it "creates and lists posts" do
       mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      Current.tenant = nil
 
       post "/api/v1/discussions/#{discussion.id}/posts", params: { content: "My thoughts on the reading" }
       expect(response).to have_http_status(:created)
@@ -90,6 +116,9 @@ RSpec.describe "Api::V1::Discussions", type: :request do
 
     it "creates threaded replies" do
       mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      Current.tenant = nil
 
       post "/api/v1/discussions/#{discussion.id}/posts", params: { content: "Original post" }
       parent_id = response.parsed_body["id"]
@@ -101,6 +130,9 @@ RSpec.describe "Api::V1::Discussions", type: :request do
 
     it "blocks posting to locked discussions" do
       mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      Current.tenant = nil
       Current.tenant = tenant
       discussion.update!(status: "locked")
       Current.tenant = nil

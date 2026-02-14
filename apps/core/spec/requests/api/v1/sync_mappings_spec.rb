@@ -29,6 +29,11 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
     Current.tenant = nil
     config
   end
+  let(:academic_year) { create(:academic_year, tenant: tenant) }
+  let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:other_course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
   after do
     Current.tenant = nil
@@ -54,14 +59,28 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
     it "returns sync mappings for teacher" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
       create(:sync_mapping, tenant: tenant, integration_config: integration_config,
-        local_type: "Course", local_id: 1, external_type: "classroom_course", external_id: "gc_1")
+        local_type: "Course", local_id: course.id, external_type: "classroom_course", external_id: "gc_1")
       Current.tenant = nil
 
       get "/api/v1/integration_configs/#{integration_config.id}/sync_mappings"
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
+    end
+
+    it "does not return mappings for courses the teacher does not teach" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:sync_mapping, tenant: tenant, integration_config: integration_config,
+        local_type: "Course", local_id: other_course.id, external_type: "classroom_course", external_id: "gc_9")
+      Current.tenant = nil
+
+      get "/api/v1/integration_configs/#{integration_config.id}/sync_mappings"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
     end
 
     it "returns 403 for student" do

@@ -9,6 +9,20 @@ RSpec.describe "Api::V1::Enrollments", type: :request do
     Current.tenant = nil
     u
   end
+  let(:teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
+  let(:student) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:student)
+    Current.tenant = nil
+    u
+  end
 
   after do
     Current.tenant = nil
@@ -51,6 +65,66 @@ RSpec.describe "Api::V1::Enrollments", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "GET /api/v1/enrollments" do
+    it "returns only the current student's enrollments" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      own_section = create(:section, tenant: tenant, course: course, term: term)
+      other_section = create(:section, tenant: tenant, course: course, term: term)
+      own_enrollment = create(:enrollment, tenant: tenant, user: student, section: own_section, role: "student")
+      create(:enrollment, tenant: tenant, section: other_section, role: "student")
+      Current.tenant = nil
+
+      get "/api/v1/enrollments"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["id"]).to eq(own_enrollment.id)
+    end
+
+    it "returns enrollments for sections taught by a teacher" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      taught_section = create(:section, tenant: tenant, course: course, term: term)
+      untaught_section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, user: teacher, section: taught_section, role: "teacher")
+      taught_student = create(:enrollment, tenant: tenant, section: taught_section, role: "student")
+      create(:enrollment, tenant: tenant, section: untaught_section, role: "student")
+      Current.tenant = nil
+
+      get "/api/v1/enrollments"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.map { |row| row["id"] }).to include(taught_student.id)
+      expect(response.parsed_body.all? { |row| row["section_id"] == taught_section.id }).to be(true)
+    end
+  end
+
+  describe "GET /api/v1/enrollments/:id" do
+    it "returns forbidden when viewing another student's enrollment" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      other_student = create(:user, tenant: tenant)
+      other_student.add_role(:student)
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      enrollment = create(:enrollment, tenant: tenant, user: other_student, section: section, role: "student")
+      Current.tenant = nil
+
+      get "/api/v1/enrollments/#{enrollment.id}"
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

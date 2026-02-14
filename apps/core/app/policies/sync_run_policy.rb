@@ -1,21 +1,30 @@
 class SyncRunPolicy < ApplicationPolicy
   def index?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    privileged_user? || user.has_role?(:teacher)
   end
 
   def show?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    privileged_user? || record.triggered_by_id == user.id
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      if user.has_role?(:admin)
-        scope.all
-      elsif user.has_role?(:teacher)
-        scope.where(triggered_by: user)
-      else
-        scope.none
-      end
+      return scope.all if privileged_user?
+      return scope.where(triggered_by: user) if user.has_role?(:teacher)
+
+      scope.none
     end
+
+    private
+
+    def privileged_user?
+      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+    end
+  end
+
+  private
+
+  def privileged_user?
+    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
   end
 end

@@ -152,6 +152,18 @@ RSpec.describe "Api::V1::SyncRuns", type: :request do
       expect(response.parsed_body["id"]).to eq(run.id)
     end
 
+    it "returns 403 when teacher requests another user's sync run" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      run = create(:sync_run, tenant: tenant, integration_config: integration_config,
+        triggered_by: admin)
+      Current.tenant = nil
+
+      get "/api/v1/sync_runs/#{run.id}"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
     it "returns 403 for student" do
       mock_session(student, tenant: tenant)
       Current.tenant = tenant

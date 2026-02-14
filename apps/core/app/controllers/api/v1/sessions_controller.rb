@@ -9,14 +9,12 @@ module Api
         auth = request.env["omniauth.auth"]
 
         unless auth
-          render json: { error: "Authentication failed" }, status: :unauthorized
-          return
+          return redirect_with_error("authentication_failed")
         end
 
         tenant = resolve_tenant_from_auth(auth)
         unless tenant
-          render json: { error: "No tenant found for this account" }, status: :forbidden
-          return
+          return redirect_with_error("tenant_not_found")
         end
 
         Current.tenant = tenant
@@ -25,16 +23,30 @@ module Api
 
         session[:user_id] = user.id
         session[:tenant_id] = tenant.id
+        audit_event(
+          "session.signed_in",
+          actor: user,
+          auditable: user,
+          metadata: {
+            provider: auth.provider,
+            tenant_id: tenant.id
+          }
+        )
 
-        redirect_to ENV.fetch("FRONTEND_URL", "http://localhost:3000") + "/auth/callback",
+        redirect_to frontend_url + "/auth/callback",
           allow_other_host: true
       end
 
       def failure
-        render json: { error: "Authentication failed: #{params[:message]}" }, status: :unauthorized
+        redirect_with_error(params[:message].presence || "authentication_failed")
       end
 
       def destroy
+        audit_event(
+          "session.signed_out",
+          auditable: Current.user,
+          metadata: { tenant_id: Current.tenant&.id }
+        )
         reset_session
         render json: { message: "Signed out successfully" }, status: :ok
       end
@@ -58,6 +70,16 @@ module Api
       end
 
       private
+
+      def frontend_url
+        ENV.fetch("FRONTEND_URL", "http://localhost:3000")
+      end
+
+      def redirect_with_error(error_code)
+        encoded_error = CGI.escape(error_code.to_s)
+        redirect_to "#{frontend_url}/auth/callback?error=#{encoded_error}",
+          allow_other_host: true
+      end
 
       def resolve_tenant_from_auth(auth)
         email_domain = auth.info.email.split("@").last

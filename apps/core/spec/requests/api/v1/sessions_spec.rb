@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Sessions", type: :request do
-  let!(:tenant) { create(:tenant) }
+  let!(:tenant) { create(:tenant, slug: "example") }
 
   before do
     OmniAuth.config.test_mode = true
@@ -31,8 +31,10 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect {
           get "/auth/google_oauth2/callback"
         }.to change(User.unscoped, :count).by(1)
+          .and change(AuditLog.unscoped, :count).by(1)
 
         expect(response).to have_http_status(:redirect)
+        expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.signed_in")
       end
 
       it "finds existing user by email within tenant" do
@@ -85,11 +87,11 @@ RSpec.describe "Api::V1::Sessions", type: :request do
     end
 
     context "with failed OmniAuth response" do
-      it "returns failure message" do
+      it "redirects to frontend callback with an error" do
         get "/auth/failure", params: { message: "invalid_credentials" }
 
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.parsed_body["error"]).to include("invalid_credentials")
+        expect(response).to have_http_status(:redirect)
+        expect(response.headers["Location"]).to include("/auth/callback?error=invalid_credentials")
       end
     end
   end
@@ -102,10 +104,13 @@ RSpec.describe "Api::V1::Sessions", type: :request do
 
       mock_session(user, tenant: tenant)
 
-      delete "/api/v1/session"
+      expect {
+        delete "/api/v1/session"
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["message"]).to eq("Signed out successfully")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.signed_out")
     end
   end
 

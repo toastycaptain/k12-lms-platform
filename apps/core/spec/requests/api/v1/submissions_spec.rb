@@ -23,8 +23,17 @@ RSpec.describe "Api::V1::Submissions", type: :request do
     Current.tenant = nil
     u
   end
+  let(:other_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
   let(:assignment) do
     Current.tenant = tenant
     a = create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "published")
@@ -37,6 +46,9 @@ RSpec.describe "Api::V1::Submissions", type: :request do
   describe "POST /api/v1/assignments/:assignment_id/submissions" do
     it "creates a submission as student" do
       mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      Current.tenant = nil
 
       post "/api/v1/assignments/#{assignment.id}/submissions", params: {
         submission_type: "text",
@@ -60,6 +72,9 @@ RSpec.describe "Api::V1::Submissions", type: :request do
 
     it "prevents duplicate submissions" do
       mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      Current.tenant = nil
 
       post "/api/v1/assignments/#{assignment.id}/submissions", params: {
         submission_type: "text",
@@ -118,6 +133,17 @@ RSpec.describe "Api::V1::Submissions", type: :request do
       mock_session(other_student, tenant: tenant)
       Current.tenant = tenant
       submission = create(:submission, tenant: tenant, assignment: assignment, user: student, status: "submitted", submitted_at: Time.current)
+      Current.tenant = nil
+
+      get "/api/v1/submissions/#{submission.id}"
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "returns 403 for unrelated teachers" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      other_assignment = create(:assignment, tenant: tenant, course: course, created_by: other_teacher, status: "published")
+      submission = create(:submission, tenant: tenant, assignment: other_assignment, user: student, status: "submitted", submitted_at: Time.current)
       Current.tenant = nil
 
       get "/api/v1/submissions/#{submission.id}"

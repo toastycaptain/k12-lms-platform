@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.providers.base import BaseProvider, GenerateResponse, StreamChunk, Usage
+from app.providers.base import BaseProvider, GenerateResponse, ProviderError, StreamChunk, Usage
 from app.providers.registry import registry
 
 
@@ -12,8 +12,17 @@ class FakeProvider(BaseProvider):
     name = "fake"
     supported_models = ["fake-model"]
 
-    def __init__(self, content: str = "generated"):
+    def __init__(
+        self,
+        content: str = "generated",
+        generate_error: ProviderError | Exception | None = None,
+        stream_error: ProviderError | Exception | None = None,
+    ):
         self.content = content
+        self.generate_error = generate_error
+        self.stream_error = stream_error
+        self.last_generate_call: dict | None = None
+        self.last_stream_call: dict | None = None
 
     async def generate(
         self,
@@ -23,6 +32,16 @@ class FakeProvider(BaseProvider):
         max_tokens: int = 2048,
         system_prompt: str | None = None,
     ) -> GenerateResponse:
+        self.last_generate_call = {
+            "prompt": prompt,
+            "model": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "system_prompt": system_prompt,
+        }
+        if self.generate_error is not None:
+            raise self.generate_error
+
         return GenerateResponse(
             content=self.content,
             model=model,
@@ -39,6 +58,16 @@ class FakeProvider(BaseProvider):
         max_tokens: int = 2048,
         system_prompt: str | None = None,
     ) -> AsyncGenerator[StreamChunk, None]:
+        self.last_stream_call = {
+            "prompt": prompt,
+            "model": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "system_prompt": system_prompt,
+        }
+        if self.stream_error is not None:
+            raise self.stream_error
+
         yield StreamChunk(content="partial", done=False)
         yield StreamChunk(
             content="",

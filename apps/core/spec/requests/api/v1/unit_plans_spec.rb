@@ -16,6 +16,13 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
     Current.tenant = nil
     u
   end
+  let(:outsider_teacher) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:teacher)
+    Current.tenant = nil
+    u
+  end
 
   after do
     Current.tenant = nil
@@ -102,6 +109,43 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
+    end
+
+    it "returns owned and taught-course unit plans, excluding unrelated ones" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      taught_course = create(:course, tenant: tenant, academic_year: ay)
+      owned_course = create(:course, tenant: tenant, academic_year: ay)
+      hidden_course = create(:course, tenant: tenant, academic_year: ay)
+      term = create(:term, tenant: tenant, academic_year: ay)
+      taught_section = create(:section, tenant: tenant, course: taught_course, term: term)
+      create(:enrollment, tenant: tenant, user: teacher, section: taught_section, role: "teacher")
+      taught_plan = create(:unit_plan, tenant: tenant, course: taught_course, created_by: outsider_teacher)
+      owned_plan = create(:unit_plan, tenant: tenant, course: owned_course, created_by: teacher)
+      create(:unit_plan, tenant: tenant, course: hidden_course, created_by: outsider_teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(2)
+      expect(response.parsed_body.map { |row| row["id"] }).to contain_exactly(owned_plan.id, taught_plan.id)
+    end
+  end
+
+  describe "GET /api/v1/unit_plans/:id" do
+    it "returns forbidden for teachers without ownership or course assignment" do
+      mock_session(outsider_teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{unit_plan.id}"
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 
