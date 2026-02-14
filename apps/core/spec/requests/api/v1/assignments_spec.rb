@@ -98,7 +98,7 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
       post "/api/v1/courses/#{course.id}/assignments", params: {
         title: "Unauthorized Essay",
-        assignment_type: "written",
+        assignment_type: "written"
       }
 
       expect(response).to have_http_status(:forbidden)
