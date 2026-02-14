@@ -97,6 +97,14 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :rubrics do
+        resources :criteria, controller: "rubric_criteria", only: [ :index, :create ]
+      end
+      resources :rubric_criteria, only: [ :update, :destroy ] do
+        resources :ratings, controller: "rubric_ratings", only: [ :index, :create ]
+      end
+      resources :rubric_ratings, only: [ :update, :destroy ]
+
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
       end

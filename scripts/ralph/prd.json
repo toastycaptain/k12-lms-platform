@@ -111,7 +111,7 @@
         "Rubocop passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11: Rubrics enable consistent grading. Keep the model simple — criterion has rating levels (e.g., Excellent=4, Good=3, Fair=2, Poor=1). points_possible on Rubric should equal sum of max criterion points."
     },
     {

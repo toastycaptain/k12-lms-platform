@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_235720) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_000104) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -203,6 +203,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_235720) do
     t.datetime "updated_at", null: false
     t.index ["tenant_id", "name"], name: "index_roles_on_tenant_id_and_name", unique: true
     t.index ["tenant_id"], name: "index_roles_on_tenant_id"
+  end
+
+  create_table "rubric_criteria", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.decimal "points", null: false
+    t.integer "position", default: 0
+    t.bigint "rubric_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rubric_id"], name: "index_rubric_criteria_on_rubric_id"
+    t.index ["tenant_id"], name: "index_rubric_criteria_on_tenant_id"
+  end
+
+  create_table "rubric_ratings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.decimal "points", null: false
+    t.integer "position", default: 0
+    t.bigint "rubric_criterion_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rubric_criterion_id"], name: "index_rubric_ratings_on_rubric_criterion_id"
+    t.index ["tenant_id"], name: "index_rubric_ratings_on_tenant_id"
+  end
+
+  create_table "rubrics", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.decimal "points_possible"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_rubrics_on_created_by_id"
+    t.index ["tenant_id"], name: "index_rubrics_on_tenant_id"
   end
 
   create_table "schools", force: :cascade do |t|
@@ -411,6 +448,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_235720) do
   add_foreign_key "approvals", "users", column: "requested_by_id"
   add_foreign_key "approvals", "users", column: "reviewed_by_id"
   add_foreign_key "assignments", "courses"
+  add_foreign_key "assignments", "rubrics"
   add_foreign_key "assignments", "tenants"
   add_foreign_key "assignments", "users", column: "created_by_id"
   add_foreign_key "course_modules", "courses"
@@ -430,6 +468,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_235720) do
   add_foreign_key "module_items", "tenants"
   add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
+  add_foreign_key "rubric_criteria", "rubrics"
+  add_foreign_key "rubric_criteria", "tenants"
+  add_foreign_key "rubric_ratings", "rubric_criteria", column: "rubric_criterion_id"
+  add_foreign_key "rubric_ratings", "tenants"
+  add_foreign_key "rubrics", "tenants"
+  add_foreign_key "rubrics", "users", column: "created_by_id"
   add_foreign_key "schools", "tenants"
   add_foreign_key "sections", "courses"
   add_foreign_key "sections", "tenants"
