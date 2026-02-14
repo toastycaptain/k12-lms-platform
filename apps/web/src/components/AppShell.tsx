@@ -21,7 +21,14 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Standards", href: "/plan/standards" },
     ],
   },
-  { label: "Teach", href: "/teach" },
+  {
+    label: "Teach",
+    href: "/teach",
+    children: [
+      { label: "Courses", href: "/teach/courses" },
+      { label: "Submissions", href: "/teach/submissions" },
+    ],
+  },
   { label: "Assess", href: "/assess" },
   { label: "Report", href: "/report" },
   { label: "Communicate", href: "/communicate" },

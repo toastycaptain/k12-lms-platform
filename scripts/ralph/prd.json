@@ -192,7 +192,7 @@
         "npm run build succeeds"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11, UX §3.4: Course Home is the teacher/student entry point to LMS. Teach sub-nav mirrors Plan sub-nav pattern from M2."
     },
     {
