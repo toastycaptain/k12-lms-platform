@@ -24,7 +24,7 @@
         "App starts successfully with: cd apps/ai-gateway && pip install -r requirements.txt && uvicorn app.main:app"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.1, 2.2: ai-gateway is the isolated FastAPI service for AI model adapters, prompts, and safety. This story establishes the project foundation. The service communicates with Rails Core via HTTP."
     },
     {
@@ -47,7 +47,7 @@
         "pytest passes with 0 failures"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.1, 2.10: The provider adapter pattern allows adding new LLM providers without changing the core gateway logic. Registry pattern enables runtime discovery. Real API calls are never made in tests — all HTTP is mocked."
     },
     {
@@ -69,7 +69,7 @@
         "pytest passes with 0 failures"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.10: /v1/generate is the primary gateway endpoint. Safety filters provide a defense-in-depth layer (even though Rails also enforces policies). Task-type-specific system prompts encode domain knowledge about K-12 education content generation."
     },
     {
@@ -92,7 +92,7 @@
         "pytest passes with 0 failures"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.10: Streaming provides a better UX for AI generation — teachers see content appear progressively. SSE is simpler than WebSocket for unidirectional streaming. FastAPI's StreamingResponse handles the SSE protocol natively."
     },
     {
@@ -117,7 +117,7 @@
         "Request specs: list as admin (200), list as teacher (403), create with api_key (verify key not in response), show (no api_key in response), update, delete, activate (with key), activate (without key — 422), deactivate, duplicate provider per tenant (422), Rubocop passes"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-14, Tech Spec 2.4: AiProviderConfig is the admin model registry. One config per provider per tenant. API keys are encrypted at rest and never exposed in API responses. Admin-only access ensures institutional control over AI provider configuration."
     },
     {
@@ -142,7 +142,7 @@
         "Request specs: list as admin (200, all policies), list as teacher (200, only allowed), list as student (200, empty), create, update, delete, allowed_for? checks, Rubocop passes"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-14, PRD-21: Task policies are the admin control plane for AI usage. Each task_type maps to a specific AI workflow (lesson generation, differentiation, etc.). Policies control which roles can use which AI features, with optional model override and token/temperature limits."
     },
     {
@@ -169,7 +169,7 @@
         "Request specs: list as admin (200), list as teacher (only active), create, update, render template, activate, archive, missing required variable (422), Rubocop passes"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-14, PRD-21: Templates give admins and curriculum leads control over AI prompts. The variable system allows templates to be reused across different contexts (subjects, grades, standards). Mustache-style {{variable}} syntax is simple and familiar."
     },
     {
@@ -196,7 +196,7 @@
         "Request specs: list as admin (200 with filters), list as teacher (403), show, summary endpoint, date range filtering, Rubocop passes"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-14, PRD-22: Audit logging is critical for institutional AI governance. Admins need visibility into who is using AI, how much, and for what purpose. Token counts enable cost tracking. Input hashing allows dedup detection without storing sensitive prompt content."
     },
     {
@@ -220,7 +220,7 @@
         "Rubocop passes"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": "Tech Spec 2.1: Rails Core communicates with AI Gateway via HTTP. Faraday provides a clean HTTP client with middleware support. The client encapsulates all gateway communication, connection management, and error handling so controllers/jobs don't deal with HTTP details directly."
     },
     {
@@ -243,7 +243,7 @@
         "Request specs: generate unit as teacher (202), generate as student (403), get result (200 with content), get result before complete (200 with pending status), no task policy configured (403), Rubocop passes"
       ],
       "priority": 10,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-21: 'Invoke AI → review output → save draft → enforce policy'. This is the core AI-assisted planning workflow. The async job pattern prevents request timeouts. Results are cached temporarily (not persisted) — teachers must explicitly save to create a unit plan draft."
     },
     {
@@ -263,7 +263,7 @@
         "Request specs: generate lesson (202), generate with unit context (202, verify unit data included), Rubocop passes"
       ],
       "priority": 11,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-21: Lesson generation is the most frequent AI task. Providing unit plan context prevents duplication and ensures coherence across lessons. The same async pattern as unit generation ensures consistency."
     },
     {
@@ -284,7 +284,7 @@
         "Request specs: differentiate (202), generate assessment (202), rewrite (202), policy enforcement for each, Rubocop passes"
       ],
       "priority": 12,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-5, PRD-21, UX 3.7: These are the 'Differentiate', 'Assess', and 'Rewrite' capabilities from the AI Assistant Panel. Each follows the same async job pattern but with different prompt construction and response parsing."
     },
     {
@@ -308,7 +308,7 @@
         "npm run build succeeds"
       ],
       "priority": 13,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-14, UX 3.6: The AI Registry and AI Policies pages are the admin control center for AI features. They map directly to the AiProviderConfig and AiTaskPolicy models. API keys are never displayed — only a 'Change' flow."
     },
     {
@@ -332,7 +332,7 @@
         "npm run build succeeds"
       ],
       "priority": 14,
-      "passes": true,
+      "passes": false,
       "notes": "UX 3.7: The AI Assistant Panel is the primary AI interaction surface. It provides Draft, Differentiate, Assess, and Rewrite capabilities in a contextual panel. The panel respects task policies — only showing capabilities the user is allowed to use."
     },
     {
@@ -352,7 +352,7 @@
         "npm run build succeeds"
       ],
       "priority": 15,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-21: 'Invoke AI → review output → save draft → enforce policy'. This story completes the AI workflow loop by connecting generation results to existing editor forms. The preview-then-apply pattern ensures teachers maintain control over AI-generated content."
     }
   ]

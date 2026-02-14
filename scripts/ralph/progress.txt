@@ -564,3 +564,65 @@
 - Quality checks: 535 examples passing, rubocop clean
 
 ## M5 COMPLETE — All 15 stories (US-067 through US-081) passing
+
+### Iteration 70 — US-082-085: FastAPI ai-gateway service
+- Initialized FastAPI ai-gateway with health endpoint, CORS, request logging, error handling middleware
+- Provider adapter layer: BaseProvider ABC, OpenAIProvider, AnthropicProvider with httpx async clients
+- ProviderRegistry for dynamic provider registration
+- SafetyFilter with regex injection detection
+- System prompts per task type
+- POST /v1/generate and POST /v1/generate_stream (SSE) endpoints
+- 24 pytest tests passing
+- Quality checks: all pass
+
+### Iteration 71 — US-086-089: Rails AI models
+- AiProviderConfig: encrypts :api_key, activate!/deactivate!, admin-only CRUD
+- AiTaskPolicy: allowed_for?(user) with JSONB role filtering, effective_model
+- AiTemplate: render(vars) with {{variable}} mustache substitution, activate!/archive!
+- AiInvocation: start!/complete!/fail! lifecycle with duration_ms tracking
+- Routes for all AI resources
+- 93 new specs (628 total), rubocop clean
+
+### Iteration 72 — US-090: AiGatewayClient service
+- Faraday-based HTTP client for FastAPI gateway
+- Methods: generate, generate_stream (SSE parsing), health, providers
+- AiGatewayError custom error class
+- Admin-only health proxy endpoint
+- 15 specs passing
+
+### Iteration 73 — US-091: AI generation endpoints and unit generation job
+- AiGenerationsController with 5 task-type endpoints + result polling
+- Each endpoint: Pundit check + AiTaskPolicy.allowed_for? + AiInvocation creation + job enqueue
+- AiUnitGenerationJob: template rendering, gateway invocation, JSON result caching
+- Gotcha: test env uses :null_store cache — use MemoryStore in specs
+- 21 specs for endpoint + 8 for job
+
+### Iteration 74 — US-092: AI lesson generation job
+- AiLessonGenerationJob with UnitPlan context injection (title, essential questions, existing lessons)
+- 4 specs passing
+
+### Iteration 75 — US-093: AI differentiation, assessment, and rewrite jobs
+- AiDifferentiationJob, AiAssessmentGenerationJob, AiRewriteJob
+- All follow same pattern: template support, gateway invocation, result caching
+- 12 specs (4 per job)
+- Full suite: 676 examples, 0 failures, rubocop clean (408 files, 0 offenses)
+
+### Iteration 76 — US-094: Admin AI management pages (Next.js)
+- AI Registry: provider CRUD with activate/deactivate, inline edit
+- AI Policies: task-type access control, role multi-checkbox, enable/disable toggle
+- AI Usage: invocations dashboard with summary stats and filters
+- AppShell updated with AI nav items under Admin
+
+### Iteration 77 — US-095: AI Assistant Panel component (Next.js)
+- AiAssistantPanel: slide-out panel from right side
+- 5 tabs: Unit, Lesson, Differentiate, Assessment, Rewrite
+- Async generation with polling (2s intervals, 60 max attempts)
+- Result preview in JSON format, Apply to Editor callback
+- Configurable default tab and context pass-through
+
+### Iteration 78 — US-096: AI integration in planners and quiz builder (Next.js)
+- Unit Planner: AI Assist button, auto-fills title/description/questions/understandings
+- Lesson Editor: AI Assist with unit context (unitPlanId), auto-fills all fields
+- Quiz Builder: AI Assist for assessment generation
+
+## M6 COMPLETE — All 15 stories (US-082 through US-096) passing
