@@ -25,7 +25,7 @@ module Api
             return
           end
 
-          permitted_items = params.permit(content_items: [:title, :text, :url, :type, custom: {}])
+          permitted_items = params.permit(content_items: [ :title, :text, :url, :type, custom: {} ])
           items = permitted_items[:content_items]&.map(&:to_h) || []
 
           render json: { status: "ok", content_items: items }

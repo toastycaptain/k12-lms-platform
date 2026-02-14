@@ -72,7 +72,7 @@ module Api
       def import_qti
         authorize @question_bank, :update?
         unless params[:file].present?
-          render json: { errors: ["File is required"] }, status: :unprocessable_entity
+          render json: { errors: [ "File is required" ] }, status: :unprocessable_entity
           return
         end
         blob = ActiveStorage::Blob.create_and_upload!(
