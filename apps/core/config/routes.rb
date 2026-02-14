@@ -17,7 +17,13 @@ Rails.application.routes.draw do
         get :gradebook, on: :member, controller: "gradebook", action: "show"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :assignments, only: [ :index, :create ]
+        resources :discussions, only: [ :index, :create ]
       end
+
+      resources :discussions, only: [ :show, :update, :destroy ] do
+        resources :posts, controller: "discussion_posts", only: [ :index, :create ]
+      end
+      resources :discussion_posts, only: [ :destroy ]
 
       resources :assignments, only: [ :show, :update, :destroy ] do
         member do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_000412) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_000550) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -119,6 +119,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000412) do
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
+  end
+
+  create_table "discussion_posts", force: :cascade do |t|
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "discussion_id", null: false
+    t.bigint "parent_post_id"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_discussion_posts_on_created_by_id"
+    t.index ["discussion_id"], name: "index_discussion_posts_on_discussion_id"
+    t.index ["parent_post_id"], name: "index_discussion_posts_on_parent_post_id"
+    t.index ["tenant_id"], name: "index_discussion_posts_on_tenant_id"
+  end
+
+  create_table "discussions", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.boolean "pinned", default: false
+    t.boolean "require_initial_post", default: false
+    t.string "status", default: "open", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_discussions_on_course_id"
+    t.index ["created_by_id"], name: "index_discussions_on_created_by_id"
+    t.index ["tenant_id"], name: "index_discussions_on_tenant_id"
   end
 
   create_table "enrollments", force: :cascade do |t|
@@ -471,6 +501,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000412) do
   add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"
   add_foreign_key "courses", "tenants"
+  add_foreign_key "discussion_posts", "discussion_posts", column: "parent_post_id"
+  add_foreign_key "discussion_posts", "discussions"
+  add_foreign_key "discussion_posts", "tenants"
+  add_foreign_key "discussion_posts", "users", column: "created_by_id"
+  add_foreign_key "discussions", "courses"
+  add_foreign_key "discussions", "tenants"
+  add_foreign_key "discussions", "users", column: "created_by_id"
   add_foreign_key "enrollments", "sections"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"

@@ -5,6 +5,7 @@ class Course < ApplicationRecord
   has_many :sections, dependent: :destroy
   has_many :course_modules, dependent: :destroy
   has_many :assignments, dependent: :destroy
+  has_many :discussions, dependent: :destroy
 
   validates :name, presence: true
 end
