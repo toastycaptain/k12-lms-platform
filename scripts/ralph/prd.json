@@ -88,7 +88,7 @@
         "Rubocop passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11, PRD-18: Grading workflow is grade → feedback → return. Gradebook gives teachers a course-level view of all grades."
     },
     {

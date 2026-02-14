@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       resources :terms
       resources :courses do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
+        get :gradebook, on: :member, controller: "gradebook", action: "show"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :assignments, only: [ :index, :create ]
       end
@@ -25,7 +26,12 @@ Rails.application.routes.draw do
         end
         resources :submissions, only: [ :index, :create ]
       end
-      resources :submissions, only: [ :show ]
+      resources :submissions, only: [ :show ] do
+        member do
+          post :grade, controller: "submission_grading", action: "grade"
+          post :return, controller: "submission_grading", action: "return_submission"
+        end
+      end
 
       resources :modules, controller: "course_modules", only: [ :show, :update, :destroy ] do
         member do
