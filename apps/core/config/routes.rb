@@ -151,6 +151,13 @@ Rails.application.routes.draw do
       end
       resources :rubric_ratings, only: [ :update, :destroy ]
 
+      resources :integration_configs do
+        member do
+          post :activate
+          post :deactivate
+        end
+      end
+
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
       end

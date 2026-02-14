@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_005600) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_020340) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -196,6 +196,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005600) do
     t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
     t.index ["user_id", "section_id"], name: "index_enrollments_on_user_id_and_section_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
+  end
+
+  create_table "integration_configs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "provider", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "inactive", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_integration_configs_on_created_by_id"
+    t.index ["tenant_id", "provider"], name: "index_integration_configs_on_tenant_id_and_provider", unique: true
+    t.index ["tenant_id"], name: "index_integration_configs_on_tenant_id"
   end
 
   create_table "lesson_plans", force: :cascade do |t|
@@ -660,6 +673,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_005600) do
   add_foreign_key "enrollments", "sections"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
+  add_foreign_key "integration_configs", "tenants"
+  add_foreign_key "integration_configs", "users", column: "created_by_id"
   add_foreign_key "lesson_plans", "lesson_versions", column: "current_version_id"
   add_foreign_key "lesson_plans", "tenants"
   add_foreign_key "lesson_plans", "unit_plans"
