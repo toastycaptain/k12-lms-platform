@@ -8,6 +8,7 @@ module Api
           .order(created_at: :asc)
 
         logs = logs.where(level: params[:level]) if params[:level].present?
+        logs = paginate(logs)
 
         render json: logs
       end

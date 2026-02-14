@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
+  include Paginatable
   include Pundit::Authorization
 
   before_action :authenticate_user!

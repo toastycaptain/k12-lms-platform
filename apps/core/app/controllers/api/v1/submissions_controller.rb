@@ -6,6 +6,7 @@ module Api
 
       def index
         submissions = policy_scope(Submission).where(assignment: @assignment)
+        submissions = paginate(submissions)
         render json: submissions
       end
 

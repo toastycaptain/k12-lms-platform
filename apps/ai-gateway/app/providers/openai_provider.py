@@ -31,6 +31,14 @@ class OpenAIProvider(BaseProvider):
             "Content-Type": "application/json",
         }
 
+    def _ensure_api_key(self) -> None:
+        if not self.api_key:
+            raise ProviderError(
+                message="OpenAI API key is not configured",
+                provider=self.name,
+                status_code=500,
+            )
+
     def _build_messages(self, prompt: str, system_prompt: str | None = None) -> list[dict]:
         messages = []
         if system_prompt:
@@ -39,6 +47,7 @@ class OpenAIProvider(BaseProvider):
         return messages
 
     async def generate(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> GenerateResponse:
+        self._ensure_api_key()
         messages = self._build_messages(prompt, system_prompt)
         try:
             response = await self._client.post(
@@ -54,8 +63,9 @@ class OpenAIProvider(BaseProvider):
             )
 
             if response.status_code != 200:
+                detail = response.text[:500]
                 raise ProviderError(
-                    message=f"OpenAI API error: {response.status_code}",
+                    message=f"OpenAI API error: {response.status_code} {detail}",
                     provider=self.name,
                     status_code=response.status_code,
                 )
@@ -73,6 +83,11 @@ class OpenAIProvider(BaseProvider):
                 ),
                 finish_reason=data["choices"][0].get("finish_reason", "stop"),
             )
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="OpenAI request timed out",
+                provider=self.name,
+            )
         except httpx.HTTPError:
             raise ProviderError(
                 message="OpenAI request failed",
@@ -80,6 +95,7 @@ class OpenAIProvider(BaseProvider):
             )
 
     async def stream(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> AsyncGenerator[StreamChunk, None]:
+        self._ensure_api_key()
         messages = self._build_messages(prompt, system_prompt)
         try:
             async with self._client.stream(
@@ -96,9 +112,9 @@ class OpenAIProvider(BaseProvider):
                 timeout=180.0,
             ) as response:
                 if response.status_code != 200:
-                    await response.aread()
+                    detail = (await response.aread()).decode("utf-8", errors="ignore")[:500]
                     raise ProviderError(
-                        message=f"OpenAI API error: {response.status_code}",
+                        message=f"OpenAI API error: {response.status_code} {detail}",
                         provider=self.name,
                         status_code=response.status_code,
                     )
@@ -139,6 +155,11 @@ class OpenAIProvider(BaseProvider):
                         return
 
                     yield StreamChunk(content=content, done=False)
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="OpenAI stream timed out",
+                provider=self.name,
+            )
         except httpx.HTTPError:
             raise ProviderError(
                 message="OpenAI stream failed",

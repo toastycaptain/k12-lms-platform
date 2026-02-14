@@ -28,6 +28,19 @@ RSpec.describe "Api::V1::Courses", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(2)
     end
+
+    it "supports optional pagination params" do
+      mock_session(admin, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      create_list(:course, 3, tenant: tenant, academic_year: ay)
+      Current.tenant = nil
+
+      get "/api/v1/courses", params: { page: 2, per_page: 1 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
   end
 
   describe "POST /api/v1/courses" do

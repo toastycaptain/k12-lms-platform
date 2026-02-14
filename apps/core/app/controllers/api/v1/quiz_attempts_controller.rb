@@ -6,6 +6,7 @@ module Api
 
       def index
         attempts = policy_scope(QuizAttempt).where(quiz: @quiz)
+        attempts = paginate(attempts)
         render json: attempts
       end
 

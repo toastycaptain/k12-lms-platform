@@ -30,8 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const currentUser = await fetchCurrentUser();
       setUser(currentUser);
-    } catch {
+    } catch (err) {
       setUser(null);
+      setError(err instanceof Error ? err.message : "Unable to fetch current user");
     } finally {
       setLoading(false);
     }
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   return (

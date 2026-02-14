@@ -6,6 +6,7 @@ module Api
 
       def index
         posts = policy_scope(DiscussionPost).where(discussion: @discussion)
+        posts = paginate(posts)
         render json: posts
       end
 

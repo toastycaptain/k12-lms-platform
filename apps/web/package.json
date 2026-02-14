@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\"",
+    "typecheck": "npm run clean && next typegen && tsc --noEmit",
+    "ci": "npm run lint && npm run typecheck && npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

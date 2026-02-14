@@ -55,3 +55,8 @@ lcov.info
 *.key
 credentials.yml.enc
 master.key
+
+# Ralph runtime artifacts
+scripts/ralph/archive/
+scripts/ralph/prd-m*.json
+scripts/ralph/m*-code-review.md

@@ -7,6 +7,7 @@ module Api
         banks = policy_scope(QuestionBank)
         banks = banks.where(subject: params[:subject]) if params[:subject].present?
         banks = banks.where(grade_level: params[:grade_level]) if params[:grade_level].present?
+        banks = paginate(banks)
         render json: banks
       end
 

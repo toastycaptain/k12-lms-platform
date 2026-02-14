@@ -7,6 +7,7 @@ module Api
       def index
         @unit_plans = policy_scope(UnitPlan)
         @unit_plans = @unit_plans.where(course_id: params[:course_id]) if params[:course_id]
+        @unit_plans = paginate(@unit_plans)
         render json: @unit_plans
       end
 

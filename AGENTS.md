@@ -2,13 +2,13 @@
 
 ## Project Overview
 K-12 web application combining curriculum planning, course delivery, assessment, and Google integration.
-See docs/ for full PRD, Tech Spec, and UX Spec.
+See `spec/` for full PRD, Tech Spec, and UX Spec.
 
 ## Architecture
 - Monorepo with three apps and two shared packages
-- apps/core: Rails 7+ API-only (system of record)
-- apps/web: Next.js 14+ with TypeScript and Tailwind
-- apps/ai-gateway: FastAPI (Phase 6, not yet implemented)
+- apps/core: Rails 8+ API-only (system of record)
+- apps/web: Next.js 16+ with TypeScript and Tailwind
+- apps/ai-gateway: FastAPI gateway service
 - packages/ui: Shared design system components
 - packages/contracts: OpenAPI specs and JSON schemas
 
@@ -21,9 +21,9 @@ See docs/ for full PRD, Tech Spec, and UX Spec.
 6. Do NOT add: real-time collab editing, video conferencing, full SIS, proctoring, marketplace
 
 ## Tech Stack
-- Ruby on Rails 7+ (API-only)
+- Ruby on Rails 8+ (API-only)
 - PostgreSQL
-- Next.js 14+ (App Router, TypeScript, Tailwind)
+- Next.js 16+ (App Router, TypeScript, Tailwind)
 - Sidekiq for background jobs
 - Pundit for authorization
 - OmniAuth for authentication (Google OIDC)
@@ -41,4 +41,8 @@ cd apps/core && bundle exec rails db:migrate
 cd apps/web && npm run lint
 cd apps/web && npm run typecheck
 cd apps/web && npm run build
+
+# AI gateway
+cd apps/ai-gateway && pip install -e .[dev]
+cd apps/ai-gateway && pytest
 ```

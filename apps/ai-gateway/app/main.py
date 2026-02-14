@@ -12,16 +12,21 @@ from app.providers.openai_provider import OpenAIProvider
 from app.providers.registry import registry
 from app.routers.v1 import router as v1_router
 
-logging.basicConfig(level=logging.INFO)
+LOG_LEVEL = getattr(logging, settings.log_level.upper(), logging.INFO)
+logging.basicConfig(level=LOG_LEVEL)
 logger = logging.getLogger("ai-gateway")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    registry.clear()
     registry.register("openai", OpenAIProvider())
     registry.register("anthropic", AnthropicProvider())
     logger.info("Registered providers: %s", registry.list_providers())
-    yield
+    try:
+        yield
+    finally:
+        await registry.close_all()
 
 
 app = FastAPI(title="K-12 LMS AI Gateway", version="1.0.0", lifespan=lifespan)

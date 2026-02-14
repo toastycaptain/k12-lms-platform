@@ -19,6 +19,13 @@ router = APIRouter(prefix="/v1")
 safety_filter = SafetyFilter()
 
 
+def resolve_provider(provider_name: str):
+    try:
+        return registry.get(provider_name)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+
+
 @router.get("/health")
 async def health():
     return {
@@ -39,10 +46,7 @@ async def generate(request: GenerateRequest):
     if not is_safe:
         raise HTTPException(status_code=422, detail=reason)
 
-    try:
-        provider = registry.get(request.provider)
-    except KeyError:
-        raise HTTPException(status_code=400, detail=str(KeyError))
+    provider = resolve_provider(request.provider)
 
     system_prompt = request.system_prompt
     if not system_prompt and request.task_type:
@@ -56,8 +60,12 @@ async def generate(request: GenerateRequest):
             max_tokens=request.max_tokens,
             system_prompt=system_prompt,
         )
-    except ProviderError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except ProviderError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from None
+
+    is_safe_output, output_reason = safety_filter.check_output(result.content, request.task_type)
+    if not is_safe_output:
+        raise HTTPException(status_code=422, detail=output_reason)
 
     return GenerateResponseModel(
         content=result.content,
@@ -75,10 +83,7 @@ async def generate_stream(request: GenerateRequest):
     if not is_safe:
         raise HTTPException(status_code=422, detail=reason)
 
-    try:
-        provider = registry.get(request.provider)
-    except KeyError:
-        raise HTTPException(status_code=400, detail=str(KeyError))
+    provider = resolve_provider(request.provider)
 
     system_prompt = request.system_prompt
     if not system_prompt and request.task_type:
@@ -103,9 +108,9 @@ async def generate_stream(request: GenerateRequest):
                 else:
                     data = {"content": chunk.content, "done": False}
                 yield "data: " + json.dumps(data) + "\n\n"
-        except ProviderError as e:
-            yield "data: " + json.dumps({"error": e.message}) + "\n\n"
-        except Exception as e:
-            yield "data: " + json.dumps({"error": str(e)}) + "\n\n"
+        except ProviderError as exc:
+            yield "data: " + json.dumps({"error": exc.message}) + "\n\n"
+        except Exception as exc:
+            yield "data: " + json.dumps({"error": str(exc)}) + "\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

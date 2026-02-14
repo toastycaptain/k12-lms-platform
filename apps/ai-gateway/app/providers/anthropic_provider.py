@@ -32,7 +32,16 @@ class AnthropicProvider(BaseProvider):
             "content-type": "application/json",
         }
 
+    def _ensure_api_key(self) -> None:
+        if not self.api_key:
+            raise ProviderError(
+                message="Anthropic API key is not configured",
+                provider=self.name,
+                status_code=500,
+            )
+
     async def generate(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> GenerateResponse:
+        self._ensure_api_key()
         body = {
             "model": model,
             "max_tokens": max_tokens,
@@ -51,8 +60,9 @@ class AnthropicProvider(BaseProvider):
             )
 
             if response.status_code != 200:
+                detail = response.text[:500]
                 raise ProviderError(
-                    message=f"Anthropic API error: {response.status_code}",
+                    message=f"Anthropic API error: {response.status_code} {detail}",
                     provider=self.name,
                     status_code=response.status_code,
                 )
@@ -70,6 +80,11 @@ class AnthropicProvider(BaseProvider):
                 ),
                 finish_reason=data.get("stop_reason", "end_turn"),
             )
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="Anthropic request timed out",
+                provider=self.name,
+            )
         except httpx.HTTPError:
             raise ProviderError(
                 message="Anthropic request failed",
@@ -77,6 +92,7 @@ class AnthropicProvider(BaseProvider):
             )
 
     async def stream(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> AsyncGenerator[StreamChunk, None]:
+        self._ensure_api_key()
         body = {
             "model": model,
             "max_tokens": max_tokens,
@@ -96,14 +112,15 @@ class AnthropicProvider(BaseProvider):
                 timeout=180.0,
             ) as response:
                 if response.status_code != 200:
-                    await response.aread()
+                    detail = (await response.aread()).decode("utf-8", errors="ignore")[:500]
                     raise ProviderError(
-                        message=f"Anthropic API error: {response.status_code}",
+                        message=f"Anthropic API error: {response.status_code} {detail}",
                         provider=self.name,
                         status_code=response.status_code,
                     )
 
                 input_tokens = 0
+                output_tokens = 0
                 async for line in response.aiter_lines():
                     line = line.strip()
                     if not line or not line.startswith("data: "):
@@ -143,6 +160,11 @@ class AnthropicProvider(BaseProvider):
                             ),
                         )
                         return
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="Anthropic stream timed out",
+                provider=self.name,
+            )
         except httpx.HTTPError:
             raise ProviderError(
                 message="Anthropic stream failed",

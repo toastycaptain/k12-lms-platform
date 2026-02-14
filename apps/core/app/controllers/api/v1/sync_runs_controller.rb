@@ -11,6 +11,7 @@ module Api
 
         runs = runs.where(status: params[:status]) if params[:status].present?
         runs = runs.where(sync_type: params[:sync_type]) if params[:sync_type].present?
+        runs = paginate(runs)
 
         render json: runs
       end

@@ -1,24 +1,37 @@
-# README
+# Core API (`apps/core`)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Rails API-only service for tenancy, auth, planner/LMS domains, and background jobs.
 
-Things you may want to cover:
+## Prerequisites
 
-* Ruby version
+- Ruby 4.0+
+- PostgreSQL 15+
+- Redis 7+
 
-* System dependencies
+## Setup
 
-* Configuration
+```bash
+bundle install
+bundle exec rails db:prepare
+```
 
-* Database creation
+## Run
 
-* Database initialization
+```bash
+bundle exec rails server -p 3001
+```
 
-* How to run the test suite
+## Test & Static Analysis
 
-* Services (job queues, cache servers, search engines, etc.)
+```bash
+bundle exec rspec
+bundle exec rubocop
+bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+bundle exec bundler-audit
+```
 
-* Deployment instructions
+## Architectural Rules
 
-* ...
+- All tenant-scoped records require `tenant_id`.
+- Policies are enforced via Pundit on every API endpoint.
+- API routes are namespaced under `/api/v1`.

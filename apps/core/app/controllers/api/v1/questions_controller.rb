@@ -7,6 +7,7 @@ module Api
       def index
         questions = policy_scope(Question).where(question_bank: @question_bank)
         questions = questions.where(question_type: params[:question_type]) if params[:question_type].present?
+        questions = paginate(questions)
         render json: questions
       end
 
