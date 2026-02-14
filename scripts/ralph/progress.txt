@@ -469,3 +469,98 @@
 - Quality checks: lint, typecheck, build all pass
 
 ## M4 COMPLETE — All 15 stories (US-052 through US-066) passing
+
+### Iteration 55 — US-067: IntegrationConfig model with CRUD API
+- IntegrationConfig: provider, status, settings (JSONB), created_by
+- Unique constraint on [tenant_id, provider]
+- activate!/deactivate! status transitions
+- Admin-only policy with scope
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 56 — US-068: Google OAuth token storage and refresh service
+- Rails encrypted attributes for google_access_token and google_refresh_token
+- OmniAuth callback updated to store tokens; only updates refresh_token if new one provided
+- GoogleTokenService: valid_token?, refresh!, access_token, credentials methods
+- google_connected? on User, google_connected boolean in /me response
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 57 — US-069: SyncMapping model with CRUD API
+- Bidirectional ID map: local_type/local_id ↔ external_type/external_id
+- Two unique indexes for one-to-one mapping in both directions
+- find_local/find_external class methods, for_local/for_external scopes
+- Read/delete-only API (sync jobs create/update mappings)
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 58 — US-070: SyncRun and SyncLog models
+- SyncRun lifecycle: start!/complete!/fail! with timestamps
+- SyncLog convenience methods: log_info/log_warn/log_error
+- Nested index: GET /sync_runs/:id/sync_logs
+- Quality checks: 484 examples passing, rubocop clean
+
+### Iteration 59 — US-071: Google Classroom and Drive API service layer
+- google-apis-classroom_v1 and google-apis-drive_v3 gems
+- GoogleClassroomService: list_courses, get_course, list_students, create_coursework, update_coursework, list_student_submissions, update_student_submission_grade
+- GoogleDriveService: create_document, create_presentation, get_file
+- GoogleApiError custom error class with status_code
+- Gotcha: Google API uses list_course_students not list_students, patch_course_course_work not patch_course_work
+- Gotcha: Test doubles need both authorization= setter and authorization getter stubbed
+- Quality checks: 494 examples passing, rubocop clean
+
+### Iteration 60 — US-077: Admin Integrations configuration page (Next.js)
+- Updated api.ts CurrentUser with google_connected: boolean
+- AppShell Admin nav updated with children: Curriculum Map, Approvals, Integrations
+- Setup form for new integration, management view for existing
+- Activate/Deactivate toggle, manual sync trigger
+- Quality checks: lint, build pass
+
+### Iteration 61 — US-078: Sync Dashboard page (Next.js)
+- Sync run history table with expandable log rows
+- Summary stats, filter by sync_type/status/level
+- Sync Mappings tab with delete capability
+- Quality checks: lint, build pass
+
+### Iteration 62 — US-079: Teacher Classroom Sync UI (Next.js)
+- Course home: Google Classroom section with course linking, roster sync, assignment sync
+- Only shown when integration active and user has google_connected
+- Quality checks: lint, build pass
+
+### Iteration 63 — US-080: Google Drive Picker and document creation (Next.js)
+- GoogleDrivePicker component loads Google Picker API dynamically
+- Assignment Editor: Push/Update to Classroom, Sync Grades, Drive creation buttons
+- Lesson Editor: Drive creation buttons and picker integration
+- Quality checks: lint, build pass
+
+### Iteration 64 — US-072: ClassroomCourseSyncJob
+- Pulls courses from Google Classroom, creates local Course + SyncMapping
+- Updates existing course names when changed
+- sync_courses controller action on IntegrationConfigsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 65 — US-073: ClassroomRosterSyncJob
+- Pulls students, creates User/Enrollment/SyncMapping with domain filtering
+- sync_roster action on SyncMappingsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 66 — US-074: ClassroomCourseworkPushJob
+- Idempotent create/update of Classroom coursework from published assignments
+- push_to_classroom action on AssignmentsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 67 — US-075: ClassroomGradePassbackJob
+- Pushes grades for graded/returned submissions to Classroom
+- sync_grades action on AssignmentsController
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 68 — US-076: Google Drive API endpoints
+- DriveController: create_document, create_presentation, show_file, picker_token
+- Auto-creates ResourceLink when linkable params provided
+- Requires google_connected via before_action
+- Quality checks: 535 examples passing, rubocop clean
+
+### Iteration 69 — US-081: Workspace Add-on API
+- AddonController: unit_plans, lessons, attach, me for sidebar integration
+- rack-attack rate limiting: 60 req/min for /api/v1/addon
+- AddonPolicy requires teacher/admin role
+- Quality checks: 535 examples passing, rubocop clean
+
+## M5 COMPLETE — All 15 stories (US-067 through US-081) passing
