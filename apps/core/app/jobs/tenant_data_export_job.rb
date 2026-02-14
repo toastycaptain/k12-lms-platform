@@ -44,10 +44,18 @@ class TenantDataExportJob < ApplicationJob
 
     Zip::OutputStream.write_buffer(buffer) do |zos|
       EXPORT_MODELS.each do |name, klass|
-        records = klass.all.map { |r| sanitize_record(r) }
-        record_counts[name] = records.size
         zos.put_next_entry("#{name}.json")
-        zos.write(JSON.pretty_generate(records))
+        count = 0
+        zos.write("[\n")
+        first = true
+        klass.find_each(batch_size: 500) do |record|
+          zos.write(",\n") unless first
+          first = false
+          zos.write(JSON.pretty_generate(sanitize_record(record)))
+          count += 1
+        end
+        zos.write("\n]")
+        record_counts[name] = count
       end
 
       metadata = {

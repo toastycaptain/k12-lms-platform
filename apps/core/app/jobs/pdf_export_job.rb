@@ -4,7 +4,10 @@ class PdfExportJob < ApplicationJob
   queue_as :default
 
   def perform(unit_plan_id)
-    unit_plan = UnitPlan.unscoped.find(unit_plan_id)
+    unit_plan = UnitPlan.unscoped.includes(
+      { lesson_plans: :current_version },
+      { current_version: :standards }
+    ).find(unit_plan_id)
     Current.tenant = unit_plan.tenant
 
     pdf = generate_pdf(unit_plan)

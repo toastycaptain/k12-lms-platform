@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface LtiRegistration {
   id: number;
@@ -34,20 +35,6 @@ interface PlatformInfo {
   issuer_url: string;
   jwks_url: string;
   redirect_urls: string[];
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    active: "bg-green-100 text-green-800",
-    inactive: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
 }
 
 export default function LtiPage() {

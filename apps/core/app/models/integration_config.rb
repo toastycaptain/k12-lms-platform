@@ -22,4 +22,12 @@ class IntegrationConfig < ApplicationRecord
   def deactivate!
     update!(status: "inactive")
   end
+
+  def one_roster_client
+    OneRosterClient.new(
+      base_url: settings["base_url"],
+      client_id: settings["client_id"],
+      client_secret: settings["client_secret"]
+    )
+  end
 end

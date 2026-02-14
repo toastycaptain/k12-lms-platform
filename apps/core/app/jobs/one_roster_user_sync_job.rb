@@ -22,17 +22,16 @@ class OneRosterUserSyncJob < ApplicationJob
     sync_run.start!
 
     begin
-      settings = config.settings
-      client = OneRosterClient.new(
-        base_url: settings["base_url"],
-        client_id: settings["client_id"],
-        client_secret: settings["client_secret"]
-      )
+      client = config.one_roster_client
 
       users = client.get_all_users
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       users.each do |or_user|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           email = or_user["email"]
           unless email.present?
@@ -75,13 +74,14 @@ class OneRosterUserSyncJob < ApplicationJob
           local_role = ROLE_MAPPING[or_role]
           user.add_role(local_role) if local_role
 
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to sync user: #{e.message}", external_id: or_user["sourcedId"])
         end
       end
 
+      sync_run.update!(records_processed: processed, records_succeeded: succeeded, records_failed: failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

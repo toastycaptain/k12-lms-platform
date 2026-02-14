@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -21,7 +21,7 @@ interface StandardTree {
   children: StandardTree[];
 }
 
-function StandardNode({
+const StandardNode = React.memo(function StandardNode({
   node,
   searchQuery,
   depth,
@@ -97,7 +97,7 @@ function StandardNode({
       )}
     </div>
   );
-}
+});
 
 function hasSearchMatch(children: StandardTree[], query: string): boolean {
   for (const child of children) {

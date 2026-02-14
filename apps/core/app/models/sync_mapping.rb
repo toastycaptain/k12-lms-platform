@@ -18,10 +18,10 @@ class SyncMapping < ApplicationRecord
   scope :for_external, ->(type, id) { where(external_type: type, external_id: id) }
 
   def self.find_local(integration_config, local_type, local_id)
-    where(integration_config: integration_config, local_type: local_type, local_id: local_id).first
+    find_by(integration_config: integration_config, local_type: local_type, local_id: local_id)
   end
 
   def self.find_external(integration_config, external_type, external_id)
-    where(integration_config: integration_config, external_type: external_type, external_id: external_id).first
+    find_by(integration_config: integration_config, external_type: external_type, external_id: external_id)
   end
 end

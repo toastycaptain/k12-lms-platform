@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Course {
   id: number;
@@ -34,20 +35,6 @@ interface SubmissionRow {
   submittedAt: string | null;
   status: string;
   grade: string | null;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    submitted: "bg-blue-100 text-blue-800",
-    graded: "bg-purple-100 text-purple-800",
-    returned: "bg-green-100 text-green-800",
-    draft: "bg-yellow-100 text-yellow-800",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
 }
 
 export default function SubmissionsInboxPage() {

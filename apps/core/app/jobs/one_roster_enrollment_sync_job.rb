@@ -22,17 +22,16 @@ class OneRosterEnrollmentSyncJob < ApplicationJob
     sync_run.start!
 
     begin
-      settings = config.settings
-      client = OneRosterClient.new(
-        base_url: settings["base_url"],
-        client_id: settings["client_id"],
-        client_secret: settings["client_secret"]
-      )
+      client = config.one_roster_client
 
       enrollments = client.get_all_enrollments
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       enrollments.each do |or_enrollment|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           user_sourced_id = or_enrollment.dig("user", "sourcedId")
           class_sourced_id = or_enrollment.dig("class", "sourcedId")
@@ -42,13 +41,13 @@ class OneRosterEnrollmentSyncJob < ApplicationJob
 
           unless user_mapping
             sync_run.log_warn("User not found for enrollment", external_id: or_enrollment["sourcedId"])
-            sync_run.update!(records_failed: sync_run.records_failed + 1)
+            failed += 1
             next
           end
 
           unless class_mapping
             sync_run.log_warn("Class not found for enrollment", external_id: or_enrollment["sourcedId"])
-            sync_run.update!(records_failed: sync_run.records_failed + 1)
+            failed += 1
             next
           end
 
@@ -92,13 +91,14 @@ class OneRosterEnrollmentSyncJob < ApplicationJob
             sync_run.log_info("Created enrollment", entity_type: "Enrollment", entity_id: enrollment.id, external_id: or_enrollment["sourcedId"])
           end
 
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to sync enrollment: #{e.message}", external_id: or_enrollment["sourcedId"])
         end
       end
 
+      sync_run.update!(records_processed: processed, records_succeeded: succeeded, records_failed: failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

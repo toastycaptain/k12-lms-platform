@@ -19,12 +19,14 @@ module Api
         answers_params = params[:answers] || []
         saved_answers = []
 
-        answers_params.each do |ap|
-          answer = @quiz_attempt.attempt_answers.find_or_initialize_by(question_id: ap[:question_id])
-          answer.tenant = Current.tenant
-          answer.answer = ap[:answer]
-          answer.save!
-          saved_answers << answer
+        ActiveRecord::Base.transaction do
+          answers_params.each do |ap|
+            answer = @quiz_attempt.attempt_answers.find_or_initialize_by(question_id: ap[:question_id])
+            answer.tenant = Current.tenant
+            answer.answer = ap[:answer]
+            answer.save!
+            saved_answers << answer
+          end
         end
 
         render json: saved_answers, status: :created

@@ -11,6 +11,8 @@ class DataRetentionEnforcementJob < ApplicationJob
     policy = DataRetentionPolicy.unscoped.find(policy_id)
     Current.tenant = Tenant.find(policy.tenant_id)
 
+    return unless policy.enabled?
+
     klass = ENTITY_TYPE_MAP[policy.entity_type]
     return unless klass
 
@@ -19,11 +21,8 @@ class DataRetentionEnforcementJob < ApplicationJob
 
     case policy.action
     when "delete"
-      count = 0
-      records.find_each(batch_size: 1000) do |record|
-        record.destroy
-        count += 1
-      end
+      count = records.count
+      records.in_batches(of: 1000).delete_all
       log_enforcement(policy, "deleted", count)
     when "archive"
       count = 0

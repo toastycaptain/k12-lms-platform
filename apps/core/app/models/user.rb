@@ -10,7 +10,11 @@ class User < ApplicationRecord
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
 
   def has_role?(role_name)
-    roles.exists?(name: role_name.to_s)
+    cached_role_names.include?(role_name.to_s)
+  end
+
+  def cached_role_names
+    @cached_role_names ||= roles.pluck(:name)
   end
 
   def add_role(role_name)

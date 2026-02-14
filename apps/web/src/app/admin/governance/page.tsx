@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StatusBadge } from "@/components/StatusBadge";
 
 /* ---------- Types ---------- */
 
@@ -67,23 +68,6 @@ const ACTION_TYPES = ["create", "update", "delete", "login", "logout", "sync"];
 const ENTITY_TYPES = ["audit_log", "sync_log", "ai_invocation"];
 
 const RETENTION_ACTIONS = ["archive", "anonymize", "delete"];
-
-/* ---------- Helpers ---------- */
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    processing: "bg-blue-100 text-blue-800",
-    completed: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
-}
 
 /* ---------- Main Component ---------- */
 
@@ -167,7 +151,7 @@ function AuditLogTab() {
         const params = new URLSearchParams();
         params.set("page", String(currentPage));
         params.set("per_page", "50");
-        if (filterAction) params.set("action", filterAction);
+        if (filterAction) params.set("action_filter", filterAction);
         if (filterType) params.set("auditable_type", filterType);
         if (filterUser) params.set("user_search", filterUser);
         if (filterStartDate) params.set("start_date", filterStartDate);

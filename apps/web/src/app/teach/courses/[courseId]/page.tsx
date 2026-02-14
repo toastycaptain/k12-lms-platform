@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Course {
   id: number;
@@ -63,22 +64,6 @@ interface IntegrationConfig {
   status: string;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    published: "bg-green-100 text-green-800",
-    archived: "bg-gray-100 text-gray-600",
-    open: "bg-green-100 text-green-800",
-    closed: "bg-red-100 text-red-800",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
-}
 
 export default function CourseHomePage() {
   const params = useParams();

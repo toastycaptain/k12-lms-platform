@@ -20,7 +20,7 @@ module Api
             assignment_type: "written",
             status: "published",
             course_id: params[:course_id],
-            created_by_id: params[:created_by_id] || User.first&.id
+            created_by_id: params[:created_by_id]
           )
           if assignment.save
             render json: LtiAgsService.assignment_to_line_item(assignment), status: :created

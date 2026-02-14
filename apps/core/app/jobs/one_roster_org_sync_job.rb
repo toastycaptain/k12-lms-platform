@@ -16,12 +16,7 @@ class OneRosterOrgSyncJob < ApplicationJob
     sync_run.start!
 
     begin
-      settings = config.settings
-      client = OneRosterClient.new(
-        base_url: settings["base_url"],
-        client_id: settings["client_id"],
-        client_secret: settings["client_secret"]
-      )
+      client = config.one_roster_client
 
       sync_orgs(client, config, sync_run)
       sync_academic_sessions(client, config, sync_run)
@@ -39,8 +34,12 @@ class OneRosterOrgSyncJob < ApplicationJob
     orgs = client.get_all_orgs
     schools = orgs.select { |o| o["type"] == "school" }
 
+    processed = 0
+    succeeded = 0
+    failed = 0
+
     schools.each do |org|
-      sync_run.update!(records_processed: sync_run.records_processed + 1)
+      processed += 1
       begin
         mapping = SyncMapping.find_external(config, "oneroster_org", org["sourcedId"])
 
@@ -67,19 +66,29 @@ class OneRosterOrgSyncJob < ApplicationJob
           sync_run.log_info("Created school", entity_type: "School", entity_id: school.id, external_id: org["sourcedId"])
         end
 
-        sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+        succeeded += 1
       rescue => e
-        sync_run.update!(records_failed: sync_run.records_failed + 1)
+        failed += 1
         sync_run.log_error("Failed to sync org: #{e.message}", external_id: org["sourcedId"])
       end
     end
+
+    sync_run.update!(
+      records_processed: sync_run.records_processed + processed,
+      records_succeeded: sync_run.records_succeeded + succeeded,
+      records_failed: sync_run.records_failed + failed
+    )
   end
 
   def sync_academic_sessions(client, config, sync_run)
     sessions = client.get_all_academic_sessions
 
+    processed = 0
+    succeeded = 0
+    failed = 0
+
     sessions.each do |session|
-      sync_run.update!(records_processed: sync_run.records_processed + 1)
+      processed += 1
       begin
         session_type = session["type"]
 
@@ -92,12 +101,18 @@ class OneRosterOrgSyncJob < ApplicationJob
           next
         end
 
-        sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+        succeeded += 1
       rescue => e
-        sync_run.update!(records_failed: sync_run.records_failed + 1)
+        failed += 1
         sync_run.log_error("Failed to sync academic session: #{e.message}", external_id: session["sourcedId"])
       end
     end
+
+    sync_run.update!(
+      records_processed: sync_run.records_processed + processed,
+      records_succeeded: sync_run.records_succeeded + succeeded,
+      records_failed: sync_run.records_failed + failed
+    )
   end
 
   def sync_academic_year(session, config, sync_run)

@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Assignment {
   id: number;
@@ -29,20 +30,6 @@ interface Rubric {
   title: string;
   points_possible: string;
   rubric_criteria: { id: number; title: string; points: string; rubric_ratings: { description: string; points: string }[] }[];
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    published: "bg-green-100 text-green-800",
-    closed: "bg-red-100 text-red-800",
-    archived: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
 }
 
 export default function AssignmentEditorPage() {

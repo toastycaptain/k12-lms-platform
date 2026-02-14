@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Template {
   id: number;
@@ -32,21 +33,6 @@ interface Standard {
   id: number;
   code: string;
   description: string;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    published: "bg-green-100 text-green-800",
-    archived: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
-    </span>
-  );
 }
 
 export default function TemplateEditorPage() {
@@ -152,16 +138,16 @@ export default function TemplateEditorPage() {
       );
 
       // Sync standards alignment on the new version
-      for (const std of standards) {
-        try {
-          await apiFetch(`/api/v1/template_versions/${newVersion.id}/standards`, {
+      await Promise.all(
+        standards.map((std) =>
+          apiFetch(`/api/v1/template_versions/${newVersion.id}/standards`, {
             method: "POST",
             body: JSON.stringify({ standard_id: std.id }),
-          });
-        } catch {
-          // May already be attached
-        }
-      }
+          }).catch(() => {
+            // May already be attached
+          }),
+        ),
+      );
 
       await fetchData();
     } catch {
@@ -219,11 +205,15 @@ export default function TemplateEditorPage() {
     setList(list.filter((_, i) => i !== index));
   };
 
-  const filteredStandards = allStandards.filter(
-    (s) =>
-      standardSearch &&
-      (s.code.toLowerCase().includes(standardSearch.toLowerCase()) ||
-        s.description.toLowerCase().includes(standardSearch.toLowerCase())),
+  const filteredStandards = useMemo(
+    () =>
+      allStandards.filter(
+        (s) =>
+          standardSearch &&
+          (s.code.toLowerCase().includes(standardSearch.toLowerCase()) ||
+            s.description.toLowerCase().includes(standardSearch.toLowerCase())),
+      ),
+    [allStandards, standardSearch],
   );
 
   if (loading) {

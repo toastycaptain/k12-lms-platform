@@ -65,14 +65,15 @@ export default function LessonEditorPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const lessonData = await apiFetch<LessonPlan>(
-        `/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}`,
-      );
+      const [lessonData, versions] = await Promise.all([
+        apiFetch<LessonPlan>(
+          `/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}`,
+        ),
+        apiFetch<LessonVersion[]>(
+          `/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}/versions`,
+        ),
+      ]);
       setLesson(lessonData);
-
-      const versions = await apiFetch<LessonVersion[]>(
-        `/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}/versions`,
-      );
 
       if (versions.length > 0) {
         const cv = versions[0]; // sorted desc

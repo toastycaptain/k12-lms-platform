@@ -16,17 +16,16 @@ class OneRosterClassSyncJob < ApplicationJob
     sync_run.start!
 
     begin
-      settings = config.settings
-      client = OneRosterClient.new(
-        base_url: settings["base_url"],
-        client_id: settings["client_id"],
-        client_secret: settings["client_secret"]
-      )
+      client = config.one_roster_client
 
       classes = client.get_all_classes
 
+      processed = 0
+      succeeded = 0
+      failed = 0
+
       classes.each do |or_class|
-        sync_run.update!(records_processed: sync_run.records_processed + 1)
+        processed += 1
         begin
           mapping = SyncMapping.find_external(config, "oneroster_class", or_class["sourcedId"])
 
@@ -59,13 +58,14 @@ class OneRosterClassSyncJob < ApplicationJob
             sync_run.log_info("Created course", entity_type: "Course", entity_id: course.id, external_id: or_class["sourcedId"])
           end
 
-          sync_run.update!(records_succeeded: sync_run.records_succeeded + 1)
+          succeeded += 1
         rescue => e
-          sync_run.update!(records_failed: sync_run.records_failed + 1)
+          failed += 1
           sync_run.log_error("Failed to sync class: #{e.message}", external_id: or_class["sourcedId"])
         end
       end
 
+      sync_run.update!(records_processed: processed, records_succeeded: succeeded, records_failed: failed)
       sync_run.complete!
     rescue => e
       sync_run.fail!(e.message)

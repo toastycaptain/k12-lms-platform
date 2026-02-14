@@ -2,7 +2,6 @@ class CourseModule < ApplicationRecord
   include TenantScoped
 
   VALID_STATUSES = %w[draft published archived].freeze
-  VALID_ITEM_TYPES = %w[assignment discussion resource url].freeze
 
   belongs_to :course
   has_many :module_items, dependent: :destroy
