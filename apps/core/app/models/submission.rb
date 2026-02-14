@@ -6,6 +6,7 @@ class Submission < ApplicationRecord
   belongs_to :assignment
   belongs_to :user
   belongs_to :graded_by, class_name: "User", optional: true
+  has_many :rubric_scores, dependent: :destroy
   has_one_attached :attachment
 
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

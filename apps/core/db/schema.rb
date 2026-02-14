@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_000104) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_000412) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -228,6 +228,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000104) do
     t.datetime "updated_at", null: false
     t.index ["rubric_criterion_id"], name: "index_rubric_ratings_on_rubric_criterion_id"
     t.index ["tenant_id"], name: "index_rubric_ratings_on_tenant_id"
+  end
+
+  create_table "rubric_scores", force: :cascade do |t|
+    t.text "comments"
+    t.datetime "created_at", null: false
+    t.decimal "points_awarded", null: false
+    t.bigint "rubric_criterion_id", null: false
+    t.bigint "rubric_rating_id"
+    t.bigint "submission_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rubric_criterion_id"], name: "index_rubric_scores_on_rubric_criterion_id"
+    t.index ["rubric_rating_id"], name: "index_rubric_scores_on_rubric_rating_id"
+    t.index ["submission_id", "rubric_criterion_id"], name: "idx_rubric_scores_sub_crit_unique", unique: true
+    t.index ["submission_id"], name: "index_rubric_scores_on_submission_id"
+    t.index ["tenant_id"], name: "index_rubric_scores_on_tenant_id"
   end
 
   create_table "rubrics", force: :cascade do |t|
@@ -470,8 +486,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000104) do
   add_foreign_key "roles", "tenants"
   add_foreign_key "rubric_criteria", "rubrics"
   add_foreign_key "rubric_criteria", "tenants"
-  add_foreign_key "rubric_ratings", "rubric_criteria", column: "rubric_criterion_id"
+  add_foreign_key "rubric_ratings", "rubric_criteria"
   add_foreign_key "rubric_ratings", "tenants"
+  add_foreign_key "rubric_scores", "rubric_criteria"
+  add_foreign_key "rubric_scores", "rubric_ratings"
+  add_foreign_key "rubric_scores", "submissions"
+  add_foreign_key "rubric_scores", "tenants"
   add_foreign_key "rubrics", "tenants"
   add_foreign_key "rubrics", "users", column: "created_by_id"
   add_foreign_key "schools", "tenants"

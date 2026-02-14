@@ -31,6 +31,7 @@ Rails.application.routes.draw do
           post :grade, controller: "submission_grading", action: "grade"
           post :return, controller: "submission_grading", action: "return_submission"
         end
+        resources :rubric_scores, only: [ :index, :create ]
       end
 
       resources :modules, controller: "course_modules", only: [ :show, :update, :destroy ] do

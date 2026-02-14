@@ -132,7 +132,7 @@
         "Rubocop passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11: Rubric scoring is the bridge between rubrics and submissions. Auto-calculate grade from rubric to avoid manual entry when rubric is used."
     },
     {
