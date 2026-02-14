@@ -233,7 +233,7 @@
         "npm run build succeeds"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "PRD-11, UX §3.4: Assignment Editor is where teachers define student work. Rubric attachment is optional — inline rubric creation deferred to US-050."
     },
     {
