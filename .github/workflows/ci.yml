@@ -66,10 +66,13 @@ jobs:
         working-directory: apps/core
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve Ruby Version
+        id: ruby_version
+        run: echo "value=$(cat apps/core/.ruby-version)" >> "$GITHUB_OUTPUT"
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: apps/core/.ruby-version
+          ruby-version: ${{ steps.ruby_version.outputs.value }}
       - name: Install Gems
         run: bundle install --jobs 4 --retry 3
       - name: RuboCop
