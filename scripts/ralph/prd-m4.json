@@ -24,7 +24,7 @@
         "Request specs: list question banks, create as teacher (201), create as student (403), show, update, delete, archive, filter by subject, Rubocop passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": "PRD-12: Question banks are the top-level container for organizing questions. Subject and grade_level are optional free-text filters (not enums) for flexibility. First model in M4 dependency chain."
     },
     {

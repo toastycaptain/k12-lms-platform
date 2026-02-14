@@ -107,6 +107,10 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :question_banks do
+        post :archive, on: :member
+      end
+
       resources :rubrics do
         resources :criteria, controller: "rubric_criteria", only: [ :index, :create ]
       end

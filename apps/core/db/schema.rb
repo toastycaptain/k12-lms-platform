@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_000729) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_004052) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -224,6 +224,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000729) do
     t.index ["course_module_id"], name: "index_module_items_on_course_module_id"
     t.index ["itemable_type", "itemable_id"], name: "index_module_items_on_itemable_type_and_itemable_id"
     t.index ["tenant_id"], name: "index_module_items_on_tenant_id"
+  end
+
+  create_table "question_banks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.string "grade_level"
+    t.string "status", default: "active", null: false
+    t.string "subject"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_question_banks_on_created_by_id"
+    t.index ["tenant_id"], name: "index_question_banks_on_tenant_id"
   end
 
   create_table "resource_links", force: :cascade do |t|
@@ -537,6 +551,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_000729) do
   add_foreign_key "lesson_versions", "tenants"
   add_foreign_key "module_items", "course_modules"
   add_foreign_key "module_items", "tenants"
+  add_foreign_key "question_banks", "tenants"
+  add_foreign_key "question_banks", "users", column: "created_by_id"
   add_foreign_key "resource_links", "tenants"
   add_foreign_key "roles", "tenants"
   add_foreign_key "rubric_criteria", "rubrics"
