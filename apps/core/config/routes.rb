@@ -112,8 +112,11 @@ Rails.application.routes.draw do
         member do
           post :publish
           post :close
+          post :reorder_items, controller: "quiz_items"
         end
+        resources :quiz_items, only: [ :index, :create ]
       end
+      resources :quiz_items, only: [ :update, :destroy ]
 
       resources :question_banks do
         post :archive, on: :member

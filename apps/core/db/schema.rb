@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_14_004443) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_004658) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -257,6 +257,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004443) do
     t.index ["created_by_id"], name: "index_questions_on_created_by_id"
     t.index ["question_bank_id"], name: "index_questions_on_question_bank_id"
     t.index ["tenant_id"], name: "index_questions_on_tenant_id"
+  end
+
+  create_table "quiz_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "points", default: "1.0", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "question_id", null: false
+    t.bigint "quiz_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_id"], name: "index_quiz_items_on_question_id"
+    t.index ["quiz_id", "question_id"], name: "index_quiz_items_on_quiz_id_and_question_id", unique: true
+    t.index ["quiz_id"], name: "index_quiz_items_on_quiz_id"
+    t.index ["tenant_id"], name: "index_quiz_items_on_tenant_id"
   end
 
   create_table "quizzes", force: :cascade do |t|
@@ -600,6 +614,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_14_004443) do
   add_foreign_key "questions", "question_banks"
   add_foreign_key "questions", "tenants"
   add_foreign_key "questions", "users", column: "created_by_id"
+  add_foreign_key "quiz_items", "questions"
+  add_foreign_key "quiz_items", "quizzes"
+  add_foreign_key "quiz_items", "tenants"
   add_foreign_key "quizzes", "courses"
   add_foreign_key "quizzes", "tenants"
   add_foreign_key "quizzes", "users", column: "created_by_id"

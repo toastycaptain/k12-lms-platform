@@ -7,8 +7,8 @@ class Quiz < ApplicationRecord
 
   belongs_to :course
   belongs_to :created_by, class_name: "User"
-  # has_many :quiz_items added in US-055
-  # has_many :questions, through: :quiz_items added in US-055
+  has_many :quiz_items, dependent: :destroy
+  has_many :questions, through: :quiz_items
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
@@ -33,6 +33,6 @@ class Quiz < ApplicationRecord
   end
 
   def calculate_points!
-    update!(points_possible: QuizItem.where(quiz_id: id).sum(:points))
+    update!(points_possible: quiz_items.sum(:points))
   end
 end
