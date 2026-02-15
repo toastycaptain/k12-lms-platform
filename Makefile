@@ -26,6 +26,10 @@ ai-install:
 	cd apps/ai-gateway && python3 -m venv .venv && . .venv/bin/activate && pip install -e .[dev]
 
 ai-ci:
-	cd apps/ai-gateway && . .venv/bin/activate && pytest
+	cd apps/ai-gateway && \
+	if [ ! -d .venv ]; then python3 -m venv .venv; fi && \
+	. .venv/bin/activate && \
+	pip install -e .[dev] && \
+	pytest
 
 ci: web-ci ai-ci
