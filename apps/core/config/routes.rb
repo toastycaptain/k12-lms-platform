@@ -158,11 +158,13 @@ Rails.application.routes.draw do
           post :activate
           post :deactivate
           post :sync_courses
+          post :sync_organizations
+          post :sync_users
         end
         resources :sync_mappings, only: [ :index ]
         resources :sync_runs, only: [ :index ]
       end
-      resources :sync_mappings, only: [ :show, :destroy ] do
+      resources :sync_mappings, only: [ :index, :show, :destroy ] do
         member do
           post :sync_roster
         end
@@ -170,6 +172,22 @@ Rails.application.routes.draw do
       resources :sync_runs, only: [ :show ] do
         resources :sync_logs, only: [ :index ]
       end
+
+      resources :lti_registrations, only: [ :index, :show, :create, :update, :destroy ] do
+        member do
+          post :activate
+          post :deactivate
+        end
+        resources :lti_resource_links, only: [ :index, :show, :create, :update, :destroy ]
+      end
+      resources :data_retention_policies, only: [ :index, :show, :create, :update, :destroy ] do
+        member do
+          post :enforce
+        end
+      end
+      resources :audit_logs, only: [ :index ]
+      resources :schools
+      resources :users
 
       resources :standard_frameworks do
         get :tree, on: :member, controller: "standards", action: "tree"
@@ -186,6 +204,10 @@ Rails.application.routes.draw do
       namespace :addon do
         get :unit_plans
         get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons
+        get "unit_plans/:id/standards", action: :unit_plan_standards, as: :unit_plan_standards
+        get :standards
+        get :templates
+        post :ai_generate
         post :attach
         get :me
       end

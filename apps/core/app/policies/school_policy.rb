@@ -1,4 +1,4 @@
-class IntegrationConfigPolicy < ApplicationPolicy
+class SchoolPolicy < ApplicationPolicy
   def index?
     privileged_user?
   end
@@ -8,35 +8,15 @@ class IntegrationConfigPolicy < ApplicationPolicy
   end
 
   def create?
-    privileged_user?
+    admin_user?
   end
 
   def update?
-    privileged_user?
+    admin_user?
   end
 
   def destroy?
-    privileged_user?
-  end
-
-  def activate?
-    privileged_user?
-  end
-
-  def deactivate?
-    privileged_user?
-  end
-
-  def sync_courses?
-    privileged_user?
-  end
-
-  def sync_organizations?
-    privileged_user?
-  end
-
-  def sync_users?
-    privileged_user?
+    admin_user?
   end
 
   class Scope < ApplicationPolicy::Scope
@@ -55,5 +35,9 @@ class IntegrationConfigPolicy < ApplicationPolicy
 
   def privileged_user?
     user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+  end
+
+  def admin_user?
+    user.has_role?(:admin)
   end
 end

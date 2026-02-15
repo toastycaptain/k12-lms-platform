@@ -43,9 +43,15 @@ const NAV_ITEMS: NavItem[] = [
     label: "Admin",
     href: "/admin",
     children: [
-      { label: "Curriculum Map", href: "/admin/curriculum-map" },
-      { label: "Approvals", href: "/admin/approvals" },
+      { label: "Dashboard", href: "/admin/dashboard" },
+      { label: "School Setup", href: "/admin/school" },
+      { label: "Users & Roles", href: "/admin/users" },
       { label: "Integrations", href: "/admin/integrations" },
+      { label: "AI Settings", href: "/admin/ai" },
+      { label: "LTI", href: "/admin/lti" },
+      { label: "Data Retention", href: "/admin/retention" },
+      { label: "Curriculum Map", href: "/admin/curriculum-map" },
+      { label: "Approval Queue", href: "/admin/approvals" },
     ],
   },
 ];

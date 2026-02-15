@@ -1,41 +1,9 @@
-class IntegrationConfigPolicy < ApplicationPolicy
+class AuditLogPolicy < ApplicationPolicy
   def index?
     privileged_user?
   end
 
   def show?
-    privileged_user?
-  end
-
-  def create?
-    privileged_user?
-  end
-
-  def update?
-    privileged_user?
-  end
-
-  def destroy?
-    privileged_user?
-  end
-
-  def activate?
-    privileged_user?
-  end
-
-  def deactivate?
-    privileged_user?
-  end
-
-  def sync_courses?
-    privileged_user?
-  end
-
-  def sync_organizations?
-    privileged_user?
-  end
-
-  def sync_users?
     privileged_user?
   end
 

@@ -1,7 +1,7 @@
 class IntegrationConfig < ApplicationRecord
   include TenantScoped
 
-  VALID_PROVIDERS = %w[google_classroom].freeze
+  VALID_PROVIDERS = %w[google_classroom google_workspace oneroster].freeze
   VALID_STATUSES = %w[inactive active error].freeze
 
   belongs_to :created_by, class_name: "User"

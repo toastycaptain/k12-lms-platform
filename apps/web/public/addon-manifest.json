@@ -1,0 +1,18 @@
+{
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/presentations"
+  ],
+  "addOnId": "k12-lms-addon",
+  "homepageTrigger": {
+    "runFunction": "onHomepage"
+  },
+  "editor": {
+    "documentSidebar": {
+      "url": "{NEXT_PUBLIC_BASE_URL}/addon"
+    },
+    "presentationSidebar": {
+      "url": "{NEXT_PUBLIC_BASE_URL}/addon"
+    }
+  }
+}

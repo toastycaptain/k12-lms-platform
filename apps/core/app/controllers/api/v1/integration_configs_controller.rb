@@ -1,7 +1,8 @@
 module Api
   module V1
     class IntegrationConfigsController < ApplicationController
-      before_action :set_integration_config, only: [ :show, :update, :destroy, :activate, :deactivate, :sync_courses ]
+      before_action :set_integration_config, only: [ :show, :update, :destroy, :activate, :deactivate, :sync_courses,
+        :sync_organizations, :sync_users ]
 
       def index
         authorize IntegrationConfig
@@ -55,6 +56,11 @@ module Api
 
       def sync_courses
         authorize @integration_config
+        unless @integration_config.provider == "google_classroom"
+          render json: { error: "sync_courses is only available for google_classroom integrations" }, status: :unprocessable_content
+          return
+        end
+
         ClassroomCourseSyncJob.perform_later(@integration_config.id, Current.user.id)
         audit_event(
           "integration.sync_courses_triggered",
@@ -62,6 +68,38 @@ module Api
           metadata: { provider: @integration_config.provider }
         )
         render json: { message: "Sync triggered" }, status: :accepted
+      end
+
+      def sync_organizations
+        authorize @integration_config
+        unless @integration_config.provider == "oneroster"
+          render json: { error: "sync_organizations is only available for oneroster integrations" }, status: :unprocessable_content
+          return
+        end
+
+        OneRosterOrgSyncJob.perform_later(@integration_config.id, Current.user.id)
+        audit_event(
+          "integration.oneroster_org_sync_triggered",
+          auditable: @integration_config,
+          metadata: { provider: @integration_config.provider }
+        )
+        render json: { message: "Organization sync triggered" }, status: :accepted
+      end
+
+      def sync_users
+        authorize @integration_config
+        unless @integration_config.provider == "oneroster"
+          render json: { error: "sync_users is only available for oneroster integrations" }, status: :unprocessable_content
+          return
+        end
+
+        OneRosterUserSyncJob.perform_later(@integration_config.id, Current.user.id)
+        audit_event(
+          "integration.oneroster_user_sync_triggered",
+          auditable: @integration_config,
+          metadata: { provider: @integration_config.provider }
+        )
+        render json: { message: "User and enrollment sync triggered" }, status: :accepted
       end
 
       private

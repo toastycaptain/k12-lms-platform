@@ -15,6 +15,18 @@ class AddonPolicy < ApplicationPolicy
     unit_plans?
   end
 
+  def standards?
+    unit_plans?
+  end
+
+  def templates?
+    unit_plans?
+  end
+
+  def ai_generate?
+    unit_plans?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

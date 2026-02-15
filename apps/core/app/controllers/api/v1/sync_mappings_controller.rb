@@ -1,13 +1,16 @@
 module Api
   module V1
     class SyncMappingsController < ApplicationController
-      before_action :set_integration_config, only: [ :index ]
       before_action :set_sync_mapping, only: [ :show, :destroy, :sync_roster ]
 
       def index
         authorize SyncMapping
-        mappings = policy_scope(SyncMapping).where(integration_config: @integration_config)
+        mappings = policy_scope(SyncMapping)
+        mappings = mappings.where(integration_config_id: params[:integration_config_id]) if params[:integration_config_id].present?
         mappings = mappings.where(local_type: params[:local_type]) if params[:local_type].present?
+        mappings = mappings.where(local_id: params[:local_id]) if params[:local_id].present?
+        mappings = mappings.where(external_type: params[:external_type]) if params[:external_type].present?
+        mappings = mappings.where(external_id: params[:external_id]) if params[:external_id].present?
         render json: mappings
       end
 
@@ -41,10 +44,6 @@ module Api
       end
 
       private
-
-      def set_integration_config
-        @integration_config = IntegrationConfig.find(params[:integration_config_id])
-      end
 
       def set_sync_mapping
         @sync_mapping = SyncMapping.find(params[:id])
