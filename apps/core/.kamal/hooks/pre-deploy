@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+if [ "${KAMAL_COMMAND:-}" = "rollback" ]; then
+  exit 0
+fi
+
+if [ -z "${GITHUB_TOKEN:-}" ] || [ -z "${GITHUB_REPOSITORY:-}" ]; then
+  echo "Skipping CI gate check: GITHUB_TOKEN or GITHUB_REPOSITORY is not set."
+  exit 0
+fi
+
+sha="${KAMAL_VERSION:-$(git rev-parse HEAD)}"
+max_attempts=24
+attempt=1
+
+while [ "$attempt" -le "$max_attempts" ]; do
+  response="$(curl -fsSL \
+    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${sha}/check-runs")"
+
+  state="$(printf '%s' "$response" | ruby -rjson -e '
+data = JSON.parse(STDIN.read)
+runs = data.fetch("check_runs", [])
+if runs.empty?
+  puts "missing"
+elsif runs.any? { |run| run["status"] != "completed" }
+  puts "pending"
+elsif runs.all? { |run| run["conclusion"] == "success" }
+  puts "success"
+else
+  puts "failure"
+end
+')"
+
+  case "$state" in
+    success)
+      echo "CI gate passed for commit ${sha}."
+      exit 0
+      ;;
+    failure)
+      echo "CI gate failed for commit ${sha}." >&2
+      exit 1
+      ;;
+    pending|missing)
+      echo "CI gate status is ${state}; waiting (attempt ${attempt}/${max_attempts})."
+      sleep 10
+      ;;
+  esac
+
+  attempt=$((attempt + 1))
+done
+
+echo "Timed out waiting for CI gate on commit ${sha}." >&2
+exit 1

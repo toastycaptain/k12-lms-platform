@@ -36,6 +36,12 @@ class ApplicationPolicy
     false
   end
 
+  private
+
+  def privileged_user?
+    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+  end
+
   class Scope
     def initialize(user, scope)
       @user = user
@@ -49,5 +55,9 @@ class ApplicationPolicy
     private
 
     attr_reader :user, :scope
+
+    def privileged_user?
+      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
+    end
   end
 end

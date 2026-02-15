@@ -57,7 +57,7 @@ class ClassroomCourseSyncJob < ApplicationJob
 
           mapping&.update!(last_synced_at: Time.current)
           succeeded += 1
-        rescue => e
+        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, ActiveRecord::RecordNotFound, RuntimeError => e
           failed += 1
           sync_run.log_error("Failed to sync course: #{e.message}", external_id: classroom_course.id)
         end
@@ -65,7 +65,7 @@ class ClassroomCourseSyncJob < ApplicationJob
 
       sync_run.update!(records_processed: sync_run.records_processed + processed, records_succeeded: sync_run.records_succeeded + succeeded, records_failed: sync_run.records_failed + failed)
       sync_run.complete!
-    rescue => e
+    rescue StandardError => e
       sync_run.fail!(e.message)
       raise
     end

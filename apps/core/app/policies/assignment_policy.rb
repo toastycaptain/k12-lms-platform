@@ -54,10 +54,6 @@ class AssignmentPolicy < ApplicationPolicy
 
     private
 
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-
     def taught_course_ids
       Enrollment.joins(:section)
         .where(user_id: user.id, role: "teacher")
@@ -74,10 +70,6 @@ class AssignmentPolicy < ApplicationPolicy
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def owns_assignment?
     record.created_by_id == user.id

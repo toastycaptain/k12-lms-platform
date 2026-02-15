@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+summary="${KAMAL_PERFORMER:-unknown} deployed ${KAMAL_VERSION:-unknown} to ${KAMAL_DESTINATION:-default} in ${KAMAL_RUNTIME:-unknown}s"
+echo "$summary"
+
+if [ -z "${DEPLOY_WEBHOOK_URL:-}" ]; then
+  exit 0
+fi
+
+escaped_summary="$(printf '%s' "$summary" | sed 's/"/\\"/g')"
+payload="{\"text\":\"${escaped_summary}\"}"
+
+curl -fsSL \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d "$payload" \
+  "${DEPLOY_WEBHOOK_URL}" >/dev/null

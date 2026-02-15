@@ -49,8 +49,8 @@ export default function DashboardPage() {
         ]);
         setUnitPlans(units.slice(0, 5));
         setCourses(allCourses);
-      } catch {
-        // API may not be available in dev
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
       } finally {
         setLoading(false);
       }

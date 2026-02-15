@@ -1,15 +1,16 @@
 import json
 import logging
-from datetime import datetime, timezone
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.auth import verify_service_token
+from app.config import settings
 from app.models.generate import GenerateRequest, GenerateResponseModel
 from app.prompts.system_prompts import SYSTEM_PROMPTS
-from app.providers.base import ProviderError
+from app.providers.base import BaseProvider, ProviderError
 from app.providers.registry import registry
 from app.safety.filters import SafetyFilter
 
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/v1")
 safety_filter = SafetyFilter()
 
 
-def resolve_provider(provider_name: str):
+def resolve_provider(provider_name: str) -> BaseProvider:
     try:
         return registry.get(provider_name)
     except KeyError as exc:
@@ -27,21 +28,32 @@ def resolve_provider(provider_name: str):
 
 
 @router.get("/health")
-async def health():
+async def health() -> dict[str, object]:
+    configured_providers: list[str] = []
+    if settings.openai_api_key.strip():
+        configured_providers.append("openai")
+    if settings.anthropic_api_key.strip():
+        configured_providers.append("anthropic")
+
+    status = "ok" if configured_providers else "degraded"
     return {
-        "status": "ok",
+        "status": status,
         "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
+        "checks": {
+            "providers": "ok" if configured_providers else "degraded",
+        },
+        "providers_configured": configured_providers,
     }
 
 
 @router.get("/providers")
-async def list_providers():
+async def list_providers() -> list[dict[str, object]]:
     return registry.list_providers()
 
 
 @router.post("/generate", dependencies=[Depends(verify_service_token)])
-async def generate(request: GenerateRequest):
+async def generate(request: GenerateRequest) -> GenerateResponseModel:
     is_safe, reason = safety_filter.check_input(request.prompt, request.task_type)
     if not is_safe:
         raise HTTPException(status_code=422, detail=reason)
@@ -78,7 +90,7 @@ async def generate(request: GenerateRequest):
 
 
 @router.post("/generate_stream", dependencies=[Depends(verify_service_token)])
-async def generate_stream(request: GenerateRequest):
+async def generate_stream(request: GenerateRequest) -> StreamingResponse:
     is_safe, reason = safety_filter.check_input(request.prompt, request.task_type)
     if not is_safe:
         raise HTTPException(status_code=422, detail=reason)

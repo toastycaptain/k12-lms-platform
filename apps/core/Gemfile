@@ -5,37 +5,41 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 
 # Authentication
-gem "devise"
-gem "omniauth"
-gem "omniauth-google-oauth2"
-gem "omniauth-rails_csrf_protection"
+gem "devise", "~> 5.0"
+gem "omniauth", "~> 2.1"
+gem "omniauth-google-oauth2", "~> 1.2"
+gem "omniauth-rails_csrf_protection", "~> 2.0"
 
 # Authorization
-gem "pundit"
+gem "pundit", "~> 2.5"
 
 # Background jobs
-gem "sidekiq"
+gem "sidekiq", "~> 8.1"
 
 # API serialization
-gem "active_model_serializers"
+gem "active_model_serializers", "~> 0.10"
 
 # PDF generation
 gem "matrix" # Required by prawn on Ruby 4.0+
-gem "prawn"
-gem "prawn-table"
+gem "prawn", "~> 2.4"
+gem "prawn-table", "~> 0.2"
 
 # Google APIs
 gem "google-apis-classroom_v1"
 gem "google-apis-drive_v3"
 
 # HTTP client for AI Gateway and OneRoster
-gem "faraday"
+gem "faraday", "~> 2.14"
 
 # CORS
-gem "rack-cors"
+gem "rack-cors", "~> 3.0"
 
 # Rate limiting
-gem "rack-attack"
+gem "rack-attack", "~> 6.8"
+
+# Error tracking
+gem "sentry-ruby", "~> 6.0"
+gem "sentry-rails", "~> 6.0"
 
 # Windows timezone data
 gem "tzinfo-data", platforms: %i[windows jruby]
@@ -59,6 +63,7 @@ group :development, :test do
 end
 
 group :test do
+  gem "simplecov", require: false
   gem "shoulda-matchers"
   gem "database_cleaner-active_record"
 end

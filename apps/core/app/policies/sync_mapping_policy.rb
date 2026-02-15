@@ -25,10 +25,6 @@ class SyncMappingPolicy < ApplicationPolicy
 
     private
 
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-
     def teacher_scope
       scope.where(local_type: "Course", local_id: taught_course_ids)
         .or(scope.where(local_type: "Section", local_id: taught_section_ids))
@@ -59,10 +55,6 @@ class SyncMappingPolicy < ApplicationPolicy
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def record_visible_to_teacher?
     case record.local_type

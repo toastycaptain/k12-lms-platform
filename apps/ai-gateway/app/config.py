@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     anthropic_api_key: str = ""
     service_token: str = ""
+    sentry_dsn: str = ""
 
     model_config = {"env_file": ".env"}
 

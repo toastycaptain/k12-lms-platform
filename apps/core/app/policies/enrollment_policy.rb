@@ -32,10 +32,6 @@ class EnrollmentPolicy < ApplicationPolicy
 
     private
 
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-
     def teacher_scope
       scope.where(user_id: user.id)
         .or(scope.where(section_id: taught_section_ids))
@@ -48,10 +44,6 @@ class EnrollmentPolicy < ApplicationPolicy
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def owns_enrollment?
     record.user_id == user.id

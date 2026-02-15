@@ -15,7 +15,9 @@ class SafetyFilter:
         r"on\w+\s*=",
     ]
     _compiled_input_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in BLOCKED_PATTERNS]
-    _compiled_output_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in OUTPUT_BLOCKED_PATTERNS]
+    _compiled_output_patterns = [
+        re.compile(pattern, re.IGNORECASE) for pattern in OUTPUT_BLOCKED_PATTERNS
+    ]
 
     def check_input(self, prompt: str, task_type: str | None = None) -> tuple[bool, str | None]:
         """Returns (is_safe, rejection_reason)"""

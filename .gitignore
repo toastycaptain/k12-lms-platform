@@ -54,5 +54,6 @@ lcov.info
 *.pem
 *.key
 credentials.yml.enc
+config/master.key
+apps/core/config/master.key
 master.key
-

@@ -12,8 +12,23 @@ def test_health_endpoint(client):
 
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "ok"
+    assert body["status"] == "degraded"
+    assert body["checks"]["providers"] == "degraded"
+    assert body["providers_configured"] == []
     assert "timestamp" in body
+
+
+def test_health_endpoint_reports_ok_when_provider_key_present(client):
+    settings.openai_api_key = "test-key"
+    try:
+        response = client.get("/v1/health")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "ok"
+        assert body["checks"]["providers"] == "ok"
+        assert "openai" in body["providers_configured"]
+    finally:
+        settings.openai_api_key = ""
 
 
 def test_generate_rejects_unknown_provider(client):
@@ -62,14 +77,14 @@ def test_generate_success(client):
         "model": "fake-model",
         "prompt": "Create a lesson plan",
     }
-    registry.register("fake", FakeProvider(content="{\"title\":\"Fractions\"}"))
+    registry.register("fake", FakeProvider(content='{"title":"Fractions"}'))
 
     response = client.post("/v1/generate", json=payload)
 
     assert response.status_code == 200
     body = response.json()
     assert body["provider"] == "fake"
-    assert body["content"] == "{\"title\":\"Fractions\"}"
+    assert body["content"] == '{"title":"Fractions"}'
 
 
 def test_generate_requires_service_token_when_configured(client):
@@ -140,7 +155,7 @@ def test_generate_rejects_invalid_service_token(client):
 
 
 def test_generate_uses_task_type_system_prompt_when_not_explicit(client):
-    provider = FakeProvider(content="{\"title\":\"Fractions\"}")
+    provider = FakeProvider(content='{"title":"Fractions"}')
     registry.register("fake", provider)
 
     response = client.post(
@@ -159,7 +174,7 @@ def test_generate_uses_task_type_system_prompt_when_not_explicit(client):
 
 
 def test_generate_prefers_explicit_system_prompt(client):
-    provider = FakeProvider(content="{\"title\":\"Fractions\"}")
+    provider = FakeProvider(content='{"title":"Fractions"}')
     registry.register("fake", provider)
 
     response = client.post(
@@ -205,7 +220,7 @@ def test_generate_stream_emits_sse_chunks(client):
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     events = [
-        json.loads(line[len("data: "):])
+        json.loads(line[len("data: ") :])
         for line in response.text.splitlines()
         if line.startswith("data: ")
     ]
@@ -218,7 +233,9 @@ def test_generate_stream_emits_sse_chunks(client):
 def test_generate_stream_emits_provider_error_event(client):
     registry.register(
         "fake",
-        FakeProvider(stream_error=ProviderError("upstream failed", provider="fake", status_code=503)),
+        FakeProvider(
+            stream_error=ProviderError("upstream failed", provider="fake", status_code=503)
+        ),
     )
     response = client.post(
         "/v1/generate_stream",
@@ -230,7 +247,7 @@ def test_generate_stream_emits_provider_error_event(client):
     )
 
     assert response.status_code == 200
-    assert "{\"error\": \"upstream failed\"}" in response.text
+    assert '{"error": "upstream failed"}' in response.text
 
 
 def test_generate_stream_emits_unhandled_error_event(client):
@@ -245,7 +262,7 @@ def test_generate_stream_emits_unhandled_error_event(client):
     )
 
     assert response.status_code == 200
-    assert "{\"error\": \"unexpected\"}" in response.text
+    assert '{"error": "unexpected"}' in response.text
 
 
 def test_generate_stream_requires_service_token_when_configured(client):

@@ -74,7 +74,7 @@ class ClassroomRosterSyncJob < ApplicationJob
 
           sync_run.log_info("Synced student", entity_type: "Enrollment", entity_id: enrollment.id, external_id: student.user_id)
           succeeded += 1
-        rescue => e
+        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, Google::Apis::Error => e
           failed += 1
           sync_run.log_error("Failed to sync student: #{e.message}", external_id: student.user_id)
         end
@@ -82,7 +82,7 @@ class ClassroomRosterSyncJob < ApplicationJob
 
       sync_run.update!(records_processed: sync_run.records_processed + processed, records_succeeded: sync_run.records_succeeded + succeeded, records_failed: sync_run.records_failed + failed)
       sync_run.complete!
-    rescue => e
+    rescue StandardError => e
       sync_run.fail!(e.message)
       raise
     end

@@ -1,3 +1,12 @@
+require "simplecov"
+
+SimpleCov.start "rails" do
+  minimum_coverage 80 if ENV["CI"]
+  add_filter "/spec/"
+  add_filter "/config/"
+  add_filter "/db/"
+end
+
 require "spec_helper"
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"

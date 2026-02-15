@@ -48,10 +48,6 @@ class UnitPlanPolicy < ApplicationPolicy
 
     private
 
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-
     def teacher_scope
       scope.where(created_by_id: user.id)
         .or(scope.where(course_id: taught_course_ids))
@@ -66,10 +62,6 @@ class UnitPlanPolicy < ApplicationPolicy
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def owns_record?
     record.created_by_id == user.id

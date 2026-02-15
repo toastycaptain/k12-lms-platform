@@ -11,6 +11,6 @@ def verify_service_token(request: Request) -> None:
     if not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
     if token != settings.service_token:
         raise HTTPException(status_code=401, detail="Invalid service token")

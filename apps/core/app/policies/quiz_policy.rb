@@ -50,10 +50,6 @@ class QuizPolicy < ApplicationPolicy
 
     private
 
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-
     def taught_course_ids
       Enrollment.joins(:section)
         .where(user_id: user.id, role: "teacher")
@@ -70,10 +66,6 @@ class QuizPolicy < ApplicationPolicy
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def owns_quiz?
     record.created_by_id == user.id

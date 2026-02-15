@@ -11,17 +11,5 @@ class AuditLogPolicy < ApplicationPolicy
     def resolve
       privileged_user? ? scope.all : scope.none
     end
-
-    private
-
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
-  end
-
-  private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
   end
 end

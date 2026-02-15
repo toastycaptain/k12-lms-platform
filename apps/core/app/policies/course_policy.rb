@@ -27,19 +27,9 @@ class CoursePolicy < ApplicationPolicy
 
       scope.joins(sections: :enrollments).where(enrollments: { user_id: user.id }).distinct
     end
-
-    private
-
-    def privileged_user?
-      user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-    end
   end
 
   private
-
-  def privileged_user?
-    user.has_role?(:admin) || user.has_role?(:curriculum_lead)
-  end
 
   def enrolled_course_ids
     @enrolled_course_ids ||= Enrollment.joins(:section)

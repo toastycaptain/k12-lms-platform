@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
+
 from pydantic import BaseModel
-from typing import AsyncGenerator, Optional
 
 
 class Usage(BaseModel):
@@ -20,7 +21,7 @@ class GenerateResponse(BaseModel):
 class StreamChunk(BaseModel):
     content: str
     done: bool
-    usage: Optional[Usage] = None
+    usage: Usage | None = None
 
 
 class ProviderError(Exception):
@@ -36,13 +37,25 @@ class BaseProvider(ABC):
     supported_models: list[str]
 
     @abstractmethod
-    async def generate(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> GenerateResponse:
-        ...
+    async def generate(
+        self,
+        prompt: str,
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        system_prompt: str | None = None,
+    ) -> GenerateResponse: ...
 
     @abstractmethod
-    async def stream(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> AsyncGenerator[StreamChunk, None]:
-        ...
+    def stream(
+        self,
+        prompt: str,
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        system_prompt: str | None = None,
+    ) -> AsyncGenerator[StreamChunk, None]: ...
 
     async def close(self) -> None:
-        """Close the underlying HTTP client. Override in subclasses that hold a persistent client."""
-        pass
+        """Close the underlying HTTP client."""
+        return None

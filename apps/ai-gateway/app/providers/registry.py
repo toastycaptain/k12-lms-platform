@@ -2,7 +2,7 @@ from app.providers.base import BaseProvider
 
 
 class ProviderRegistry:
-    def __init__(self):
+    def __init__(self) -> None:
         self._providers: dict[str, BaseProvider] = {}
 
     def register(self, name: str, provider: BaseProvider) -> None:
@@ -26,7 +26,7 @@ class ProviderRegistry:
         for provider in self._providers.values():
             await provider.close()
 
-    def list_providers(self) -> list[dict]:
+    def list_providers(self) -> list[dict[str, object]]:
         providers = sorted(self._providers.items(), key=lambda item: item[0])
         return [{"name": name, "models": provider.supported_models} for name, provider in providers]
 

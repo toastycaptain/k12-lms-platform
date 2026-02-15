@@ -1,10 +1,13 @@
 import logging
 import time
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 
 from app.config import settings
 from app.providers.anthropic_provider import AnthropicProvider
@@ -16,9 +19,16 @@ LOG_LEVEL = getattr(logging, settings.log_level.upper(), logging.INFO)
 logging.basicConfig(level=LOG_LEVEL)
 logger = logging.getLogger("ai-gateway")
 
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.ai_gateway_env,
+        traces_sample_rate=0.1,
+    )
+
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     registry.clear()
     registry.register("openai", OpenAIProvider())
     registry.register("anthropic", AnthropicProvider())
@@ -41,7 +51,9 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def request_logging_middleware(request: Request, call_next):
+async def request_logging_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     start = time.perf_counter()
     response = await call_next(request)
     duration_ms = round((time.perf_counter() - start) * 1000)
@@ -56,7 +68,7 @@ async def request_logging_middleware(request: Request, call_next):
 
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error("Unhandled exception: %s", exc, exc_info=True)
     return JSONResponse(
         status_code=500,

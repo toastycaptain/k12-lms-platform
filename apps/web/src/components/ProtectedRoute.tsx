@@ -4,15 +4,35 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRoles?: string[];
+  unauthorizedRedirect?: string;
+}
+
+export default function ProtectedRoute({
+  children,
+  requiredRoles,
+  unauthorizedRedirect = "/not-authorized",
+}: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const roles = user?.roles ?? [];
+  const hasRequiredRole =
+    !requiredRoles || requiredRoles.length === 0 || requiredRoles.some((role) => roles.includes(role));
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+
+    if (!user) {
       router.replace("/login");
+      return;
     }
-  }, [user, loading, router]);
+
+    if (!hasRequiredRole) {
+      router.replace(unauthorizedRedirect);
+    }
+  }, [hasRequiredRole, loading, router, unauthorizedRedirect, user]);
 
   if (loading) {
     return (
@@ -23,6 +43,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!user) {
+    return null;
+  }
+
+  if (!hasRequiredRole) {
     return null;
   }
 

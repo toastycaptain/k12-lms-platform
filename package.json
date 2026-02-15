@@ -1,0 +1,20 @@
+{
+  "name": "k12-lms-platform",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{ts,tsx}": [
+      "bash -c 'cd apps/web && npx eslint --fix \"$@\"' --",
+      "bash -c 'cd apps/web && npx prettier --write \"$@\"' --"
+    ],
+    "apps/web/**/*.{json,md,css}": [
+      "bash -c 'cd apps/web && npx prettier --write \"$@\"' --"
+    ]
+  }
+}

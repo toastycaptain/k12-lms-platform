@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import httpx
 
@@ -40,7 +40,14 @@ class AnthropicProvider(BaseProvider):
                 status_code=500,
             )
 
-    async def generate(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> GenerateResponse:
+    async def generate(
+        self,
+        prompt: str,
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        system_prompt: str | None = None,
+    ) -> GenerateResponse:
         self._ensure_api_key()
         body = {
             "model": model,
@@ -80,18 +87,25 @@ class AnthropicProvider(BaseProvider):
                 ),
                 finish_reason=data.get("stop_reason", "end_turn"),
             )
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as exc:
             raise ProviderError(
                 message="Anthropic request timed out",
                 provider=self.name,
-            )
-        except httpx.HTTPError:
+            ) from exc
+        except httpx.HTTPError as exc:
             raise ProviderError(
                 message="Anthropic request failed",
                 provider=self.name,
-            )
+            ) from exc
 
-    async def stream(self, prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048, system_prompt: str | None = None) -> AsyncGenerator[StreamChunk, None]:
+    async def stream(
+        self,
+        prompt: str,
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        system_prompt: str | None = None,
+    ) -> AsyncGenerator[StreamChunk, None]:
         self._ensure_api_key()
         body = {
             "model": model,
@@ -128,7 +142,7 @@ class AnthropicProvider(BaseProvider):
                             continue
                         continue
 
-                    line = line[len("data: "):]
+                    line = line[len("data: ") :]
 
                     try:
                         data = json.loads(line)
@@ -160,16 +174,16 @@ class AnthropicProvider(BaseProvider):
                             ),
                         )
                         return
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as exc:
             raise ProviderError(
                 message="Anthropic stream timed out",
                 provider=self.name,
-            )
-        except httpx.HTTPError:
+            ) from exc
+        except httpx.HTTPError as exc:
             raise ProviderError(
                 message="Anthropic stream failed",
                 provider=self.name,
-            )
+            ) from exc
 
     async def close(self) -> None:
         await self._client.aclose()
