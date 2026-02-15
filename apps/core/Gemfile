@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 gem "rails", "~> 8.1.2"
 gem "pg", "~> 1.1"
-gem "puma", ">= 5.0"
+gem "puma", "~> 7.2"
 
 # Authentication
 gem "devise", "~> 5.0"
@@ -20,13 +20,13 @@ gem "sidekiq", "~> 8.1"
 gem "active_model_serializers", "~> 0.10"
 
 # PDF generation
-gem "matrix" # Required by prawn on Ruby 4.0+
+gem "matrix", "~> 0.4" # Required by prawn on Ruby 4.0+
 gem "prawn", "~> 2.4"
 gem "prawn-table", "~> 0.2"
 
 # Google APIs
-gem "google-apis-classroom_v1"
-gem "google-apis-drive_v3"
+gem "google-apis-classroom_v1", "~> 0.50"
+gem "google-apis-drive_v3", "~> 0.77"
 
 # HTTP client for AI Gateway and OneRoster
 gem "faraday", "~> 2.14"
@@ -38,32 +38,32 @@ gem "rack-cors", "~> 3.0"
 gem "rack-attack", "~> 6.8"
 
 # Error tracking
-gem "sentry-ruby", "~> 6.0"
-gem "sentry-rails", "~> 6.0"
+gem "sentry-ruby", "~> 6.3"
+gem "sentry-rails", "~> 6.3"
 
 # Windows timezone data
-gem "tzinfo-data", platforms: %i[windows jruby]
+gem "tzinfo-data", "~> 1.0", platforms: %i[windows jruby]
 
 # Caching / Queue
-gem "solid_cache"
-gem "solid_queue"
+gem "solid_cache", "~> 1.0"
+gem "solid_queue", "~> 1.3"
 
-gem "bootsnap", require: false
-gem "kamal", require: false
-gem "thruster", require: false
+gem "bootsnap", "~> 1.23", require: false
+gem "kamal", "~> 2.10", require: false
+gem "thruster", "~> 0.1", require: false
 
 group :development, :test do
-  gem "debug", platforms: %i[mri windows], require: "debug/prelude"
-  gem "bundler-audit", require: false
-  gem "brakeman", require: false
-  gem "rubocop-rails-omakase", require: false
-  gem "rspec-rails"
-  gem "factory_bot_rails"
-  gem "faker"
+  gem "debug", "~> 1.11", platforms: %i[mri windows], require: "debug/prelude"
+  gem "bundler-audit", "~> 0.9", require: false
+  gem "brakeman", "~> 8.0", require: false
+  gem "rubocop-rails-omakase", "~> 1.1", require: false
+  gem "rspec-rails", "~> 8.0"
+  gem "factory_bot_rails", "~> 6.5"
+  gem "faker", "~> 3.6"
 end
 
 group :test do
-  gem "simplecov", require: false
-  gem "shoulda-matchers"
-  gem "database_cleaner-active_record"
+  gem "simplecov", "~> 0.22", require: false
+  gem "shoulda-matchers", "~> 7.0"
+  gem "database_cleaner-active_record", "~> 2.2"
 end

@@ -37,6 +37,13 @@ RSpec.describe UserPolicy, type: :policy do
     end
   end
 
+  permissions :search? do
+    it "grants access to authenticated users" do
+      authenticated_user = create(:user, tenant: tenant)
+      expect(subject).to permit(authenticated_user, User)
+    end
+  end
+
   permissions :show? do
     let(:admin) { create(:user, tenant: tenant) }
     let(:other_user) { create(:user, tenant: tenant) }

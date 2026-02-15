@@ -7,8 +7,7 @@ RSpec.describe "Api::V1::Health", type: :request do
   describe "GET /api/v1/health" do
     it "returns ok when all dependency checks pass" do
       allow_any_instance_of(Api::V1::HealthController).to receive(:database_check!).and_return(true)
-      allow_any_instance_of(Api::V1::HealthController).to receive(:cache_check!).and_return(true)
-      allow_any_instance_of(Api::V1::HealthController).to receive(:queue_check!).and_return(true)
+      allow_any_instance_of(Api::V1::HealthController).to receive(:redis_check!).and_return(true)
 
       get "/api/v1/health"
 
@@ -17,8 +16,7 @@ RSpec.describe "Api::V1::Health", type: :request do
       expect(body["status"]).to eq("ok")
       expect(body["checks"]).to eq(
         "database" => "ok",
-        "cache" => "ok",
-        "queue" => "ok"
+        "redis" => "ok"
       )
     end
 

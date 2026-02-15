@@ -70,7 +70,7 @@ const NAV_ITEMS: NavItem[] = [
     id: "communicate",
     label: "Communicate",
     href: "/communicate",
-    roles: ["admin", "curriculum_lead", "teacher"],
+    roles: ["admin", "curriculum_lead", "teacher", "student"],
   },
   {
     id: "admin",

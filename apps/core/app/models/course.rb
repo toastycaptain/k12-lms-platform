@@ -7,6 +7,7 @@ class Course < ApplicationRecord
   has_many :assignments, dependent: :destroy
   has_many :discussions, dependent: :destroy
   has_many :announcements, dependent: :destroy
+  has_many :message_threads, dependent: :nullify
   has_many :quizzes, dependent: :destroy
 
   validates :name, presence: true

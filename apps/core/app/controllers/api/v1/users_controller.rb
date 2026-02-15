@@ -4,6 +4,21 @@ module Api
       before_action :set_user, only: [ :show, :update, :destroy ]
 
       def index
+        if params[:q].present?
+          authorize User, :search?
+          query = params[:q].to_s.strip
+          users = policy_scope(User, policy_scope_class: UserPolicy::SearchScope).order(:last_name, :first_name)
+          if query.blank?
+            render json: []
+            return
+          end
+
+          pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+          users = users.where("users.first_name ILIKE :q OR users.last_name ILIKE :q OR users.email ILIKE :q", q: pattern)
+          render json: users.limit(20)
+          return
+        end
+
         authorize User
         users = policy_scope(User).order(:last_name, :first_name)
         users = users.joins(:roles).where(roles: { name: params[:role] }) if params[:role].present?

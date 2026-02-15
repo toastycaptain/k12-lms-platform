@@ -57,7 +57,7 @@ class ClassroomCourseSyncJob < ApplicationJob
 
           mapping&.update!(last_synced_at: Time.current)
           succeeded += 1
-        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, ActiveRecord::RecordNotFound, RuntimeError => e
+        rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, ActiveRecord::RecordNotFound, RuntimeError, Google::Apis::Error => e
           failed += 1
           sync_run.log_error("Failed to sync course: #{e.message}", external_id: classroom_course.id)
         end

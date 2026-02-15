@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { apiFetch, ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ApiError, apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 interface Course {
   id: number;
@@ -17,141 +18,161 @@ interface Announcement {
   title: string;
   message: string;
   created_at: string;
-  pinned: boolean;
+  published_at: string | null;
+  course_name?: string;
+  created_by_name?: string;
 }
 
-type AnnouncementRow = Announcement & { course_name?: string };
+interface Participant {
+  id: number;
+  first_name: string;
+  last_name: string;
+  roles: string[];
+}
+
+interface ThreadMessage {
+  id: number;
+  body: string;
+  created_at: string;
+}
+
+interface MessageThread {
+  id: number;
+  subject: string;
+  thread_type: string;
+  participants: Participant[];
+  last_message: ThreadMessage | null;
+  unread_count: number;
+  updated_at: string;
+}
+
+type Tab = "announcements" | "messages";
 
 function formatDate(value: string): string {
   const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) {
-    return "Unknown date";
-  }
+  if (Number.isNaN(parsed)) return "Unknown date";
   return new Date(parsed).toLocaleString();
 }
 
-function previewMessage(message: string): string {
-  const trimmed = message.trim();
-  if (trimmed.length <= 160) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, 160)}...`;
+function preview(value: string, max = 140): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max)}...`;
+}
+
+function fullName(participant: Participant): string {
+  return `${participant.first_name} ${participant.last_name}`.trim();
 }
 
 export default function CommunicatePage() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>("announcements");
+
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [threads, setThreads] = useState<MessageThread[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [announcements, setAnnouncements] = useState<AnnouncementRow[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+  const [loadingThreads, setLoadingThreads] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const canCreate = useMemo(
-    () => (user?.roles ?? []).some((role) => role === "admin" || role === "teacher"),
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+  const [announcementCourseId, setAnnouncementCourseId] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementMessage, setAnnouncementMessage] = useState("");
+  const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
+
+  const canCreateAnnouncement = useMemo(
+    () => (user?.roles || []).some((role) => role === "admin" || role === "teacher"),
     [user?.roles],
   );
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
+  const loadAnnouncements = useCallback(async () => {
+    setLoadingAnnouncements(true);
     try {
-      const availableCourses = await apiFetch<Course[]>("/api/v1/courses");
-      setCourses(availableCourses);
-      setSelectedCourseId((current) => current || String(availableCourses[0]?.id || ""));
-
-      const nameByCourseId = new Map(availableCourses.map((course) => [course.id, course.name]));
-      let rows: AnnouncementRow[];
-
-      try {
-        const directRows = await apiFetch<Announcement[]>("/api/v1/announcements");
-        rows = directRows.map((row) => ({ ...row, course_name: nameByCourseId.get(row.course_id) }));
-      } catch (directError) {
-        if (!(directError instanceof ApiError) || (directError.status !== 404 && directError.status !== 405)) {
-          throw directError;
-        }
-
-        const settled = await Promise.allSettled(
-          availableCourses.map(async (course) => {
-            const courseRows = await apiFetch<Announcement[]>(`/api/v1/courses/${course.id}/announcements`);
-            return courseRows.map((row) => ({ ...row, course_name: course.name }));
-          }),
-        );
-
-        rows = settled.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
-      }
-
-      rows.sort((a, b) => {
-        if (a.pinned !== b.pinned) {
-          return a.pinned ? -1 : 1;
-        }
-        return Date.parse(b.created_at) - Date.parse(a.created_at);
-      });
-
+      const rows = await apiFetch<Announcement[]>("/api/v1/announcements");
       setAnnouncements(rows);
     } catch (loadError) {
-      setError(loadError instanceof ApiError ? loadError.message : "Failed to load communication data.");
+      setError(loadError instanceof ApiError ? loadError.message : "Failed to load announcements.");
     } finally {
-      setLoading(false);
+      setLoadingAnnouncements(false);
+    }
+  }, []);
+
+  const loadThreads = useCallback(async () => {
+    setLoadingThreads(true);
+    try {
+      const rows = await apiFetch<MessageThread[]>("/api/v1/message_threads");
+      setThreads(rows);
+    } catch (loadError) {
+      setError(loadError instanceof ApiError ? loadError.message : "Failed to load messages.");
+    } finally {
+      setLoadingThreads(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    void loadAnnouncements();
+    void loadThreads();
+  }, [loadAnnouncements, loadThreads]);
+
+  useEffect(() => {
+    if (!canCreateAnnouncement) return;
+
+    async function loadCourses() {
+      try {
+        const rows = await apiFetch<Course[]>("/api/v1/courses");
+        setCourses(rows);
+        setAnnouncementCourseId((current) => current || String(rows[0]?.id || ""));
+      } catch (loadError) {
+        setError(loadError instanceof ApiError ? loadError.message : "Failed to load courses.");
+      }
+    }
+
+    void loadCourses();
+  }, [canCreateAnnouncement]);
 
   async function submitAnnouncement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canCreate || !selectedCourseId || !title.trim() || !message.trim()) {
+    if (!canCreateAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()) {
       return;
     }
 
-    setSubmitting(true);
+    setSubmittingAnnouncement(true);
     setError(null);
     setSuccess(null);
 
-    const courseId = Number(selectedCourseId);
-
     try {
-      try {
-        await apiFetch<Announcement>("/api/v1/announcements", {
-          method: "POST",
-          body: JSON.stringify({
-            announcement: {
-              title: title.trim(),
-              message: message.trim(),
-              course_id: courseId,
-            },
-          }),
-        });
-      } catch (directError) {
-        if (!(directError instanceof ApiError) || (directError.status !== 404 && directError.status !== 405)) {
-          throw directError;
-        }
+      await apiFetch<Announcement>("/api/v1/announcements", {
+        method: "POST",
+        body: JSON.stringify({
+          course_id: Number(announcementCourseId),
+          title: announcementTitle.trim(),
+          message: announcementMessage.trim(),
+          published_at: new Date().toISOString(),
+        }),
+      });
 
-        await apiFetch<Announcement>(`/api/v1/courses/${courseId}/announcements`, {
-          method: "POST",
-          body: JSON.stringify({
-            title: title.trim(),
-            message: message.trim(),
-            published_at: new Date().toISOString(),
-          }),
-        });
-      }
-
-      setTitle("");
-      setMessage("");
+      setAnnouncementTitle("");
+      setAnnouncementMessage("");
+      setShowAnnouncementForm(false);
       setSuccess("Announcement posted.");
-      await loadData();
+      await loadAnnouncements();
     } catch (submitError) {
-      setError(submitError instanceof ApiError ? submitError.message : "Failed to post announcement.");
+      setError(submitError instanceof ApiError ? submitError.message : "Failed to create announcement.");
     } finally {
-      setSubmitting(false);
+      setSubmittingAnnouncement(false);
     }
+  }
+
+  function participantPreview(thread: MessageThread): string {
+    const currentUserId = user?.id;
+    const visibleParticipants = thread.participants.filter((participant) => participant.id !== currentUserId);
+    const names = visibleParticipants.slice(0, 3).map(fullName).filter(Boolean);
+    if (names.length === 0) return "No participants";
+    if (visibleParticipants.length > 3) return `${names.join(", ")} +${visibleParticipants.length - 3}`;
+    return names.join(", ");
   }
 
   return (
@@ -160,89 +181,157 @@ export default function CommunicatePage() {
         <div className="mx-auto max-w-5xl space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Communicate</h1>
-            <p className="text-sm text-gray-600">Announcements and classroom updates.</p>
+            <p className="text-sm text-gray-600">Announcements and direct course messaging.</p>
           </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
-          {canCreate && (
-            <form onSubmit={(event) => void submitAnnouncement(event)} className="rounded-lg border border-gray-200 bg-white p-5">
-              <h2 className="text-lg font-semibold text-gray-900">Post Announcement</h2>
+          <div className="flex items-center gap-2 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("announcements")}
+              className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                activeTab === "announcements" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
+              }`}
+            >
+              Announcements
+            </button>
+            <button
+              onClick={() => setActiveTab("messages")}
+              className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                activeTab === "messages" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
+              }`}
+            >
+              Messages
+            </button>
+          </div>
 
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <select
-                  value={selectedCourseId}
-                  onChange={(event) => setSelectedCourseId(event.target.value)}
-                  className="rounded border border-gray-300 px-3 py-2 text-sm"
-                  disabled={courses.length === 0}
-                >
-                  {courses.length === 0 ? (
-                    <option value="">No courses available</option>
-                  ) : (
-                    courses.map((course) => (
-                      <option key={course.id} value={String(course.id)}>
-                        {course.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Announcement title"
-                  className="rounded border border-gray-300 px-3 py-2 text-sm"
-                />
+          {activeTab === "announcements" && (
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
+                {canCreateAnnouncement && (
+                  <button
+                    onClick={() => setShowAnnouncementForm((current) => !current)}
+                    className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    {showAnnouncementForm ? "Cancel" : "New Announcement"}
+                  </button>
+                )}
               </div>
 
-              <textarea
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                placeholder="Write your message..."
-                className="mt-3 min-h-28 w-full rounded border border-gray-300 px-3 py-2 text-sm"
-              />
+              {showAnnouncementForm && canCreateAnnouncement && (
+                <form onSubmit={(event) => void submitAnnouncement(event)} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <select
+                      value={announcementCourseId}
+                      onChange={(event) => setAnnouncementCourseId(event.target.value)}
+                      className="rounded border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      {courses.map((course) => (
+                        <option key={course.id} value={String(course.id)}>
+                          {course.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={announcementTitle}
+                      onChange={(event) => setAnnouncementTitle(event.target.value)}
+                      className="rounded border border-gray-300 px-3 py-2 text-sm"
+                      placeholder="Announcement title"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !selectedCourseId || !title.trim() || !message.trim()}
-                className="mt-3 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {submitting ? "Posting..." : "Post Announcement"}
-              </button>
-            </form>
+                  <textarea
+                    value={announcementMessage}
+                    onChange={(event) => setAnnouncementMessage(event.target.value)}
+                    className="min-h-28 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Write your announcement"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={submittingAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()}
+                    className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {submittingAnnouncement ? "Posting..." : "Post Announcement"}
+                  </button>
+                </form>
+              )}
+
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                {loadingAnnouncements ? (
+                  <p className="text-sm text-gray-500">Loading announcements...</p>
+                ) : announcements.length === 0 ? (
+                  <p className="text-sm text-gray-500">No announcements yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {announcements.map((announcement) => (
+                      <article key={announcement.id} className="rounded border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900">{announcement.title}</h3>
+                          <span className="text-xs text-gray-500">{formatDate(announcement.created_at)}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-700">{preview(announcement.message)}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                          <span>{announcement.created_by_name || "Unknown author"}</span>
+                          <span>•</span>
+                          <span>{announcement.course_name || `Course #${announcement.course_id}`}</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
           )}
 
-          <section className="rounded-lg border border-gray-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
-              {!loading && <span className="text-xs text-gray-500">{announcements.length} total</span>}
-            </div>
-
-            {loading ? (
-              <p className="mt-3 text-sm text-gray-500">Loading announcements...</p>
-            ) : announcements.length === 0 ? (
-              <p className="mt-3 text-sm text-gray-500">No announcements yet.</p>
-            ) : (
-              <div className="mt-3 space-y-3">
-                {announcements.map((announcement) => (
-                  <article key={announcement.id} className="rounded border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-gray-900">{announcement.title}</h3>
-                      <span className="text-xs text-gray-500">{formatDate(announcement.created_at)}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-700">{previewMessage(announcement.message)}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                      {announcement.course_name && <span>{announcement.course_name}</span>}
-                      {announcement.pinned && (
-                        <span className="rounded bg-blue-100 px-2 py-0.5 font-medium text-blue-700">Pinned</span>
-                      )}
-                    </div>
-                  </article>
-                ))}
+          {activeTab === "messages" && (
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-gray-900">Message Threads</h2>
+                <Link href="/communicate/compose" className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                  New Message
+                </Link>
               </div>
-            )}
-          </section>
+
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                {loadingThreads ? (
+                  <p className="text-sm text-gray-500">Loading threads...</p>
+                ) : threads.length === 0 ? (
+                  <p className="text-sm text-gray-500">No threads yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {threads.map((thread) => (
+                      <Link
+                        key={thread.id}
+                        href={`/communicate/threads/${thread.id}`}
+                        className="block rounded border border-gray-200 bg-gray-50 px-4 py-3 hover:bg-gray-100"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-900">{thread.subject}</p>
+                          <div className="flex items-center gap-2">
+                            {thread.unread_count > 0 && (
+                              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-medium text-white">
+                                {thread.unread_count}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              {formatDate(thread.last_message?.created_at || thread.updated_at)}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">{participantPreview(thread)}</p>
+                        <p className="mt-1 text-sm text-gray-700">
+                          {thread.last_message ? preview(thread.last_message.body, 120) : "No messages yet"}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
         </div>
       </AppShell>
     </ProtectedRoute>

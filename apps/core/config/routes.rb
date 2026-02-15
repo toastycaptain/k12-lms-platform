@@ -27,7 +27,10 @@ Rails.application.routes.draw do
         resources :quizzes, only: [ :index, :create ]
       end
 
-      resources :announcements, only: [ :update, :destroy ]
+      resources :announcements, only: [ :index, :create, :update, :destroy ]
+      resources :message_threads, only: [ :index, :show, :create, :destroy ] do
+        resources :messages, only: [ :index, :create ]
+      end
 
       resources :discussions, only: [ :show, :update, :destroy ] do
         member do

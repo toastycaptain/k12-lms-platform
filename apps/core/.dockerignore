@@ -4,6 +4,4 @@ log
 spec
 node_modules
 config/master.key
-.env
-.env.*
-coverage
+.env*

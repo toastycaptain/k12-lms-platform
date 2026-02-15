@@ -5,6 +5,10 @@ class UserPolicy < ApplicationPolicy
     user.has_role?(:admin) || user.has_role?(:curriculum_lead)
   end
 
+  def search?
+    true
+  end
+
   def show?
     user.has_role?(:admin) || record.id == user.id
   end
@@ -28,6 +32,12 @@ class UserPolicy < ApplicationPolicy
       else
         scope.where(id: user.id)
       end
+    end
+  end
+
+  class SearchScope < ApplicationPolicy::Scope
+    def resolve
+      scope.all
     end
   end
 end

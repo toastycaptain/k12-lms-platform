@@ -59,6 +59,19 @@ RSpec.describe "Api::V1::Announcements", type: :request do
     end
   end
 
+  describe "GET /api/v1/announcements" do
+    it "returns announcements across accessible courses" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:announcement, tenant: tenant, course: course, created_by: teacher, published_at: Time.current)
+      Current.tenant = nil
+
+      get "/api/v1/announcements"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+  end
+
   describe "POST /api/v1/courses/:course_id/announcements" do
     it "creates an announcement" do
       mock_session(teacher, tenant: tenant)
@@ -75,6 +88,23 @@ RSpec.describe "Api::V1::Announcements", type: :request do
 
       post "/api/v1/courses/#{course.id}/announcements", params: { title: "Test", message: "Test" }
       expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "POST /api/v1/announcements" do
+    it "creates an announcement using course_id param" do
+      mock_session(teacher, tenant: tenant)
+
+      post "/api/v1/announcements", params: {
+        title: "General Update",
+        message: "School-wide update",
+        course_id: course.id,
+        published_at: Time.current.iso8601
+      }
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["title"]).to eq("General Update")
+      expect(response.parsed_body["course_id"]).to eq(course.id)
     end
   end
 

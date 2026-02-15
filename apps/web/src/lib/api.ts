@@ -1,4 +1,24 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_V1_PREFIX = "/api/v1";
+
+function normalizedBaseUrl(): string {
+  return API_BASE_URL.replace(/\/+$/, "");
+}
+
+function apiOrigin(): string {
+  return normalizedBaseUrl().replace(/\/api\/v1$/, "");
+}
+
+function buildUrl(path: string): string {
+  const base = normalizedBaseUrl();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (base.endsWith(API_V1_PREFIX) && normalizedPath.startsWith(API_V1_PREFIX)) {
+    return `${base}${normalizedPath.slice(API_V1_PREFIX.length)}`;
+  }
+
+  return `${base}${normalizedPath}`;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -11,12 +31,14 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${path}`;
+  const url = buildUrl(path);
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined && options.body !== null;
   const isFormDataBody = typeof FormData !== "undefined" && options.body instanceof FormData;
   const selectedSchoolId =
-    typeof window !== "undefined" ? window.localStorage.getItem("k12.selectedSchoolId") : null;
+    typeof window !== "undefined" && typeof window.localStorage?.getItem === "function"
+      ? window.localStorage.getItem("k12.selectedSchoolId")
+      : null;
 
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json");
@@ -62,11 +84,11 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 }
 
 export function getAuthUrl(): string {
-  return `${API_BASE_URL}/auth/google_oauth2`;
+  return `${apiOrigin()}/auth/google_oauth2`;
 }
 
 export function getSignOutUrl(): string {
-  return `${API_BASE_URL}/api/v1/session`;
+  return `${apiOrigin()}/api/v1/session`;
 }
 
 export interface CurrentUser {

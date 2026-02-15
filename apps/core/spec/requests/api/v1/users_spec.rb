@@ -66,4 +66,19 @@ RSpec.describe "Api::V1::Users", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
   end
+
+  describe "GET /api/v1/users?q=..." do
+    it "allows recipient search for authenticated users" do
+      mock_session(teacher, tenant: tenant)
+      create(:user, tenant: tenant, first_name: "Alice", last_name: "Smith", email: "alice@example.com")
+      create(:user, tenant: tenant, first_name: "Bob", last_name: "Jones", email: "bob@example.com")
+
+      get "/api/v1/users", params: { q: "ali" }
+
+      expect(response).to have_http_status(:ok)
+      emails = response.parsed_body.map { |row| row["email"] }
+      expect(emails).to include("alice@example.com")
+      expect(emails).not_to include("bob@example.com")
+    end
+  end
 end

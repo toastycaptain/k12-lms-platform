@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_130010) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -411,6 +411,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_130010) do
     t.index ["course_id"], name: "index_lti_resource_links_on_course_id"
     t.index ["lti_registration_id"], name: "index_lti_resource_links_on_lti_registration_id"
     t.index ["tenant_id"], name: "index_lti_resource_links_on_tenant_id"
+  end
+
+  create_table "message_thread_participants", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_read_at"
+    t.bigint "message_thread_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["message_thread_id", "user_id"], name: "idx_thread_participants_unique", unique: true
+    t.index ["message_thread_id"], name: "index_message_thread_participants_on_message_thread_id"
+    t.index ["tenant_id"], name: "index_message_thread_participants_on_tenant_id"
+    t.index ["user_id"], name: "index_message_thread_participants_on_user_id"
+  end
+
+  create_table "message_threads", force: :cascade do |t|
+    t.bigint "course_id"
+    t.datetime "created_at", null: false
+    t.string "subject", null: false
+    t.bigint "tenant_id", null: false
+    t.string "thread_type", default: "direct", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_message_threads_on_course_id"
+    t.index ["tenant_id", "thread_type"], name: "index_message_threads_on_tenant_id_and_thread_type"
+    t.index ["tenant_id"], name: "index_message_threads_on_tenant_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "message_thread_id", null: false
+    t.bigint "sender_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["message_thread_id", "created_at"], name: "index_messages_on_message_thread_id_and_created_at"
+    t.index ["message_thread_id"], name: "index_messages_on_message_thread_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
+    t.index ["tenant_id"], name: "index_messages_on_tenant_id"
   end
 
   create_table "module_item_completions", force: :cascade do |t|
@@ -979,6 +1017,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_130010) do
   add_foreign_key "lti_resource_links", "courses"
   add_foreign_key "lti_resource_links", "lti_registrations"
   add_foreign_key "lti_resource_links", "tenants"
+  add_foreign_key "message_thread_participants", "message_threads"
+  add_foreign_key "message_thread_participants", "tenants"
+  add_foreign_key "message_thread_participants", "users"
+  add_foreign_key "message_threads", "courses"
+  add_foreign_key "message_threads", "tenants"
+  add_foreign_key "messages", "message_threads"
+  add_foreign_key "messages", "tenants"
+  add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "module_item_completions", "module_items"
   add_foreign_key "module_item_completions", "tenants"
   add_foreign_key "module_item_completions", "users"
