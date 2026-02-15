@@ -3,6 +3,14 @@ set -eu
 
 npx lint-staged
 
+# Ensure rbenv is available so we use the project Ruby, not system Ruby
+if [ -d "$HOME/.rbenv/bin" ]; then
+  export PATH="$HOME/.rbenv/bin:$PATH"
+fi
+if command -v rbenv >/dev/null 2>&1; then
+  eval "$(rbenv init - sh)"
+fi
+
 ruby_files="$(git diff --cached --name-only --diff-filter=ACM -- 'apps/core/**/*.rb')"
 if [ -n "$ruby_files" ]; then
   core_files="$(printf '%s\n' "$ruby_files" | sed 's#^apps/core/##')"
