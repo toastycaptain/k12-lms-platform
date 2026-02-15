@@ -9,7 +9,7 @@ RSpec.describe GoogleTokenService do
     user = create(:user, tenant: tenant,
       google_access_token: "valid-access-token",
       google_refresh_token: "valid-refresh-token",
-      google_token_expires_at: 1.hour.from_now)
+      google_token_expires_at: 10.minutes.from_now)
     Current.tenant = nil
     user
   end
@@ -45,6 +45,7 @@ RSpec.describe GoogleTokenService do
     end
 
     it "refreshes the token via Google OAuth endpoint" do
+      user.update!(google_token_expires_at: 1.minute.ago)
       response_body = {
         "access_token" => "new-access-token",
         "expires_in" => 3600
@@ -63,6 +64,7 @@ RSpec.describe GoogleTokenService do
     end
 
     it "raises an error when the refresh response contains an error" do
+      user.update!(google_token_expires_at: 1.minute.ago)
       response_body = { "error" => "invalid_grant" }.to_json
       stub_request = instance_double(Net::HTTPOK, body: response_body)
       allow(Net::HTTP).to receive(:post_form).and_return(stub_request)

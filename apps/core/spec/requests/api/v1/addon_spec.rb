@@ -94,7 +94,7 @@ RSpec.describe "Api::V1::Addon", type: :request do
   describe "POST /api/v1/addon/ai_generate" do
     it "validates task_type policy and proxies to AI gateway" do
       Current.tenant = tenant
-      provider = create(:ai_provider_config, tenant: tenant, created_by: admin, provider_name: "fake", default_model: "fake-model")
+      provider = create(:ai_provider_config, tenant: tenant, created_by: admin, provider_name: "anthropic", default_model: "claude-sonnet-4-5-20250929")
       create(
         :ai_task_policy,
         tenant: tenant,
@@ -106,13 +106,13 @@ RSpec.describe "Api::V1::Addon", type: :request do
       )
       Current.tenant = nil
 
-      fake_response = instance_double(Faraday::Response, status: 200, body: {
+      fake_response = {
         "content" => "{\"title\":\"Fractions\"}",
-        "provider" => "fake",
-        "model" => "fake-model",
+        "provider" => "anthropic",
+        "model" => "claude-sonnet-4-5-20250929",
         "usage" => { "prompt_tokens" => 12, "completion_tokens" => 10, "total_tokens" => 22 }
-      }, success?: true)
-      allow_any_instance_of(Faraday::Connection).to receive(:post).and_return(fake_response)
+      }
+      allow(AiGatewayClient).to receive(:generate).and_return(fake_response)
 
       expect {
         post "/api/v1/addon/ai_generate",

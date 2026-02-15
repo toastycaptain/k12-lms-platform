@@ -107,6 +107,15 @@ RSpec.describe "Api::V1::QuizAccommodations" do
   end
 
   describe "accommodation effects" do
+    before do
+      Current.tenant = tenant
+      academic_year = create(:academic_year, tenant: tenant)
+      term = create(:term, tenant: tenant, academic_year: academic_year)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, user: student, section: section, role: "student")
+      Current.tenant = nil
+    end
+
     it "allows extra attempt when accommodation grants extra_attempts" do
       mock_session(student, tenant: tenant)
       Current.tenant = tenant

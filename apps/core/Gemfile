@@ -28,6 +28,9 @@ gem "prawn-table"
 gem "google-apis-classroom_v1"
 gem "google-apis-drive_v3"
 
+# HTTP client for AI Gateway and OneRoster
+gem "faraday"
+
 # CORS
 gem "rack-cors"
 

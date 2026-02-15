@@ -29,6 +29,8 @@ class Approval < ApplicationRecord
   private
 
   def no_duplicate_pending
+    return unless status == "pending"
+
     if Approval.where(approvable: approvable, status: "pending").exists?
       errors.add(:base, "A pending approval already exists for this item")
     end

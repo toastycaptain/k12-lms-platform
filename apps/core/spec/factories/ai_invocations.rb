@@ -5,7 +5,7 @@ FactoryBot.define do
     association :ai_provider_config
     association :ai_task_policy
     provider_name { ai_provider_config.provider_name }
-    model { ai_task_policy.model_name }
+    model { ai_task_policy.effective_model }
     task_type { ai_task_policy.task_type }
     status { "completed" }
     context { {} }

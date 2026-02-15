@@ -109,6 +109,7 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
       Current.tenant = tenant
       term = create(:term, tenant: tenant, academic_year: academic_year)
       section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
       create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
       create(:submission, tenant: tenant, assignment: assignment, user: student, status: "graded", grade: 85)
       Current.tenant = nil

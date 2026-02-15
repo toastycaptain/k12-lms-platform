@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 
 interface LessonPlan {
   id: number;
@@ -47,6 +48,7 @@ export default function LessonEditorPage() {
   const [resources, setResources] = useState<ResourceLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -198,15 +200,23 @@ export default function LessonEditorPage() {
                 <span className="text-sm text-gray-400">v{currentVersion.version_number}</span>
               )}
             </div>
-            {isEditable && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleSave}
-                disabled={saving}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                onClick={() => setShowAiPanel((prev) => !prev)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                {saving ? "Saving..." : "Save New Version"}
+                {showAiPanel ? "Hide AI Assistant" : "AI Assistant"}
               </button>
-            )}
+              {isEditable && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save New Version"}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Title */}
@@ -410,6 +420,8 @@ export default function LessonEditorPage() {
               </div>
             )}
           </div>
+
+          {showAiPanel && <AiAssistantPanel lessonId={Number(lessonId)} />}
         </div>
       </AppShell>
     </ProtectedRoute>

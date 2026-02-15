@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 
 interface UnitPlan {
   id: number;
@@ -72,6 +73,7 @@ export default function UnitPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -244,6 +246,12 @@ export default function UnitPlannerPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAiPanel((prev) => !prev)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  {showAiPanel ? "Hide AI Assistant" : "AI Assistant"}
+                </button>
                 {isEditable && (
                   <>
                     <button
@@ -493,6 +501,8 @@ export default function UnitPlannerPage() {
                 </div>
               )}
             </div>
+
+            {showAiPanel && <AiAssistantPanel unitId={Number(unitId)} />}
           </div>
 
           {/* Right Context Panel — UX §3.2 */}

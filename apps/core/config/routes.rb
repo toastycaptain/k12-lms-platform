@@ -103,6 +103,16 @@ Rails.application.routes.draw do
         resources :standards, only: [ :index, :create, :destroy ], controller: "template_version_standards"
       end
 
+      resources :ai_provider_configs, only: [ :index, :show, :create, :update, :destroy ] do
+        member do
+          post :activate
+          post :deactivate
+        end
+      end
+      resources :ai_task_policies, only: [ :index, :show, :create, :update, :destroy ]
+      resources :ai_templates, only: [ :index, :show, :create, :update, :destroy ]
+      resources :ai_invocations, only: [ :index, :show, :create ]
+
       resources :approvals, only: [ :index ] do
         member do
           post :approve

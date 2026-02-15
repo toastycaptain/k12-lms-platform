@@ -35,7 +35,8 @@ class ClassroomCourseSyncJob < ApplicationJob
               sync_run.log_info("Updated course name", entity_type: "Course", entity_id: local_course.id, external_id: classroom_course.id)
             end
           else
-            academic_year = AcademicYear.order(start_date: :desc).first
+            academic_year = AcademicYear.first
+            raise "No academic year available for course creation" unless academic_year
             local_course = Course.create!(
               name: classroom_course.name,
               code: classroom_course.id,

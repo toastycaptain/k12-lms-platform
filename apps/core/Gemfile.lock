@@ -496,6 +496,7 @@ DEPENDENCIES
   devise
   factory_bot_rails
   faker
+  faraday
   google-apis-classroom_v1
   google-apis-drive_v3
   kamal

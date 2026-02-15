@@ -1,7 +1,5 @@
 require "base64"
 require "digest"
-require "faraday"
-require "ostruct"
 
 module Api
   module V1
@@ -118,7 +116,7 @@ module Api
         end
 
         provider_config = task_policy.ai_provider_config
-        model_name = task_policy.model_name
+        model_name = task_policy.effective_model
         invocation = AiInvocation.create!(
           tenant: Current.tenant,
           ai_provider_config: provider_config,
@@ -133,36 +131,29 @@ module Api
           status: "pending"
         )
 
-        gateway_response = call_ai_gateway(
+        result = AiGatewayClient.generate(
           provider: provider_config.provider_name,
           model: model_name,
+          messages: [ { role: "user", content: prompt } ],
           task_type: task_type,
-          prompt: prompt,
-          context: context
+          max_tokens: task_policy.max_tokens_limit || 4096,
+          temperature: task_policy.temperature_limit || 0.7
         )
-        gateway_body = parse_gateway_body(gateway_response.body)
-
-        if gateway_response.success?
-          usage = gateway_body["usage"].is_a?(Hash) ? gateway_body["usage"] : {}
-          invocation.update!(
-            status: "completed",
-            completed_at: Time.current,
-            duration_ms: duration_ms(invocation.started_at),
-            prompt_tokens: usage["prompt_tokens"],
-            completion_tokens: usage["completion_tokens"],
-            total_tokens: usage["total_tokens"]
-          )
-          render json: gateway_body, status: gateway_response.status
-        else
-          invocation.update!(
-            status: "failed",
-            completed_at: Time.current,
-            duration_ms: duration_ms(invocation.started_at),
-            error_message: gateway_body["detail"].presence || gateway_body["error"].presence || "AI gateway error"
-          )
-          render json: gateway_body.presence || { error: "AI gateway error" }, status: gateway_response.status
-        end
-      rescue Faraday::Error => e
+        usage = result["usage"].is_a?(Hash) ? result["usage"] : {}
+        invocation.complete!(
+          tokens: {
+            prompt: usage["prompt_tokens"],
+            completion: usage["completion_tokens"],
+            total: usage["total_tokens"]
+          },
+          duration: duration_ms(invocation.started_at)
+        )
+        render json: result, status: :ok
+      rescue AiGatewayClient::AiGatewayError => e
+        invocation&.fail!(e.message)
+        render json: { error: "AI gateway error", detail: e.message }, status: (e.status_code || 502)
+      rescue => e
+        invocation&.fail!(e.message)
         render json: { error: "AI gateway request failed", detail: e.message }, status: :bad_gateway
       end
 
@@ -266,39 +257,6 @@ module Api
         return true if allowed_roles.empty?
 
         allowed_roles.any? { |role| Current.user.has_role?(role) }
-      end
-
-      def call_ai_gateway(provider:, model:, task_type:, prompt:, context:)
-        gateway_url = ENV.fetch("AI_GATEWAY_URL", "http://localhost:8001")
-        conn = Faraday.new(url: gateway_url) do |f|
-          f.request :json
-          f.response :raise_error
-          f.adapter Faraday.default_adapter
-        end
-
-        conn.post("/v1/generate") do |req|
-          req.headers["Authorization"] = "Bearer #{ENV["AI_GATEWAY_SERVICE_TOKEN"]}" if ENV["AI_GATEWAY_SERVICE_TOKEN"].present?
-          req.headers["Content-Type"] = "application/json"
-          req.headers["Accept"] = "application/json"
-          req.body = {
-            provider: provider,
-            model: model,
-            task_type: task_type,
-            prompt: prompt,
-            context: context
-          }
-        end
-      rescue Faraday::ClientError => e
-        e.response ? OpenStruct.new(status: e.response[:status], body: e.response[:body], success?: false) : raise
-      end
-
-      def parse_gateway_body(body)
-        return body if body.is_a?(Hash)
-        return {} if body.blank?
-
-        JSON.parse(body)
-      rescue JSON::ParserError
-        { "detail" => body.to_s }
       end
 
       def duration_ms(started_at)

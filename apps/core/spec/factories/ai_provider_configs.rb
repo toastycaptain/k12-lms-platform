@@ -2,11 +2,11 @@ FactoryBot.define do
   factory :ai_provider_config do
     association :tenant
     association :created_by, factory: :user
-    provider_name { "fake" }
-    display_name { "Fake Provider" }
-    default_model { "fake-model" }
+    provider_name { "anthropic" }
+    display_name { "Claude" }
+    default_model { "claude-sonnet-4-5-20250929" }
     status { "active" }
-    available_models { [ "fake-model" ] }
+    available_models { [ "claude-sonnet-4-5-20250929" ] }
     settings { {} }
   end
 end
