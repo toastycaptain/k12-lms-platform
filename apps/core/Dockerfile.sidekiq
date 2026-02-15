@@ -1,6 +1,6 @@
 FROM ruby:4.0.1
 
-RUN apt-get update -qq && apt-get install -y postgresql-client
+RUN apt-get update -qq && apt-get install -y postgresql-client libyaml-dev
 
 WORKDIR /app
 
