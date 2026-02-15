@@ -2,7 +2,7 @@ module Api
   module V1
     class CourseModulesController < ApplicationController
       before_action :set_course, only: [ :index, :create ]
-      before_action :set_course_module, only: [ :show, :update, :destroy, :publish, :archive, :reorder_items ]
+      before_action :set_course_module, only: [ :show, :update, :destroy, :publish, :archive, :reorder_items, :reorder ]
 
       def index
         modules = policy_scope(CourseModule).where(course: @course).ordered
@@ -42,8 +42,16 @@ module Api
 
       def publish
         authorize @course_module
-        @course_module.publish!
-        render json: @course_module
+        CourseModule.transaction do
+          @course_module.publish!
+          @course_module.module_items.includes(:itemable).each do |item|
+            next unless item.itemable.respond_to?(:publish!) && item.itemable.respond_to?(:status)
+            next unless item.itemable.status == "draft"
+
+            item.itemable.publish!
+          end
+        end
+        render json: @course_module.reload
       rescue ActiveRecord::RecordInvalid
         render json: { error: "Cannot publish from current status" }, status: :unprocessable_content
       end
@@ -63,6 +71,10 @@ module Api
           @course_module.module_items.where(id: id).update_all(position: index) # rubocop:disable Rails/SkipsModelValidations
         end
         render json: @course_module.module_items.ordered
+      end
+
+      def reorder
+        reorder_items
       end
 
       private

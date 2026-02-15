@@ -33,6 +33,8 @@ module Api
           @linkable = UnitVersion.find(params[:unit_version_id])
         elsif params[:lesson_version_id]
           @linkable = LessonVersion.find(params[:lesson_version_id])
+        elsif params[:assignment_id]
+          @linkable = Assignment.find(params[:assignment_id])
         else
           render json: { error: "Linkable not found" }, status: :not_found
         end

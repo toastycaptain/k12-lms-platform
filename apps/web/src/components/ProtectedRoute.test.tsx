@@ -1,10 +1,11 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
+  usePathname: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -14,10 +15,12 @@ vi.mock("@/lib/auth-context", () => ({
 describe("ProtectedRoute", () => {
   const replaceMock = vi.fn();
   const mockedUseRouter = vi.mocked(useRouter);
+  const mockedUsePathname = vi.mocked(usePathname);
   const mockedUseAuth = vi.mocked(useAuth);
 
   beforeEach(() => {
     mockedUseRouter.mockReturnValue({ replace: replaceMock } as never);
+    mockedUsePathname.mockReturnValue("/dashboard");
   });
 
   afterEach(() => {
@@ -72,6 +75,8 @@ describe("ProtectedRoute", () => {
         tenant_id: 1,
         roles: ["teacher"],
         google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
       },
       loading: false,
       error: null,
@@ -99,6 +104,8 @@ describe("ProtectedRoute", () => {
         tenant_id: 3,
         roles: ["student"],
         google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
       },
       loading: false,
       error: null,
@@ -112,7 +119,7 @@ describe("ProtectedRoute", () => {
       </ProtectedRoute>,
     );
 
-    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/not-authorized"));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/unauthorized"));
     expect(screen.queryByText("Admin content")).not.toBeInTheDocument();
   });
 });

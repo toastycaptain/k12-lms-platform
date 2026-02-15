@@ -1,6 +1,6 @@
 class QuizAccommodationPolicy < ApplicationPolicy
   def index?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    user.has_role?(:admin) || user.has_role?(:teacher) || user.has_role?(:student)
   end
 
   def create?
@@ -18,10 +18,14 @@ class QuizAccommodationPolicy < ApplicationPolicy
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.has_role?(:admin) || user.has_role?(:teacher)
-        scope.all
-      else
-        scope.none
+        return scope.all
       end
+
+      if user.has_role?(:student)
+        return scope.where(user_id: user.id)
+      end
+
+      scope.none
     end
   end
 end

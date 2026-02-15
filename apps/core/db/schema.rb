@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_130010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -167,6 +167,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
     t.index ["reviewed_by_id"], name: "index_approvals_on_reviewed_by_id"
     t.index ["tenant_id", "status"], name: "idx_approvals_tenant_status"
     t.index ["tenant_id"], name: "index_approvals_on_tenant_id"
+  end
+
+  create_table "assignment_standards", force: :cascade do |t|
+    t.bigint "assignment_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "standard_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignment_id", "standard_id"], name: "index_assignment_standards_on_assignment_id_and_standard_id", unique: true
+    t.index ["assignment_id"], name: "index_assignment_standards_on_assignment_id"
+    t.index ["standard_id"], name: "index_assignment_standards_on_standard_id"
+    t.index ["tenant_id"], name: "index_assignment_standards_on_tenant_id"
   end
 
   create_table "assignments", force: :cascade do |t|
@@ -401,6 +413,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
     t.index ["tenant_id"], name: "index_lti_resource_links_on_tenant_id"
   end
 
+  create_table "module_item_completions", force: :cascade do |t|
+    t.datetime "completed_at", null: false
+    t.datetime "created_at", null: false
+    t.bigint "module_item_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["module_item_id"], name: "index_module_item_completions_on_module_item_id"
+    t.index ["tenant_id"], name: "index_module_item_completions_on_tenant_id"
+    t.index ["user_id", "module_item_id"], name: "index_module_item_completions_on_user_id_and_module_item_id", unique: true
+    t.index ["user_id"], name: "index_module_item_completions_on_user_id"
+  end
+
   create_table "module_items", force: :cascade do |t|
     t.bigint "course_module_id", null: false
     t.datetime "created_at", null: false
@@ -415,6 +440,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
     t.index ["course_module_id"], name: "index_module_items_on_course_module_id"
     t.index ["itemable_type", "itemable_id"], name: "index_module_items_on_itemable_type_and_itemable_id"
     t.index ["tenant_id"], name: "index_module_items_on_tenant_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "actor_id"
+    t.datetime "created_at", null: false
+    t.text "message"
+    t.bigint "notifiable_id"
+    t.string "notifiable_type"
+    t.string "notification_type", null: false
+    t.datetime "read_at"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.bigint "user_id", null: false
+    t.index ["actor_id"], name: "index_notifications_on_actor_id"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable_type_and_notifiable_id"
+    t.index ["tenant_id"], name: "index_notifications_on_tenant_id"
+    t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
   create_table "question_banks", force: :cascade do |t|
@@ -803,6 +848,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.bigint "current_version_id"
+    t.date "end_date"
+    t.date "start_date"
     t.string "status", default: "draft", null: false
     t.bigint "tenant_id", null: false
     t.string "title", null: false
@@ -861,6 +908,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
     t.text "google_refresh_token"
     t.datetime "google_token_expires_at"
     t.string "last_name"
+    t.boolean "onboarding_complete", default: false, null: false
+    t.jsonb "preferences", default: {}, null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id", "email"], name: "index_users_on_tenant_id_and_email", unique: true
@@ -888,6 +937,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
   add_foreign_key "approvals", "tenants"
   add_foreign_key "approvals", "users", column: "requested_by_id"
   add_foreign_key "approvals", "users", column: "reviewed_by_id"
+  add_foreign_key "assignment_standards", "assignments"
+  add_foreign_key "assignment_standards", "standards"
+  add_foreign_key "assignment_standards", "tenants"
   add_foreign_key "assignments", "courses"
   add_foreign_key "assignments", "rubrics"
   add_foreign_key "assignments", "tenants"
@@ -927,8 +979,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_100003) do
   add_foreign_key "lti_resource_links", "courses"
   add_foreign_key "lti_resource_links", "lti_registrations"
   add_foreign_key "lti_resource_links", "tenants"
+  add_foreign_key "module_item_completions", "module_items"
+  add_foreign_key "module_item_completions", "tenants"
+  add_foreign_key "module_item_completions", "users"
   add_foreign_key "module_items", "course_modules"
   add_foreign_key "module_items", "tenants"
+  add_foreign_key "notifications", "tenants"
+  add_foreign_key "notifications", "users"
+  add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "question_banks", "tenants"
   add_foreign_key "question_banks", "users", column: "created_by_id"
   add_foreign_key "questions", "question_banks"

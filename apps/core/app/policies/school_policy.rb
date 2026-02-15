@@ -1,10 +1,10 @@
 class SchoolPolicy < ApplicationPolicy
   def index?
-    privileged_user?
+    true
   end
 
   def show?
-    privileged_user?
+    true
   end
 
   def create?
@@ -21,7 +21,7 @@ class SchoolPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      privileged_user? ? scope.all : scope.none
+      scope.all
     end
   end
 

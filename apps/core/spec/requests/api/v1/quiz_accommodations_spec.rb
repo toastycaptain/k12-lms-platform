@@ -16,6 +16,13 @@ RSpec.describe "Api::V1::QuizAccommodations" do
     Current.tenant = nil
     u
   end
+  let(:other_student) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:student)
+    Current.tenant = nil
+    u
+  end
   let(:course) do
     Current.tenant = tenant
     c = create(:course, tenant: tenant)
@@ -78,6 +85,20 @@ RSpec.describe "Api::V1::QuizAccommodations" do
       get "/api/v1/quizzes/#{quiz.id}/accommodations"
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
+    end
+
+    it "lists only the current student's accommodation as student" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      own = create(:quiz_accommodation, tenant: tenant, quiz: quiz, user: student)
+      create(:quiz_accommodation, tenant: tenant, quiz: quiz, user: other_student)
+      Current.tenant = nil
+
+      get "/api/v1/quizzes/#{quiz.id}/accommodations"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["id"]).to eq(own.id)
+      expect(response.parsed_body.first["user_id"]).to eq(student.id)
     end
   end
 

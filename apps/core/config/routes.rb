@@ -9,6 +9,8 @@ Rails.application.routes.draw do
 
       delete "/session", to: "sessions#destroy"
       get "/me", to: "sessions#me"
+      patch "/me", to: "sessions#update_me"
+      get "/search", to: "search#index"
 
       resources :academic_years do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "academic_year_coverage"
@@ -18,6 +20,7 @@ Rails.application.routes.draw do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
+        resources :course_modules, controller: "course_modules", only: [ :index ]
         resources :assignments, only: [ :index, :create ]
         resources :discussions, only: [ :index, :create ]
         resources :announcements, only: [ :index, :create ]
@@ -27,25 +30,40 @@ Rails.application.routes.draw do
       resources :announcements, only: [ :update, :destroy ]
 
       resources :discussions, only: [ :show, :update, :destroy ] do
+        member do
+          post :lock
+          post :unlock
+        end
         resources :posts, controller: "discussion_posts", only: [ :index, :create ]
       end
       resources :discussion_posts, only: [ :destroy ]
 
-      resources :assignments, only: [ :show, :update, :destroy ] do
+      resources :assignments, only: [ :index, :show, :update, :destroy ] do
         member do
           post :publish
           post :close
           post :push_to_classroom
           post :sync_grades
         end
+        resources :resource_links, only: [ :index, :create, :destroy ], controller: "resource_links"
         resources :submissions, only: [ :index, :create ]
+        resources :standards, only: [ :index, :create ], controller: "assignment_standards" do
+          collection do
+            delete :bulk_destroy, action: :destroy
+          end
+        end
       end
-      resources :submissions, only: [ :show ] do
+      resources :submissions, only: [ :index, :show, :update ] do
         member do
           post :grade, controller: "submission_grading", action: "grade"
           post :return, controller: "submission_grading", action: "return_submission"
         end
         resources :rubric_scores, only: [ :index, :create ]
+      end
+
+      resources :course_modules, only: [] do
+        patch :reorder, on: :member
+        get :progress, on: :member, controller: "module_item_completions"
       end
 
       resources :modules, controller: "course_modules", only: [ :show, :update, :destroy ] do
@@ -56,7 +74,12 @@ Rails.application.routes.draw do
         end
         resources :module_items, only: [ :index, :create ]
       end
-      resources :module_items, only: [ :show, :update, :destroy ]
+      resources :module_items, only: [ :show, :update, :destroy ] do
+        member do
+          post :complete, controller: "module_item_completions", action: "create"
+          delete :complete, controller: "module_item_completions", action: "destroy"
+        end
+      end
       resources :sections
       resources :enrollments
 
@@ -198,6 +221,15 @@ Rails.application.routes.draw do
         end
       end
       resources :audit_logs, only: [ :index ]
+      resources :notifications, only: [ :index, :show, :update ] do
+        collection do
+          get :unread_count
+          post :mark_all_read
+        end
+        member do
+          patch :read
+        end
+      end
       resources :schools
       resources :users
 

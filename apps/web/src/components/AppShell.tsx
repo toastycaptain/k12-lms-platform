@@ -4,44 +4,79 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import GlobalSearch from "@/components/GlobalSearch";
+import NotificationBell from "@/components/NotificationBell";
+import SchoolSelector from "@/components/SchoolSelector";
 
 interface NavItem {
+  id: string;
   label: string;
   href: string;
+  roles?: string[];
   children?: { label: string; href: string }[];
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
+    id: "learn",
+    label: "Learn",
+    href: "/learn",
+    roles: ["student"],
+    children: [
+      { label: "Dashboard", href: "/learn/dashboard" },
+      { label: "My Courses", href: "/learn/courses" },
+      { label: "Grades", href: "/learn/grades" },
+    ],
+  },
+  {
+    id: "plan",
     label: "Plan",
     href: "/plan",
+    roles: ["admin", "curriculum_lead", "teacher"],
     children: [
       { label: "Units", href: "/plan/units" },
+      { label: "Calendar", href: "/plan/calendar" },
       { label: "Templates", href: "/plan/templates" },
       { label: "Standards", href: "/plan/standards" },
     ],
   },
   {
+    id: "teach",
     label: "Teach",
     href: "/teach",
+    roles: ["admin", "teacher"],
     children: [
       { label: "Courses", href: "/teach/courses" },
       { label: "Submissions", href: "/teach/submissions" },
     ],
   },
   {
+    id: "assess",
     label: "Assess",
     href: "/assess",
+    roles: ["admin", "curriculum_lead", "teacher"],
     children: [
       { label: "Question Banks", href: "/assess/banks" },
       { label: "Quizzes", href: "/assess/quizzes" },
     ],
   },
-  { label: "Report", href: "/report" },
-  { label: "Communicate", href: "/communicate" },
   {
+    id: "report",
+    label: "Report",
+    href: "/report",
+    roles: ["admin", "curriculum_lead", "teacher"],
+  },
+  {
+    id: "communicate",
+    label: "Communicate",
+    href: "/communicate",
+    roles: ["admin", "curriculum_lead", "teacher"],
+  },
+  {
+    id: "admin",
     label: "Admin",
     href: "/admin",
+    roles: ["admin", "curriculum_lead"],
     children: [
       { label: "Dashboard", href: "/admin/dashboard" },
       { label: "School Setup", href: "/admin/school" },
@@ -60,12 +95,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const roles = user?.roles ?? [];
+  const isStudentOnly = roles.length > 0 && roles.every((role) => role === "student");
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (roles.length === 0 || !item.roles || item.roles.length === 0) return true;
+    return item.roles.some((role) => roles.includes(role));
+  }).filter((item) => {
+    if (!isStudentOnly) return true;
+    return !["plan", "teach", "admin"].includes(item.id);
+  });
+
+  const homeHref = isStudentOnly ? "/learn/dashboard" : "/dashboard";
 
   return (
     <div className="flex h-screen">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Left sidebar nav — UX §3.2 */}
@@ -75,7 +125,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-gray-900">
+          <Link href={homeHref} className="text-lg font-semibold text-gray-900">
             K-12 LMS
           </Link>
           <button
@@ -83,12 +133,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setSidebarOpen(false)}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <nav className="mt-2 flex flex-col gap-1 px-2">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <div key={item.href}>
@@ -96,9 +151,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.children ? item.children[0].href : item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`rounded-md px-3 py-2 text-sm font-medium block ${
-                    isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-100"
+                    isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   {item.label}
@@ -134,25 +187,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
         <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-4 pr-4">
             <button
               className="rounded-md p-1 text-gray-400 hover:text-gray-600 md:hidden"
               onClick={() => setSidebarOpen(true)}
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
-            <span className="text-sm text-gray-500">School Name</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">Search</span>
-            <span className="text-sm text-gray-400">Notifications</span>
             {user && (
-              <button
-                onClick={signOut}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
+              <>
+                <SchoolSelector />
+                <GlobalSearch />
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {user && <NotificationBell />}
+            {user && (
+              <button onClick={signOut} className="text-sm text-gray-500 hover:text-gray-700">
                 Sign out
               </button>
             )}

@@ -16,6 +16,13 @@ module Api
         # Auto-publish the unit plan
         approvable = @approval.approvable
         approvable.publish! if approvable.respond_to?(:publish!)
+        NotificationService.notify(
+          user: @approval.requested_by,
+          type: "approval_status_changed",
+          title: "Your #{approvable.class.name.underscore.humanize.downcase} '#{approvable.respond_to?(:title) ? approvable.title : approvable.id}' was approved",
+          actor: Current.user,
+          notifiable: @approval
+        )
         audit_event(
           "approval.approved",
           auditable: @approval,
@@ -44,6 +51,13 @@ module Api
         # Revert unit plan status back to draft
         approvable = @approval.approvable
         approvable.update!(status: "draft") if approvable.respond_to?(:status)
+        NotificationService.notify(
+          user: @approval.requested_by,
+          type: "approval_status_changed",
+          title: "Your #{approvable.class.name.underscore.humanize.downcase} '#{approvable.respond_to?(:title) ? approvable.title : approvable.id}' was rejected",
+          actor: Current.user,
+          notifiable: @approval
+        )
         audit_event(
           "approval.rejected",
           auditable: @approval,

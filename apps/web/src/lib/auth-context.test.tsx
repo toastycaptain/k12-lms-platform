@@ -45,6 +45,8 @@ describe("AuthProvider", () => {
       tenant_id: 3,
       roles: ["teacher"],
       google_connected: false,
+      onboarding_complete: true,
+      preferences: {},
     });
 
     render(
@@ -54,7 +56,9 @@ describe("AuthProvider", () => {
     );
 
     expect(screen.getByTestId("loading")).toHaveTextContent("true");
-    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("teacher@example.com"));
+    await waitFor(() =>
+      expect(screen.getByTestId("user")).toHaveTextContent("teacher@example.com"),
+    );
     expect(screen.getByTestId("loading")).toHaveTextContent("false");
     expect(screen.getByTestId("error")).toHaveTextContent("");
   });
@@ -82,6 +86,8 @@ describe("AuthProvider", () => {
       tenant_id: 1,
       roles: ["admin"],
       google_connected: true,
+      onboarding_complete: true,
+      preferences: {},
     });
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
 

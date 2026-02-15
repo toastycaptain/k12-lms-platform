@@ -114,7 +114,7 @@ module Api
       end
 
       def unit_plan_params
-        params.require(:unit_plan).permit(:course_id, :title, :status)
+        params.require(:unit_plan).permit(:course_id, :title, :status, :start_date, :end_date)
       end
 
       def version_params

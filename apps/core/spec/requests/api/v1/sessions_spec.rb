@@ -131,6 +131,8 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(body["user"]["email"]).to eq("me@example.com")
         expect(body["user"]["first_name"]).to eq("John")
         expect(body["user"]["roles"]).to include("teacher")
+        expect(body["user"]["onboarding_complete"]).to be(false)
+        expect(body["user"]["preferences"]).to eq({})
         expect(body["tenant"]["name"]).to eq(tenant.name)
       end
 
@@ -169,6 +171,25 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body["error"]).to eq("Unauthorized")
       end
+    end
+  end
+
+  describe "PATCH /api/v1/me" do
+    it "updates onboarding and preferences for the current user" do
+      Current.tenant = tenant
+      user = create(:user, tenant: tenant)
+      Current.tenant = nil
+      mock_session(user, tenant: tenant)
+
+      patch "/api/v1/me", params: {
+        onboarding_complete: true,
+        preferences: { subjects: [ "Math" ], grade_levels: [ "6" ] }
+      }
+
+      expect(response).to have_http_status(:ok)
+      user.reload
+      expect(user.onboarding_complete).to be(true)
+      expect(user.preferences).to eq({ "subjects" => [ "Math" ], "grade_levels" => [ "6" ] })
     end
   end
 end

@@ -7,19 +7,18 @@ RSpec.describe SchoolPolicy, type: :policy do
   let(:admin) { u = create(:user, tenant: tenant); u.add_role(:admin); u }
   let(:curriculum_lead) { u = create(:user, tenant: tenant); u.add_role(:curriculum_lead); u }
   let(:teacher) { u = create(:user, tenant: tenant); u.add_role(:teacher); u }
+  let(:student) { u = create(:user, tenant: tenant); u.add_role(:student); u }
   let(:record) { create(:school, tenant: tenant) }
 
   before { Current.tenant = tenant }
   after { Current.tenant = nil }
 
   permissions :index?, :show? do
-    it "permits admin and curriculum lead" do
+    it "permits authenticated users" do
       expect(policy).to permit(admin, record)
       expect(policy).to permit(curriculum_lead, record)
-    end
-
-    it "denies teacher" do
-      expect(policy).not_to permit(teacher, record)
+      expect(policy).to permit(teacher, record)
+      expect(policy).to permit(student, record)
     end
   end
 
@@ -38,13 +37,11 @@ RSpec.describe SchoolPolicy, type: :policy do
     let!(:school1) { create(:school, tenant: tenant) }
     let!(:school2) { create(:school, tenant: tenant) }
 
-    it "returns all for privileged users" do
+    it "returns all schools for authenticated users" do
       scope = described_class::Scope.new(curriculum_lead, School).resolve
       expect(scope).to contain_exactly(school1, school2)
-    end
-
-    it "returns none for non-privileged users" do
-      expect(described_class::Scope.new(teacher, School).resolve).to be_empty
+      expect(described_class::Scope.new(teacher, School).resolve).to contain_exactly(school1, school2)
+      expect(described_class::Scope.new(student, School).resolve).to contain_exactly(school1, school2)
     end
   end
 end

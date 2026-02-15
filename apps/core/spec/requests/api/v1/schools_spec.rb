@@ -33,12 +33,14 @@ RSpec.describe "Api::V1::Schools", type: :request do
       expect(response.parsed_body.length).to eq(1)
     end
 
-    it "forbids teacher" do
+    it "allows teacher" do
       mock_session(teacher, tenant: tenant)
+      create(:school, tenant: tenant)
 
       get "/api/v1/schools"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
     end
   end
 

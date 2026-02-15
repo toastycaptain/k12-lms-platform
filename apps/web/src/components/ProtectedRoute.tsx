@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 interface ProtectedRouteProps {
@@ -13,13 +13,16 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({
   children,
   requiredRoles,
-  unauthorizedRedirect = "/not-authorized",
+  unauthorizedRedirect = "/unauthorized",
 }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const roles = user?.roles ?? [];
   const hasRequiredRole =
-    !requiredRoles || requiredRoles.length === 0 || requiredRoles.some((role) => roles.includes(role));
+    !requiredRoles ||
+    requiredRoles.length === 0 ||
+    requiredRoles.some((role) => roles.includes(role));
 
   useEffect(() => {
     if (loading) return;
@@ -31,8 +34,30 @@ export default function ProtectedRoute({
 
     if (!hasRequiredRole) {
       router.replace(unauthorizedRedirect);
+      return;
     }
-  }, [hasRequiredRole, loading, router, unauthorizedRedirect, user]);
+
+    const isOnboardingIncomplete = user.onboarding_complete === false;
+    const setupExemptPaths = [
+      "/setup",
+      "/login",
+      "/auth/callback",
+      "/unauthorized",
+      "/not-authorized",
+    ];
+    const isExempt = setupExemptPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+
+    if (isOnboardingIncomplete && !isExempt) {
+      router.replace("/setup");
+      return;
+    }
+
+    if (user.onboarding_complete && pathname === "/setup") {
+      router.replace("/dashboard");
+    }
+  }, [hasRequiredRole, loading, pathname, router, unauthorizedRedirect, user]);
 
   if (loading) {
     return (

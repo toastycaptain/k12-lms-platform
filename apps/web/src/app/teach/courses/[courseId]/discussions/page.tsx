@@ -17,7 +17,10 @@ interface Discussion {
   status: string;
   pinned: boolean;
   created_at: string;
+  post_count?: number;
 }
+
+const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -26,7 +29,9 @@ function StatusBadge({ status }: { status: string }) {
     archived: "bg-gray-100 text-gray-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -58,7 +63,20 @@ export default function DiscussionListPage() {
         if (!a.pinned && b.pinned) return 1;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-      setDiscussions(sorted);
+      const withPostCounts = await Promise.all(
+        sorted.map(async (discussion) => {
+          try {
+            const posts = await apiFetch<{ id: number }[]>(
+              `/api/v1/discussions/${discussion.id}/posts`,
+            );
+            return { ...discussion, post_count: posts.length };
+          } catch {
+            return { ...discussion, post_count: 0 };
+          }
+        }),
+      );
+
+      setDiscussions(withPostCounts);
     } catch {
       // handle error
     } finally {
@@ -100,7 +118,7 @@ export default function DiscussionListPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
           <div className="text-sm text-gray-500">Loading discussions...</div>
         </AppShell>
@@ -109,11 +127,14 @@ export default function DiscussionListPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRoles={TEACHER_ROLES}>
       <AppShell>
         <div className="mx-auto max-w-3xl space-y-6">
           <div>
-            <Link href={`/teach/courses/${courseId}`} className="text-sm text-blue-600 hover:text-blue-800">
+            <Link
+              href={`/teach/courses/${courseId}`}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
               &larr; Back to course
             </Link>
             <div className="mt-2 flex items-center justify-between">
@@ -144,7 +165,9 @@ export default function DiscussionListPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description / Prompt</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description / Prompt
+                </label>
                 <textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
@@ -194,14 +217,21 @@ export default function DiscussionListPage() {
                       </span>
                     </div>
                     {discussion.description && (
-                      <p className="mt-0.5 text-xs text-gray-500 truncate">{discussion.description}</p>
+                      <p className="mt-0.5 text-xs text-gray-500 truncate">
+                        {discussion.description}
+                      </p>
                     )}
                     <p className="mt-0.5 text-xs text-gray-400">
                       Created by #{discussion.created_by_id} &middot;{" "}
                       {new Date(discussion.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <StatusBadge status={discussion.status} />
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                      {discussion.post_count || 0} posts
+                    </span>
+                    <StatusBadge status={discussion.status} />
+                  </div>
                 </Link>
               ))}
             </div>

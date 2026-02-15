@@ -1,34 +1,32 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
 
 interface Course {
   id: number;
   name: string;
   code: string;
   description: string;
+  sections?: { id: number; name: string; term_id: number }[];
 }
 
 interface CourseModule {
   id: number;
   title: string;
-  description: string;
-  position: number;
   status: string;
+  position: number;
 }
 
-interface Announcement {
+interface ModuleItem {
   id: number;
-  title: string;
-  message: string;
-  published_at: string;
-  pinned: boolean;
+  item_type: string;
+  itemable_type: string | null;
+  itemable_id: number | null;
 }
 
 interface Assignment {
@@ -36,123 +34,311 @@ interface Assignment {
   title: string;
   due_at: string | null;
   status: string;
-  points_possible: string | null;
 }
 
-interface Quiz {
+interface Discussion {
   id: number;
   title: string;
   status: string;
-  points_possible: number | null;
-  due_at: string | null;
+}
+
+interface Submission {
+  id: number;
+  assignment_id: number;
+  user_id: number;
+  submitted_at: string | null;
+}
+
+interface DiscussionPost {
+  id: number;
+  discussion_id: number;
+  created_by_id: number;
+  created_at: string;
+}
+
+interface Term {
+  id: number;
+  name: string;
+}
+
+interface Enrollment {
+  id: number;
+  user_id: number;
+  role: string;
+}
+
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
 }
 
 interface SyncMapping {
   id: number;
   local_type: string;
   local_id: number;
-  external_type: string;
-  external_id: string;
-  metadata: Record<string, string>;
   last_synced_at: string | null;
 }
 
 interface IntegrationConfig {
   id: number;
-  provider: string;
   status: string;
 }
 
+interface ModuleProgress {
+  moduleId: number;
+  completed: number;
+  total: number;
+}
+
+interface ActivityItem {
+  id: string;
+  timestamp: string;
+  text: string;
+}
+
+const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
+
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
+  const styles: Record<string, string> = {
     draft: "bg-yellow-100 text-yellow-800",
     published: "bg-green-100 text-green-800",
-    archived: "bg-gray-100 text-gray-600",
-    open: "bg-green-100 text-green-800",
-    closed: "bg-red-100 text-red-800",
+    archived: "bg-gray-100 text-gray-700",
   };
+
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${styles[status] || "bg-gray-100 text-gray-700"}`}
     >
       {status}
     </span>
   );
 }
 
+function personName(usersById: Record<number, User>, userId: number): string {
+  const user = usersById[userId];
+  if (!user) return `User #${userId}`;
+  return `${user.first_name} ${user.last_name}`.trim() || `User #${userId}`;
+}
+
+function countdownLabel(dateValue: string | null): string {
+  if (!dateValue) return "No due date";
+  const now = new Date();
+  const due = new Date(dateValue);
+  const diffMs = due.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
+  if (diffDays === 0) return "Due today";
+  return `Due in ${diffDays}d`;
+}
+
 export default function CourseHomePage() {
   const params = useParams();
-  const courseId = params.courseId as string;
-  const { user } = useAuth();
+  const courseId = String(params.courseId);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [termsById, setTermsById] = useState<Record<number, Term>>({});
+  const [studentCount, setStudentCount] = useState(0);
+  const [moduleProgress, setModuleProgress] = useState<Record<number, ModuleProgress>>({});
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
 
-  // Google Classroom state
-  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
   const [courseMapping, setCourseMapping] = useState<SyncMapping | null>(null);
-  const [syncing, setSyncing] = useState(false);
+  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
-  const isTeacher = user?.roles?.includes("teacher") || user?.roles?.includes("admin");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    try {
-      const [courseData, modulesData, announcementsData, assignmentsData, quizzesData] = await Promise.all([
-        apiFetch<Course>(`/api/v1/courses/${courseId}`),
-        apiFetch<CourseModule[]>(`/api/v1/courses/${courseId}/modules`),
-        apiFetch<Announcement[]>(`/api/v1/courses/${courseId}/announcements`),
-        apiFetch<Assignment[]>(`/api/v1/courses/${courseId}/assignments`),
-        apiFetch<Quiz[]>(`/api/v1/courses/${courseId}/quizzes`),
-      ]);
-      setCourse(courseData);
-      setModules(modulesData);
-      setAnnouncements(announcementsData.slice(0, 3));
-      // Upcoming assignments: published, sorted by due date, next 5
-      const upcoming = assignmentsData
-        .filter((a) => a.status === "published" && a.due_at)
-        .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
-        .slice(0, 5);
-      setAssignments(upcoming);
-      setQuizzes(quizzesData);
+    setLoading(true);
+    setError(null);
 
-      // Fetch integration config for Google Classroom
+    try {
+      const [courseData, moduleData, assignmentData, discussionData, termData, userData] =
+        await Promise.all([
+          apiFetch<Course>(`/api/v1/courses/${courseId}`),
+          apiFetch<CourseModule[]>(`/api/v1/courses/${courseId}/modules`),
+          apiFetch<Assignment[]>(`/api/v1/courses/${courseId}/assignments`),
+          apiFetch<Discussion[]>(`/api/v1/courses/${courseId}/discussions`),
+          apiFetch<Term[]>("/api/v1/terms"),
+          apiFetch<User[]>("/api/v1/users"),
+        ]);
+
+      setCourse(courseData);
+      setModules(moduleData.sort((a, b) => a.position - b.position));
+      setAssignments(assignmentData);
+      setTermsById(
+        termData.reduce<Record<number, Term>>((accumulator, term) => {
+          accumulator[term.id] = term;
+          return accumulator;
+        }, {}),
+      );
+      const usersMap = userData.reduce<Record<number, User>>((accumulator, user) => {
+        accumulator[user.id] = user;
+        return accumulator;
+      }, {});
+
+      const sections = courseData.sections || [];
+      const enrollmentsBySection = await Promise.all(
+        sections.map((section) =>
+          apiFetch<Enrollment[]>(`/api/v1/enrollments?section_id=${section.id}`),
+        ),
+      );
+
+      const uniqueStudents = new Set<number>();
+      enrollmentsBySection.flat().forEach((enrollment) => {
+        if (enrollment.role === "student") {
+          uniqueStudents.add(enrollment.user_id);
+        }
+      });
+      setStudentCount(uniqueStudents.size);
+
+      const moduleItems = await Promise.all(
+        moduleData.map((moduleEntry) =>
+          apiFetch<ModuleItem[]>(`/api/v1/modules/${moduleEntry.id}/module_items`),
+        ),
+      );
+
+      const assignmentById = assignmentData.reduce<Record<number, Assignment>>(
+        (accumulator, assignment) => {
+          accumulator[assignment.id] = assignment;
+          return accumulator;
+        },
+        {},
+      );
+
+      const progress: Record<number, ModuleProgress> = {};
+      moduleData.forEach((moduleEntry, index) => {
+        const items = moduleItems[index] || [];
+        const completed = items.filter((item) => {
+          if (item.itemable_type === "Assignment" && item.itemable_id) {
+            return assignmentById[item.itemable_id]?.status !== "draft";
+          }
+          return true;
+        }).length;
+
+        progress[moduleEntry.id] = {
+          moduleId: moduleEntry.id,
+          completed,
+          total: items.length,
+        };
+      });
+      setModuleProgress(progress);
+
+      const submissionsPerAssignment = await Promise.all(
+        assignmentData.map((assignment) =>
+          apiFetch<Submission[]>(`/api/v1/assignments/${assignment.id}/submissions`),
+        ),
+      );
+      const postsPerDiscussion = await Promise.all(
+        discussionData.map((discussion) =>
+          apiFetch<DiscussionPost[]>(`/api/v1/discussions/${discussion.id}/posts`),
+        ),
+      );
+
+      const activity: ActivityItem[] = [];
+      submissionsPerAssignment.forEach((submissionList, index) => {
+        submissionList.forEach((submission) => {
+          if (!submission.submitted_at) return;
+          activity.push({
+            id: `submission-${submission.id}`,
+            timestamp: submission.submitted_at,
+            text: `${personName(usersMap, submission.user_id)} submitted ${assignmentData[index].title}`,
+          });
+        });
+      });
+
+      postsPerDiscussion.forEach((postList, index) => {
+        postList.forEach((post) => {
+          activity.push({
+            id: `post-${post.id}`,
+            timestamp: post.created_at,
+            text: `${personName(usersMap, post.created_by_id)} posted in ${discussionData[index].title}`,
+          });
+        });
+      });
+
+      setRecentActivity(
+        activity
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, 5),
+      );
+
       try {
         const configs = await apiFetch<IntegrationConfig[]>("/api/v1/integration_configs");
         if (configs.length > 0 && configs[0].status === "active") {
-          const ic = configs[0];
-          setIntegrationConfig(ic);
-          const mappingsData = await apiFetch<SyncMapping[]>(
-            `/api/v1/integration_configs/${ic.id}/sync_mappings?local_type=Course`,
+          const activeConfig = configs[0];
+          setIntegrationConfig(activeConfig);
+
+          const mappings = await apiFetch<SyncMapping[]>(
+            `/api/v1/integration_configs/${activeConfig.id}/sync_mappings?local_type=Course`,
           );
-          const match = mappingsData.find(
-            (m) => m.local_type === "Course" && m.local_id === Number(courseId),
+          const mapping = mappings.find(
+            (entry) => entry.local_type === "Course" && entry.local_id === Number(courseId),
           );
-          if (match) setCourseMapping(match);
+          setCourseMapping(mapping || null);
+        } else {
+          setIntegrationConfig(null);
+          setCourseMapping(null);
         }
       } catch {
-        // Integration not available
+        setIntegrationConfig(null);
+        setCourseMapping(null);
       }
     } catch {
-      // silently fail
+      setError("Unable to load course home data.");
     } finally {
       setLoading(false);
     }
   }, [courseId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
+
+  const sectionNames =
+    (course?.sections || []).map((section) => section.name).join(", ") || "No sections";
+
+  const termNames = useMemo(() => {
+    const names = new Set<string>();
+    (course?.sections || []).forEach((section) => {
+      const term = termsById[section.term_id];
+      if (term) names.add(term.name);
+    });
+    return Array.from(names).join(", ") || "No term assigned";
+  }, [course?.sections, termsById]);
+
+  const upcomingAssignments = useMemo(() => {
+    return assignments
+      .filter((assignment) => assignment.due_at)
+      .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
+      .slice(0, 5);
+  }, [assignments]);
+
+  async function syncNow() {
+    if (!integrationConfig) return;
+
+    try {
+      if (courseMapping) {
+        await apiFetch(`/api/v1/sync_mappings/${courseMapping.id}/sync_roster`, { method: "POST" });
+      } else {
+        await apiFetch(`/api/v1/integration_configs/${integrationConfig.id}/sync_courses`, {
+          method: "POST",
+        });
+      }
+      setSyncMessage("Sync triggered.");
+    } catch {
+      setSyncMessage("Failed to trigger sync.");
+    }
+  }
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading course...</div>
+          <p className="text-sm text-gray-500">Loading course home...</p>
         </AppShell>
       </ProtectedRoute>
     );
@@ -160,279 +346,188 @@ export default function CourseHomePage() {
 
   if (!course) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <div className="text-sm text-red-500">Course not found</div>
+          <p className="text-sm text-gray-500">Course not found.</p>
         </AppShell>
       </ProtectedRoute>
     );
   }
 
-  const visibleModules = isTeacher
-    ? modules
-    : modules.filter((m) => m.status === "published");
-
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRoles={TEACHER_ROLES}>
       <AppShell>
-        <div className="space-y-8">
-          {/* Course Header */}
-          <div>
+        <div className="space-y-6">
+          <header className="rounded-lg border border-gray-200 bg-white p-6">
             <Link href="/teach/courses" className="text-sm text-blue-600 hover:text-blue-800">
-              &larr; Back to courses
+              &larr; Back to Courses
             </Link>
             <h1 className="mt-2 text-2xl font-bold text-gray-900">{course.name}</h1>
-            {course.code && <p className="text-sm text-gray-400">{course.code}</p>}
-            {course.description && <p className="mt-2 text-sm text-gray-600">{course.description}</p>}
-          </div>
-
-          {/* Modules Section */}
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Modules</h2>
-              {isTeacher && (
-                <Link
-                  href={`/teach/courses/${courseId}/modules/new`}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  New Module
-                </Link>
-              )}
+            <p className="mt-1 text-sm text-gray-500">{course.code}</p>
+            <p className="mt-3 text-sm text-gray-600">{course.description}</p>
+            <div className="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-3">
+              <p>
+                <span className="font-semibold text-gray-700">Section:</span> {sectionNames}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700">Term:</span> {termNames}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-700">Enrollment:</span> {studentCount}{" "}
+                students
+              </p>
             </div>
-            {visibleModules.length === 0 ? (
-              <p className="mt-3 text-sm text-gray-500">No modules yet</p>
+          </header>
+
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+          <section className="rounded-lg border border-gray-200 bg-white p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={`/teach/courses/${courseId}/modules/new`}
+                className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Create Module
+              </Link>
+              <Link
+                href={`/teach/courses/${courseId}/assignments/new`}
+                className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Create Assignment
+              </Link>
+              <Link
+                href={`/teach/courses/${courseId}/gradebook`}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                View Gradebook
+              </Link>
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Modules</h2>
+              <Link
+                href={`/teach/courses/${courseId}/modules/new`}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                + New Module
+              </Link>
+            </div>
+            {modules.length === 0 ? (
+              <p className="text-sm text-gray-500">No modules yet.</p>
             ) : (
-              <div className="mt-3 space-y-2">
-                {visibleModules.map((mod) => (
-                  <Link
-                    key={mod.id}
-                    href={`/teach/courses/${courseId}/modules/${mod.id}`}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:shadow-sm transition-shadow"
-                  >
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">{mod.title}</span>
-                      <span className="ml-2 text-xs text-gray-400">
-                        {mod.position !== undefined ? `Position ${mod.position}` : ""}
-                      </span>
-                    </div>
-                    <StatusBadge status={mod.status} />
-                  </Link>
-                ))}
+              <div className="space-y-2">
+                {modules.map((moduleEntry) => {
+                  const progress = moduleProgress[moduleEntry.id] || { completed: 0, total: 0 };
+                  return (
+                    <Link
+                      key={moduleEntry.id}
+                      href={`/teach/courses/${courseId}/modules/${moduleEntry.id}`}
+                      className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-3 hover:bg-gray-50"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{moduleEntry.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {progress.completed} of {progress.total} items completed
+                        </p>
+                      </div>
+                      <StatusBadge status={moduleEntry.status} />
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>
 
-          {/* Recent Announcements */}
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900">Recent Announcements</h2>
-            {announcements.length === 0 ? (
-              <p className="mt-3 text-sm text-gray-500">No announcements</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {announcements.map((ann) => (
-                  <div
-                    key={ann.id}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      {ann.pinned && (
-                        <span className="text-xs font-medium text-blue-600">Pinned</span>
-                      )}
-                      <h3 className="text-sm font-medium text-gray-900">{ann.title}</h3>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{ann.message}</p>
-                    {ann.published_at && (
-                      <p className="mt-1 text-xs text-gray-400">
-                        {new Date(ann.published_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Upcoming Assignments */}
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
-            {assignments.length === 0 ? (
-              <p className="mt-3 text-sm text-gray-500">No upcoming assignments</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {assignments.map((asn) => (
-                  <Link
-                    key={asn.id}
-                    href={`/teach/courses/${courseId}/assignments/${asn.id}`}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:shadow-sm transition-shadow"
-                  >
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">{asn.title}</span>
-                      {asn.points_possible && (
-                        <span className="ml-2 text-xs text-gray-400">{asn.points_possible} pts</span>
-                      )}
-                    </div>
-                    {asn.due_at && (
-                      <span className="text-xs text-gray-500">
-                        Due {new Date(asn.due_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Google Classroom Section */}
-          {isTeacher && integrationConfig && user?.google_connected && (
+          <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-lg border border-gray-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Google Classroom</h2>
-              {syncMessage && (
-                <div className="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-700">
-                  {syncMessage}
-                </div>
-              )}
-              {courseMapping ? (
-                <div className="mt-3 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">
-                      Linked to Classroom course
-                    </span>
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                      Synced
-                    </span>
-                  </div>
-                  {courseMapping.last_synced_at && (
-                    <p className="text-xs text-gray-400">
-                      Last synced: {new Date(courseMapping.last_synced_at).toLocaleString()}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={async () => {
-                        setSyncing(true);
-                        setSyncMessage(null);
-                        try {
-                          await apiFetch(
-                            `/api/v1/sync_mappings/${courseMapping.id}/sync_roster`,
-                            { method: "POST" },
-                          );
-                          setSyncMessage("Roster sync triggered.");
-                        } catch {
-                          setSyncMessage("Failed to trigger roster sync.");
-                        } finally {
-                          setSyncing(false);
-                        }
-                      }}
-                      disabled={syncing}
-                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Sync Roster
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setSyncing(true);
-                        setSyncMessage(null);
-                        try {
-                          const publishedAssignments = assignments.filter(
-                            (a) => a.status === "published",
-                          );
-                          for (const asn of publishedAssignments) {
-                            await apiFetch(
-                              `/api/v1/assignments/${asn.id}/push_to_classroom`,
-                              { method: "POST" },
-                            );
-                          }
-                          setSyncMessage(
-                            `Pushed ${publishedAssignments.length} assignment(s) to Classroom.`,
-                          );
-                        } catch {
-                          setSyncMessage("Failed to push assignments.");
-                        } finally {
-                          setSyncing(false);
-                        }
-                      }}
-                      disabled={syncing}
-                      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Sync All Assignments
-                    </button>
-                  </div>
-                </div>
+              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+              {recentActivity.length === 0 ? (
+                <p className="mt-3 text-sm text-gray-500">No recent activity.</p>
               ) : (
-                <div className="mt-3">
-                  <p className="text-sm text-gray-500">
-                    This course is not linked to Google Classroom.
-                  </p>
-                  <button
-                    onClick={async () => {
-                      setSyncing(true);
-                      setSyncMessage(null);
-                      try {
-                        await apiFetch(
-                          `/api/v1/integration_configs/${integrationConfig.id}/sync_courses`,
-                          { method: "POST" },
-                        );
-                        setSyncMessage(
-                          "Course sync triggered. Refresh this page after a moment to see the mapping.",
-                        );
-                      } catch {
-                        setSyncMessage("Failed to trigger course sync.");
-                      } finally {
-                        setSyncing(false);
-                      }
-                    }}
-                    disabled={syncing}
-                    className="mt-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {syncing ? "Syncing..." : "Link to Google Classroom"}
-                  </button>
-                </div>
+                <ul className="mt-3 space-y-2">
+                  {recentActivity.map((item) => (
+                    <li key={item.id} className="rounded-md border border-gray-100 px-3 py-2">
+                      <p className="text-sm text-gray-700">{item.text}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(item.timestamp).toLocaleString()}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
-          )}
 
-          {/* Quizzes */}
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Quizzes</h2>
-              {isTeacher && (
-                <Link
-                  href={`/assess/quizzes/new?courseId=${courseId}`}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  New Quiz
-                </Link>
+            <section className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
+              {upcomingAssignments.length === 0 ? (
+                <p className="mt-3 text-sm text-gray-500">No upcoming assignments.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {upcomingAssignments.map((assignment) => (
+                    <li key={assignment.id} className="rounded-md border border-gray-100 px-3 py-2">
+                      <Link
+                        href={`/teach/courses/${courseId}/assignments/${assignment.id}`}
+                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                      >
+                        {assignment.title}
+                      </Link>
+                      <p className="text-xs text-gray-500">
+                        {assignment.due_at
+                          ? new Date(assignment.due_at).toLocaleString()
+                          : "No due date"}{" "}
+                        - {countdownLabel(assignment.due_at)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </div>
-            {quizzes.length === 0 ? (
-              <p className="mt-3 text-sm text-gray-500">No quizzes yet</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {quizzes.map((qz) => (
-                  <Link
-                    key={qz.id}
-                    href={`/assess/quizzes/${qz.id}`}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:shadow-sm transition-shadow"
-                  >
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">{qz.title}</span>
-                      {qz.points_possible != null && (
-                        <span className="ml-2 text-xs text-gray-400">{qz.points_possible} pts</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {qz.due_at && (
-                        <span className="text-xs text-gray-500">
-                          Due {new Date(qz.due_at).toLocaleDateString()}
-                        </span>
-                      )}
-                      <StatusBadge status={qz.status} />
-                    </div>
-                  </Link>
-                ))}
+            </section>
+          </div>
+
+          <section className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Roster</h2>
+                <p className="text-sm text-gray-600">{studentCount} enrolled students</p>
               </div>
-            )}
+              <Link
+                href={`/teach/courses/${courseId}/roster`}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                View Roster
+              </Link>
+            </div>
           </section>
+
+          {integrationConfig && (
+            <section className="rounded-lg border border-gray-200 bg-white p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Classroom Sync</h2>
+                  <p className="text-sm text-gray-600">
+                    {courseMapping
+                      ? "Linked to Google Classroom"
+                      : "Not linked to Google Classroom"}
+                  </p>
+                  {courseMapping?.last_synced_at && (
+                    <p className="text-xs text-gray-500">
+                      Last sync: {new Date(courseMapping.last_synced_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => void syncNow()}
+                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Sync Now
+                </button>
+              </div>
+              {syncMessage && <p className="mt-2 text-sm text-blue-700">{syncMessage}</p>}
+            </section>
+          )}
         </div>
       </AppShell>
     </ProtectedRoute>

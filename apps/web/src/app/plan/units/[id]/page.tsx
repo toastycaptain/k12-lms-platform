@@ -44,6 +44,8 @@ interface StandardFramework {
   name: string;
 }
 
+const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     draft: "bg-yellow-100 text-yellow-800",
@@ -171,10 +173,7 @@ export default function UnitPlannerPage() {
     }
   };
 
-  const addListItem = (
-    list: string[],
-    setList: (items: string[]) => void,
-  ) => {
+  const addListItem = (list: string[], setList: (items: string[]) => void) => {
     setList([...list, ""]);
   };
 
@@ -189,11 +188,7 @@ export default function UnitPlannerPage() {
     setList(updated);
   };
 
-  const removeListItem = (
-    list: string[],
-    setList: (items: string[]) => void,
-    index: number,
-  ) => {
+  const removeListItem = (list: string[], setList: (items: string[]) => void, index: number) => {
     if (list.length <= 1) return;
     setList(list.filter((_, i) => i !== index));
   };
@@ -207,7 +202,7 @@ export default function UnitPlannerPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
           <p className="text-gray-500">Loading...</p>
         </AppShell>
@@ -217,7 +212,7 @@ export default function UnitPlannerPage() {
 
   if (!unitPlan) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
           <p className="text-gray-500">Unit plan not found.</p>
         </AppShell>
@@ -228,7 +223,7 @@ export default function UnitPlannerPage() {
   const isEditable = unitPlan.status === "draft";
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRoles={TEACHER_ROLES}>
       <AppShell>
         <div className="flex gap-6">
           {/* Main Content */}
@@ -246,6 +241,12 @@ export default function UnitPlannerPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <Link
+                  href={`/plan/units/${unitId}/preview`}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Preview
+                </Link>
                 <button
                   onClick={() => setShowAiPanel((prev) => !prev)}
                   className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -307,12 +308,7 @@ export default function UnitPlannerPage() {
                       type="text"
                       value={q}
                       onChange={(e) =>
-                        updateListItem(
-                          essentialQuestions,
-                          setEssentialQuestions,
-                          i,
-                          e.target.value,
-                        )
+                        updateListItem(essentialQuestions, setEssentialQuestions, i, e.target.value)
                       }
                       disabled={!isEditable}
                       placeholder={`Question ${i + 1}`}
@@ -320,9 +316,7 @@ export default function UnitPlannerPage() {
                     />
                     {isEditable && essentialQuestions.length > 1 && (
                       <button
-                        onClick={() =>
-                          removeListItem(essentialQuestions, setEssentialQuestions, i)
-                        }
+                        onClick={() => removeListItem(essentialQuestions, setEssentialQuestions, i)}
                         className="text-sm text-red-500 hover:text-red-700"
                       >
                         Remove
@@ -378,9 +372,7 @@ export default function UnitPlannerPage() {
                 ))}
                 {isEditable && (
                   <button
-                    onClick={() =>
-                      addListItem(enduringUnderstandings, setEnduringUnderstandings)
-                    }
+                    onClick={() => addListItem(enduringUnderstandings, setEnduringUnderstandings)}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     + Add Understanding
@@ -391,9 +383,7 @@ export default function UnitPlannerPage() {
 
             {/* Standards Alignment */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Standards Alignment
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Standards Alignment</label>
               <input
                 type="text"
                 placeholder="Search standards by code or description..."
@@ -522,9 +512,7 @@ export default function UnitPlannerPage() {
                     v{v.version_number}: {v.title}
                   </div>
                 ))}
-                {versions.length === 0 && (
-                  <p className="text-sm text-gray-400">No versions yet.</p>
-                )}
+                {versions.length === 0 && <p className="text-sm text-gray-400">No versions yet.</p>}
               </div>
             </div>
           </div>

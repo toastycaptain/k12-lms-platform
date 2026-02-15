@@ -150,4 +150,21 @@ RSpec.describe "Api::V1::Submissions", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
   end
+
+  describe "GET /api/v1/submissions" do
+    it "returns scoped submissions and supports status filter" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      second_assignment = create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "published")
+      graded = create(:submission, tenant: tenant, assignment: assignment, user: student, status: "graded", submitted_at: Time.current)
+      create(:submission, tenant: tenant, assignment: second_assignment, user: student, status: "submitted", submitted_at: Time.current)
+      create(:submission, tenant: tenant, assignment: assignment, user: other_student, status: "graded", submitted_at: Time.current)
+      Current.tenant = nil
+
+      get "/api/v1/submissions", params: { status: "graded" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["id"]).to eq(graded.id)
+    end
+  end
 end

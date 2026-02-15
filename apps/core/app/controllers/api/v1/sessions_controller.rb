@@ -59,7 +59,9 @@ module Api
             first_name: Current.user.first_name,
             last_name: Current.user.last_name,
             roles: Current.user.roles.pluck(:name),
-            google_connected: Current.user.google_connected?
+            google_connected: Current.user.google_connected?,
+            onboarding_complete: Current.user.onboarding_complete,
+            preferences: Current.user.preferences || {}
           },
           tenant: {
             id: Current.tenant.id,
@@ -67,6 +69,30 @@ module Api
             slug: Current.tenant.slug
           }
         }
+      end
+
+      def update_me
+        if Current.user.update(current_user_params)
+          render json: {
+            user: {
+              id: Current.user.id,
+              email: Current.user.email,
+              first_name: Current.user.first_name,
+              last_name: Current.user.last_name,
+              roles: Current.user.roles.pluck(:name),
+              google_connected: Current.user.google_connected?,
+              onboarding_complete: Current.user.onboarding_complete,
+              preferences: Current.user.preferences || {}
+            },
+            tenant: {
+              id: Current.tenant.id,
+              name: Current.tenant.name,
+              slug: Current.tenant.slug
+            }
+          }
+        else
+          render json: { errors: Current.user.errors.full_messages }, status: :unprocessable_content
+        end
       end
 
       private
@@ -102,6 +128,10 @@ module Api
         attrs[:google_token_expires_at] = Time.at(auth.credentials.expires_at) if auth.credentials.expires_at.present?
 
         user.update!(attrs)
+      end
+
+      def current_user_params
+        params.permit(:onboarding_complete, preferences: {})
       end
     end
   end

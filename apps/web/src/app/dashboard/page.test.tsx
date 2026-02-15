@@ -53,6 +53,8 @@ describe("DashboardPage", () => {
         tenant_id: 2,
         roles: ["teacher"],
         google_connected: true,
+        onboarding_complete: true,
+        preferences: {},
       },
       loading: false,
       error: null,

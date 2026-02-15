@@ -8,6 +8,8 @@ class Assignment < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :rubric, optional: true
   has_many :submissions, dependent: :destroy
+  has_many :assignment_standards, dependent: :destroy
+  has_many :standards, through: :assignment_standards
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

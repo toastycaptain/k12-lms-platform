@@ -6,6 +6,9 @@ class User < ApplicationRecord
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
   has_many :enrollments, dependent: :destroy
+  has_many :module_item_completions, dependent: :destroy
+  has_many :notifications, dependent: :destroy
+  has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
 
   validates :email, presence: true, uniqueness: { scope: :tenant_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }

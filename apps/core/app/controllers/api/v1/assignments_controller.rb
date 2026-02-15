@@ -1,11 +1,12 @@
 module Api
   module V1
     class AssignmentsController < ApplicationController
-      before_action :set_course, only: [ :index, :create ]
+      before_action :set_course, only: [ :create ]
       before_action :set_assignment, only: [ :show, :update, :destroy, :publish, :close, :push_to_classroom, :sync_grades ]
 
       def index
-        assignments = policy_scope(Assignment).where(course: @course)
+        assignments = policy_scope(Assignment)
+        assignments = assignments.where(course_id: params[:course_id]) if params[:course_id].present?
         assignments = assignments.where(status: params[:status]) if params[:status].present?
         render json: assignments
       end
@@ -45,6 +46,14 @@ module Api
       def publish
         authorize @assignment
         @assignment.publish!
+        NotificationService.notify_enrolled_students(
+          course: @assignment.course,
+          type: "assignment_published",
+          title: "New assignment: #{@assignment.title}",
+          url: "/learn/courses/#{@assignment.course_id}/assignments/#{@assignment.id}",
+          actor: Current.user,
+          notifiable: @assignment
+        )
         render json: @assignment
       rescue ActiveRecord::RecordInvalid
         render json: { error: "Cannot publish from current status" }, status: :unprocessable_content

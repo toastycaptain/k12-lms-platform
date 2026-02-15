@@ -2,7 +2,7 @@ module Api
   module V1
     class DiscussionsController < ApplicationController
       before_action :set_course, only: [ :index, :create ]
-      before_action :set_discussion, only: [ :show, :update, :destroy ]
+      before_action :set_discussion, only: [ :show, :update, :destroy, :lock, :unlock ]
 
       def index
         discussions = policy_scope(Discussion).where(course: @course)
@@ -39,6 +39,24 @@ module Api
         authorize @discussion
         @discussion.destroy!
         head :no_content
+      end
+
+      def lock
+        authorize @discussion, :lock?
+        if @discussion.update(status: "locked")
+          render json: @discussion
+        else
+          render json: { errors: @discussion.errors.full_messages }, status: :unprocessable_content
+        end
+      end
+
+      def unlock
+        authorize @discussion, :lock?
+        if @discussion.update(status: "open")
+          render json: @discussion
+        else
+          render json: { errors: @discussion.errors.full_messages }, status: :unprocessable_content
+        end
       end
 
       private
