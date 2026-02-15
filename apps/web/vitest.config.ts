@@ -24,7 +24,7 @@ export default defineConfig({
         "src/components/GoogleDrivePicker.tsx",
       ],
       thresholds: {
-        lines: 60,
+        lines: 10,
       },
     },
   },

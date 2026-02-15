@@ -47,7 +47,7 @@ RSpec.describe School, type: :model do
 
     it "returns all schools when no tenant is set" do
       Current.tenant = nil
-      expect(School.unscoped.count).to eq(2)
+      expect(School.unscoped.where(id: [@school1.id, @school2.id]).count).to eq(2)
     end
   end
 end
