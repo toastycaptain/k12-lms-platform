@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
@@ -50,7 +50,7 @@ export default function AiPoliciesPage() {
 
   const canAccess = user?.roles?.includes("admin") || false;
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -61,19 +61,21 @@ export default function AiPoliciesPage() {
       ]);
       setPolicies(policyRows);
       setProviders(providerRows);
-      if (!form.ai_provider_config_id && providerRows[0]) {
-        setForm((prev) => ({ ...prev, ai_provider_config_id: String(providerRows[0].id) }));
-      }
+      setForm((prev) =>
+        !prev.ai_provider_config_id && providerRows[0]
+          ? { ...prev, ai_provider_config_id: String(providerRows[0].id) }
+          : prev,
+      );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load AI policies.");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [loadData]);
 
   function toggleRole(roleName: string) {
     setForm((prev) => {
@@ -160,17 +162,25 @@ export default function AiPoliciesPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">AI Policies</h1>
             <div className="flex items-center gap-2">
-              <Link href="/admin/ai" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 Providers
               </Link>
-              <Link href="/admin/ai/templates" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai/templates"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 Templates
               </Link>
             </div>
           </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>
+          )}
 
           {loading ? (
             <p className="text-sm text-gray-500">Loading AI policies...</p>
@@ -182,7 +192,10 @@ export default function AiPoliciesPage() {
                   {policies.map((policy) => {
                     const provider = providers.find((p) => p.id === policy.ai_provider_config_id);
                     return (
-                      <div key={policy.id} className="rounded border border-gray-200 bg-gray-50 p-3">
+                      <div
+                        key={policy.id}
+                        className="rounded border border-gray-200 bg-gray-50 p-3"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <button
                             onClick={() =>
@@ -202,14 +215,20 @@ export default function AiPoliciesPage() {
                           >
                             <p className="text-sm font-medium text-gray-900">{policy.task_type}</p>
                             <p className="text-xs text-gray-500">
-                              {provider ? `${provider.display_name} (${provider.provider_name})` : `Provider #${policy.ai_provider_config_id}`}
+                              {provider
+                                ? `${provider.display_name} (${provider.provider_name})`
+                                : `Provider #${policy.ai_provider_config_id}`}
                             </p>
                             <p className="mt-1 text-xs text-gray-500">
-                              max_tokens: {policy.max_tokens_limit || "-"} · temperature: {policy.temperature_limit ?? "-"}
+                              max_tokens: {policy.max_tokens_limit || "-"} · temperature:{" "}
+                              {policy.temperature_limit ?? "-"}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-1">
                               {(policy.allowed_roles || []).map((role) => (
-                                <span key={`${policy.id}-${role}`} className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                                <span
+                                  key={`${policy.id}-${role}`}
+                                  className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800"
+                                >
                                   {role}
                                 </span>
                               ))}
@@ -217,7 +236,9 @@ export default function AiPoliciesPage() {
                           </button>
 
                           <div className="flex items-center gap-2">
-                            <span className={`rounded-full px-2 py-0.5 text-xs ${policy.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs ${policy.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"}`}
+                            >
                               {policy.enabled ? "enabled" : "disabled"}
                             </span>
                             <button
@@ -231,7 +252,9 @@ export default function AiPoliciesPage() {
                       </div>
                     );
                   })}
-                  {policies.length === 0 && <p className="text-sm text-gray-500">No task policies configured.</p>}
+                  {policies.length === 0 && (
+                    <p className="text-sm text-gray-500">No task policies configured.</p>
+                  )}
                 </div>
               </section>
 
@@ -252,7 +275,9 @@ export default function AiPoliciesPage() {
 
                   <select
                     value={form.ai_provider_config_id}
-                    onChange={(e) => setForm((prev) => ({ ...prev, ai_provider_config_id: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, ai_provider_config_id: e.target.value }))
+                    }
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   >
                     <option value="">Select provider</option>
@@ -267,7 +292,9 @@ export default function AiPoliciesPage() {
                     type="number"
                     min={1}
                     value={form.max_tokens_limit}
-                    onChange={(e) => setForm((prev) => ({ ...prev, max_tokens_limit: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, max_tokens_limit: e.target.value }))
+                    }
                     placeholder="Max tokens"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
@@ -278,7 +305,9 @@ export default function AiPoliciesPage() {
                     max={2}
                     step={0.1}
                     value={form.temperature_limit}
-                    onChange={(e) => setForm((prev) => ({ ...prev, temperature_limit: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, temperature_limit: e.target.value }))
+                    }
                     placeholder="Temperature"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
@@ -286,7 +315,9 @@ export default function AiPoliciesPage() {
                   <input
                     type="text"
                     value={form.model_override}
-                    onChange={(e) => setForm((prev) => ({ ...prev, model_override: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, model_override: e.target.value }))
+                    }
                     placeholder="Model override (optional)"
                     className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"
                   />
@@ -295,7 +326,10 @@ export default function AiPoliciesPage() {
                     <p className="mb-1 text-xs font-medium text-gray-700">Allowed roles</p>
                     <div className="flex flex-wrap gap-2">
                       {ROLE_OPTIONS.map((role) => (
-                        <label key={role} className="inline-flex items-center gap-1 text-sm text-gray-700">
+                        <label
+                          key={role}
+                          className="inline-flex items-center gap-1 text-sm text-gray-700"
+                        >
                           <input
                             type="checkbox"
                             checked={form.allowed_roles.includes(role)}
@@ -320,7 +354,9 @@ export default function AiPoliciesPage() {
                     <input
                       type="checkbox"
                       checked={form.requires_approval}
-                      onChange={(e) => setForm((prev) => ({ ...prev, requires_approval: e.target.checked }))}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, requires_approval: e.target.checked }))
+                      }
                     />
                     Requires approval
                   </label>
