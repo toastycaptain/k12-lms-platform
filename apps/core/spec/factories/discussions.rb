@@ -7,11 +7,4 @@ FactoryBot.define do
     description { "Discussion description" }
     status { "open" }
   end
-
-  factory :discussion_post do
-    association :tenant
-    association :discussion
-    association :created_by, factory: :user
-    content { "A discussion post" }
-  end
 end
