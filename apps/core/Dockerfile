@@ -3,7 +3,8 @@ FROM ruby:4.0.1 AS builder
 RUN apt-get update -qq && apt-get install -y build-essential libpq-dev libyaml-dev && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY Gemfile Gemfile.lock ./
-RUN bundle install --jobs 4 --retry 3 --without development test
+RUN bundle config set --local without 'development test' && \
+    bundle install --jobs 4 --retry 3
 COPY . .
 
 # --- Runtime ---
