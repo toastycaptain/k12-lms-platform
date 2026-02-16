@@ -18,11 +18,11 @@ RSpec.describe "OpenAPI specification", type: :model do
     expect(spec["info"]).to include("title", "version")
   end
 
-  it "has at least 20 path operations" do
+  it "has at least 100 path operations" do
     operation_count = spec["paths"].sum do |_path, methods|
       methods.count { |method, _| %w[get post put patch delete].include?(method) }
     end
-    expect(operation_count).to be >= 20
+    expect(operation_count).to be >= 100
   end
 
   it "every path starts with /api/v1/" do
@@ -39,6 +39,57 @@ RSpec.describe "OpenAPI specification", type: :model do
 
         expect(operation).to have_key("summary"), "#{method.upcase} #{path} missing summary"
         expect(operation).to have_key("operationId"), "#{method.upcase} #{path} missing operationId"
+      end
+    end
+  end
+
+  it "documents required endpoint groups from the expansion backlog" do
+    canonical_paths = spec["paths"].keys.index_with do |path|
+      path.gsub(/\{[^}]+\}/, "{}")
+    end.invert
+
+    required_operations = {
+      "/api/v1/academic_years" => %w[get post],
+      "/api/v1/terms" => %w[get post],
+      "/api/v1/sections" => %w[get post],
+      "/api/v1/announcements" => %w[get post],
+      "/api/v1/discussions/{id}" => %w[get patch delete],
+      "/api/v1/discussions/{discussion_id}/posts" => %w[get post],
+      "/api/v1/rubrics/{id}" => %w[get patch delete],
+      "/api/v1/unit_plans/{id}/versions" => %w[get],
+      "/api/v1/templates/{id}/create_unit" => %w[post],
+      "/api/v1/standard_frameworks/{id}/tree" => %w[get],
+      "/api/v1/quizzes/{id}/analytics" => %w[get],
+      "/api/v1/message_threads/{id}/messages" => %w[get post],
+      "/api/v1/users/{id}" => %w[get patch delete],
+      "/api/v1/ai_provider_configs" => %w[get post],
+      "/api/v1/ai_task_policies" => %w[get post],
+      "/api/v1/ai_templates" => %w[get post]
+    }
+
+    required_operations.each do |path, methods|
+      canonical_required_path = path.gsub(/\{[^}]+\}/, "{}")
+      resolved_path = canonical_paths[canonical_required_path]
+      expect(resolved_path).not_to be_nil, "Missing documented path #{path}"
+
+      methods.each do |method|
+        expect(spec["paths"][resolved_path]).to have_key(method), "Missing #{method.upcase} for #{path}"
+      end
+    end
+  end
+
+  it "requires cookieAuth on all operations except health checks" do
+    global_security = spec["security"] || []
+
+    spec["paths"].each do |path, methods|
+      methods.each do |method, operation|
+        next if method == "parameters"
+        next unless operation.is_a?(Hash)
+        next if path == "/api/v1/health"
+
+        effective_security = operation["security"] || global_security
+        has_cookie_auth = effective_security.any? { |sec| sec.is_a?(Hash) && sec.key?("cookieAuth") }
+        expect(has_cookie_auth).to be(true), "#{method.upcase} #{path} is missing cookieAuth security"
       end
     end
   end

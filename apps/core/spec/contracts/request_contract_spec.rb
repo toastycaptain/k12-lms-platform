@@ -46,6 +46,29 @@ RSpec.describe "Request contracts", type: :request do
     end
   end
 
+  def documented_operation_for(method, request_path)
+    method = method.to_s.downcase
+
+    openapi.fetch("paths").each do |path_template, operations|
+      next unless operations.is_a?(Hash)
+      next unless operations.key?(method)
+
+      matcher = Regexp.new("\\A#{Regexp.escape(path_template).gsub("\\{", "{").gsub("\\}", "}").gsub(/\{[^}]+\}/, "[^/]+")}\\z")
+      return operations[method] if matcher.match?(request_path)
+    end
+
+    nil
+  end
+
+  def assert_status_documented(method, request_path)
+    operation = documented_operation_for(method, request_path)
+    expect(operation).not_to be_nil, "No OpenAPI operation found for #{method.upcase} #{request_path}"
+
+    response_codes = operation.fetch("responses", {}).keys
+    expect(response_codes).to include(response.status.to_s),
+      "Status #{response.status} for #{method.upcase} #{request_path} not documented (documented: #{response_codes.join(', ')})"
+  end
+
   describe "GET /api/v1/courses" do
     it "returns responses matching Course schema" do
       term = create(:term, tenant: tenant, academic_year: academic_year)
@@ -58,6 +81,7 @@ RSpec.describe "Request contracts", type: :request do
       body = response.parsed_body
       expect(body).to be_an(Array)
       expect(body).not_to be_empty
+      assert_status_documented(:get, "/api/v1/courses")
       assert_contract(body.first, "Course")
     end
   end
@@ -71,6 +95,7 @@ RSpec.describe "Request contracts", type: :request do
       get "/api/v1/courses/#{course.id}"
 
       expect(response).to have_http_status(:ok)
+      assert_status_documented(:get, "/api/v1/courses/#{course.id}")
       assert_contract(response.parsed_body, "Course")
     end
   end
@@ -88,6 +113,7 @@ RSpec.describe "Request contracts", type: :request do
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
       expect(body).to be_an(Array)
+      assert_status_documented(:get, "/api/v1/assignments/#{assignment.id}/submissions")
       assert_contract(body.first, "Submission")
     end
   end
@@ -101,6 +127,7 @@ RSpec.describe "Request contracts", type: :request do
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
       expect(body).to be_an(Array)
+      assert_status_documented(:get, "/api/v1/notifications")
       assert_contract(body.first, "Notification")
     end
   end
@@ -114,7 +141,99 @@ RSpec.describe "Request contracts", type: :request do
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
       expect(body).to be_an(Array)
+      assert_status_documented(:get, "/api/v1/unit_plans")
       assert_contract(body.first, "UnitPlan")
+    end
+  end
+
+  describe "GET /api/v1/academic_years" do
+    it "returns responses matching AcademicYear schema" do
+      create(:academic_year, tenant: tenant)
+
+      get "/api/v1/academic_years"
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body).to be_an(Array)
+      expect(body).not_to be_empty
+      assert_status_documented(:get, "/api/v1/academic_years")
+      assert_contract(body.first, "AcademicYear")
+    end
+  end
+
+  describe "GET /api/v1/quizzes/{id}" do
+    it "returns responses matching Quiz schema" do
+      term = create(:term, tenant: tenant, academic_year: academic_year)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+      quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher)
+
+      get "/api/v1/quizzes/#{quiz.id}"
+
+      expect(response).to have_http_status(:ok)
+      assert_status_documented(:get, "/api/v1/quizzes/#{quiz.id}")
+      assert_contract(response.parsed_body, "Quiz")
+    end
+  end
+
+  describe "GET /api/v1/discussions/{id}" do
+    it "returns responses matching Discussion schema" do
+      term = create(:term, tenant: tenant, academic_year: academic_year)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+      discussion = create(:discussion, tenant: tenant, course: course, created_by: teacher)
+
+      get "/api/v1/discussions/#{discussion.id}"
+
+      expect(response).to have_http_status(:ok)
+      assert_status_documented(:get, "/api/v1/discussions/#{discussion.id}")
+      assert_contract(response.parsed_body, "Discussion")
+    end
+  end
+
+  describe "GET /api/v1/message_threads/{id}" do
+    it "returns responses matching MessageThread schema" do
+      thread = create(:message_thread, tenant: tenant, course: course)
+      create(:message_thread_participant, tenant: tenant, message_thread: thread, user: teacher)
+      create(:message_thread_participant, tenant: tenant, message_thread: thread, user: student)
+      create(:message, tenant: tenant, message_thread: thread, sender: teacher)
+
+      get "/api/v1/message_threads/#{thread.id}"
+
+      expect(response).to have_http_status(:ok)
+      assert_status_documented(:get, "/api/v1/message_threads/#{thread.id}")
+      assert_contract(response.parsed_body, "MessageThread")
+    end
+  end
+
+  describe "GET /api/v1/users/{id}" do
+    it "returns responses matching User schema" do
+      admin = create(:user, tenant: tenant)
+      admin_role = create(:role, tenant: tenant, name: "admin")
+      create(:user_role, user: admin, role: admin_role, tenant: tenant)
+      mock_session(admin, tenant: tenant)
+
+      get "/api/v1/users/#{teacher.id}"
+
+      expect(response).to have_http_status(:ok)
+      assert_status_documented(:get, "/api/v1/users/#{teacher.id}")
+      assert_contract(response.parsed_body, "User")
+    end
+  end
+
+  describe "GET /api/v1/ai_task_policies" do
+    it "returns responses matching AiTaskPolicy schema" do
+      provider = create(:ai_provider_config, tenant: tenant, created_by: teacher)
+      create(:ai_task_policy, tenant: tenant, created_by: teacher, ai_provider_config: provider)
+
+      get "/api/v1/ai_task_policies"
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body).to be_an(Array)
+      expect(body).not_to be_empty
+      assert_status_documented(:get, "/api/v1/ai_task_policies")
+      assert_contract(body.first, "AiTaskPolicy")
     end
   end
 end
