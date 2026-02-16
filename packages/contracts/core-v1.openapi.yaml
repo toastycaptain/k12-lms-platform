@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: K-12 LMS Core API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Contract for high-priority Core API v1 endpoints consumed by the web app.
-    This document intentionally focuses on the 20 highest-traffic endpoints.
+    Covers quiz attempts, questions, enrollments, submissions grading, and rubric scoring.
   license:
     name: Proprietary
     url: https://github.com/toastycaptain/k12-lms-platform
@@ -516,6 +516,415 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /api/v1/quizzes/{quiz_id}/attempts:
+    parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: List quiz attempts
+      operationId: listQuizAttempts
+      tags: [Quizzes]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Quiz attempt list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizAttempt"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Start a new quiz attempt
+      operationId: createQuizAttempt
+      tags: [Quizzes]
+      security:
+        - cookieAuth: []
+      responses:
+        "201":
+          description: Quiz attempt created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizAttempt"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
+  /api/v1/quiz_attempts/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show quiz attempt
+      operationId: showQuizAttempt
+      tags: [Quizzes]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Quiz attempt detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizAttempt"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/quiz_attempts/{id}/submit:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    post:
+      summary: Submit a quiz attempt
+      operationId: submitQuizAttempt
+      tags: [Quizzes]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Quiz attempt submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizAttempt"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
+  /api/v1/question_banks/{question_bank_id}/questions:
+    parameters:
+      - in: path
+        name: question_bank_id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: List questions in a question bank
+      operationId: listQuestions
+      tags: [Questions]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: question_type
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Question list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create a question
+      operationId: createQuestion
+      tags: [Questions]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionCreateInput"
+      responses:
+        "201":
+          description: Question created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
+  /api/v1/questions/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show question
+      operationId: showQuestion
+      tags: [Questions]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Question detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update question
+      operationId: updateQuestion
+      tags: [Questions]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionCreateInput"
+      responses:
+        "200":
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+    delete:
+      summary: Delete question
+      operationId: deleteQuestion
+      tags: [Questions]
+      security:
+        - cookieAuth: []
+      responses:
+        "204":
+          description: Question deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/enrollments:
+    get:
+      summary: List enrollments
+      operationId: listEnrollments
+      tags: [Enrollments]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: section_id
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Enrollment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enrollment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      summary: Create enrollment
+      operationId: createEnrollment
+      tags: [Enrollments]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollmentCreateInput"
+      responses:
+        "201":
+          description: Enrollment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
+  /api/v1/submissions/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show submission
+      operationId: showSubmission
+      tags: [Submissions]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Submission detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Grade or update submission
+      operationId: updateSubmission
+      tags: [Submissions]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionUpdateInput"
+      responses:
+        "200":
+          description: Updated submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
+  /api/v1/submissions/{submission_id}/rubric_scores:
+    parameters:
+      - in: path
+        name: submission_id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: List rubric scores for a submission
+      operationId: listRubricScores
+      tags: [Submissions]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Rubric scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RubricScore"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create rubric scores for a submission
+      operationId: createRubricScores
+      tags: [Submissions]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scores]
+              properties:
+                scores:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/RubricScoreInput"
+      responses:
+        "201":
+          description: Rubric scores created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RubricScore"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationErrors"
+
   /api/v1/search:
     get:
       summary: Global search
@@ -903,6 +1312,12 @@ components:
         url:
           type: string
           nullable: true
+        notifiable_type:
+          type: string
+          nullable: true
+        notifiable_id:
+          type: integer
+          nullable: true
         read_at:
           type: string
           format: date-time
@@ -1099,6 +1514,191 @@ components:
       type: object
       properties:
         error:
+          type: string
+
+    QuizAttempt:
+      type: object
+      required: [id, tenant_id, quiz_id, user_id, attempt_number, status, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        quiz_id:
+          type: integer
+        user_id:
+          type: integer
+        attempt_number:
+          type: integer
+        status:
+          type: string
+        score:
+          type: number
+          nullable: true
+        percentage:
+          type: number
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        time_spent_seconds:
+          type: integer
+          nullable: true
+        effective_time_limit:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Question:
+      type: object
+      required: [id, tenant_id, question_bank_id, created_by_id, question_type, prompt, points, position, status, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        question_bank_id:
+          type: integer
+        created_by_id:
+          type: integer
+        question_type:
+          type: string
+        prompt:
+          type: string
+        choices:
+          type: array
+          nullable: true
+          items:
+            type: object
+        points:
+          type: number
+        position:
+          type: integer
+        status:
+          type: string
+        correct_answer:
+          description: Only included for admin/teacher/curriculum_lead
+          nullable: true
+        explanation:
+          type: string
+          description: Only included for admin/teacher/curriculum_lead
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuestionCreateInput:
+      type: object
+      required: [question_type, prompt, points]
+      properties:
+        question_type:
+          type: string
+        prompt:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+        correct_answer:
+          type: object
+        points:
+          type: number
+        position:
+          type: integer
+
+    Enrollment:
+      type: object
+      required: [id, user_id, section_id, role, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        section_id:
+          type: integer
+        role:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    EnrollmentCreateInput:
+      type: object
+      required: [section_id, user_id]
+      properties:
+        section_id:
+          type: integer
+        user_id:
+          type: integer
+        role:
+          type: string
+
+    SubmissionUpdateInput:
+      type: object
+      properties:
+        grade:
+          type: number
+        feedback:
+          type: string
+        status:
+          type: string
+        rubric_scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/RubricScoreInput"
+
+    RubricScore:
+      type: object
+      required: [id, submission_id, rubric_criterion_id, points_awarded, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        submission_id:
+          type: integer
+        rubric_criterion_id:
+          type: integer
+        rubric_rating_id:
+          type: integer
+          nullable: true
+        points_awarded:
+          type: number
+        comments:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RubricScoreInput:
+      type: object
+      required: [rubric_criterion_id, points_awarded]
+      properties:
+        rubric_criterion_id:
+          type: integer
+        rubric_rating_id:
+          type: integer
+        points_awarded:
+          type: number
+        comments:
           type: string
 
     ValidationErrorsResponse:

@@ -211,4 +211,129 @@ RSpec.describe "Serializer contracts", type: :model do
     expect(payload["rubric_criteria"]).to be_an(Array)
     forbidden_keys.each { |key| expect(payload).not_to have_key(key) }
   end
+
+  it "validates QuizAttemptSerializer contract" do
+    academic_year = create(:academic_year, tenant: tenant)
+    course = create(:course, tenant: tenant, academic_year: academic_year)
+    quiz = create(:quiz, tenant: tenant, course: course, created_by: current_user, status: "published")
+    attempt = create(:quiz_attempt, tenant: tenant, quiz: quiz, user: current_user)
+
+    payload = serialize(attempt)
+
+    expect(payload.keys).to include(
+      "id", "tenant_id", "quiz_id", "user_id", "attempt_number", "status",
+      "score", "percentage", "started_at", "submitted_at", "time_spent_seconds",
+      "effective_time_limit", "created_at", "updated_at"
+    )
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["tenant_id"]).to eq(tenant.id)
+    expect(payload["quiz_id"]).to eq(quiz.id)
+    expect(payload["attempt_number"]).to be_a(Integer)
+    expect(payload["status"]).to be_a(String)
+    expect(payload["score"]).to be_nil
+    expect(payload["created_at"]).to be_a(String)
+    forbidden_keys.each { |key| expect(payload).not_to have_key(key) }
+  end
+
+  it "validates QuestionSerializer contract" do
+    question_bank = create(:question_bank, tenant: tenant, created_by: current_user)
+    question = create(:question, tenant: tenant, question_bank: question_bank, created_by: current_user)
+
+    payload = serialize(question)
+
+    expect(payload.keys).to include(
+      "id", "tenant_id", "question_bank_id", "created_by_id", "question_type",
+      "prompt", "choices", "points", "position", "status", "created_at", "updated_at"
+    )
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["tenant_id"]).to eq(tenant.id)
+    expect(payload["question_type"]).to be_a(String)
+    expect(payload["prompt"]).to be_a(String)
+    expect(payload["points"]).to be_present
+    expect(payload["status"]).to be_a(String)
+    expect(payload["created_at"]).to be_a(String)
+    forbidden_keys.each { |key| expect(payload).not_to have_key(key) }
+  end
+
+  it "validates RubricScoreSerializer contract" do
+    academic_year = create(:academic_year, tenant: tenant)
+    course = create(:course, tenant: tenant, academic_year: academic_year)
+    assignment = create(:assignment, tenant: tenant, course: course, created_by: current_user)
+    rubric = create(:rubric, tenant: tenant, created_by: current_user)
+    criterion = create(:rubric_criterion, tenant: tenant, rubric: rubric)
+    student = create(:user, tenant: tenant)
+    submission = create(:submission, tenant: tenant, assignment: assignment, user: student)
+    rubric_score = create(:rubric_score, tenant: tenant, submission: submission, rubric_criterion: criterion)
+
+    payload = serialize(rubric_score)
+
+    expect(payload.keys).to include(
+      "id", "submission_id", "rubric_criterion_id", "points_awarded", "comments", "created_at", "updated_at"
+    )
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["submission_id"]).to eq(submission.id)
+    expect(payload["rubric_criterion_id"]).to eq(criterion.id)
+    expect(payload["comments"]).to be_nil
+    expect(payload["created_at"]).to be_a(String)
+    forbidden_keys.each { |key| expect(payload).not_to have_key(key) }
+  end
+
+  # Strict type assertions for existing serializers
+  it "validates CourseSerializer types strictly" do
+    academic_year = create(:academic_year, tenant: tenant)
+    course = create(:course, tenant: tenant, academic_year: academic_year, code: nil, description: nil)
+    term = create(:term, tenant: tenant, academic_year: academic_year)
+    create(:section, tenant: tenant, course: course, term: term)
+
+    payload = serialize(course)
+
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["name"]).to be_a(String)
+    expect(payload["code"]).to be_nil
+    expect(payload["description"]).to be_nil
+    expect(payload["academic_year_id"]).to be_a(Integer)
+    expect(payload["sections"]).to be_an(Array)
+    expect(payload["sections"].first).to include("id", "name", "course_id", "term_id")
+    expect(payload["created_at"]).to match(/\d{4}-\d{2}-\d{2}/)
+    expect(payload["updated_at"]).to match(/\d{4}-\d{2}-\d{2}/)
+  end
+
+  it "validates AssignmentSerializer nullable fields" do
+    academic_year = create(:academic_year, tenant: tenant)
+    course = create(:course, tenant: tenant, academic_year: academic_year)
+    assignment = create(:assignment, tenant: tenant, course: course, created_by: current_user,
+      due_at: nil, unlock_at: nil, lock_at: nil, rubric: nil, points_possible: nil)
+
+    payload = serialize(assignment)
+
+    expect(payload["due_at"]).to be_nil
+    expect(payload["unlock_at"]).to be_nil
+    expect(payload["lock_at"]).to be_nil
+    expect(payload["rubric_id"]).to be_nil
+    expect(payload["points_possible"]).to be_nil
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["title"]).to be_a(String)
+    expect(payload["assignment_type"]).to be_a(String)
+    expect(payload["status"]).to be_a(String)
+  end
+
+  it "validates SubmissionSerializer nullable fields" do
+    academic_year = create(:academic_year, tenant: tenant)
+    course = create(:course, tenant: tenant, academic_year: academic_year)
+    assignment = create(:assignment, tenant: tenant, course: course, created_by: current_user)
+    student = create(:user, tenant: tenant)
+    submission = create(:submission, tenant: tenant, assignment: assignment, user: student,
+      feedback: nil, grade: nil, graded_at: nil, graded_by: nil)
+
+    payload = serialize(submission)
+
+    expect(payload["feedback"]).to be_nil
+    expect(payload["grade"]).to be_nil
+    expect(payload["graded_at"]).to be_nil
+    expect(payload["graded_by_id"]).to be_nil
+    expect(payload["id"]).to be_a(Integer)
+    expect(payload["assignment_id"]).to be_a(Integer)
+    expect(payload["user_id"]).to be_a(Integer)
+    expect(payload["status"]).to be_a(String)
+  end
 end
