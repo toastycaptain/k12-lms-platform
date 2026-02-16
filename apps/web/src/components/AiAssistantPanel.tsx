@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetchStream } from "@/lib/api-stream";
 
 interface AiTaskPolicy {
   id: number;
@@ -25,16 +26,23 @@ interface AiAssistantPanelProps {
 
 const TASK_TYPES = ["lesson_plan", "unit_plan", "differentiation", "assessment", "rewrite"];
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiAssistantPanelProps) {
   const [taskType, setTaskType] = useState<string>("lesson_plan");
   const [prompt, setPrompt] = useState("");
   const [responseText, setResponseText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [policyHint, setPolicyHint] = useState<string | null>(null);
   const [enabledTasks, setEnabledTasks] = useState<Record<string, boolean>>(
     Object.fromEntries(TASK_TYPES.map((value) => [value, true])) as Record<string, boolean>,
   );
+
+  const streamAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     async function loadPolicies() {
@@ -65,6 +73,12 @@ export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiA
     void loadPolicies();
   }, [taskType]);
 
+  useEffect(() => {
+    return () => {
+      streamAbortRef.current?.abort();
+    };
+  }, []);
+
   const contextPayload = useMemo(() => {
     return {
       ...(unitId ? { unit_id: String(unitId) } : {}),
@@ -73,27 +87,93 @@ export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiA
     };
   }, [unitId, lessonId, context]);
 
+  async function runFallbackGeneration(trimmedPrompt: string) {
+    const result = await apiFetch<InvocationResponse>("/api/v1/ai_invocations", {
+      method: "POST",
+      body: JSON.stringify({
+        task_type: taskType,
+        prompt: trimmedPrompt,
+        context: contextPayload,
+      }),
+    });
+
+    setResponseText(result.content || "");
+  }
+
   async function generate() {
-    if (!prompt.trim()) return;
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) return;
 
     setLoading(true);
+    setStreaming(true);
     setError(null);
+    setResponseText("");
+
+    let streamFailed = false;
+    let aborted = false;
+
+    const abortController = new AbortController();
+    streamAbortRef.current = abortController;
 
     try {
-      const result = await apiFetch<InvocationResponse>("/api/v1/ai_invocations", {
-        method: "POST",
-        body: JSON.stringify({
+      await apiFetchStream(
+        "/api/v1/ai/stream",
+        {
           task_type: taskType,
-          prompt: prompt.trim(),
+          prompt: trimmedPrompt,
           context: contextPayload,
-        }),
-      });
-      setResponseText(result.content || "");
+          messages: [
+            {
+              role: "user",
+              content: trimmedPrompt,
+            },
+          ],
+        },
+        (token) => {
+          setResponseText((previous) => previous + token);
+        },
+        (fullText) => {
+          setResponseText(fullText);
+        },
+        () => {
+          streamFailed = true;
+        },
+        abortController.signal,
+      );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "AI generation failed.");
+      if (isAbortError(e)) {
+        aborted = true;
+      } else {
+        streamFailed = true;
+      }
     } finally {
-      setLoading(false);
+      setStreaming(false);
+      streamAbortRef.current = null;
     }
+
+    if (aborted) {
+      setLoading(false);
+      setError("Generation stopped.");
+      return;
+    }
+
+    if (streamFailed) {
+      try {
+        await runFallbackGeneration(trimmedPrompt);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "AI generation failed.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    setLoading(false);
+  }
+
+  function stopGeneration() {
+    streamAbortRef.current?.abort();
   }
 
   async function copyToClipboard() {
@@ -131,20 +211,33 @@ export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiA
           className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
         />
 
-        <button
-          onClick={() => void generate()}
-          disabled={loading || !prompt.trim() || !enabledTasks[taskType]}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Generating..." : "Generate"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void generate()}
+            disabled={loading || !prompt.trim() || !enabledTasks[taskType]}
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Generating..." : "Generate"}
+          </button>
+          {streaming && (
+            <button
+              onClick={stopGeneration}
+              className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Stop
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-4">
         <label className="block text-xs font-medium text-gray-700">Response</label>
         <div className="mt-1 rounded border border-gray-200 bg-gray-50 p-2">
-          {responseText ? (
-            <pre className="whitespace-pre-wrap text-xs text-gray-800">{responseText}</pre>
+          {responseText || loading ? (
+            <pre className="whitespace-pre-wrap text-xs text-gray-800">
+              {responseText}
+              {loading && <span className="inline-block animate-pulse">|</span>}
+            </pre>
           ) : (
             <p className="text-xs text-gray-500">No response yet.</p>
           )}

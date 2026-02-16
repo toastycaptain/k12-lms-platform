@@ -14,17 +14,34 @@ class AiInvocation < ApplicationRecord
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
 
   def complete!(tokens:, duration:, response_hash: nil)
+    normalized_tokens = normalize_tokens(tokens)
+    updated_context = (context || {}).dup
+    updated_context["response"] = response_hash if response_hash.present?
+
     update!(
       status: "completed",
       completed_at: Time.current,
-      prompt_tokens: tokens[:prompt],
-      completion_tokens: tokens[:completion],
-      total_tokens: tokens[:total],
-      duration_ms: duration
+      prompt_tokens: normalized_tokens[:prompt],
+      completion_tokens: normalized_tokens[:completion],
+      total_tokens: normalized_tokens[:total],
+      duration_ms: duration,
+      context: updated_context
     )
   end
 
   def fail!(message)
     update!(status: "failed", error_message: message, completed_at: Time.current)
+  end
+
+  private
+
+  def normalize_tokens(tokens)
+    token_hash = tokens.respond_to?(:to_h) ? tokens.to_h : {}
+
+    {
+      prompt: token_hash[:prompt] || token_hash["prompt"] || token_hash[:prompt_tokens] || token_hash["prompt_tokens"],
+      completion: token_hash[:completion] || token_hash["completion"] || token_hash[:completion_tokens] || token_hash["completion_tokens"],
+      total: token_hash[:total] || token_hash["total"] || token_hash[:total_tokens] || token_hash["total_tokens"]
+    }
   end
 end

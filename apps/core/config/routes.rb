@@ -142,6 +142,7 @@ Rails.application.routes.draw do
       resources :ai_task_policies, only: [ :index, :show, :create, :update, :destroy ]
       resources :ai_templates, only: [ :index, :show, :create, :update, :destroy ]
       resources :ai_invocations, only: [ :index, :show, :create ]
+      post "ai/stream", to: "ai_stream#create"
 
       resources :approvals, only: [ :index ] do
         member do

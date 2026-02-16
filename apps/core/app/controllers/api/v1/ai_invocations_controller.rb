@@ -33,15 +33,11 @@ module Api
         provider_config = task_policy.ai_provider_config
         model = task_policy.effective_model
 
-        template = AiTemplate.find(params[:ai_template_id]) if params[:ai_template_id].present?
-
+        template = AiTemplate.find_by!(id: params[:ai_template_id], tenant: Current.tenant) if params[:ai_template_id].present?
         system_prompt = template&.system_prompt || "You are a helpful K-12 education assistant."
-        user_prompt = params[:prompt]
-
-        messages = [
-          { role: "system", content: system_prompt },
-          { role: "user", content: user_prompt }
-        ]
+        messages = build_messages(system_prompt)
+        max_tokens = task_policy.max_tokens_limit || 4096
+        temperature = task_policy.temperature_limit || 0.7
 
         invocation = AiInvocation.new(
           tenant: Current.tenant,
@@ -53,13 +49,22 @@ module Api
           provider_name: provider_config.provider_name,
           model: model,
           status: "pending",
-          started_at: Time.current,
-          context: normalize_context
+          context: invocation_context(messages: messages, max_tokens: max_tokens, temperature: temperature)
         )
         invocation.save!
 
+        if async_requested?
+          AiGenerationJob.perform_later(invocation.id)
+          render json: {
+            invocation_id: invocation.id,
+            status: invocation.status,
+            message: "Generation queued. Poll GET /api/v1/ai_invocations/#{invocation.id} for status."
+          }, status: :accepted
+          return
+        end
+
         begin
-          invocation.update!(status: "running")
+          invocation.update!(status: "running", started_at: Time.current)
           start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
           result = AiGatewayClient.generate(
@@ -67,8 +72,8 @@ module Api
             model: model,
             messages: messages,
             task_type: params[:task_type],
-            max_tokens: task_policy.max_tokens_limit || 4096,
-            temperature: task_policy.temperature_limit || 0.7
+            max_tokens: max_tokens,
+            temperature: temperature
           )
 
           duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).to_i
@@ -91,13 +96,58 @@ module Api
             usage: usage,
             status: invocation.status
           }
-        rescue => e
+        rescue StandardError => e
           invocation.fail!(e.message)
           render json: { error: "AI generation failed: #{e.message}" }, status: :bad_gateway
         end
       end
 
       private
+
+      def async_requested?
+        ActiveModel::Type::Boolean.new.cast(params[:async])
+      end
+
+      def build_messages(system_prompt)
+        messages = [ { role: "system", content: system_prompt } ]
+
+        if params[:messages].is_a?(Array)
+          user_messages = params[:messages].filter_map do |message|
+            role, content = extract_message_fields(message)
+            next if role.blank? || content.blank?
+
+            { role: role, content: content }
+          end
+          messages.concat(user_messages)
+        elsif params[:prompt].present?
+          messages << { role: "user", content: params[:prompt] }
+        end
+
+        messages
+      end
+
+      def invocation_context(messages:, max_tokens:, temperature:)
+        base = normalize_context.deep_stringify_keys
+        base["messages"] = messages
+        base["max_tokens"] = max_tokens
+        base["temperature"] = temperature
+        base["return_url"] = params[:return_url] if params[:return_url].present?
+        base
+      end
+
+      def extract_message_fields(message)
+        permitted = if message.respond_to?(:permit)
+          message.permit(:role, :content).to_h
+        elsif message.respond_to?(:to_h)
+          message.to_h
+        else
+          {}
+        end
+
+        role = permitted["role"] || permitted[:role]
+        content = permitted["content"] || permitted[:content]
+        [ role, content ]
+      end
 
       def normalize_context
         context = params[:context]
