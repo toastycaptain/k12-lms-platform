@@ -68,7 +68,7 @@ const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
     published: "bg-green-100 text-green-800",
     closed: "bg-red-100 text-red-800",
     archived: "bg-gray-100 text-gray-700",
@@ -559,23 +559,26 @@ export default function AssignmentEditorPage() {
             </div>
           </div>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {message && (
-            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
+            <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
           )}
 
           <section className="grid gap-4 rounded-lg border border-gray-200 bg-white p-6 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <label htmlFor="assignment-title" className="block text-sm font-medium text-gray-700">Title</label>
               <input
+                id="assignment-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
+                required
+                aria-required="true"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <p id="assignment-description-label" className="block text-sm font-medium text-gray-700">Description</p>
               <div className="mt-1 flex flex-wrap gap-1 rounded-t-md border border-b-0 border-gray-300 bg-gray-50 px-2 py-1">
                 <button
                   type="button"
@@ -638,7 +641,9 @@ export default function AssignmentEditorPage() {
               </div>
               <div
                 ref={descriptionRef}
+                id="assignment-description"
                 contentEditable
+                aria-labelledby="assignment-description-label"
                 onInput={() => {
                   if (descriptionRef.current) {
                     setDescription(descriptionRef.current.innerHTML);
@@ -650,8 +655,9 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Points Possible</label>
+              <label htmlFor="assignment-points-possible" className="block text-sm font-medium text-gray-700">Points Possible</label>
               <input
+                id="assignment-points-possible"
                 type="number"
                 min={0}
                 value={pointsPossible}
@@ -661,8 +667,9 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Submission Type</label>
+              <label htmlFor="assignment-submission-type" className="block text-sm font-medium text-gray-700">Submission Type</label>
               <select
+                id="assignment-submission-type"
                 value={submissionType}
                 onChange={(event) =>
                   setSubmissionType(
@@ -683,8 +690,9 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Due Date</label>
+              <label htmlFor="assignment-due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
               <input
+                id="assignment-due-date"
                 type="datetime-local"
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
@@ -693,8 +701,9 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Available From</label>
+              <label htmlFor="assignment-available-from" className="block text-sm font-medium text-gray-700">Available From</label>
               <input
+                id="assignment-available-from"
                 type="datetime-local"
                 value={availableFrom}
                 onChange={(event) => setAvailableFrom(event.target.value)}
@@ -703,8 +712,9 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Available Until</label>
+              <label htmlFor="assignment-available-until" className="block text-sm font-medium text-gray-700">Available Until</label>
               <input
+                id="assignment-available-until"
                 type="datetime-local"
                 value={availableUntil}
                 onChange={(event) => setAvailableUntil(event.target.value)}

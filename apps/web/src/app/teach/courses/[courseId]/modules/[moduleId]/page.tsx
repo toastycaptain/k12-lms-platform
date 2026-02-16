@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { announce } from "@/components/LiveRegion";
 
 interface CourseModule {
   id: number;
@@ -63,7 +64,7 @@ const TYPE_ICONS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
     published: "bg-green-100 text-green-800",
     archived: "bg-gray-100 text-gray-700",
     open: "bg-green-100 text-green-800",
@@ -109,6 +110,7 @@ export default function ModuleEditorPage() {
   const [addingExisting, setAddingExisting] = useState(false);
 
   const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState("");
 
   const assignmentMap = useMemo(
     () =>
@@ -214,6 +216,26 @@ export default function ModuleEditorPage() {
       setError("Unable to reorder module items.");
       void fetchData();
     }
+  }
+
+  async function moveItem(itemId: number, direction: -1 | 1) {
+    const currentIndex = items.findIndex((item) => item.id === itemId);
+    const targetIndex = currentIndex + direction;
+
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= items.length) {
+      return;
+    }
+
+    const nextItems = [...items];
+    const [moved] = nextItems.splice(currentIndex, 1);
+    nextItems.splice(targetIndex, 0, moved);
+
+    await persistOrder(nextItems);
+
+    const nextPosition = nextItems.findIndex((item) => item.id === itemId) + 1;
+    const message = `${moved.title} moved to position ${nextPosition}`;
+    setReorderAnnouncement(message);
+    announce(message);
   }
 
   async function removeItem(itemId: number) {
@@ -339,6 +361,10 @@ export default function ModuleEditorPage() {
     next.splice(toIndex, 0, moved);
 
     void persistOrder(next);
+    const nextPosition = next.findIndex((item) => item.id === moved.id) + 1;
+    const message = `${moved.title} moved to position ${nextPosition}`;
+    setReorderAnnouncement(message);
+    announce(message);
     setDraggedItemId(null);
   }
 
@@ -397,20 +423,22 @@ export default function ModuleEditorPage() {
             </button>
           </div>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <section className="space-y-3 rounded-lg border border-gray-200 bg-white p-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <label htmlFor="module-title" className="block text-sm font-medium text-gray-700">Title</label>
               <input
+                id="module-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label htmlFor="module-description" className="block text-sm font-medium text-gray-700">Description</label>
               <textarea
+                id="module-description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 rows={3}
@@ -444,6 +472,9 @@ export default function ModuleEditorPage() {
                 </button>
               </div>
             </div>
+            <p aria-live="polite" className="sr-only">
+              {reorderAnnouncement}
+            </p>
 
             {showAddItem && (
               <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
@@ -520,7 +551,7 @@ export default function ModuleEditorPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <div
                     key={item.id}
                     draggable
@@ -551,12 +582,30 @@ export default function ModuleEditorPage() {
                     <div className="flex items-center gap-2">
                       <StatusBadge status={itemStatus(item)} />
                       <button
+                        type="button"
+                        onClick={() => void moveItem(item.id, -1)}
+                        disabled={index === 0}
+                        className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Move Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void moveItem(item.id, 1)}
+                        disabled={index === items.length - 1}
+                        className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Move Down
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => editItem(item)}
                         className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
                       >
                         Edit
                       </button>
                       <button
+                        type="button"
                         onClick={() => removeItem(item.id)}
                         className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
                       >

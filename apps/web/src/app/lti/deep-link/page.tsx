@@ -211,8 +211,9 @@ function LtiDeepLinkContent() {
         {!loading && (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">Course Filter</label>
+              <label htmlFor="deep-link-course-filter" className="mb-1 block text-xs font-medium text-gray-700">Course Filter</label>
               <select
+                id="deep-link-course-filter"
                 value={selectedCourseId}
                 onChange={(event) => setSelectedCourseId(event.target.value)}
                 className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"

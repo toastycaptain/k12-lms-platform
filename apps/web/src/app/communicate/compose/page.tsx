@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { announce } from "@/components/LiveRegion";
 
 interface UserSearchRow {
   id: number;
@@ -38,6 +39,7 @@ export default function ComposeMessagePage() {
 
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const selectedIds = useMemo(() => new Set(selectedRecipients.map((recipient) => recipient.id)), [selectedRecipients]);
 
@@ -78,10 +80,13 @@ export default function ComposeMessagePage() {
     event.preventDefault();
 
     if (!subject.trim() || !messageBody.trim() || selectedRecipients.length === 0) {
+      setValidationError("Subject, recipients, and message are required.");
+      announce("Message form has validation errors");
       return;
     }
 
     setSending(true);
+    setValidationError(null);
     setError(null);
 
     try {
@@ -99,8 +104,10 @@ export default function ComposeMessagePage() {
         body: JSON.stringify({ body: messageBody.trim() }),
       });
 
+      announce("Message sent");
       router.push(`/communicate/threads/${thread.id}`);
     } catch (sendError) {
+      announce("Failed to send message");
       setError(sendError instanceof ApiError ? sendError.message : "Failed to send message.");
       setSending(false);
     }
@@ -117,23 +124,34 @@ export default function ComposeMessagePage() {
             <h1 className="mt-1 text-2xl font-bold text-gray-900">Compose Message</h1>
           </div>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {validationError && (
+            <div id="compose-form-error" role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {validationError}
+            </div>
+          )}
 
           <form onSubmit={(event) => void sendMessage(event)} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Subject</label>
+                <label htmlFor="compose-subject" className="mb-1 block text-sm font-medium text-gray-700">Subject</label>
                 <input
+                  id="compose-subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
+                  required
+                  aria-required="true"
+                  aria-invalid={Boolean(validationError && !subject.trim())}
+                  aria-describedby={validationError && !subject.trim() ? "compose-form-error" : undefined}
                   className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   placeholder="Enter subject"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Thread Type</label>
+                <label htmlFor="compose-thread-type" className="mb-1 block text-sm font-medium text-gray-700">Thread Type</label>
                 <select
+                  id="compose-thread-type"
                   value={threadType}
                   onChange={(event) => setThreadType(event.target.value)}
                   className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
@@ -146,10 +164,13 @@ export default function ComposeMessagePage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Recipients</label>
+              <label htmlFor="compose-recipients-search" className="mb-1 block text-sm font-medium text-gray-700">Recipients</label>
               <input
+                id="compose-recipients-search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
+                aria-invalid={Boolean(validationError && selectedRecipients.length === 0)}
+                aria-describedby={validationError && selectedRecipients.length === 0 ? "compose-form-error" : undefined}
                 className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 placeholder="Search users by name"
               />
@@ -189,11 +210,16 @@ export default function ComposeMessagePage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Message</label>
+              <label htmlFor="compose-message-body" className="mb-1 block text-sm font-medium text-gray-700">Message</label>
               <textarea
+                id="compose-message-body"
                 value={messageBody}
                 onChange={(event) => setMessageBody(event.target.value)}
                 rows={6}
+                required
+                aria-required="true"
+                aria-invalid={Boolean(validationError && !messageBody.trim())}
+                aria-describedby={validationError && !messageBody.trim() ? "compose-form-error" : undefined}
                 className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 placeholder="Write your message"
               />

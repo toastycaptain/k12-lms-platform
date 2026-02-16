@@ -102,7 +102,7 @@ function dueCountdownLabel(dueAt: string | null): string {
 function statusBadgeClass(status: string): string {
   if (status === "graded" || status === "returned") return "bg-green-100 text-green-800";
   if (status === "submitted") return "bg-blue-100 text-blue-800";
-  return "bg-yellow-100 text-yellow-800";
+  return "bg-yellow-200 text-yellow-900";
 }
 
 function supportsSubmissionType(assignment: Assignment | null, type: string): boolean {
@@ -299,9 +299,9 @@ export default function LearnAssignmentSubmissionPage() {
             )}
           </header>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {message && (
-            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
+            <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
           )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -345,10 +345,11 @@ export default function LearnAssignmentSubmissionPage() {
                   <>
                     {supportsSubmissionType(assignment, "online_text") && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="submission-text-entry" className="block text-sm font-medium text-gray-700">
                           Text Entry
                         </label>
                         <textarea
+                          id="submission-text-entry"
                           value={body}
                           onChange={(event) => setBody(event.target.value)}
                           rows={7}
@@ -360,10 +361,11 @@ export default function LearnAssignmentSubmissionPage() {
 
                     {supportsSubmissionType(assignment, "file_upload") && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="submission-file-upload" className="block text-sm font-medium text-gray-700">
                           File Upload
                         </label>
                         <input
+                          id="submission-file-upload"
                           type="file"
                           className="mt-1 block w-full text-sm text-gray-700"
                           onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
@@ -378,7 +380,7 @@ export default function LearnAssignmentSubmissionPage() {
 
                     {supportsSubmissionType(assignment, "google_drive_link") && (
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="submission-drive-link" className="block text-sm font-medium text-gray-700">
                           Google Drive Link
                         </label>
                         <GoogleDrivePicker onSelect={onDriveFileSelect}>
@@ -387,6 +389,7 @@ export default function LearnAssignmentSubmissionPage() {
                           </span>
                         </GoogleDrivePicker>
                         <input
+                          id="submission-drive-link"
                           type="url"
                           value={url}
                           onChange={(event) => setUrl(event.target.value)}
@@ -534,7 +537,7 @@ export default function LearnAssignmentSubmissionPage() {
                       >
                         {resource.title || resource.url}
                       </a>
-                      <span className="ml-2 text-xs uppercase text-gray-400">
+                      <span className="ml-2 text-xs uppercase text-gray-500">
                         {resource.provider}
                       </span>
                     </li>

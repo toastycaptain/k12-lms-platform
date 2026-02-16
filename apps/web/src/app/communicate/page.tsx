@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { FocusTrap } from "@/components/FocusTrap";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { announce } from "@/components/LiveRegion";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -82,6 +84,7 @@ export default function CommunicatePage() {
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
+  const [announcementValidationError, setAnnouncementValidationError] = useState<string | null>(null);
 
   const canCreateAnnouncement = useMemo(
     () => (user?.roles || []).some((role) => role === "admin" || role === "teacher"),
@@ -136,10 +139,13 @@ export default function CommunicatePage() {
   async function submitAnnouncement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canCreateAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()) {
+      setAnnouncementValidationError("Course, title, and message are required.");
+      announce("Announcement form has validation errors");
       return;
     }
 
     setSubmittingAnnouncement(true);
+    setAnnouncementValidationError(null);
     setError(null);
     setSuccess(null);
 
@@ -158,12 +164,19 @@ export default function CommunicatePage() {
       setAnnouncementMessage("");
       setShowAnnouncementForm(false);
       setSuccess("Announcement posted.");
+      announce("Announcement posted successfully");
       await loadAnnouncements();
     } catch (submitError) {
+      announce("Failed to post announcement");
       setError(submitError instanceof ApiError ? submitError.message : "Failed to create announcement.");
     } finally {
       setSubmittingAnnouncement(false);
     }
+  }
+
+  function activateTab(nextTab: Tab) {
+    setActiveTab(nextTab);
+    announce(`${nextTab === "announcements" ? "Announcements" : "Messages"} tab selected`);
   }
 
   function participantPreview(thread: MessageThread): string {
@@ -184,12 +197,23 @@ export default function CommunicatePage() {
             <p className="text-sm text-gray-600">Announcements and direct course messaging.</p>
           </div>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {success && <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
-          <div className="flex items-center gap-2 border-b border-gray-200">
+          <div role="tablist" aria-label="Communication tabs" className="flex items-center gap-2 border-b border-gray-200">
             <button
-              onClick={() => setActiveTab("announcements")}
+              id="communicate-tab-announcements"
+              role="tab"
+              aria-selected={activeTab === "announcements"}
+              aria-controls="communicate-panel-announcements"
+              tabIndex={activeTab === "announcements" ? 0 : -1}
+              onClick={() => activateTab("announcements")}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                  event.preventDefault();
+                  activateTab(event.key === "ArrowRight" ? "messages" : "messages");
+                }
+              }}
               className={`border-b-2 px-3 py-2 text-sm font-medium ${
                 activeTab === "announcements" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
               }`}
@@ -197,7 +221,18 @@ export default function CommunicatePage() {
               Announcements
             </button>
             <button
-              onClick={() => setActiveTab("messages")}
+              id="communicate-tab-messages"
+              role="tab"
+              aria-selected={activeTab === "messages"}
+              aria-controls="communicate-panel-messages"
+              tabIndex={activeTab === "messages" ? 0 : -1}
+              onClick={() => activateTab("messages")}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                  event.preventDefault();
+                  activateTab(event.key === "ArrowRight" ? "announcements" : "announcements");
+                }
+              }}
               className={`border-b-2 px-3 py-2 text-sm font-medium ${
                 activeTab === "messages" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
               }`}
@@ -207,7 +242,13 @@ export default function CommunicatePage() {
           </div>
 
           {activeTab === "announcements" && (
-            <section className="space-y-4">
+            <section
+              id="communicate-panel-announcements"
+              role="tabpanel"
+              aria-labelledby="communicate-tab-announcements"
+              tabIndex={0}
+              className="space-y-4"
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
                 {canCreateAnnouncement && (
@@ -221,42 +262,74 @@ export default function CommunicatePage() {
               </div>
 
               {showAnnouncementForm && canCreateAnnouncement && (
-                <form onSubmit={(event) => void submitAnnouncement(event)} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <select
-                      value={announcementCourseId}
-                      onChange={(event) => setAnnouncementCourseId(event.target.value)}
-                      className="rounded border border-gray-300 px-3 py-2 text-sm"
+                <FocusTrap active={showAnnouncementForm}>
+                  <form onSubmit={(event) => void submitAnnouncement(event)} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <label htmlFor="announcement-course" className="mb-1 block text-sm font-medium text-gray-700">Course</label>
+                        <select
+                          id="announcement-course"
+                          value={announcementCourseId}
+                          onChange={(event) => setAnnouncementCourseId(event.target.value)}
+                          required
+                          aria-required="true"
+                          aria-invalid={Boolean(announcementValidationError && !announcementCourseId)}
+                          aria-describedby={announcementValidationError && !announcementCourseId ? "announcement-form-error" : undefined}
+                          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          {courses.map((course) => (
+                            <option key={course.id} value={String(course.id)}>
+                              {course.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="announcement-title" className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                        <input
+                          id="announcement-title"
+                          value={announcementTitle}
+                          onChange={(event) => setAnnouncementTitle(event.target.value)}
+                          required
+                          aria-required="true"
+                          aria-invalid={Boolean(announcementValidationError && !announcementTitle.trim())}
+                          aria-describedby={announcementValidationError && !announcementTitle.trim() ? "announcement-form-error" : undefined}
+                          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                          placeholder="Announcement title"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="announcement-message" className="mb-1 block text-sm font-medium text-gray-700">Message</label>
+                      <textarea
+                        id="announcement-message"
+                        value={announcementMessage}
+                        onChange={(event) => setAnnouncementMessage(event.target.value)}
+                        required
+                        aria-required="true"
+                        aria-invalid={Boolean(announcementValidationError && !announcementMessage.trim())}
+                        aria-describedby={announcementValidationError && !announcementMessage.trim() ? "announcement-form-error" : undefined}
+                        className="min-h-28 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="Write your announcement"
+                      />
+                    </div>
+
+                    {announcementValidationError && (
+                      <p id="announcement-form-error" role="alert" className="text-sm text-red-700">
+                        {announcementValidationError}
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={submittingAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()}
+                      className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                     >
-                      {courses.map((course) => (
-                        <option key={course.id} value={String(course.id)}>
-                          {course.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      value={announcementTitle}
-                      onChange={(event) => setAnnouncementTitle(event.target.value)}
-                      className="rounded border border-gray-300 px-3 py-2 text-sm"
-                      placeholder="Announcement title"
-                    />
-                  </div>
-
-                  <textarea
-                    value={announcementMessage}
-                    onChange={(event) => setAnnouncementMessage(event.target.value)}
-                    className="min-h-28 w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    placeholder="Write your announcement"
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={submittingAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()}
-                    className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {submittingAnnouncement ? "Posting..." : "Post Announcement"}
-                  </button>
-                </form>
+                      {submittingAnnouncement ? "Posting..." : "Post Announcement"}
+                    </button>
+                  </form>
+                </FocusTrap>
               )}
 
               <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -287,7 +360,13 @@ export default function CommunicatePage() {
           )}
 
           {activeTab === "messages" && (
-            <section className="space-y-4">
+            <section
+              id="communicate-panel-messages"
+              role="tabpanel"
+              aria-labelledby="communicate-tab-messages"
+              tabIndex={0}
+              className="space-y-4"
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Message Threads</h2>
                 <Link href="/communicate/compose" className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">

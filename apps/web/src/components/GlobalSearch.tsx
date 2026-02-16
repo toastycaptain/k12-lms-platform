@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import { announce } from "@/components/LiveRegion";
 
 interface SearchResult {
   type: string;
@@ -33,7 +34,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function GlobalSearch() {
   const router = useRouter();
+  const listboxId = useId();
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,8 +72,14 @@ export default function GlobalSearch() {
       const response = await apiFetch<SearchResponse>(
         `/api/v1/search?q=${encodeURIComponent(trimmedQuery)}`,
       );
-      setResults(response.results || []);
+      const nextResults = response.results || [];
+      setResults(nextResults);
       setActiveIndex(-1);
+      announce(
+        nextResults.length > 0
+          ? `${nextResults.length} search results loaded`
+          : "No search results found",
+      );
     } catch {
       setResults([]);
       setActiveIndex(-1);
@@ -110,13 +119,6 @@ export default function GlobalSearch() {
     }, 140);
   }
 
-  function cancelClose() {
-    if (blurTimeoutRef.current) {
-      clearTimeout(blurTimeoutRef.current);
-      blurTimeoutRef.current = null;
-    }
-  }
-
   function navigateTo(url: string) {
     setOpen(false);
     setQuery("");
@@ -126,10 +128,16 @@ export default function GlobalSearch() {
   }
 
   return (
-    <div className="relative w-full max-w-xl" onMouseDown={cancelClose}>
+    <div className="relative w-full max-w-xl">
       <input
+        ref={inputRef}
         type="text"
         value={query}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={listboxId}
+        aria-activedescendant={activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined}
         onChange={(event) => setQuery(event.target.value)}
         onFocus={() => {
           if (trimmedQuery.length >= 2) {
@@ -141,6 +149,7 @@ export default function GlobalSearch() {
           if (!open || flatResults.length === 0) {
             if (event.key === "Escape") {
               setOpen(false);
+              inputRef.current?.focus();
             }
             return;
           }
@@ -158,6 +167,7 @@ export default function GlobalSearch() {
             event.preventDefault();
             setOpen(false);
             setActiveIndex(-1);
+            inputRef.current?.focus();
           }
         }}
         placeholder="Search units, lessons, courses, standards, assignments..."
@@ -165,7 +175,12 @@ export default function GlobalSearch() {
       />
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-96 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Search results"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-96 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg"
+        >
           {loading ? (
             <p className="px-3 py-3 text-sm text-gray-500">Searching...</p>
           ) : results.length === 0 ? (
@@ -188,6 +203,9 @@ export default function GlobalSearch() {
                     return (
                       <li key={`${result.type}-${result.id}-${result.url}`}>
                         <button
+                          id={`${listboxId}-option-${globalIndex}`}
+                          role="option"
+                          aria-selected={isActive}
                           type="button"
                           onMouseDown={(event) => event.preventDefault()}
                           onClick={() => navigateTo(result.url)}

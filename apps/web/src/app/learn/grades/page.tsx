@@ -328,7 +328,14 @@ export default function LearnGradesPage() {
                           {gradedCount === 0 ? (
                             <p className="mt-1 text-sm text-gray-500">No graded assignments yet.</p>
                           ) : (
-                            <div className="mt-2 flex h-3 w-full overflow-hidden rounded-full border border-gray-200">
+                            <div
+                              role="progressbar"
+                              aria-valuenow={summary.averagePercent ?? 0}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-label={`${summary.courseName} grade average`}
+                              className="mt-2 flex h-3 w-full overflow-hidden rounded-full border border-gray-200"
+                            >
                               {(["A", "B", "C", "D", "F"] as const).map((band) => {
                                 const count = summary.distribution[band] || 0;
                                 const width = (count / gradedCount) * 100;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import GlobalSearch from "@/components/GlobalSearch";
+import { LiveRegion } from "@/components/LiveRegion";
 import NotificationBell from "@/components/NotificationBell";
 import SchoolSelector from "@/components/SchoolSelector";
 
@@ -115,16 +116,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:ring-2 focus:ring-blue-500"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          aria-label="Close navigation menu"
           onClick={() => setSidebarOpen(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setSidebarOpen(false);
+            }
+          }}
         />
       )}
 
       {/* Left sidebar nav — UX §3.2 */}
       <aside
+        id="primary-sidebar"
+        aria-label="Main navigation"
         className={`fixed inset-y-0 left-0 z-40 w-60 flex-shrink-0 border-r border-gray-200 bg-white transition-transform md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -134,8 +152,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             K-12 LMS
           </Link>
           <button
-            className="rounded-md p-1 text-gray-400 hover:text-gray-600 md:hidden"
+            className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation menu"
+            aria-controls="primary-sidebar"
+            aria-expanded={sidebarOpen}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -147,7 +168,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
         </div>
-        <nav className="mt-2 flex flex-col gap-1 px-2">
+        <nav aria-label="Main navigation" className="mt-2 flex flex-col gap-1 px-2">
           {visibleNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -155,7 +176,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   href={item.children ? item.children[0].href : item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`rounded-md px-3 py-2 text-sm font-medium block ${
+                  aria-current={isActive ? "page" : undefined}
+                  className={`rounded-md px-3 py-2 text-sm font-medium block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                     isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
@@ -170,7 +192,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                           key={child.href}
                           href={child.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                          aria-current={childActive ? "page" : undefined}
+                          className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                             childActive
                               ? "text-blue-700 bg-blue-50"
                               : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -191,11 +214,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+        <header role="banner" className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
           <div className="flex min-w-0 flex-1 items-center gap-4 pr-4">
             <button
-              className="rounded-md p-1 text-gray-400 hover:text-gray-600 md:hidden"
+              className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation menu"
+              aria-controls="primary-sidebar"
+              aria-expanded={sidebarOpen}
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -216,14 +242,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             {user && <NotificationBell />}
             {user && (
-              <button onClick={signOut} className="text-sm text-gray-500 hover:text-gray-700">
+              <button
+                onClick={signOut}
+                className="text-sm text-gray-500 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
                 Sign out
               </button>
             )}
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-gray-50 p-6">{children}</main>
+        <main id="main-content" role="main" className="flex-1 overflow-auto bg-gray-50 p-6">
+          <LiveRegion />
+          {children}
+        </main>
       </div>
     </div>
   );

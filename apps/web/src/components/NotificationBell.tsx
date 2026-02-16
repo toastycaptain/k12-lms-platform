@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import { announce } from "@/components/LiveRegion";
 
 interface Notification {
   id: number;
@@ -17,6 +18,7 @@ interface Notification {
 export default function NotificationBell() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const bellButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(0);
@@ -67,6 +69,7 @@ export default function NotificationBell() {
       if (!containerRef.current) return;
       if (!containerRef.current.contains(event.target as Node)) {
         setOpen(false);
+        bellButtonRef.current?.focus();
       }
     }
 
@@ -79,6 +82,19 @@ export default function NotificationBell() {
     void loadNotifications();
   }, [loadNotifications, open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function onEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      bellButtonRef.current?.focus();
+    }
+
+    document.addEventListener("keydown", onEscape);
+    return () => document.removeEventListener("keydown", onEscape);
+  }, [open]);
+
   async function markAsRead(notificationId: number) {
     try {
       await apiFetch(`/api/v1/notifications/${notificationId}/read`, { method: "PATCH" });
@@ -90,6 +106,7 @@ export default function NotificationBell() {
         ),
       );
       setCount((previous) => Math.max(0, previous - 1));
+      announce("Notification marked as read");
     } catch {
       // noop
     }
@@ -105,6 +122,7 @@ export default function NotificationBell() {
         })),
       );
       setCount(0);
+      announce("All notifications marked as read");
     } catch {
       // noop
     }
@@ -127,10 +145,14 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={containerRef}>
       <button
+        ref={bellButtonRef}
         type="button"
         onClick={() => setOpen((previous) => !previous)}
         className="relative rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
-        aria-label="Notifications"
+        aria-label={`Notifications, ${count} unread`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls="notifications-menu"
       >
         <span>🔔</span>
         {count > 0 && (
@@ -141,7 +163,11 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[85vw] rounded-md border border-gray-200 bg-white shadow-lg">
+        <aside
+          id="notifications-menu"
+          aria-label="Notifications"
+          className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[85vw] rounded-md border border-gray-200 bg-white shadow-lg"
+        >
           <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
             <p className="text-sm font-semibold text-gray-900">Notifications</p>
             <button
@@ -158,11 +184,12 @@ export default function NotificationBell() {
           ) : notifications.length === 0 ? (
             <p className="px-3 py-4 text-sm text-gray-500">No notifications yet.</p>
           ) : (
-            <ul className="max-h-96 overflow-y-auto">
+            <ul role="menu" className="max-h-96 overflow-y-auto">
               {notifications.map((notification) => (
                 <li key={notification.id} className="border-b border-gray-100 last:border-b-0">
                   <button
                     type="button"
+                    role="menuitem"
                     className={`w-full px-3 py-3 text-left hover:bg-gray-50 ${
                       notification.read_at ? "bg-white" : "bg-blue-50/50"
                     }`}
@@ -172,6 +199,7 @@ export default function NotificationBell() {
                       }
                       if (notification.url) {
                         setOpen(false);
+                        bellButtonRef.current?.focus();
                         router.push(notification.url);
                       }
                     }}
@@ -199,13 +227,17 @@ export default function NotificationBell() {
           <div className="border-t border-gray-100 px-3 py-2">
             <Link
               href="/notifications"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                bellButtonRef.current?.focus();
+              }}
+              role="menuitem"
               className="text-xs text-blue-600 hover:text-blue-800"
             >
               View all
             </Link>
           </div>
-        </div>
+        </aside>
       )}
     </div>
   );

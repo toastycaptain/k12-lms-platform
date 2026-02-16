@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { announce } from "@/components/LiveRegion";
 
 const SUBJECT_OPTIONS = ["Math", "Science", "ELA", "Social Studies", "Arts", "PE"];
 const GRADE_OPTIONS = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
@@ -64,8 +65,10 @@ export default function SetupPage() {
         }),
       });
       await refresh();
+      announce("Setup complete");
       router.push("/dashboard");
     } catch {
+      announce("Unable to save setup progress");
       setError("Unable to save setup progress.");
     } finally {
       setSaving(false);
@@ -89,7 +92,7 @@ export default function SetupPage() {
             <p className="mt-1 text-sm text-gray-600">Step {step} of 4</p>
           </header>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <section className="rounded-lg border border-gray-200 bg-white p-6">
             {step === 1 && (
@@ -118,6 +121,7 @@ export default function SetupPage() {
                             onClick={() =>
                               toggleValue(selectedSubjects, subject, setSelectedSubjects)
                             }
+                            aria-pressed={selectedSubjects.includes(subject)}
                             className={`rounded-full px-3 py-1 text-xs ${
                               selectedSubjects.includes(subject)
                                 ? "bg-blue-100 text-blue-800"
@@ -137,6 +141,7 @@ export default function SetupPage() {
                             key={grade}
                             type="button"
                             onClick={() => toggleValue(selectedGrades, grade, setSelectedGrades)}
+                            aria-pressed={selectedGrades.includes(grade)}
                             className={`rounded-full px-3 py-1 text-xs ${
                               selectedGrades.includes(grade)
                                 ? "bg-blue-100 text-blue-800"

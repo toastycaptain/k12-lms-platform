@@ -291,7 +291,14 @@ export default function StandardsCoverageReportPage() {
                               </p>
                             </div>
 
-                            <div className="mt-3 h-2 w-full rounded bg-gray-200">
+                            <div
+                              role="progressbar"
+                              aria-valuenow={Math.min(100, framework.coverage_percentage)}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-label={`${framework.framework_name} coverage`}
+                              className="mt-3 h-2 w-full rounded bg-gray-200"
+                            >
                               <div
                                 className={`h-2 rounded ${progressBarClass(framework.coverage_percentage)}`}
                                 style={{ width: `${Math.min(100, framework.coverage_percentage)}%` }}
