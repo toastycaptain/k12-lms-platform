@@ -5,14 +5,18 @@ info:
   description: |
     Contract for high-priority Core API v1 endpoints consumed by the web app.
     This document intentionally focuses on the 20 highest-traffic endpoints.
+  license:
+    name: Proprietary
+    url: https://github.com/toastycaptain/k12-lms-platform
 servers:
-  - url: http://localhost:3001
+  - url: https://api.k12-lms.platform
 security:
   - cookieAuth: []
 paths:
   /api/v1/me:
     get:
       summary: Current authenticated user and tenant
+      operationId: getMe
       tags: [Auth]
       security:
         - cookieAuth: []
@@ -29,6 +33,7 @@ paths:
   /api/v1/session:
     delete:
       summary: Sign out current session
+      operationId: deleteSession
       tags: [Auth]
       security:
         - cookieAuth: []
@@ -45,6 +50,7 @@ paths:
   /api/v1/courses:
     get:
       summary: List courses
+      operationId: listCourses
       tags: [Courses]
       security:
         - cookieAuth: []
@@ -72,6 +78,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
     post:
       summary: Create course
+      operationId: createCourse
       tags: [Courses]
       security:
         - cookieAuth: []
@@ -108,6 +115,7 @@ paths:
           type: integer
     get:
       summary: Show course
+      operationId: showCourse
       tags: [Courses]
       security:
         - cookieAuth: []
@@ -126,6 +134,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     patch:
       summary: Update course
+      operationId: updateCourse
       tags: [Courses]
       security:
         - cookieAuth: []
@@ -164,6 +173,7 @@ paths:
           type: integer
     get:
       summary: List assignments for a course
+      operationId: listCourseAssignments
       tags: [Assignments]
       security:
         - cookieAuth: []
@@ -184,6 +194,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     post:
       summary: Create assignment for a course
+      operationId: createCourseAssignment
       tags: [Assignments]
       security:
         - cookieAuth: []
@@ -216,6 +227,7 @@ paths:
           type: integer
     get:
       summary: Show assignment
+      operationId: showAssignment
       tags: [Assignments]
       security:
         - cookieAuth: []
@@ -242,6 +254,7 @@ paths:
           type: integer
     get:
       summary: List submissions for an assignment
+      operationId: listAssignmentSubmissions
       tags: [Submissions]
       security:
         - cookieAuth: []
@@ -262,6 +275,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     post:
       summary: Create assignment submission
+      operationId: createAssignmentSubmission
       tags: [Submissions]
       security:
         - cookieAuth: []
@@ -288,6 +302,7 @@ paths:
   /api/v1/unit_plans:
     get:
       summary: List unit plans
+      operationId: listUnitPlans
       tags: [UnitPlans]
       security:
         - cookieAuth: []
@@ -329,6 +344,7 @@ paths:
           type: integer
     get:
       summary: Show unit plan
+      operationId: showUnitPlan
       tags: [UnitPlans]
       security:
         - cookieAuth: []
@@ -349,6 +365,7 @@ paths:
   /api/v1/notifications:
     get:
       summary: List notifications
+      operationId: listNotifications
       tags: [Notifications]
       security:
         - cookieAuth: []
@@ -382,6 +399,7 @@ paths:
   /api/v1/notifications/unread_count:
     get:
       summary: Get unread notification count
+      operationId: getNotificationUnreadCount
       tags: [Notifications]
       security:
         - cookieAuth: []
@@ -398,6 +416,7 @@ paths:
   /api/v1/notifications/mark_all_read:
     post:
       summary: Mark all notifications read
+      operationId: markAllNotificationsRead
       tags: [Notifications]
       security:
         - cookieAuth: []
@@ -414,6 +433,7 @@ paths:
   /api/v1/message_threads:
     get:
       summary: List message threads
+      operationId: listMessageThreads
       tags: [Messaging]
       security:
         - cookieAuth: []
@@ -449,6 +469,7 @@ paths:
           type: integer
     get:
       summary: Show quiz
+      operationId: showQuiz
       tags: [Quizzes]
       security:
         - cookieAuth: []
@@ -475,6 +496,7 @@ paths:
           type: integer
     get:
       summary: Course gradebook snapshot
+      operationId: showCourseGradebook
       tags: [Gradebook]
       security:
         - cookieAuth: []
@@ -497,6 +519,7 @@ paths:
   /api/v1/search:
     get:
       summary: Global search
+      operationId: searchGlobal
       tags: [Search]
       security:
         - cookieAuth: []
