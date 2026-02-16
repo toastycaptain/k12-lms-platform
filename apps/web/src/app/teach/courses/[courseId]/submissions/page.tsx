@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Assignment {
   id: number;
@@ -378,7 +379,7 @@ export default function CourseSubmissionsInboxPage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading submissions...</p>
+            <ListSkeleton />
           ) : filteredRows.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-gray-300 p-10 text-center">
               <p className="text-sm text-gray-500">No submissions match the current filters.</p>

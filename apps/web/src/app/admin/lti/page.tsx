@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 
 interface LtiRegistration {
   id: number;
@@ -43,12 +47,15 @@ function platformBaseUrl() {
 
 export default function LtiManagementPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [registrations, setRegistrations] = useState<LtiRegistration[]>([]);
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [links, setLinks] = useState<LtiResourceLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [registrationForm, setRegistrationForm] = useState({
     id: "",
@@ -88,11 +95,12 @@ export default function LtiManagementPage() {
       setLoading(true);
       try {
         const [registrationRows, courseRows] = await Promise.all([
-          apiFetch<LtiRegistration[]>("/api/v1/lti_registrations"),
+          apiFetch<LtiRegistration[]>(`/api/v1/lti_registrations?page=${page}&per_page=${perPage}`),
           apiFetch<CourseRow[]>("/api/v1/courses"),
         ]);
         setRegistrations(registrationRows);
         setCourses(courseRows);
+        setTotalPages(registrationRows.length < perPage ? page : page + 1);
 
         if (registrationRows[0]) {
           const first = registrationRows[0];
@@ -116,7 +124,7 @@ export default function LtiManagementPage() {
     }
 
     void fetchData();
-  }, []);
+  }, [page, perPage]);
 
   useEffect(() => {
     async function fetchLinks() {
@@ -139,15 +147,14 @@ export default function LtiManagementPage() {
   }, [selectedRegistrationId]);
 
   async function refreshRegistrations() {
-    const rows = await apiFetch<LtiRegistration[]>("/api/v1/lti_registrations");
+    const rows = await apiFetch<LtiRegistration[]>(
+      `/api/v1/lti_registrations?page=${page}&per_page=${perPage}`,
+    );
     setRegistrations(rows);
   }
 
   async function saveRegistration() {
     if (!registrationForm.name.trim() || !registrationForm.issuer.trim()) return;
-
-    setError(null);
-    setSuccess(null);
 
     const payload = {
       lti_registration: {
@@ -168,39 +175,37 @@ export default function LtiManagementPage() {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        setSuccess("LTI registration updated.");
+        addToast("success", "LTI registration updated.");
       } else {
         const created = await apiFetch<LtiRegistration>("/api/v1/lti_registrations", {
           method: "POST",
           body: JSON.stringify(payload),
         });
         setRegistrationForm((prev) => ({ ...prev, id: String(created.id) }));
-        setSuccess("LTI registration created.");
+        addToast("success", "LTI registration created.");
       }
       await refreshRegistrations();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save registration.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save registration.");
     }
   }
 
   async function toggleRegistrationStatus(id: number, currentStatus: string) {
-    setError(null);
-    setSuccess(null);
     try {
       const action = currentStatus === "active" ? "deactivate" : "activate";
       await apiFetch(`/api/v1/lti_registrations/${id}/${action}`, { method: "POST" });
-      setSuccess(`Registration ${action}d.`);
+      addToast("success", `Registration ${action}d.`);
       await refreshRegistrations();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to update registration status.");
+      addToast(
+        "error",
+        e instanceof ApiError ? e.message : "Failed to update registration status.",
+      );
     }
   }
 
   async function createResourceLink() {
     if (!selectedRegistrationId || !resourceForm.title.trim()) return;
-
-    setError(null);
-    setSuccess(null);
 
     try {
       await apiFetch(`/api/v1/lti_registrations/${selectedRegistrationId}/lti_resource_links`, {
@@ -217,22 +222,22 @@ export default function LtiManagementPage() {
       });
 
       setResourceForm({ title: "", description: "", url: "", course_id: "" });
-      setSuccess("Resource link created.");
+      addToast("success", "Resource link created.");
       const linkRows = await apiFetch<LtiResourceLink[]>(
         `/api/v1/lti_registrations/${selectedRegistrationId}/lti_resource_links`,
       );
       setLinks(linkRows);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to create resource link.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to create resource link.");
     }
   }
 
   async function copyEndpoint(label: string, value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      setSuccess(`${label} copied.`);
+      addToast("success", `${label} copied.`);
     } catch {
-      setError("Failed to copy endpoint URL.");
+      addToast("error", "Failed to copy endpoint URL.");
     }
   }
 
@@ -259,7 +264,10 @@ export default function LtiManagementPage() {
             </p>
             <div className="mt-3 space-y-2">
               {endpoints.map((endpoint) => (
-                <div key={endpoint.label} className="flex items-center gap-2 rounded border border-blue-200 bg-white px-3 py-2">
+                <div
+                  key={endpoint.label}
+                  className="flex items-center gap-2 rounded border border-blue-200 bg-white px-3 py-2"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-blue-900">{endpoint.label}</p>
                     <p className="truncate text-xs text-blue-700">{endpoint.value}</p>
@@ -276,10 +284,9 @@ export default function LtiManagementPage() {
           </section>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading LTI registrations...</p>
+            <ListSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -307,7 +314,10 @@ export default function LtiManagementPage() {
 
                 <div className="mt-3 space-y-2">
                   {registrations.map((row) => (
-                    <div key={row.id} className="rounded border border-gray-200 bg-gray-50 px-3 py-2">
+                    <div
+                      key={row.id}
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2"
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <button
                           onClick={() =>
@@ -329,7 +339,11 @@ export default function LtiManagementPage() {
                           <p className="text-xs text-gray-500">{row.issuer}</p>
                         </button>
                         <div className="flex items-center gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(row.status)}`}>{row.status}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs ${statusClass(row.status)}`}
+                          >
+                            {row.status}
+                          </span>
                           <button
                             onClick={() => void toggleRegistrationStatus(row.id, row.status)}
                             className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
@@ -340,7 +354,12 @@ export default function LtiManagementPage() {
                       </div>
                     </div>
                   ))}
-                  {registrations.length === 0 && <p className="text-sm text-gray-500">No registrations yet.</p>}
+                  {registrations.length === 0 && (
+                    <EmptyState
+                      title="No registrations yet"
+                      description="Add an LTI registration to connect external tools."
+                    />
+                  )}
                 </div>
               </section>
 
@@ -349,49 +368,65 @@ export default function LtiManagementPage() {
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                   <input
                     value={registrationForm.name}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder="Name"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.issuer}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, issuer: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, issuer: e.target.value }))
+                    }
                     placeholder="Issuer"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.client_id}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, client_id: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, client_id: e.target.value }))
+                    }
                     placeholder="Client ID"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.deployment_id}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, deployment_id: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, deployment_id: e.target.value }))
+                    }
                     placeholder="Deployment ID"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.auth_login_url}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, auth_login_url: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, auth_login_url: e.target.value }))
+                    }
                     placeholder="Auth Login URL"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.auth_token_url}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, auth_token_url: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, auth_token_url: e.target.value }))
+                    }
                     placeholder="Auth Token URL"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     value={registrationForm.jwks_url}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, jwks_url: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, jwks_url: e.target.value }))
+                    }
                     placeholder="JWKS URL"
                     className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"
                   />
                   <textarea
                     value={registrationForm.description}
-                    onChange={(e) => setRegistrationForm((prev) => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setRegistrationForm((prev) => ({ ...prev, description: e.target.value }))
+                    }
                     placeholder="Description"
                     rows={3}
                     className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"
@@ -408,25 +443,33 @@ export default function LtiManagementPage() {
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h2 className="text-lg font-semibold text-gray-900">Resource Links</h2>
                 {!selectedRegistrationId ? (
-                  <p className="mt-2 text-sm text-gray-500">Select a registration to manage links.</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Select a registration to manage links.
+                  </p>
                 ) : (
                   <>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       <input
                         value={resourceForm.title}
-                        onChange={(e) => setResourceForm((prev) => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setResourceForm((prev) => ({ ...prev, title: e.target.value }))
+                        }
                         placeholder="Title"
                         className="rounded border border-gray-300 px-3 py-2 text-sm"
                       />
                       <input
                         value={resourceForm.url}
-                        onChange={(e) => setResourceForm((prev) => ({ ...prev, url: e.target.value }))}
+                        onChange={(e) =>
+                          setResourceForm((prev) => ({ ...prev, url: e.target.value }))
+                        }
                         placeholder="URL"
                         className="rounded border border-gray-300 px-3 py-2 text-sm"
                       />
                       <select
                         value={resourceForm.course_id}
-                        onChange={(e) => setResourceForm((prev) => ({ ...prev, course_id: e.target.value }))}
+                        onChange={(e) =>
+                          setResourceForm((prev) => ({ ...prev, course_id: e.target.value }))
+                        }
                         className="rounded border border-gray-300 px-3 py-2 text-sm"
                       >
                         <option value="">No Course</option>
@@ -438,7 +481,9 @@ export default function LtiManagementPage() {
                       </select>
                       <input
                         value={resourceForm.description}
-                        onChange={(e) => setResourceForm((prev) => ({ ...prev, description: e.target.value }))}
+                        onChange={(e) =>
+                          setResourceForm((prev) => ({ ...prev, description: e.target.value }))
+                        }
                         placeholder="Description"
                         className="rounded border border-gray-300 px-3 py-2 text-sm"
                       />
@@ -452,18 +497,34 @@ export default function LtiManagementPage() {
 
                     <div className="mt-4 space-y-2">
                       {links.map((link) => (
-                        <div key={link.id} className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+                        <div
+                          key={link.id}
+                          className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                        >
                           <p className="font-medium text-gray-900">{link.title}</p>
                           <p className="text-xs text-gray-500">{link.url || "No URL"}</p>
                         </div>
                       ))}
-                      {links.length === 0 && <p className="text-sm text-gray-500">No resource links yet.</p>}
+                      {links.length === 0 && (
+                        <p className="text-sm text-gray-500">No resource links yet.</p>
+                      )}
                     </div>
                   </>
                 )}
               </section>
             </>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

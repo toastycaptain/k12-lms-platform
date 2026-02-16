@@ -8,6 +8,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { announce } from "@/components/LiveRegion";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
+import { Pagination } from "@/components/Pagination";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -68,6 +72,7 @@ function fullName(participant: Participant): string {
 
 export default function CommunicatePage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("announcements");
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -77,7 +82,9 @@ export default function CommunicatePage() {
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [threadsPage, setThreadsPage] = useState(1);
+  const [threadsPerPage, setThreadsPerPage] = useState(25);
+  const [threadsTotalPages, setThreadsTotalPages] = useState(1);
 
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [announcementCourseId, setAnnouncementCourseId] = useState("");
@@ -108,14 +115,17 @@ export default function CommunicatePage() {
   const loadThreads = useCallback(async () => {
     setLoadingThreads(true);
     try {
-      const rows = await apiFetch<MessageThread[]>("/api/v1/message_threads");
+      const rows = await apiFetch<MessageThread[]>(
+        `/api/v1/message_threads?page=${threadsPage}&per_page=${threadsPerPage}`,
+      );
       setThreads(rows);
+      setThreadsTotalPages(rows.length < threadsPerPage ? threadsPage : threadsPage + 1);
     } catch (loadError) {
       setError(loadError instanceof ApiError ? loadError.message : "Failed to load messages.");
     } finally {
       setLoadingThreads(false);
     }
-  }, []);
+  }, [threadsPage, threadsPerPage]);
 
   useEffect(() => {
     void loadAnnouncements();
@@ -153,8 +163,6 @@ export default function CommunicatePage() {
 
     setSubmittingAnnouncement(true);
     setAnnouncementValidationError(null);
-    setError(null);
-    setSuccess(null);
 
     try {
       await apiFetch<Announcement>("/api/v1/announcements", {
@@ -170,12 +178,13 @@ export default function CommunicatePage() {
       setAnnouncementTitle("");
       setAnnouncementMessage("");
       setShowAnnouncementForm(false);
-      setSuccess("Announcement posted.");
+      addToast("success", "Announcement posted.");
       announce("Announcement posted successfully");
       await loadAnnouncements();
     } catch (submitError) {
       announce("Failed to post announcement");
-      setError(
+      addToast(
+        "error",
         submitError instanceof ApiError ? submitError.message : "Failed to create announcement.",
       );
     } finally {
@@ -212,15 +221,6 @@ export default function CommunicatePage() {
           {error && (
             <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
               {error}
-            </div>
-          )}
-          {success && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="rounded-md bg-green-50 p-3 text-sm text-green-700"
-            >
-              {success}
             </div>
           )}
 
@@ -407,9 +407,12 @@ export default function CommunicatePage() {
 
               <div className="rounded-lg border border-gray-200 bg-white p-4">
                 {loadingAnnouncements ? (
-                  <p className="text-sm text-gray-500">Loading announcements...</p>
+                  <ListSkeleton />
                 ) : announcements.length === 0 ? (
-                  <p className="text-sm text-gray-500">No announcements yet.</p>
+                  <EmptyState
+                    title="No announcements yet"
+                    description="Announcements from your courses will appear here."
+                  />
                 ) : (
                   <div className="space-y-3">
                     {announcements.map((announcement) => (
@@ -463,9 +466,12 @@ export default function CommunicatePage() {
 
               <div className="rounded-lg border border-gray-200 bg-white p-4">
                 {loadingThreads ? (
-                  <p className="text-sm text-gray-500">Loading threads...</p>
+                  <ListSkeleton />
                 ) : threads.length === 0 ? (
-                  <p className="text-sm text-gray-500">No threads yet.</p>
+                  <EmptyState
+                    title="No threads yet"
+                    description="Start a conversation by creating a new message."
+                  />
                 ) : (
                   <div className="space-y-2">
                     {threads.map((thread) => (
@@ -498,6 +504,17 @@ export default function CommunicatePage() {
                   </div>
                 )}
               </div>
+
+              <Pagination
+                currentPage={threadsPage}
+                totalPages={threadsTotalPages}
+                onPageChange={setThreadsPage}
+                perPage={threadsPerPage}
+                onPerPageChange={(nextPerPage) => {
+                  setThreadsPerPage(nextPerPage);
+                  setThreadsPage(1);
+                }}
+              />
             </section>
           )}
         </div>

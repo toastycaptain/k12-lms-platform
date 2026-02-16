@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface AiTemplate {
   id: number;
@@ -180,7 +181,7 @@ export default function AiTemplatesPage() {
           )}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading AI templates...</p>
+            <ListSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">

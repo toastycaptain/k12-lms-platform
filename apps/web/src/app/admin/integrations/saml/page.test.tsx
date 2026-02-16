@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import SamlIntegrationPage from "@/app/admin/integrations/saml/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";
@@ -88,7 +89,11 @@ describe("Admin SAML Page", () => {
   });
 
   it("renders SAML configuration form", async () => {
-    render(<SamlIntegrationPage />);
+    render(
+      <ToastProvider>
+        <SamlIntegrationPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "SAML SSO" })).toBeInTheDocument();
     expect(screen.getByLabelText("IdP SSO URL")).toBeInTheDocument();
@@ -110,7 +115,11 @@ describe("Admin SAML Page", () => {
       },
     ]);
 
-    render(<SamlIntegrationPage />);
+    render(
+      <ToastProvider>
+        <SamlIntegrationPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByDisplayValue("https://idp.example.com")).toBeInTheDocument();
     expect(screen.getByDisplayValue("https://idp.example.com/sso")).toBeInTheDocument();
@@ -118,7 +127,11 @@ describe("Admin SAML Page", () => {
   });
 
   it("submits SAML configuration", async () => {
-    render(<SamlIntegrationPage />);
+    render(
+      <ToastProvider>
+        <SamlIntegrationPage />
+      </ToastProvider>,
+    );
 
     fireEvent.change(await screen.findByLabelText("IdP SSO URL"), {
       target: { value: "https://idp.example.com/sso" },
@@ -137,7 +150,11 @@ describe("Admin SAML Page", () => {
   });
 
   it("shows validation errors", async () => {
-    render(<SamlIntegrationPage />);
+    render(
+      <ToastProvider>
+        <SamlIntegrationPage />
+      </ToastProvider>,
+    );
 
     fireEvent.click(await screen.findByRole("button", { name: "Save" }));
 

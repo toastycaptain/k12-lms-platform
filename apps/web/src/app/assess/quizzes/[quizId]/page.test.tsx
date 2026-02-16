@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import QuizBuilderPage from "@/app/assess/quizzes/[quizId]/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildQuiz } from "@/test/factories";
@@ -113,7 +114,11 @@ describe("Quiz Management Page", () => {
   });
 
   it("renders quiz details", async () => {
-    render(<QuizBuilderPage />);
+    render(
+      <ToastProvider>
+        <QuizBuilderPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Quiz Builder" })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Quiz 1")).toBeInTheDocument();
@@ -121,13 +126,21 @@ describe("Quiz Management Page", () => {
   });
 
   it("renders question count", async () => {
-    render(<QuizBuilderPage />);
+    render(
+      <ToastProvider>
+        <QuizBuilderPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Questions (2)" })).toBeInTheDocument();
   });
 
   it("renders accommodations section", async () => {
-    render(<QuizBuilderPage />);
+    render(
+      <ToastProvider>
+        <QuizBuilderPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Accommodations" })).toBeInTheDocument();
   });
@@ -135,8 +148,12 @@ describe("Quiz Management Page", () => {
   it("handles loading state", () => {
     mockedApiFetch.mockImplementation(() => new Promise(() => {}) as Promise<never>);
 
-    render(<QuizBuilderPage />);
+    const { container } = render(
+      <ToastProvider>
+        <QuizBuilderPage />
+      </ToastProvider>,
+    );
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 });

@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface QuizAttempt {
   id: number;
@@ -165,7 +166,7 @@ export default function AttemptGradePage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

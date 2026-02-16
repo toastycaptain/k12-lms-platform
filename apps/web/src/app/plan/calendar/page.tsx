@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
 
 interface Course {
   id: number;
@@ -226,7 +227,9 @@ export default function PlanningCalendarPage() {
             </div>
 
             {loading ? (
-              <div className="p-6 text-sm text-gray-500">Loading calendar...</div>
+              <div className="p-6">
+                <GradebookSkeleton />
+              </div>
             ) : error ? (
               <div className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
             ) : (

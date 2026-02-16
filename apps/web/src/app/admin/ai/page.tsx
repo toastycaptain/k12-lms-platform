@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface AiProviderConfig {
   id: number;
@@ -31,11 +33,11 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AiSettingsPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [configs, setConfigs] = useState<AiProviderConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     id: "",
@@ -69,8 +71,6 @@ export default function AiSettingsPage() {
     if (!form.display_name.trim() || !form.default_model.trim()) return;
 
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const payload = {
@@ -85,47 +85,41 @@ export default function AiSettingsPage() {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        setSuccess("AI provider updated.");
+        addToast("success", "AI provider updated.");
       } else {
         await apiFetch("/api/v1/ai_provider_configs", {
           method: "POST",
           body: JSON.stringify(payload),
         });
-        setSuccess("AI provider created.");
+        addToast("success", "AI provider created.");
       }
 
       setForm((prev) => ({ ...prev, api_key: "" }));
       await loadConfigs();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save AI provider config.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save AI provider config.");
     } finally {
       setSaving(false);
     }
   }
 
   async function toggleStatus(config: AiProviderConfig) {
-    setError(null);
-    setSuccess(null);
-
     try {
       const action = config.status === "active" ? "deactivate" : "activate";
       await apiFetch(`/api/v1/ai_provider_configs/${config.id}/${action}`, { method: "POST" });
-      setSuccess(`Provider ${action}d.`);
+      addToast("success", `Provider ${action}d.`);
       await loadConfigs();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to update provider status.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to update provider status.");
     }
   }
 
   async function deleteConfig(configId: number) {
     if (!window.confirm("Delete this AI provider config?")) return;
 
-    setError(null);
-    setSuccess(null);
-
     try {
       await apiFetch(`/api/v1/ai_provider_configs/${configId}`, { method: "DELETE" });
-      setSuccess("Provider deleted.");
+      addToast("success", "Provider deleted.");
       if (form.id === String(configId)) {
         setForm({
           id: "",
@@ -137,7 +131,7 @@ export default function AiSettingsPage() {
       }
       await loadConfigs();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to delete provider config.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to delete provider config.");
     }
   }
 
@@ -158,17 +152,22 @@ export default function AiSettingsPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1 className="text-2xl font-bold text-gray-900">AI Settings</h1>
             <div className="flex items-center gap-2">
-              <Link href="/admin/ai/policies" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai/policies"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 AI Policies
               </Link>
-              <Link href="/admin/ai/templates" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai/templates"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 AI Templates
               </Link>
             </div>
           </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5">
             <div className="flex items-center justify-between">
@@ -190,7 +189,7 @@ export default function AiSettingsPage() {
             </div>
 
             {loading ? (
-              <p className="mt-3 text-sm text-gray-500">Loading providers...</p>
+              <ListSkeleton />
             ) : (
               <div className="mt-3 space-y-2">
                 {configs.map((config) => (
@@ -232,7 +231,9 @@ export default function AiSettingsPage() {
                     </div>
                   </div>
                 ))}
-                {configs.length === 0 && <p className="text-sm text-gray-500">No AI providers configured.</p>}
+                {configs.length === 0 && (
+                  <p className="text-sm text-gray-500">No AI providers configured.</p>
+                )}
               </div>
             )}
           </section>
@@ -244,7 +245,10 @@ export default function AiSettingsPage() {
               <select
                 value={form.provider_name}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, provider_name: e.target.value as "anthropic" | "openai" }))
+                  setForm((prev) => ({
+                    ...prev,
+                    provider_name: e.target.value as "anthropic" | "openai",
+                  }))
                 }
                 className="rounded border border-gray-300 px-3 py-2 text-sm"
               >

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -136,6 +137,7 @@ function countdownLabel(dateValue: string | null): string {
 
 export default function CourseHomePage() {
   const params = useParams();
+  const { addToast } = useToast();
   const courseId = String(params.courseId);
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -148,7 +150,6 @@ export default function CourseHomePage() {
 
   const [courseMapping, setCourseMapping] = useState<SyncMapping | null>(null);
   const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -330,9 +331,9 @@ export default function CourseHomePage() {
           method: "POST",
         });
       }
-      setSyncMessage("Sync triggered.");
+      addToast("success", "Sync triggered.");
     } catch {
-      setSyncMessage("Failed to trigger sync.");
+      addToast("error", "Failed to trigger sync.");
     }
   }
 
@@ -542,7 +543,6 @@ export default function CourseHomePage() {
                   Sync Now
                 </button>
               </div>
-              {syncMessage && <p className="mt-2 text-sm text-blue-700">{syncMessage}</p>}
             </section>
           )}
         </div>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Course {
   id: number;
@@ -67,7 +68,9 @@ function NewQuizForm() {
           >
             <option value="">Select a course</option>
             {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
             ))}
           </select>
         </div>
@@ -115,7 +118,7 @@ export default function NewQuizPage() {
   return (
     <ProtectedRoute>
       <AppShell>
-        <Suspense fallback={<div className="text-sm text-gray-500">Loading...</div>}>
+        <Suspense fallback={<ListSkeleton />}>
           <NewQuizForm />
         </Suspense>
       </AppShell>

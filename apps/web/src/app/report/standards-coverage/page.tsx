@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError } from "@/lib/api";
+import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
 
 interface AcademicYear {
   id: number;
@@ -240,7 +241,7 @@ export default function StandardsCoverageReportPage() {
           )}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading standards coverage report...</p>
+            <StandardsSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">

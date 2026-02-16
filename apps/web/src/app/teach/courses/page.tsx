@@ -5,6 +5,9 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 
 interface Course {
   id: number;
@@ -34,12 +37,15 @@ interface CourseWithDetails extends Course {
 export default function CourseListPage() {
   const [courses, setCourses] = useState<CourseWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [coursesData, sectionsData, enrollmentsData] = await Promise.all([
-          apiFetch<Course[]>("/api/v1/courses"),
+          apiFetch<Course[]>(`/api/v1/courses?page=${page}&per_page=${perPage}`),
           apiFetch<Section[]>("/api/v1/sections"),
           apiFetch<Enrollment[]>("/api/v1/enrollments"),
         ]);
@@ -64,6 +70,7 @@ export default function CourseListPage() {
         });
 
         setCourses(enriched);
+        setTotalPages(coursesData.length < perPage ? page : page + 1);
       } catch {
         // silently fail
       } finally {
@@ -71,7 +78,7 @@ export default function CourseListPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   return (
     <ProtectedRoute>
@@ -83,11 +90,12 @@ export default function CourseListPage() {
           </div>
 
           {loading ? (
-            <div className="text-sm text-gray-500">Loading courses...</div>
+            <ListSkeleton />
           ) : courses.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-              <p className="text-sm text-gray-500">No courses found</p>
-            </div>
+            <EmptyState
+              title="No courses found"
+              description="Courses will appear here once they are created or assigned to you."
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => (
@@ -97,9 +105,7 @@ export default function CourseListPage() {
                   className="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <h3 className="text-base font-semibold text-gray-900">{course.name}</h3>
-                  {course.code && (
-                    <p className="mt-0.5 text-xs text-gray-400">{course.code}</p>
-                  )}
+                  {course.code && <p className="mt-0.5 text-xs text-gray-400">{course.code}</p>}
                   {course.sectionName && (
                     <p className="mt-1 text-sm text-gray-500">{course.sectionName}</p>
                   )}
@@ -121,6 +127,17 @@ export default function CourseListPage() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

@@ -5,6 +5,8 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
 
 interface AcademicYear {
   id: number;
@@ -450,7 +452,7 @@ export default function CurriculumMapPage() {
           </header>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading curriculum map...</p>
+            <StandardsSkeleton />
           ) : (
             <>
               {error && (
@@ -593,69 +595,58 @@ export default function CurriculumMapPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="overflow-x-auto rounded-lg border border-gray-200">
-                        <table className="min-w-full divide-y divide-gray-200 bg-white text-sm">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-700">
-                                Standard
-                              </th>
-                              {yearCourses.map((course) => (
-                                <th
-                                  key={course.id}
-                                  className="px-3 py-2 text-center font-medium text-gray-700"
-                                >
-                                  {course.code || course.name}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {matrixStandards.map((standard) => (
-                              <tr key={standard.id} className="hover:bg-gray-50">
-                                <td
-                                  className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-gray-900"
-                                  title={standard.description}
-                                >
-                                  {standard.code}
-                                </td>
-                                {yearCourses.map((course) => {
-                                  const covered = isCovered(standard.id, course.id);
-                                  const isSelected =
-                                    selectedCell?.standardId === standard.id &&
-                                    selectedCell?.courseId === course.id;
+                      <ResponsiveTable
+                        columns={[
+                          {
+                            key: "standard",
+                            header: "Standard",
+                            primary: true,
+                            render: (standard: StandardCoverageEntry) => (
+                              <span
+                                className="font-medium text-gray-900"
+                                title={standard.description}
+                              >
+                                {standard.code}
+                              </span>
+                            ),
+                          },
+                          ...yearCourses.map((course) => ({
+                            key: `course-${course.id}`,
+                            header: course.code || course.name,
+                            render: (standard: StandardCoverageEntry) => {
+                              const covered = isCovered(standard.id, course.id);
+                              const isSelected =
+                                selectedCell?.standardId === standard.id &&
+                                selectedCell?.courseId === course.id;
 
-                                  return (
-                                    <td
-                                      key={`${standard.id}-${course.id}`}
-                                      className="px-3 py-2 text-center"
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setSelectedCell({
-                                            standardId: standard.id,
-                                            courseId: course.id,
-                                          })
-                                        }
-                                        className={`w-full rounded px-2 py-1 ${
-                                          covered
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-red-100 text-red-700"
-                                        } ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""}`}
-                                        aria-pressed={isSelected}
-                                        aria-label={`${standard.code} in ${course.name}: ${covered ? "Covered" : "Gap"}`}
-                                      >
-                                        {covered ? "Covered" : "Gap"}
-                                      </button>
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCell({
+                                      standardId: standard.id,
+                                      courseId: course.id,
+                                    });
+                                  }}
+                                  className={`w-full rounded px-2 py-1 ${
+                                    covered
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-700"
+                                  } ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""}`}
+                                  aria-pressed={isSelected}
+                                  aria-label={`${standard.code} in ${course.name}: ${covered ? "Covered" : "Gap"}`}
+                                >
+                                  {covered ? "Covered" : "Gap"}
+                                </button>
+                              );
+                            },
+                          })),
+                        ]}
+                        data={matrixStandards}
+                        keyExtractor={(standard) => standard.id}
+                        caption="Standards coverage matrix across courses"
+                      />
 
                       {selectedCell && (
                         <div className="rounded-md border border-blue-200 bg-blue-50 p-4">

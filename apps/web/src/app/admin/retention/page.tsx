@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface RetentionPolicy {
   id: number;
@@ -15,15 +17,22 @@ interface RetentionPolicy {
   enabled: boolean;
 }
 
-const ENTITY_OPTIONS = ["AuditLog", "AiInvocation", "SyncLog", "SyncRun", "QuizAttempt", "Submission"];
+const ENTITY_OPTIONS = [
+  "AuditLog",
+  "AiInvocation",
+  "SyncLog",
+  "SyncRun",
+  "QuizAttempt",
+  "Submission",
+];
 const ACTION_OPTIONS = ["archive", "delete", "anonymize"];
 
 export default function DataRetentionPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [policies, setPolicies] = useState<RetentionPolicy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     id: "",
@@ -59,9 +68,6 @@ export default function DataRetentionPage() {
   async function savePolicy() {
     if (!form.name.trim() || !form.retention_days.trim()) return;
 
-    setError(null);
-    setSuccess(null);
-
     const payload = {
       data_retention_policy: {
         name: form.name.trim(),
@@ -79,28 +85,29 @@ export default function DataRetentionPage() {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        setSuccess("Policy updated.");
+        addToast("success", "Policy updated.");
       } else {
         await apiFetch("/api/v1/data_retention_policies", {
           method: "POST",
           body: JSON.stringify(payload),
         });
-        setSuccess("Policy created.");
+        addToast("success", "Policy created.");
       }
       await refreshPolicies();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save policy.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save policy.");
     }
   }
 
   async function runNow(policyId: number) {
-    setError(null);
-    setSuccess(null);
     try {
       await apiFetch(`/api/v1/data_retention_policies/${policyId}/enforce`, { method: "POST" });
-      setSuccess("Retention enforcement queued.");
+      addToast("success", "Retention enforcement queued.");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to enqueue policy enforcement.");
+      addToast(
+        "error",
+        e instanceof ApiError ? e.message : "Failed to enqueue policy enforcement.",
+      );
     }
   }
 
@@ -121,10 +128,9 @@ export default function DataRetentionPage() {
           <h1 className="text-2xl font-bold text-gray-900">Data Retention Policies</h1>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading retention policies...</p>
+            <ListSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -149,7 +155,10 @@ export default function DataRetentionPage() {
 
                 <div className="mt-3 space-y-2">
                   {policies.map((row) => (
-                    <div key={row.id} className="rounded border border-gray-200 bg-gray-50 px-3 py-2">
+                    <div
+                      key={row.id}
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2"
+                    >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <button
                           onClick={() =>
@@ -185,7 +194,9 @@ export default function DataRetentionPage() {
                       </div>
                     </div>
                   ))}
-                  {policies.length === 0 && <p className="text-sm text-gray-500">No policies configured.</p>}
+                  {policies.length === 0 && (
+                    <p className="text-sm text-gray-500">No policies configured.</p>
+                  )}
                 </div>
               </section>
 
@@ -202,7 +213,9 @@ export default function DataRetentionPage() {
                     type="number"
                     min={1}
                     value={form.retention_days}
-                    onChange={(e) => setForm((prev) => ({ ...prev, retention_days: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, retention_days: e.target.value }))
+                    }
                     placeholder="Retention days"
                     className="rounded border border-gray-300 px-3 py-2 text-sm"
                   />

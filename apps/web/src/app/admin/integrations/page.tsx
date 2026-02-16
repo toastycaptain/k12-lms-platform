@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface IntegrationConfig {
   id: number;
@@ -33,7 +34,9 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -155,7 +158,9 @@ export default function IntegrationsPage() {
 
     try {
       const action = googleConfig.status === "active" ? "deactivate" : "activate";
-      await apiFetch(`/api/v1/integration_configs/${googleConfig.id}/${action}`, { method: "POST" });
+      await apiFetch(`/api/v1/integration_configs/${googleConfig.id}/${action}`, {
+        method: "POST",
+      });
       setSuccess(`Google Classroom integration ${action}d.`);
       await refreshConfigs();
     } catch (e) {
@@ -173,7 +178,9 @@ export default function IntegrationsPage() {
     setBusyKey("sync_google_courses");
 
     try {
-      await apiFetch(`/api/v1/integration_configs/${googleConfig.id}/sync_courses`, { method: "POST" });
+      await apiFetch(`/api/v1/integration_configs/${googleConfig.id}/sync_courses`, {
+        method: "POST",
+      });
       setSuccess("Google Classroom course sync triggered.");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to trigger Google course sync.");
@@ -240,7 +247,9 @@ export default function IntegrationsPage() {
 
     try {
       const action = oneRosterConfig.status === "active" ? "deactivate" : "activate";
-      await apiFetch(`/api/v1/integration_configs/${oneRosterConfig.id}/${action}`, { method: "POST" });
+      await apiFetch(`/api/v1/integration_configs/${oneRosterConfig.id}/${action}`, {
+        method: "POST",
+      });
       setSuccess(`OneRoster integration ${action}d.`);
       await refreshConfigs();
     } catch (e) {
@@ -302,7 +311,7 @@ export default function IntegrationsPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading integrations...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -315,7 +324,9 @@ export default function IntegrationsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>
+          )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -353,7 +364,10 @@ export default function IntegrationsPage() {
                 min={1}
                 value={googleForm.sync_interval_hours}
                 onChange={(e) =>
-                  setGoogleForm((prev) => ({ ...prev, sync_interval_hours: Number(e.target.value) || 1 }))
+                  setGoogleForm((prev) => ({
+                    ...prev,
+                    sync_interval_hours: Number(e.target.value) || 1,
+                  }))
                 }
                 placeholder="Sync interval hours"
                 className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -362,7 +376,9 @@ export default function IntegrationsPage() {
                 <input
                   type="checkbox"
                   checked={googleForm.classroom_enabled}
-                  onChange={(e) => setGoogleForm((prev) => ({ ...prev, classroom_enabled: e.target.checked }))}
+                  onChange={(e) =>
+                    setGoogleForm((prev) => ({ ...prev, classroom_enabled: e.target.checked }))
+                  }
                 />
                 Classroom sync enabled
               </label>
@@ -370,7 +386,9 @@ export default function IntegrationsPage() {
                 <input
                   type="checkbox"
                   checked={googleForm.drive_enabled}
-                  onChange={(e) => setGoogleForm((prev) => ({ ...prev, drive_enabled: e.target.checked }))}
+                  onChange={(e) =>
+                    setGoogleForm((prev) => ({ ...prev, drive_enabled: e.target.checked }))
+                  }
                 />
                 Drive integration enabled
               </label>
@@ -378,7 +396,9 @@ export default function IntegrationsPage() {
                 <input
                   type="checkbox"
                   checked={googleForm.auto_sync_enabled}
-                  onChange={(e) => setGoogleForm((prev) => ({ ...prev, auto_sync_enabled: e.target.checked }))}
+                  onChange={(e) =>
+                    setGoogleForm((prev) => ({ ...prev, auto_sync_enabled: e.target.checked }))
+                  }
                 />
                 Automatic sync enabled
               </label>
@@ -427,22 +447,32 @@ export default function IntegrationsPage() {
               <input
                 type="text"
                 value={oneRosterForm.base_url}
-                onChange={(e) => setOneRosterForm((prev) => ({ ...prev, base_url: e.target.value }))}
+                onChange={(e) =>
+                  setOneRosterForm((prev) => ({ ...prev, base_url: e.target.value }))
+                }
                 placeholder="Base URL"
                 className="rounded border border-gray-300 px-3 py-2 text-sm"
               />
               <input
                 type="text"
                 value={oneRosterForm.client_id}
-                onChange={(e) => setOneRosterForm((prev) => ({ ...prev, client_id: e.target.value }))}
+                onChange={(e) =>
+                  setOneRosterForm((prev) => ({ ...prev, client_id: e.target.value }))
+                }
                 placeholder="Client ID"
                 className="rounded border border-gray-300 px-3 py-2 text-sm"
               />
               <input
                 type="password"
                 value={oneRosterForm.client_secret}
-                onChange={(e) => setOneRosterForm((prev) => ({ ...prev, client_secret: e.target.value }))}
-                placeholder={oneRosterConfig?.settings.client_secret ? "Client Secret (leave blank to keep current)" : "Client Secret"}
+                onChange={(e) =>
+                  setOneRosterForm((prev) => ({ ...prev, client_secret: e.target.value }))
+                }
+                placeholder={
+                  oneRosterConfig?.settings.client_secret
+                    ? "Client Secret (leave blank to keep current)"
+                    : "Client Secret"
+                }
                 className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"
               />
             </div>
@@ -483,14 +513,19 @@ export default function IntegrationsPage() {
                   disabled={busyKey !== null || oneRosterConfig.status !== "active"}
                   className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  {busyKey === "sync_oneroster_users" ? "Triggering..." : "Sync Users & Enrollments"}
+                  {busyKey === "sync_oneroster_users"
+                    ? "Triggering..."
+                    : "Sync Users & Enrollments"}
                 </button>
               )}
             </div>
           </section>
 
           <div>
-            <Link href="/admin/integrations/sync" className="text-sm text-blue-600 hover:text-blue-800">
+            <Link
+              href="/admin/integrations/sync"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
               View Sync History
             </Link>
           </div>

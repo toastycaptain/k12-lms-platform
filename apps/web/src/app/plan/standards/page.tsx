@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface StandardFramework {
   id: number;
@@ -38,9 +40,7 @@ function StandardNode({
     node.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     node.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const childMatchesSearch = searchQuery
-    ? hasSearchMatch(node.children, searchQuery)
-    : false;
+  const childMatchesSearch = searchQuery ? hasSearchMatch(node.children, searchQuery) : false;
 
   if (searchQuery && !matchesSearch && !childMatchesSearch) {
     return null;
@@ -60,11 +60,21 @@ function StandardNode({
           >
             {expanded ? (
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             ) : (
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             )}
           </button>
@@ -86,12 +96,7 @@ function StandardNode({
       {expanded && hasChildren && (
         <div className="mt-1">
           {node.children.map((child) => (
-            <StandardNode
-              key={child.id}
-              node={child}
-              searchQuery={searchQuery}
-              depth={depth + 1}
-            />
+            <StandardNode key={child.id} node={child} searchQuery={searchQuery} depth={depth + 1} />
           ))}
         </div>
       )}
@@ -169,11 +174,12 @@ export default function StandardsBrowserPage() {
           <h1 className="text-2xl font-bold text-gray-900">Standards Browser</h1>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <StandardsSkeleton />
           ) : frameworks.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-500">No standard frameworks available.</p>
-            </div>
+            <EmptyState
+              title="No standard frameworks available"
+              description="Standard frameworks will appear here once they are configured."
+            />
           ) : (
             <>
               {/* Framework Selection */}
@@ -219,20 +225,16 @@ export default function StandardsBrowserPage() {
 
               {/* Standards Tree */}
               {treeLoading ? (
-                <p className="text-sm text-gray-500">Loading standards...</p>
+                <StandardsSkeleton />
               ) : tree.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                  <p className="text-sm text-gray-500">No standards in this framework.</p>
-                </div>
+                <EmptyState
+                  title="No standards in this framework"
+                  description="This framework does not have any standards yet."
+                />
               ) : (
                 <div className="rounded-lg border border-gray-200 bg-white p-4">
                   {tree.map((node) => (
-                    <StandardNode
-                      key={node.id}
-                      node={node}
-                      searchQuery={searchQuery}
-                      depth={0}
-                    />
+                    <StandardNode key={node.id} node={node} searchQuery={searchQuery} depth={0} />
                   ))}
                 </div>
               )}

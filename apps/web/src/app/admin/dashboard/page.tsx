@@ -6,6 +6,8 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface UserRow {
   id: number;
@@ -70,7 +72,9 @@ export default function AdminDashboardPage() {
   const [configs, setConfigs] = useState<IntegrationConfig[]>([]);
   const [ltiRegistrations, setLtiRegistrations] = useState<LtiRegistrationRow[]>([]);
   const [recentLogs, setRecentLogs] = useState<AuditLogRow[]>([]);
-  const [latestRunsByProvider, setLatestRunsByProvider] = useState<Record<string, SyncRun | null>>({});
+  const [latestRunsByProvider, setLatestRunsByProvider] = useState<Record<string, SyncRun | null>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
 
   const canAccess = user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
@@ -97,7 +101,9 @@ export default function AdminDashboardPage() {
         await Promise.all(
           integrationRows.map(async (config) => {
             try {
-              const runs = await apiFetch<SyncRun[]>(`/api/v1/integration_configs/${config.id}/sync_runs`);
+              const runs = await apiFetch<SyncRun[]>(
+                `/api/v1/integration_configs/${config.id}/sync_runs`,
+              );
               runsByProvider[config.provider] = runs[0] || null;
             } catch {
               runsByProvider[config.provider] = null;
@@ -113,7 +119,10 @@ export default function AdminDashboardPage() {
     void fetchData();
   }, []);
 
-  const activeIntegrations = useMemo(() => configs.filter((row) => row.status === "active").length, [configs]);
+  const activeIntegrations = useMemo(
+    () => configs.filter((row) => row.status === "active").length,
+    [configs],
+  );
 
   const ltiStatus = useMemo(() => {
     if (ltiRegistrations.length === 0) return "inactive";
@@ -137,7 +146,7 @@ export default function AdminDashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading dashboard...</p>
+            <DashboardSkeleton />
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-4">
@@ -162,16 +171,28 @@ export default function AdminDashboardPage() {
               <div className="rounded-lg border border-gray-200 bg-white p-4">
                 <h2 className="text-sm font-semibold text-gray-900">Quick Links</h2>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link href="/admin/users" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                  <Link
+                    href="/admin/users"
+                    className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                  >
                     Users & Roles
                   </Link>
-                  <Link href="/admin/school" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                  <Link
+                    href="/admin/school"
+                    className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                  >
                     School Setup
                   </Link>
-                  <Link href="/admin/integrations" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                  <Link
+                    href="/admin/integrations"
+                    className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                  >
                     Integrations
                   </Link>
-                  <Link href="/admin/ai" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                  <Link
+                    href="/admin/ai"
+                    className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                  >
                     AI Settings
                   </Link>
                 </div>
@@ -184,8 +205,12 @@ export default function AdminDashboardPage() {
                   return (
                     <div key={provider} className="rounded-lg border border-gray-200 bg-white p-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900">{PROVIDER_LABELS[provider]}</h3>
-                        <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(config?.status || "inactive")}`}>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          {PROVIDER_LABELS[provider]}
+                        </h3>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${statusClass(config?.status || "inactive")}`}
+                        >
                           {config?.status || "inactive"}
                         </span>
                       </div>
@@ -201,7 +226,9 @@ export default function AdminDashboardPage() {
                 <div className="rounded-lg border border-gray-200 bg-white p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">LTI</h3>
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(ltiStatus)}`}>{ltiStatus}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(ltiStatus)}`}>
+                      {ltiStatus}
+                    </span>
                   </div>
                   <p className="mt-2 text-xs text-gray-500">
                     Registrations: {ltiRegistrations.length}
@@ -213,14 +240,23 @@ export default function AdminDashboardPage() {
                 <h2 className="text-sm font-semibold text-gray-900">Recent Audit Logs</h2>
                 <div className="mt-3 space-y-2">
                   {recentLogs.map((log) => (
-                    <div key={log.id} className="rounded border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                    <div
+                      key={log.id}
+                      className="rounded border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700"
+                    >
                       <p className="font-medium text-gray-900">{log.event_type}</p>
                       <p className="mt-0.5 text-gray-500">
-                        Actor: {log.actor_id || "system"} · {new Date(log.created_at).toLocaleString()}
+                        Actor: {log.actor_id || "system"} ·{" "}
+                        {new Date(log.created_at).toLocaleString()}
                       </p>
                     </div>
                   ))}
-                  {recentLogs.length === 0 && <p className="text-xs text-gray-500">No audit entries found.</p>}
+                  {recentLogs.length === 0 && (
+                    <EmptyState
+                      title="No audit entries found"
+                      description="Recent audit log entries will appear here."
+                    />
+                  )}
                 </div>
               </div>
             </>

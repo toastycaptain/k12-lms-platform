@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Discussion {
   id: number;
@@ -242,7 +244,7 @@ export default function LearnDiscussionPage() {
     return (
       <ProtectedRoute requiredRoles={LEARN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading discussion...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -290,9 +292,10 @@ export default function LearnDiscussionPage() {
               Posts ({posts.length})
             </h2>
             {roots.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                No posts yet.
-              </div>
+              <EmptyState
+                title="No posts yet"
+                description="Be the first to post in this discussion."
+              />
             ) : (
               <div className="space-y-2">
                 {roots.map((post) => (

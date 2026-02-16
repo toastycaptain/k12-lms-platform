@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { announce } from "@/components/LiveRegion";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface CourseModule {
   id: number;
@@ -381,7 +382,7 @@ export default function ModuleEditorPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading module...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

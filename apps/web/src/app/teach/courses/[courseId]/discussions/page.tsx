@@ -7,6 +7,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Discussion {
   id: number;
@@ -120,7 +122,7 @@ export default function DiscussionListPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading discussions...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -196,9 +198,10 @@ export default function DiscussionListPage() {
 
           {/* Discussion List */}
           {visibleDiscussions.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-              <p className="text-sm text-gray-500">No discussions yet</p>
-            </div>
+            <EmptyState
+              title="No discussions yet"
+              description="Start a discussion to engage with your students."
+            />
           ) : (
             <div className="space-y-2">
               {visibleDiscussions.map((discussion) => (

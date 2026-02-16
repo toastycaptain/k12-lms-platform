@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -111,11 +113,12 @@ export default function CourseRosterPage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading roster...</p>
+            <ListSkeleton />
           ) : studentRows.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-              No students enrolled.
-            </div>
+            <EmptyState
+              title="No students enrolled"
+              description="Students will appear here once they are enrolled in this course."
+            />
           ) : (
             <ResponsiveTable
               caption="Course roster"

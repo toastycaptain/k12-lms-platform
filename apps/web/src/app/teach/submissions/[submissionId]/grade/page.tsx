@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Submission {
   id: number;
@@ -53,7 +54,9 @@ function StatusBadge({ status }: { status: string }) {
     returned: "bg-green-100 text-green-800",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -93,9 +96,14 @@ export default function GradingViewPage() {
 
         // Load existing rubric scores
         try {
-          const existingScores = await apiFetch<{ rubric_criterion_id: number; rubric_rating_id: number | null; points_awarded: string; comments: string }[]>(
-            `/api/v1/submissions/${submissionId}/rubric_scores`,
-          );
+          const existingScores = await apiFetch<
+            {
+              rubric_criterion_id: number;
+              rubric_rating_id: number | null;
+              points_awarded: string;
+              comments: string;
+            }[]
+          >(`/api/v1/submissions/${submissionId}/rubric_scores`);
           const scoreMap = new Map<number, RubricScore>();
           for (const s of existingScores) {
             scoreMap.set(s.rubric_criterion_id, {
@@ -149,7 +157,10 @@ export default function GradingViewPage() {
     setRubricScores(newScores);
   }
 
-  const rubricTotal = Array.from(rubricScores.values()).reduce((sum, s) => sum + s.points_awarded, 0);
+  const rubricTotal = Array.from(rubricScores.values()).reduce(
+    (sum, s) => sum + s.points_awarded,
+    0,
+  );
 
   async function handleSaveRubricGrade() {
     setSaving(true);
@@ -203,7 +214,7 @@ export default function GradingViewPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading submission...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -221,9 +232,7 @@ export default function GradingViewPage() {
               >
                 &larr; Back to inbox
               </button>
-              <h1 className="mt-1 text-2xl font-bold text-gray-900">
-                Grade: {assignment?.title}
-              </h1>
+              <h1 className="mt-1 text-2xl font-bold text-gray-900">Grade: {assignment?.title}</h1>
               <div className="mt-1 flex items-center gap-3">
                 <span className="text-sm text-gray-500">Student #{submission?.user_id}</span>
                 <StatusBadge status={submission?.status || ""} />
@@ -287,9 +296,7 @@ export default function GradingViewPage() {
                       return (
                         <div key={criterion.id} className="border-b pb-4 last:border-0">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {criterion.title}
-                            </h3>
+                            <h3 className="text-sm font-medium text-gray-900">{criterion.title}</h3>
                             <span className="text-sm text-gray-500">
                               {score?.points_awarded || 0} / {criterion.points}
                             </span>
@@ -314,9 +321,7 @@ export default function GradingViewPage() {
                           <input
                             type="text"
                             value={score?.comments || ""}
-                            onChange={(e) =>
-                              updateCriterionComment(criterion.id, e.target.value)
-                            }
+                            onChange={(e) => updateCriterionComment(criterion.id, e.target.value)}
                             placeholder="Comments for this criterion..."
                             className="mt-2 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                           />

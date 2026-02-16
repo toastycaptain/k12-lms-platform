@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface UnitPlan {
   id: number;
@@ -95,7 +96,7 @@ export default function NewLessonPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading lesson form...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -106,7 +107,10 @@ export default function NewLessonPage() {
       <AppShell>
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="flex items-center gap-3">
-            <Link href={`/plan/units/${unitId}`} className="text-sm text-gray-400 hover:text-gray-600">
+            <Link
+              href={`/plan/units/${unitId}`}
+              className="text-sm text-gray-400 hover:text-gray-600"
+            >
               &larr; Back to unit
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Create Lesson</h1>
@@ -121,14 +125,13 @@ export default function NewLessonPage() {
                 <span className="font-medium text-gray-900">Current status:</span> {unitPlan.status}
               </p>
               <p className="mt-1">
-                <span className="font-medium text-gray-900">Existing lessons:</span> {existingLessons.length}
+                <span className="font-medium text-gray-900">Existing lessons:</span>{" "}
+                {existingLessons.length}
               </p>
             </div>
           )}
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
-          )}
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Lesson Title</label>

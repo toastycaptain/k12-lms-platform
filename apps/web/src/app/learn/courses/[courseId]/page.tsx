@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -377,7 +379,7 @@ export default function LearnCoursePage() {
     return (
       <ProtectedRoute requiredRoles={LEARN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading course...</p>
+          <CourseHomeSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -434,9 +436,10 @@ export default function LearnCoursePage() {
 
           <section className="space-y-3">
             {moduleViews.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
-                No published modules yet.
-              </div>
+              <EmptyState
+                title="No published modules yet"
+                description="Course modules will appear here once published."
+              />
             ) : (
               moduleViews.map((view) => {
                 const status = moduleStatus(view.completedCount, view.totalCount);

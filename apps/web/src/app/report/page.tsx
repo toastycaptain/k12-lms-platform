@@ -6,6 +6,8 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -417,7 +419,7 @@ export default function ReportPage() {
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
           )}
 
-          {canAccess && loading && <div className="text-sm text-gray-500">Loading report...</div>}
+          {canAccess && loading && <GradebookSkeleton />}
 
           {canAccess && !loading && (
             <>
@@ -474,9 +476,12 @@ export default function ReportPage() {
                 </div>
 
                 {assessmentOverview.recentCompletedQuizzes.length === 0 ? (
-                  <p className="mt-4 text-sm text-gray-500">
-                    No completed quizzes with graded attempts yet.
-                  </p>
+                  <div className="mt-4">
+                    <EmptyState
+                      title="No completed quizzes"
+                      description="No completed quizzes with graded attempts yet."
+                    />
+                  </div>
                 ) : (
                   <div className="mt-4 space-y-2">
                     {assessmentOverview.recentCompletedQuizzes.map((quiz) => (
@@ -541,7 +546,12 @@ export default function ReportPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Recent Submissions</h2>
 
                 {recentSubmissions.length === 0 ? (
-                  <p className="mt-3 text-sm text-gray-500">No submissions yet.</p>
+                  <div className="mt-3">
+                    <EmptyState
+                      title="No submissions yet"
+                      description="Recent submissions will appear here."
+                    />
+                  </div>
                 ) : (
                   <div className="mt-3 space-y-3">
                     {recentSubmissions.map((submission) => (

@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { useToast } from "@/components/Toast";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Submission {
   id: number;
@@ -99,6 +101,7 @@ function roleLabel(user: User | undefined): string {
 export default function CourseAssignmentGradingPage() {
   const params = useParams();
   const router = useRouter();
+  const { addToast } = useToast();
   const courseId = String(params.courseId);
   const assignmentId = String(params.assignmentId);
   const submissionId = String(params.submissionId);
@@ -114,7 +117,6 @@ export default function CourseAssignmentGradingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -214,8 +216,6 @@ export default function CourseAssignmentGradingPage() {
     if (!submission) return;
 
     setSaving(true);
-    setError(null);
-    setMessage(null);
 
     const gradeValue = rubric ? rubricTotal : Number(manualGrade || 0);
     const rubricPayload = rubric
@@ -236,10 +236,10 @@ export default function CourseAssignmentGradingPage() {
           rubric_scores: rubricPayload,
         }),
       });
-      setMessage("Grade saved.");
+      addToast("success", "Grade saved.");
       await fetchData();
     } catch {
-      setError("Failed to save grade.");
+      addToast("error", "Failed to save grade.");
     } finally {
       setSaving(false);
     }
@@ -249,7 +249,7 @@ export default function CourseAssignmentGradingPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading grading view...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -327,9 +327,6 @@ export default function CourseAssignmentGradingPage() {
           </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {message && (
-            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
-          )}
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <section className="rounded-lg border border-gray-200 bg-white p-6">

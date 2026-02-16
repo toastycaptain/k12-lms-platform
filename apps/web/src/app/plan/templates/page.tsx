@@ -7,6 +7,9 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Pagination } from "@/components/Pagination";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Template {
   id: number;
@@ -42,14 +45,20 @@ export default function TemplateLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
   const [filterGrade, setFilterGrade] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   const canManage = user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await apiFetch<Template[]>("/api/v1/templates");
+        const data = await apiFetch<Template[]>(
+          `/api/v1/templates?page=${page}&per_page=${perPage}`,
+        );
         setTemplates(data);
+        setTotalPages(data.length < perPage ? page : page + 1);
       } catch {
         // API may not be available
       } finally {
@@ -57,7 +66,7 @@ export default function TemplateLibraryPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   const subjects = useMemo(() => {
     const set = new Set<string>();
@@ -141,15 +150,22 @@ export default function TemplateLibraryPage() {
 
           {/* Template Cards */}
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <ListSkeleton />
           ) : filteredTemplates.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-500">
-                {templates.length === 0
-                  ? "No templates available yet."
-                  : "No templates match your filters."}
-              </p>
-            </div>
+            <EmptyState
+              title={
+                templates.length === 0
+                  ? "No templates available yet"
+                  : "No templates match your filters"
+              }
+              description={
+                templates.length === 0
+                  ? "Create your first template to get started."
+                  : "Try adjusting your search or filter criteria."
+              }
+              actionLabel={templates.length === 0 && canManage ? "Create Template" : undefined}
+              actionHref={templates.length === 0 && canManage ? "/plan/templates/new" : undefined}
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredTemplates.map((template) => (
@@ -194,6 +210,17 @@ export default function TemplateLibraryPage() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

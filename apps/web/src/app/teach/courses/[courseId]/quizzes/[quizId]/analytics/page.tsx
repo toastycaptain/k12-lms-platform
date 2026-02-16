@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
 
 type DistributionBucket = "0-59" | "60-69" | "70-79" | "80-89" | "90-100";
 
@@ -213,7 +215,7 @@ export default function QuizAnalyticsPage() {
             </div>
           )}
 
-          {canAccess && loading && <p className="text-sm text-gray-500">Loading analytics...</p>}
+          {canAccess && loading && <GradebookSkeleton />}
 
           {canAccess && error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
@@ -342,101 +344,111 @@ export default function QuizAnalyticsPage() {
                 {analytics.item_analysis.length === 0 ? (
                   <p className="text-sm text-gray-500">No quiz questions available for analysis.</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead className="border-b border-gray-200 bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            Question
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Type</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            Difficulty
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            Responses
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Correct</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            Avg Points
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {analytics.item_analysis.map((row) => {
-                          const expanded = expandedQuestionIds.includes(row.question_id);
-                          return (
-                            <Fragment key={row.question_id}>
-                              <tr className="hover:bg-gray-50">
-                                <td className="px-3 py-2 align-top">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleQuestion(row.question_id)}
-                                    className="w-full text-left"
-                                  >
-                                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                      Question {row.question_number}
-                                    </span>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {row.prompt}
-                                    </p>
-                                    <p className="text-xs text-blue-600">
-                                      {expanded ? "Hide details" : "Show details"}
-                                    </p>
-                                  </button>
-                                </td>
-                                <td className="px-3 py-2 align-top">
-                                  <span
-                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${questionTypeClass(row.question_type)}`}
-                                  >
-                                    {questionTypeLabel(row.question_type)}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-2 align-top">
-                                  <span
-                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${difficultyColor(row.difficulty)}`}
-                                  >
-                                    {difficultyPercent(row.difficulty)}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-2 align-top text-gray-700">
-                                  {row.total_responses}
-                                </td>
-                                <td className="px-3 py-2 align-top text-gray-700">
-                                  {row.correct_count}
-                                </td>
-                                <td className="px-3 py-2 align-top text-gray-700">
-                                  {row.avg_points !== null ? row.avg_points.toFixed(2) : "--"}
-                                </td>
-                              </tr>
-                              {expanded && (
-                                <tr className="bg-gray-50">
-                                  <td colSpan={6} className="px-4 py-3">
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                          Full Prompt
-                                        </p>
-                                        <p className="mt-1 text-sm text-gray-800">
-                                          {row.full_prompt}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                          Choice Distribution
-                                        </p>
-                                        <div className="mt-2">{renderChoiceDistribution(row)}</div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <>
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: "question",
+                          header: "Question",
+                          primary: true,
+                          render: (row: ItemAnalysisRow) => (
+                            <div>
+                              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Question {row.question_number}
+                              </span>
+                              <p className="text-sm font-medium text-gray-900">{row.prompt}</p>
+                              <p className="text-xs text-blue-600">
+                                {expandedQuestionIds.includes(row.question_id)
+                                  ? "Hide details"
+                                  : "Show details"}
+                              </p>
+                            </div>
+                          ),
+                        },
+                        {
+                          key: "type",
+                          header: "Type",
+                          render: (row: ItemAnalysisRow) => (
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${questionTypeClass(row.question_type)}`}
+                            >
+                              {questionTypeLabel(row.question_type)}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: "difficulty",
+                          header: "Difficulty",
+                          render: (row: ItemAnalysisRow) => (
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${difficultyColor(row.difficulty)}`}
+                            >
+                              {difficultyPercent(row.difficulty)}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: "responses",
+                          header: "Responses",
+                          render: (row: ItemAnalysisRow) => <span>{row.total_responses}</span>,
+                        },
+                        {
+                          key: "correct",
+                          header: "Correct",
+                          render: (row: ItemAnalysisRow) => <span>{row.correct_count}</span>,
+                        },
+                        {
+                          key: "avg_points",
+                          header: "Avg Points",
+                          render: (row: ItemAnalysisRow) => (
+                            <span>
+                              {row.avg_points !== null ? row.avg_points.toFixed(2) : "--"}
+                            </span>
+                          ),
+                        },
+                      ]}
+                      data={analytics.item_analysis}
+                      keyExtractor={(row) => row.question_id}
+                      onRowClick={(row) => toggleQuestion(row.question_id)}
+                      caption="Item analysis for quiz questions"
+                    />
+
+                    {analytics.item_analysis
+                      .filter((row) => expandedQuestionIds.includes(row.question_id))
+                      .map((row) => (
+                        <div
+                          key={`detail-${row.question_id}`}
+                          className="mt-2 rounded border border-gray-200 bg-gray-50 p-4"
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              Question {row.question_number} — Details
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => toggleQuestion(row.question_id)}
+                              className="text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              Hide details
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Full Prompt
+                              </p>
+                              <p className="mt-1 text-sm text-gray-800">{row.full_prompt}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Choice Distribution
+                              </p>
+                              <div className="mt-2">{renderChoiceDistribution(row)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </>
                 )}
               </section>
             </>

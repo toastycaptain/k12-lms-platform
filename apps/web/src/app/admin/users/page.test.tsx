@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import UsersAndRolesPage from "@/app/admin/users/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";
@@ -56,7 +57,7 @@ describe("Admin Users Page", () => {
 
   function setupApi(users: Array<Record<string, unknown>>) {
     mockedApiFetch.mockImplementation(async (path: string) => {
-      if (path === "/api/v1/users" || path.startsWith("/api/v1/users?role=")) {
+      if (path === "/api/v1/users" || path.startsWith("/api/v1/users?")) {
         return users as never;
       }
       if (path === "/api/v1/integration_configs") {
@@ -98,21 +99,33 @@ describe("Admin Users Page", () => {
   });
 
   it("renders user table", async () => {
-    render(<UsersAndRolesPage />);
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("teacher@example.com")).toBeInTheDocument();
     expect(screen.getByText("student@example.com")).toBeInTheDocument();
   });
 
   it("shows create user button", async () => {
-    render(<UsersAndRolesPage />);
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("button", { name: "Create User" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New User" })).toBeInTheDocument();
   });
 
   it("renders role badges", async () => {
-    render(<UsersAndRolesPage />);
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Taylor Teacher")).toBeInTheDocument();
     expect(screen.getByText("teacher", { selector: "span" })).toBeInTheDocument();
@@ -122,15 +135,23 @@ describe("Admin Users Page", () => {
   it("handles empty user list", async () => {
     setupApi([]);
 
-    render(<UsersAndRolesPage />);
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
 
-    expect(await screen.findByText("No users found.")).toBeInTheDocument();
+    expect(await screen.findByText("No users found")).toBeInTheDocument();
   });
 
   it("handles API error", async () => {
     mockedApiFetch.mockRejectedValue(new Error("boom"));
 
-    render(<UsersAndRolesPage />);
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Failed to load users.")).toBeInTheDocument();
   });

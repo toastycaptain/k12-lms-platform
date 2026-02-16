@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
 
 interface UnitPlan {
   id: number;
@@ -219,7 +220,7 @@ export default function UnitPublishPreviewPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading preview...</p>
+          <CourseHomeSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

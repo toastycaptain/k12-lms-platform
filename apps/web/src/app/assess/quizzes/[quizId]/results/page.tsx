@@ -7,6 +7,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface QuizResult {
   quiz: {
@@ -53,7 +55,7 @@ export default function QuizResultsPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading results...</div>
+          <GradebookSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -153,9 +155,10 @@ export default function QuizResultsPage() {
 
           {/* Attempts Table */}
           {sortedAttempts.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
-              No attempts found
-            </div>
+            <EmptyState
+              title="No attempts found"
+              description="No quiz attempts have been submitted yet."
+            />
           ) : (
             <ResponsiveTable
               caption="Quiz attempts"

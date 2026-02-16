@@ -6,6 +6,8 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Approval {
   id: number;
@@ -44,8 +46,7 @@ export default function ApprovalQueuePage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const canAccess =
-    user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
+  const canAccess = user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
 
   useEffect(() => {
     fetchApprovals();
@@ -103,9 +104,7 @@ export default function ApprovalQueuePage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <p className="text-gray-500">
-            Access restricted to administrators and curriculum leads.
-          </p>
+          <p className="text-gray-500">Access restricted to administrators and curriculum leads.</p>
         </AppShell>
       </ProtectedRoute>
     );
@@ -117,9 +116,7 @@ export default function ApprovalQueuePage() {
         <div className="space-y-6">
           <h1 className="text-2xl font-bold text-gray-900">Approval Queue</h1>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
-          )}
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           {/* Filter */}
           <div className="flex items-center gap-4">
@@ -137,20 +134,16 @@ export default function ApprovalQueuePage() {
 
           {/* Approval List */}
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <ListSkeleton />
           ) : approvals.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-500">
-                No {filterStatus !== "all" ? filterStatus : ""} approvals.
-              </p>
-            </div>
+            <EmptyState
+              title={`No ${filterStatus !== "all" ? filterStatus + " " : ""}approvals`}
+              description="Approvals matching the current filter will appear here."
+            />
           ) : (
             <div className="space-y-3">
               {approvals.map((approval) => (
-                <div
-                  key={approval.id}
-                  className="rounded-lg border border-gray-200 bg-white p-4"
-                >
+                <div key={approval.id} className="rounded-lg border border-gray-200 bg-white p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <StatusBadge status={approval.status} />
@@ -209,9 +202,7 @@ export default function ApprovalQueuePage() {
                         </button>
                         <button
                           onClick={() =>
-                            setRejectingId(
-                              rejectingId === approval.id ? null : approval.id,
-                            )
+                            setRejectingId(rejectingId === approval.id ? null : approval.id)
                           }
                           className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
                         >

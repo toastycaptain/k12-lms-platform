@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Notification {
   id: number;
@@ -111,11 +113,12 @@ export default function NotificationsPage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading notifications...</p>
+            <ListSkeleton />
           ) : items.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
-              No notifications to show.
-            </div>
+            <EmptyState
+              title="No notifications to show"
+              description="You're all caught up! New notifications will appear here."
+            />
           ) : (
             <div className="space-y-2">
               {items.map((notification) => (

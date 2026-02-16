@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface SchoolRow {
   id: number;
@@ -36,12 +38,12 @@ function toDateInput(value: string | null | undefined) {
 
 export default function SchoolSetupPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYearRow[]>([]);
   const [terms, setTerms] = useState<TermRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const [schoolForm, setSchoolForm] = useState({
     id: "",
@@ -119,8 +121,6 @@ export default function SchoolSetupPage() {
 
   async function saveSchool() {
     if (!schoolForm.name.trim()) return;
-    setError(null);
-    setSuccess(null);
 
     try {
       if (schoolForm.id) {
@@ -134,7 +134,7 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("School updated.");
+        addToast("success", "School updated.");
       } else {
         await apiFetch("/api/v1/schools", {
           method: "POST",
@@ -146,19 +146,17 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("School created.");
+        addToast("success", "School created.");
       }
 
       await refreshAll();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save school.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save school.");
     }
   }
 
   async function saveAcademicYear() {
     if (!yearForm.name.trim() || !yearForm.start_date || !yearForm.end_date) return;
-    setError(null);
-    setSuccess(null);
 
     try {
       if (yearForm.id) {
@@ -173,7 +171,7 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("Academic year updated.");
+        addToast("success", "Academic year updated.");
       } else {
         await apiFetch("/api/v1/academic_years", {
           method: "POST",
@@ -186,21 +184,23 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("Academic year created.");
+        addToast("success", "Academic year created.");
       }
       await refreshAll();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save academic year.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save academic year.");
     }
   }
 
   async function saveTerm() {
-    if (!termForm.academic_year_id || !termForm.name.trim() || !termForm.start_date || !termForm.end_date) {
+    if (
+      !termForm.academic_year_id ||
+      !termForm.name.trim() ||
+      !termForm.start_date ||
+      !termForm.end_date
+    ) {
       return;
     }
-
-    setError(null);
-    setSuccess(null);
 
     try {
       if (termForm.id) {
@@ -215,7 +215,7 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("Term updated.");
+        addToast("success", "Term updated.");
       } else {
         await apiFetch("/api/v1/terms", {
           method: "POST",
@@ -228,11 +228,11 @@ export default function SchoolSetupPage() {
             },
           }),
         });
-        setSuccess("Term created.");
+        addToast("success", "Term created.");
       }
       await refreshAll();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save term.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save term.");
     }
   }
 
@@ -258,10 +258,9 @@ export default function SchoolSetupPage() {
             </div>
           )}
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading school data...</p>
+            <ListSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -295,7 +294,9 @@ export default function SchoolSetupPage() {
                         <p className="text-xs text-gray-500">{school.timezone || "No timezone"}</p>
                       </button>
                     ))}
-                    {schools.length === 0 && <p className="text-sm text-gray-500">No schools configured.</p>}
+                    {schools.length === 0 && (
+                      <p className="text-sm text-gray-500">No schools configured.</p>
+                    )}
                   </div>
 
                   <div className="space-y-2 rounded border border-gray-200 p-3">
@@ -307,13 +308,17 @@ export default function SchoolSetupPage() {
                     />
                     <input
                       value={schoolForm.address}
-                      onChange={(e) => setSchoolForm((prev) => ({ ...prev, address: e.target.value }))}
+                      onChange={(e) =>
+                        setSchoolForm((prev) => ({ ...prev, address: e.target.value }))
+                      }
                       placeholder="Address"
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
                     <input
                       value={schoolForm.timezone}
-                      onChange={(e) => setSchoolForm((prev) => ({ ...prev, timezone: e.target.value }))}
+                      onChange={(e) =>
+                        setSchoolForm((prev) => ({ ...prev, timezone: e.target.value }))
+                      }
                       placeholder="Timezone"
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
@@ -363,20 +368,26 @@ export default function SchoolSetupPage() {
                     <input
                       type="date"
                       value={yearForm.start_date}
-                      onChange={(e) => setYearForm((prev) => ({ ...prev, start_date: e.target.value }))}
+                      onChange={(e) =>
+                        setYearForm((prev) => ({ ...prev, start_date: e.target.value }))
+                      }
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
                     <input
                       type="date"
                       value={yearForm.end_date}
-                      onChange={(e) => setYearForm((prev) => ({ ...prev, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setYearForm((prev) => ({ ...prev, end_date: e.target.value }))
+                      }
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
                         checked={yearForm.current}
-                        onChange={(e) => setYearForm((prev) => ({ ...prev, current: e.target.checked }))}
+                        onChange={(e) =>
+                          setYearForm((prev) => ({ ...prev, current: e.target.checked }))
+                        }
                       />
                       Current year
                     </label>
@@ -420,7 +431,9 @@ export default function SchoolSetupPage() {
                   <div className="space-y-2 rounded border border-gray-200 p-3">
                     <select
                       value={termForm.academic_year_id}
-                      onChange={(e) => setTermForm((prev) => ({ ...prev, academic_year_id: e.target.value }))}
+                      onChange={(e) =>
+                        setTermForm((prev) => ({ ...prev, academic_year_id: e.target.value }))
+                      }
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     >
                       <option value="">Select academic year</option>
@@ -439,13 +452,17 @@ export default function SchoolSetupPage() {
                     <input
                       type="date"
                       value={termForm.start_date}
-                      onChange={(e) => setTermForm((prev) => ({ ...prev, start_date: e.target.value }))}
+                      onChange={(e) =>
+                        setTermForm((prev) => ({ ...prev, start_date: e.target.value }))
+                      }
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
                     <input
                       type="date"
                       value={termForm.end_date}
-                      onChange={(e) => setTermForm((prev) => ({ ...prev, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setTermForm((prev) => ({ ...prev, end_date: e.target.value }))
+                      }
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
                     <button

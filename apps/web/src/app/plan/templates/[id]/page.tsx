@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Template {
   id: number;
@@ -231,7 +232,7 @@ export default function TemplateEditorPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <p className="text-gray-500">Loading...</p>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

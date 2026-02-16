@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Quiz {
   id: number;
@@ -553,7 +554,7 @@ export default function LearnQuizAttemptPage() {
     return (
       <ProtectedRoute requiredRoles={LEARN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading quiz...</p>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

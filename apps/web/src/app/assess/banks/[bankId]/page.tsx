@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface QuestionBank {
   id: number;
@@ -310,7 +312,7 @@ export default function QuestionBankEditorPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading...</div>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -699,7 +701,10 @@ export default function QuestionBankEditorPage() {
 
             {/* Questions List */}
             {questions.length === 0 ? (
-              <p className="text-sm text-gray-500">No questions yet. Add one above.</p>
+              <EmptyState
+                title="No questions yet"
+                description="Add your first question using the form above."
+              />
             ) : (
               <div className="divide-y divide-gray-100">
                 {questions.map((q, idx) => (

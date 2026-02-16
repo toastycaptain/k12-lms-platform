@@ -5,6 +5,9 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { Pagination } from "@/components/Pagination";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -58,6 +61,9 @@ export default function LearnCoursesPage() {
   const [cards, setCards] = useState<CourseCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -65,7 +71,7 @@ export default function LearnCoursesPage() {
 
     try {
       const [courses, users, terms] = await Promise.all([
-        apiFetch<Course[]>("/api/v1/courses"),
+        apiFetch<Course[]>(`/api/v1/courses?page=${page}&per_page=${perPage}`),
         apiFetch<User[]>("/api/v1/users"),
         apiFetch<Term[]>("/api/v1/terms"),
       ]);
@@ -113,12 +119,13 @@ export default function LearnCoursesPage() {
       );
 
       setCards(nextCards);
+      setTotalPages(courses.length < perPage ? page : page + 1);
     } catch {
       setError("Unable to load courses.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, perPage]);
 
   useEffect(() => {
     void fetchData();
@@ -136,11 +143,12 @@ export default function LearnCoursesPage() {
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading courses...</p>
+            <ListSkeleton />
           ) : cards.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
-              You are not enrolled in any courses.
-            </div>
+            <EmptyState
+              title="No courses found"
+              description="You are not enrolled in any courses."
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {cards.map((course) => (
@@ -158,6 +166,17 @@ export default function LearnCoursesPage() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

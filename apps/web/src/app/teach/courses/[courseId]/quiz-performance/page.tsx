@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch, ApiError } from "@/lib/api";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
 
 interface StudentQuizScore {
   quiz_id: number;
@@ -153,7 +155,7 @@ export default function CourseQuizPerformancePage() {
             <p className="text-sm text-gray-600">Class summary and per-student quiz outcomes.</p>
           </header>
 
-          {loading && <p className="text-sm text-gray-500">Loading quiz performance...</p>}
+          {loading && <GradebookSkeleton />}
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
@@ -191,131 +193,149 @@ export default function CourseQuizPerformancePage() {
                     No graded quiz attempts found for this course.
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead className="border-b border-gray-200 bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            <button
-                              type="button"
-                              onClick={() => toggleSort("name")}
-                              className="hover:text-blue-700"
-                            >
-                              Student
-                            </button>
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            <button
-                              type="button"
-                              onClick={() => toggleSort("quizzes_taken")}
-                              className="hover:text-blue-700"
-                            >
-                              Quizzes Taken
-                            </button>
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">
-                            <button
-                              type="button"
-                              onClick={() => toggleSort("average_score")}
-                              className="hover:text-blue-700"
-                            >
-                              Average Score
-                            </button>
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Highest</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Lowest</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {sortedStudents.map((student) => {
-                          const expanded = expandedStudentIds.includes(student.user_id);
+                  <>
+                    <div className="mb-2 flex gap-2 text-xs text-gray-500">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("name")}
+                        className="hover:text-blue-700 font-medium"
+                      >
+                        Sort by Name
+                      </button>
+                      <span>|</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("quizzes_taken")}
+                        className="hover:text-blue-700 font-medium"
+                      >
+                        Sort by Quizzes Taken
+                      </button>
+                      <span>|</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("average_score")}
+                        className="hover:text-blue-700 font-medium"
+                      >
+                        Sort by Average Score
+                      </button>
+                    </div>
 
-                          return (
-                            <Fragment key={student.user_id}>
-                              <tr className="hover:bg-gray-50">
-                                <td className="px-3 py-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleStudent(student.user_id)}
-                                    className="text-left"
-                                  >
-                                    <span className="font-medium text-gray-900">
-                                      {student.name}
-                                    </span>
-                                    <p className="text-xs text-blue-600">
-                                      {expanded ? "Hide details" : "Show details"}
-                                    </p>
-                                  </button>
-                                </td>
-                                <td className="px-3 py-2 text-gray-700">{student.quizzes_taken}</td>
-                                <td
-                                  className={`px-3 py-2 font-semibold ${averageColor(student.average_score)}`}
-                                >
-                                  {displayPercent(student.average_score)}
-                                </td>
-                                <td className="px-3 py-2 text-gray-700">
-                                  {displayPercent(student.highest_score)}
-                                </td>
-                                <td className="px-3 py-2 text-gray-700">
-                                  {displayPercent(student.lowest_score)}
-                                </td>
-                              </tr>
-                              {expanded && (
-                                <tr className="bg-gray-50">
-                                  <td colSpan={5} className="px-4 py-3">
-                                    {student.quiz_scores.length === 0 ? (
-                                      <p className="text-xs text-gray-500">
-                                        No graded quiz attempts for this student.
-                                      </p>
-                                    ) : (
-                                      <div className="overflow-x-auto rounded border border-gray-200 bg-white">
-                                        <table className="min-w-full text-xs sm:text-sm">
-                                          <thead className="border-b border-gray-200 bg-gray-50">
-                                            <tr>
-                                              <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                                Quiz
-                                              </th>
-                                              <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                                Attempts
-                                              </th>
-                                              <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                                Average
-                                              </th>
-                                              <th className="px-3 py-2 text-left font-medium text-gray-700">
-                                                Latest
-                                              </th>
-                                            </tr>
-                                          </thead>
-                                          <tbody className="divide-y divide-gray-100">
-                                            {student.quiz_scores.map((quizScore) => (
-                                              <tr key={`${student.user_id}-${quizScore.quiz_id}`}>
-                                                <td className="px-3 py-2 text-gray-800">
-                                                  {quizScore.quiz_title}
-                                                </td>
-                                                <td className="px-3 py-2 text-gray-700">
-                                                  {quizScore.attempts}
-                                                </td>
-                                                <td className="px-3 py-2 text-gray-700">
-                                                  {displayPercent(quizScore.average_score)}
-                                                </td>
-                                                <td className="px-3 py-2 text-gray-700">
-                                                  {displayPercent(quizScore.latest_score)}
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: "name",
+                          header: "Student",
+                          primary: true,
+                          render: (student: StudentSummary) => (
+                            <span className="font-medium text-gray-900">
+                              {student.name}
+                              <p className="text-xs text-blue-600">
+                                {expandedStudentIds.includes(student.user_id)
+                                  ? "Hide details"
+                                  : "Show details"}
+                              </p>
+                            </span>
+                          ),
+                        },
+                        {
+                          key: "quizzes_taken",
+                          header: "Quizzes Taken",
+                          render: (student: StudentSummary) => <span>{student.quizzes_taken}</span>,
+                        },
+                        {
+                          key: "average_score",
+                          header: "Average Score",
+                          render: (student: StudentSummary) => (
+                            <span
+                              className={`font-semibold ${averageColor(student.average_score)}`}
+                            >
+                              {displayPercent(student.average_score)}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: "highest",
+                          header: "Highest",
+                          render: (student: StudentSummary) => (
+                            <span>{displayPercent(student.highest_score)}</span>
+                          ),
+                        },
+                        {
+                          key: "lowest",
+                          header: "Lowest",
+                          render: (student: StudentSummary) => (
+                            <span>{displayPercent(student.lowest_score)}</span>
+                          ),
+                        },
+                      ]}
+                      data={sortedStudents}
+                      keyExtractor={(student) => student.user_id}
+                      onRowClick={(student) => toggleStudent(student.user_id)}
+                      caption="Student quiz performance summary"
+                    />
+
+                    {sortedStudents
+                      .filter((student) => expandedStudentIds.includes(student.user_id))
+                      .map((student) => (
+                        <div
+                          key={`detail-${student.user_id}`}
+                          className="mt-2 rounded border border-gray-200 bg-gray-50 p-4"
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {student.name} — Quiz Scores
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => toggleStudent(student.user_id)}
+                              className="text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              Hide details
+                            </button>
+                          </div>
+                          {student.quiz_scores.length === 0 ? (
+                            <p className="text-xs text-gray-500">
+                              No graded quiz attempts for this student.
+                            </p>
+                          ) : (
+                            <ResponsiveTable
+                              columns={[
+                                {
+                                  key: "quiz",
+                                  header: "Quiz",
+                                  primary: true,
+                                  render: (qs: StudentQuizScore) => (
+                                    <span className="text-gray-800">{qs.quiz_title}</span>
+                                  ),
+                                },
+                                {
+                                  key: "attempts",
+                                  header: "Attempts",
+                                  render: (qs: StudentQuizScore) => <span>{qs.attempts}</span>,
+                                },
+                                {
+                                  key: "average",
+                                  header: "Average",
+                                  render: (qs: StudentQuizScore) => (
+                                    <span>{displayPercent(qs.average_score)}</span>
+                                  ),
+                                },
+                                {
+                                  key: "latest",
+                                  header: "Latest",
+                                  render: (qs: StudentQuizScore) => (
+                                    <span>{displayPercent(qs.latest_score)}</span>
+                                  ),
+                                },
+                              ]}
+                              data={student.quiz_scores}
+                              keyExtractor={(qs) => `${student.user_id}-${qs.quiz_id}`}
+                              caption={`Quiz scores for ${student.name}`}
+                            />
+                          )}
+                        </div>
+                      ))}
+                  </>
                 )}
               </section>
 

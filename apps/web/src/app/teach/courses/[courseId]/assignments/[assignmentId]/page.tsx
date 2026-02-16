@@ -8,6 +8,7 @@ import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Assignment {
   id: number;
@@ -501,7 +502,7 @@ export default function AssignmentEditorPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading assignment...</p>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

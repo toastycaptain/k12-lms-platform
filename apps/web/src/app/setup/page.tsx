@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { announce } from "@/components/LiveRegion";
+import { useToast } from "@/components/Toast";
 
 const SUBJECT_OPTIONS = ["Math", "Science", "ELA", "Social Studies", "Arts", "PE"];
 const GRADE_OPTIONS = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
@@ -15,12 +16,12 @@ const GRADE_OPTIONS = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "
 export default function SetupPage() {
   const router = useRouter();
   const { user, refresh } = useAuth();
+  const { addToast } = useToast();
 
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   const rolesLabel = useMemo(() => (user?.roles || []).join(", ") || "member", [user?.roles]);
   const isTeacherLike = useMemo(
@@ -50,7 +51,6 @@ export default function SetupPage() {
 
   async function completeOnboarding() {
     setSaving(true);
-    setError(null);
 
     try {
       await apiFetch("/api/v1/me", {
@@ -69,7 +69,7 @@ export default function SetupPage() {
       router.push("/dashboard");
     } catch {
       announce("Unable to save setup progress");
-      setError("Unable to save setup progress.");
+      addToast("error", "Unable to save setup progress.");
     } finally {
       setSaving(false);
     }
@@ -91,8 +91,6 @@ export default function SetupPage() {
             <h1 className="text-2xl font-bold text-gray-900">First-Time Setup</h1>
             <p className="mt-1 text-sm text-gray-600">Step {step} of 4</p>
           </header>
-
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <section className="rounded-lg border border-gray-200 bg-white p-6">
             {step === 1 && (

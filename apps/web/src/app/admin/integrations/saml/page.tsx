@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useToast } from "@/components/Toast";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface IntegrationConfig {
   id: number;
@@ -81,6 +83,7 @@ function statusClass(status: string): string {
 }
 
 export default function SamlIntegrationPage() {
+  const { addToast } = useToast();
   const [config, setConfig] = useState<IntegrationConfig | null>(null);
   const [tenantSlug, setTenantSlug] = useState<string>("");
   const [form, setForm] = useState<SamlFormState>(initialFormState());
@@ -88,7 +91,6 @@ export default function SamlIntegrationPage() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const metadataUrl = useMemo(() => {
     if (!tenantSlug) return "";
@@ -146,18 +148,16 @@ export default function SamlIntegrationPage() {
 
   async function saveConfig(): Promise<void> {
     if (!form.idp_sso_url.trim()) {
-      setError("IdP SSO URL is required.");
+      addToast("error", "IdP SSO URL is required.");
       return;
     }
 
     if (!form.idp_cert.trim() && !form.idp_cert_fingerprint.trim()) {
-      setError("Provide either an IdP certificate or a certificate fingerprint.");
+      addToast("error", "Provide either an IdP certificate or a certificate fingerprint.");
       return;
     }
 
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     const settings = {
       issuer: form.issuer.trim() || undefined,
@@ -179,18 +179,19 @@ export default function SamlIntegrationPage() {
           method: "PATCH",
           body: JSON.stringify({ provider: "saml", settings }),
         });
-        setSuccess("SAML configuration updated.");
+        addToast("success", "SAML configuration updated.");
       } else {
         await apiFetch<IntegrationConfig>("/api/v1/integration_configs", {
           method: "POST",
           body: JSON.stringify({ provider: "saml", settings }),
         });
-        setSuccess("SAML configuration created.");
+        addToast("success", "SAML configuration created.");
       }
 
       await loadConfig();
     } catch (requestError) {
-      setError(
+      addToast(
+        "error",
         requestError instanceof ApiError ? requestError.message : "Unable to save SAML settings.",
       );
     } finally {
@@ -202,8 +203,6 @@ export default function SamlIntegrationPage() {
     if (!config) return;
 
     setToggling(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const action = config.status === "active" ? "deactivate" : "activate";
@@ -211,10 +210,11 @@ export default function SamlIntegrationPage() {
         method: "POST",
       });
 
-      setSuccess(`SAML ${action}d successfully.`);
+      addToast("success", `SAML ${action}d successfully.`);
       await loadConfig();
     } catch (requestError) {
-      setError(
+      addToast(
+        "error",
         requestError instanceof ApiError ? requestError.message : "Unable to toggle SAML status.",
       );
     } finally {
@@ -227,9 +227,9 @@ export default function SamlIntegrationPage() {
 
     try {
       await navigator.clipboard.writeText(metadataUrl);
-      setSuccess("Metadata URL copied to clipboard.");
+      addToast("success", "Metadata URL copied to clipboard.");
     } catch {
-      setError("Unable to copy metadata URL.");
+      addToast("error", "Unable to copy metadata URL.");
     }
   }
 
@@ -251,7 +251,7 @@ export default function SamlIntegrationPage() {
       link.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Unable to download metadata XML.");
+      addToast("error", "Unable to download metadata XML.");
     }
   }
 
@@ -259,7 +259,7 @@ export default function SamlIntegrationPage() {
     return (
       <ProtectedRoute requiredRoles={ADMIN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading SAML integration settings...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -280,9 +280,6 @@ export default function SamlIntegrationPage() {
           </header>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && (
-            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>
-          )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5">
             <div className="flex items-center justify-between">

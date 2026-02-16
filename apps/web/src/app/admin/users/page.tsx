@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 
 interface UserRow {
   id: number;
@@ -24,12 +28,15 @@ const ROLE_OPTIONS = ["admin", "curriculum_lead", "teacher", "student", "guardia
 
 export default function UsersAndRolesPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [configs, setConfigs] = useState<IntegrationConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [form, setForm] = useState({
     id: "",
@@ -52,11 +59,12 @@ export default function UsersAndRolesPage() {
       setLoading(true);
       try {
         const [userRows, integrationRows] = await Promise.all([
-          apiFetch<UserRow[]>("/api/v1/users"),
+          apiFetch<UserRow[]>(`/api/v1/users?page=${page}&per_page=${perPage}`),
           apiFetch<IntegrationConfig[]>("/api/v1/integration_configs"),
         ]);
         setUsers(userRows);
         setConfigs(integrationRows);
+        setTotalPages(userRows.length < perPage ? page : page + 1);
       } catch {
         setError("Failed to load users.");
       } finally {
@@ -65,29 +73,28 @@ export default function UsersAndRolesPage() {
     }
 
     void fetchData();
-  }, []);
+  }, [page, perPage]);
 
   useEffect(() => {
     async function refetchUsers() {
       try {
-        const path = roleFilter ? `/api/v1/users?role=${encodeURIComponent(roleFilter)}` : "/api/v1/users";
-        const userRows = await apiFetch<UserRow[]>(path);
+        const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+        if (roleFilter) params.set("role", roleFilter);
+        const userRows = await apiFetch<UserRow[]>(`/api/v1/users?${params.toString()}`);
         setUsers(userRows);
+        setTotalPages(userRows.length < perPage ? page : page + 1);
       } catch {
         setError("Failed to refresh users.");
       }
     }
 
     void refetchUsers();
-  }, [roleFilter]);
+  }, [roleFilter, page, perPage]);
 
   async function saveUser() {
     if (!form.email.trim() || !form.first_name.trim() || !form.last_name.trim()) {
       return;
     }
-
-    setError(null);
-    setSuccess(null);
 
     try {
       if (form.id) {
@@ -102,7 +109,7 @@ export default function UsersAndRolesPage() {
             },
           }),
         });
-        setSuccess("User updated.");
+        addToast("success", "User updated.");
       } else {
         await apiFetch("/api/v1/users", {
           method: "POST",
@@ -115,16 +122,17 @@ export default function UsersAndRolesPage() {
             },
           }),
         });
-        setSuccess("User created.");
+        addToast("success", "User created.");
       }
 
-      const path = roleFilter ? `/api/v1/users?role=${encodeURIComponent(roleFilter)}` : "/api/v1/users";
-      setUsers(await apiFetch<UserRow[]>(path));
+      const saveParams = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+      if (roleFilter) saveParams.set("role", roleFilter);
+      setUsers(await apiFetch<UserRow[]>(`/api/v1/users?${saveParams.toString()}`));
       if (!form.id) {
         setForm({ id: "", email: "", first_name: "", last_name: "", role: "teacher" });
       }
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to save user.");
+      addToast("error", e instanceof ApiError ? e.message : "Failed to save user.");
     }
   }
 
@@ -150,10 +158,9 @@ export default function UsersAndRolesPage() {
             </div>
           )}
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading users...</p>
+            <ListSkeleton />
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -194,7 +201,10 @@ export default function UsersAndRolesPage() {
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {row.roles.map((role) => (
-                            <span key={`${row.id}-${role}`} className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                            <span
+                              key={`${row.id}-${role}`}
+                              className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800"
+                            >
                               {role}
                             </span>
                           ))}
@@ -203,7 +213,12 @@ export default function UsersAndRolesPage() {
                       <p className="mt-0.5 text-xs text-gray-500">{row.email}</p>
                     </button>
                   ))}
-                  {users.length === 0 && <p className="text-sm text-gray-500">No users found.</p>}
+                  {users.length === 0 && (
+                    <EmptyState
+                      title="No users found"
+                      description="Users matching the current filter will appear here."
+                    />
+                  )}
                 </div>
               </section>
 
@@ -211,7 +226,9 @@ export default function UsersAndRolesPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">Create / Edit User</h2>
                   <button
-                    onClick={() => setForm({ id: "", email: "", first_name: "", last_name: "", role: "teacher" })}
+                    onClick={() =>
+                      setForm({ id: "", email: "", first_name: "", last_name: "", role: "teacher" })
+                    }
                     className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
                   >
                     New User
@@ -269,6 +286,17 @@ export default function UsersAndRolesPage() {
               </section>
             </>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

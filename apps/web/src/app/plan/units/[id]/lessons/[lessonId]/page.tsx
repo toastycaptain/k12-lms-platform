@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
@@ -164,7 +165,7 @@ export default function LessonEditorPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <p className="text-gray-500">Loading...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

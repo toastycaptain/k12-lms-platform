@@ -4,6 +4,8 @@ import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError } from "@/lib/api";
+import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface StandardFramework {
   id: number;
@@ -661,11 +663,12 @@ export default function AdminStandardsPage() {
           )}
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading frameworks...</p>
+            <StandardsSkeleton />
           ) : frameworks.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-              No standard frameworks found.
-            </div>
+            <EmptyState
+              title="No standard frameworks found"
+              description="Import or add standard frameworks to get started."
+            />
           ) : (
             <section className="space-y-3">
               {frameworks.map((framework) => {

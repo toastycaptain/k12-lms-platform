@@ -6,6 +6,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { Pagination } from "@/components/Pagination";
 
 interface Course {
   id: number;
@@ -58,6 +60,9 @@ export default function SubmissionsInboxPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filters
   const [filterCourse, setFilterCourse] = useState("");
@@ -68,7 +73,9 @@ export default function SubmissionsInboxPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const coursesData = await apiFetch<Course[]>("/api/v1/courses");
+        const coursesData = await apiFetch<Course[]>(
+          `/api/v1/courses?page=${page}&per_page=${perPage}`,
+        );
         setCourses(coursesData);
 
         const allRows: SubmissionRow[] = [];
@@ -100,6 +107,7 @@ export default function SubmissionsInboxPage() {
 
         setAssignments(allAssignments);
         setRows(allRows);
+        setTotalPages(coursesData.length < perPage ? page : page + 1);
       } catch {
         // handle error
       } finally {
@@ -107,7 +115,7 @@ export default function SubmissionsInboxPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   const filteredRows = rows.filter((row) => {
     if (filterCourse && !row.courseName.includes(filterCourse)) return false;
@@ -205,7 +213,7 @@ export default function SubmissionsInboxPage() {
 
           {/* Table */}
           {loading ? (
-            <div className="text-sm text-gray-500">Loading submissions...</div>
+            <ListSkeleton />
           ) : filteredRows.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
               <p className="text-sm text-gray-500">No submissions match your filters</p>
@@ -258,6 +266,17 @@ export default function SubmissionsInboxPage() {
               ]}
             />
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

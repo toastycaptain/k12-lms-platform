@@ -7,6 +7,9 @@ import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 
 interface IntegrationConfig {
   id: number;
@@ -98,6 +101,9 @@ export default function SyncDashboardPage() {
   const [mappings, setMappings] = useState<SyncMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"runs" | "mappings">("runs");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filters
   const [syncTypeFilter, setSyncTypeFilter] = useState("all");
@@ -114,7 +120,7 @@ export default function SyncDashboardPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   async function fetchData() {
     setLoading(true);
@@ -124,11 +130,14 @@ export default function SyncDashboardPage() {
         const c = configs[0];
         setConfig(c);
         const [runsData, mappingsData] = await Promise.all([
-          apiFetch<SyncRun[]>(`/api/v1/integration_configs/${c.id}/sync_runs`),
+          apiFetch<SyncRun[]>(
+            `/api/v1/integration_configs/${c.id}/sync_runs?page=${page}&per_page=${perPage}`,
+          ),
           apiFetch<SyncMapping[]>(`/api/v1/integration_configs/${c.id}/sync_mappings`),
         ]);
         setRuns(runsData);
         setMappings(mappingsData);
+        setTotalPages(runsData.length < perPage ? page : page + 1);
       }
     } catch {
       // Handle error
@@ -201,7 +210,7 @@ export default function SyncDashboardPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -324,9 +333,10 @@ export default function SyncDashboardPage() {
 
               {/* Runs Table */}
               {filteredRuns.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                  <p className="text-sm text-gray-500">No sync runs found.</p>
-                </div>
+                <EmptyState
+                  title="No sync runs found"
+                  description="Sync runs will appear after you configure and trigger a sync."
+                />
               ) : (
                 <div className="space-y-2">
                   {filteredRuns.map((run) => (
@@ -410,6 +420,19 @@ export default function SyncDashboardPage() {
             </div>
           )}
 
+          {activeTab === "runs" && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              perPage={perPage}
+              onPerPageChange={(nextPerPage) => {
+                setPerPage(nextPerPage);
+                setPage(1);
+              }}
+            />
+          )}
+
           {activeTab === "mappings" && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -428,9 +451,10 @@ export default function SyncDashboardPage() {
               </div>
 
               {filteredMappings.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                  <p className="text-sm text-gray-500">No sync mappings found.</p>
-                </div>
+                <EmptyState
+                  title="No sync mappings found"
+                  description="Sync mappings will appear after a successful sync run."
+                />
               ) : (
                 <ResponsiveTable
                   caption="Synchronization mappings"

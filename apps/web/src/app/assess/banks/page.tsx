@@ -5,6 +5,9 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { Pagination } from "@/components/Pagination";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface QuestionBank {
   id: number;
@@ -20,13 +23,18 @@ export default function QuestionBankListPage() {
   const [loading, setLoading] = useState(true);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [exportingId, setExportingId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     async function fetchBanks() {
       try {
-        const params = subjectFilter ? `?subject=${encodeURIComponent(subjectFilter)}` : "";
-        const data = await apiFetch<QuestionBank[]>(`/api/v1/question_banks${params}`);
+        const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+        if (subjectFilter) params.set("subject", subjectFilter);
+        const data = await apiFetch<QuestionBank[]>(`/api/v1/question_banks?${params.toString()}`);
         setBanks(data);
+        setTotalPages(data.length < perPage ? page : page + 1);
       } catch {
         // silently fail
       } finally {
@@ -34,7 +42,7 @@ export default function QuestionBankListPage() {
       }
     }
     fetchBanks();
-  }, [subjectFilter]);
+  }, [subjectFilter, page, perPage]);
 
   const subjects = [...new Set(banks.map((b) => b.subject).filter(Boolean))];
 
@@ -116,11 +124,14 @@ export default function QuestionBankListPage() {
           )}
 
           {loading ? (
-            <div className="text-sm text-gray-500">Loading...</div>
+            <ListSkeleton />
           ) : banks.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-              <p className="text-sm text-gray-500">No question banks yet</p>
-            </div>
+            <EmptyState
+              title="No question banks yet"
+              description="Create your first question bank to get started."
+              actionLabel="New Bank"
+              actionHref="/assess/banks/new"
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {banks.map((bank) => (
@@ -177,6 +188,17 @@ export default function QuestionBankListPage() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

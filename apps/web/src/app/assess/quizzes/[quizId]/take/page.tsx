@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Quiz {
   id: number;
@@ -76,7 +77,7 @@ export default function QuizTakePage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading...</div>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

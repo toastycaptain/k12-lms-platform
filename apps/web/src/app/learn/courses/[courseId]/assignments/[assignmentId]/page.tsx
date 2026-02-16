@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Assignment {
   id: number;
@@ -256,7 +257,7 @@ export default function LearnAssignmentSubmissionPage() {
     return (
       <ProtectedRoute requiredRoles={LEARN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading assignment...</p>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -299,9 +300,19 @@ export default function LearnAssignmentSubmissionPage() {
             )}
           </header>
 
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           {message && (
-            <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-md bg-green-50 p-3 text-sm text-green-700"
+            >
+              {message}
+            </div>
           )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -345,7 +356,10 @@ export default function LearnAssignmentSubmissionPage() {
                   <>
                     {supportsSubmissionType(assignment, "online_text") && (
                       <div>
-                        <label htmlFor="submission-text-entry" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="submission-text-entry"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Text Entry
                         </label>
                         <textarea
@@ -361,7 +375,10 @@ export default function LearnAssignmentSubmissionPage() {
 
                     {supportsSubmissionType(assignment, "file_upload") && (
                       <div>
-                        <label htmlFor="submission-file-upload" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="submission-file-upload"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           File Upload
                         </label>
                         <input
@@ -380,7 +397,10 @@ export default function LearnAssignmentSubmissionPage() {
 
                     {supportsSubmissionType(assignment, "google_drive_link") && (
                       <div className="space-y-2">
-                        <label htmlFor="submission-drive-link" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="submission-drive-link"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Google Drive Link
                         </label>
                         <GoogleDrivePicker onSelect={onDriveFileSelect}>

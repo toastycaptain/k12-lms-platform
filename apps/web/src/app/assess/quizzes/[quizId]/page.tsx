@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Quiz {
   id: number;
@@ -327,7 +329,7 @@ export default function QuizBuilderPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading...</div>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -534,7 +536,10 @@ export default function QuizBuilderPage() {
                 </div>
 
                 {items.length === 0 ? (
-                  <p className="text-sm text-gray-500">No questions added yet.</p>
+                  <EmptyState
+                    title="No questions added yet"
+                    description="Add questions from a question bank below."
+                  />
                 ) : (
                   <div className="divide-y divide-gray-100">
                     {items.map((item, idx) => (

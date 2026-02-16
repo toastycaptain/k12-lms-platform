@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Template {
   id: number;
@@ -70,13 +71,10 @@ export default function UseTemplatePage() {
     setCreating(true);
     setError(null);
     try {
-      const unitPlan = await apiFetch<UnitPlan>(
-        `/api/v1/templates/${templateId}/create_unit`,
-        {
-          method: "POST",
-          body: JSON.stringify({ course_id: parseInt(selectedCourseId) }),
-        },
-      );
+      const unitPlan = await apiFetch<UnitPlan>(`/api/v1/templates/${templateId}/create_unit`, {
+        method: "POST",
+        body: JSON.stringify({ course_id: parseInt(selectedCourseId) }),
+      });
       setSuccess(true);
       setTimeout(() => {
         router.push(`/plan/units/${unitPlan.id}`);
@@ -92,7 +90,7 @@ export default function UseTemplatePage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <p className="text-gray-500">Loading...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -103,10 +101,7 @@ export default function UseTemplatePage() {
       <AppShell>
         <div className="mx-auto max-w-lg space-y-6">
           <div className="flex items-center gap-3">
-            <Link
-              href="/plan/templates"
-              className="text-sm text-gray-400 hover:text-gray-600"
-            >
+            <Link href="/plan/templates" className="text-sm text-gray-400 hover:text-gray-600">
               &larr; Back to Templates
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Use Template</h1>
@@ -118,16 +113,12 @@ export default function UseTemplatePage() {
             </div>
           )}
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
-          )}
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           {template && (
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <h2 className="font-semibold text-gray-900">{template.name}</h2>
-              {template.subject && (
-                <p className="mt-1 text-sm text-gray-500">{template.subject}</p>
-              )}
+              {template.subject && <p className="mt-1 text-sm text-gray-500">{template.subject}</p>}
               {template.grade_level && (
                 <p className="text-xs text-gray-400">{template.grade_level}</p>
               )}
@@ -138,9 +129,7 @@ export default function UseTemplatePage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Select a Course
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Select a Course</label>
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}

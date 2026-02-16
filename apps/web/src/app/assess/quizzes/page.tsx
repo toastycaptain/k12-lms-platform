@@ -6,6 +6,9 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { Pagination } from "@/components/Pagination";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -51,6 +54,9 @@ export default function QuizLibraryPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [rows, setRows] = useState<QuizRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [courseFilter, setCourseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,7 +65,9 @@ export default function QuizLibraryPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const courseList = await apiFetch<Course[]>("/api/v1/courses");
+        const courseList = await apiFetch<Course[]>(
+          `/api/v1/courses?page=${page}&per_page=${perPage}`,
+        );
         setCourses(courseList);
 
         const byCourse = await Promise.all(
@@ -82,13 +90,14 @@ export default function QuizLibraryPage() {
         );
 
         setRows(byCourse.flat());
+        setTotalPages(courseList.length < perPage ? page : page + 1);
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
@@ -149,11 +158,12 @@ export default function QuizLibraryPage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading quizzes...</p>
+            <ListSkeleton />
           ) : filteredRows.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-500">No quizzes found for the current filters.</p>
-            </div>
+            <EmptyState
+              title="No quizzes found"
+              description="No quizzes found for the current filters."
+            />
           ) : (
             <ResponsiveTable
               caption="Quiz library rows"
@@ -196,6 +206,17 @@ export default function QuizLibraryPage() {
               ]}
             />
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

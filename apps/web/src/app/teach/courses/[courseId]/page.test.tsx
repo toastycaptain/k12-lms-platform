@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import CourseHomePage from "@/app/teach/courses/[courseId]/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildAssignment, buildCourse, buildModule } from "@/test/factories";
@@ -131,7 +132,11 @@ describe("Teach Course Home Page", () => {
   });
 
   it("renders course name and code", async () => {
-    render(<CourseHomePage />);
+    render(
+      <ToastProvider>
+        <CourseHomePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Biology 101" })).toBeInTheDocument();
     expect(screen.getByText("BIO-101")).toBeInTheDocument();
@@ -145,7 +150,11 @@ describe("Teach Course Home Page", () => {
       ],
     });
 
-    render(<CourseHomePage />);
+    render(
+      <ToastProvider>
+        <CourseHomePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Foundations")).toBeInTheDocument();
     expect(screen.getByText("Cell Structure")).toBeInTheDocument();
@@ -158,7 +167,11 @@ describe("Teach Course Home Page", () => {
       ],
     });
 
-    render(<CourseHomePage />);
+    render(
+      <ToastProvider>
+        <CourseHomePage />
+      </ToastProvider>,
+    );
 
     expect(
       await screen.findByRole("heading", { name: "Upcoming Assignments" }),
@@ -169,7 +182,11 @@ describe("Teach Course Home Page", () => {
   it("shows empty state when no modules", async () => {
     setupApi({ modules: [] });
 
-    render(<CourseHomePage />);
+    render(
+      <ToastProvider>
+        <CourseHomePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("No modules yet")).toBeInTheDocument();
   });

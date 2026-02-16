@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import ReportPage from "@/app/report/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildCourse } from "@/test/factories";
@@ -122,13 +123,21 @@ describe("Report Page", () => {
   });
 
   it("renders report dashboard heading", async () => {
-    render(<ReportPage />);
+    render(
+      <ToastProvider>
+        <ReportPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Report" })).toBeInTheDocument();
   });
 
   it("renders data summary cards", async () => {
-    render(<ReportPage />);
+    render(
+      <ToastProvider>
+        <ReportPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Total Courses")).toBeInTheDocument();
     expect(screen.getByText("Total Students")).toBeInTheDocument();
@@ -139,15 +148,23 @@ describe("Report Page", () => {
   it("handles loading state", () => {
     mockedApiFetch.mockImplementation(() => new Promise(() => {}) as Promise<never>);
 
-    render(<ReportPage />);
+    const { container } = render(
+      <ToastProvider>
+        <ReportPage />
+      </ToastProvider>,
+    );
 
-    expect(screen.getByText("Loading report...")).toBeInTheDocument();
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
   it("handles API error", async () => {
     mockedApiFetch.mockRejectedValue(new Error("boom"));
 
-    render(<ReportPage />);
+    render(
+      <ToastProvider>
+        <ReportPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Failed to load reporting data.")).toBeInTheDocument();
   });

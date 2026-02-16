@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Assignment {
   id: number;
@@ -132,7 +133,7 @@ export default function StudentSubmissionPage() {
     return (
       <ProtectedRoute>
         <AppShell>
-          <div className="text-sm text-gray-500">Loading assignment...</div>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

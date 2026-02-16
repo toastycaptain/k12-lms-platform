@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface QuizAttempt {
   id: number;
@@ -58,24 +59,27 @@ export default function AttemptPage() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAutoSubmittedRef = useRef(false);
 
-  const saveAnswers = useCallback(async (answersMap: Map<number, Record<string, unknown>>) => {
-    if (answersMap.size === 0) return;
-    setSaving(true);
-    try {
-      const payload = Array.from(answersMap.entries()).map(([question_id, answer]) => ({
-        question_id,
-        answer,
-      }));
-      await apiFetch(`/api/v1/quiz_attempts/${attemptId}/answers`, {
-        method: "POST",
-        body: JSON.stringify({ answers: payload }),
-      });
-    } catch {
-      // ignore
-    } finally {
-      setSaving(false);
-    }
-  }, [attemptId]);
+  const saveAnswers = useCallback(
+    async (answersMap: Map<number, Record<string, unknown>>) => {
+      if (answersMap.size === 0) return;
+      setSaving(true);
+      try {
+        const payload = Array.from(answersMap.entries()).map(([question_id, answer]) => ({
+          question_id,
+          answer,
+        }));
+        await apiFetch(`/api/v1/quiz_attempts/${attemptId}/answers`, {
+          method: "POST",
+          body: JSON.stringify({ answers: payload }),
+        });
+      } catch {
+        // ignore
+      } finally {
+        setSaving(false);
+      }
+    },
+    [attemptId],
+  );
 
   const submitAttempt = useCallback(async () => {
     if (submitting) return;
@@ -176,13 +180,21 @@ export default function AttemptPage() {
   }
 
   function handleSubmit() {
-    if (confirm("Are you sure you want to submit? You cannot change your answers after submitting.")) {
+    if (
+      confirm("Are you sure you want to submit? You cannot change your answers after submitting.")
+    ) {
       submitAttempt();
     }
   }
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading quiz...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <QuizSkeleton />
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   const formatTime = (seconds: number) => {
@@ -204,9 +216,11 @@ export default function AttemptPage() {
               <div className="flex items-center gap-3">
                 {saving && <span className="text-xs text-gray-400">Saving...</span>}
                 {timeLeft !== null && (
-                  <span className={`rounded-md px-3 py-1 text-sm font-mono font-medium ${
-                    timeLeft <= 300 ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"
-                  }`}>
+                  <span
+                    className={`rounded-md px-3 py-1 text-sm font-mono font-medium ${
+                      timeLeft <= 300 ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
                     {formatTime(timeLeft)}
                   </span>
                 )}
@@ -220,7 +234,11 @@ export default function AttemptPage() {
                 const answer = answers.get(item.question_id);
 
                 return (
-                  <div key={item.id} id={`question-${idx + 1}`} className="rounded-lg border border-gray-200 bg-white p-5 space-y-3">
+                  <div
+                    key={item.id}
+                    id={`question-${idx + 1}`}
+                    className="rounded-lg border border-gray-200 bg-white p-5 space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-500">Question {idx + 1}</span>
                       <span className="text-xs text-gray-400">{item.points} pts</span>
@@ -231,7 +249,10 @@ export default function AttemptPage() {
                     {question.question_type === "multiple_choice" && (
                       <div className="space-y-2">
                         {(question.choices || []).map((choice) => (
-                          <label key={choice.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <label
+                            key={choice.key}
+                            className="flex items-center gap-2 text-sm cursor-pointer"
+                          >
                             <input
                               type="radio"
                               name={`q-${item.question_id}`}
@@ -248,7 +269,10 @@ export default function AttemptPage() {
                     {question.question_type === "true_false" && (
                       <div className="space-y-2">
                         {[true, false].map((val) => (
-                          <label key={String(val)} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <label
+                            key={String(val)}
+                            className="flex items-center gap-2 text-sm cursor-pointer"
+                          >
                             <input
                               type="radio"
                               name={`q-${item.question_id}`}
@@ -265,7 +289,7 @@ export default function AttemptPage() {
                     {question.question_type === "short_answer" && (
                       <input
                         type="text"
-                        value={((answer as Record<string, string>)?.text) || ""}
+                        value={(answer as Record<string, string>)?.text || ""}
                         onChange={(e) => updateAnswer(item.question_id, { text: e.target.value })}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                         placeholder="Type your answer..."
@@ -275,7 +299,7 @@ export default function AttemptPage() {
                     {/* Essay */}
                     {question.question_type === "essay" && (
                       <textarea
-                        value={((answer as Record<string, string>)?.text) || ""}
+                        value={(answer as Record<string, string>)?.text || ""}
                         onChange={(e) => updateAnswer(item.question_id, { text: e.target.value })}
                         rows={5}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
@@ -288,17 +312,27 @@ export default function AttemptPage() {
                       <div className="space-y-2">
                         {(question.choices || []).map((pair, pairIdx) => (
                           <div key={pairIdx} className="flex items-center gap-2 text-sm">
-                            <span className="w-32 truncate font-medium">{pair.left || (pair as Record<string, string>).text}</span>
+                            <span className="w-32 truncate font-medium">
+                              {pair.left || (pair as Record<string, string>).text}
+                            </span>
                             <span className="text-gray-400">&rarr;</span>
                             <input
                               type="text"
                               value={
-                                ((answer as Record<string, Array<Record<string, string>>>)?.pairs?.[pairIdx]?.right) || ""
+                                (answer as Record<string, Array<Record<string, string>>>)?.pairs?.[
+                                  pairIdx
+                                ]?.right || ""
                               }
                               onChange={(e) => {
-                                const pairs = [...((answer as Record<string, Array<Record<string, string>>>)?.pairs || [])];
+                                const pairs = [
+                                  ...((answer as Record<string, Array<Record<string, string>>>)
+                                    ?.pairs || []),
+                                ];
                                 while (pairs.length <= pairIdx) pairs.push({ left: "", right: "" });
-                                pairs[pairIdx] = { left: (pair as Record<string, string>).left || "", right: e.target.value };
+                                pairs[pairIdx] = {
+                                  left: (pair as Record<string, string>).left || "",
+                                  right: e.target.value,
+                                };
                                 updateAnswer(item.question_id, { pairs });
                               }}
                               className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm"
@@ -314,8 +348,10 @@ export default function AttemptPage() {
                       <div className="space-y-2">
                         <input
                           type="text"
-                          value={((answer as Record<string, string[]>)?.answers?.[0]) || ""}
-                          onChange={(e) => updateAnswer(item.question_id, { answers: [e.target.value] })}
+                          value={(answer as Record<string, string[]>)?.answers?.[0] || ""}
+                          onChange={(e) =>
+                            updateAnswer(item.question_id, { answers: [e.target.value] })
+                          }
                           className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                           placeholder="Fill in the blank..."
                         />

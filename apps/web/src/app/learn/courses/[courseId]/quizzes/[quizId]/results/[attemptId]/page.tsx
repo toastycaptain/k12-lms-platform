@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Quiz {
   id: number;
@@ -239,7 +241,7 @@ export default function LearnQuizResultsPage() {
     return (
       <ProtectedRoute requiredRoles={LEARN_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading quiz results...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -288,9 +290,10 @@ export default function LearnQuizResultsPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-semibold text-gray-900">Question Review</h2>
               {answers.length === 0 ? (
-                <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                  No answers found for this attempt.
-                </div>
+                <EmptyState
+                  title="No answers found"
+                  description="No answers were recorded for this attempt."
+                />
               ) : (
                 answers.map((entry, index) => {
                   const question = questionsById[entry.question_id];

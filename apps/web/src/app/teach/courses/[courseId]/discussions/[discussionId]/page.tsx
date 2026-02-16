@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { useToast } from "@/components/Toast";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Discussion {
   id: number;
@@ -180,6 +182,7 @@ function ThreadPost({
 
 export default function DiscussionThreadPage() {
   const params = useParams();
+  const { addToast } = useToast();
   const courseId = String(params.courseId);
   const discussionId = String(params.discussionId);
 
@@ -246,7 +249,7 @@ export default function DiscussionThreadPage() {
       });
       await fetchData();
     } catch {
-      setError("Unable to post reply.");
+      addToast("error", "Unable to post reply.");
     }
   }
 
@@ -270,7 +273,7 @@ export default function DiscussionThreadPage() {
       });
       await fetchData();
     } catch {
-      setError("Unable to update discussion status.");
+      addToast("error", "Unable to update discussion status.");
     }
   }
 
@@ -278,7 +281,7 @@ export default function DiscussionThreadPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading discussion...</p>
+          <ListSkeleton />
         </AppShell>
       </ProtectedRoute>
     );

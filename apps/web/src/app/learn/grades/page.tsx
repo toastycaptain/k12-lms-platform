@@ -5,6 +5,8 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -275,11 +277,12 @@ export default function LearnGradesPage() {
           </section>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading grades...</p>
+            <GradebookSkeleton />
           ) : filteredSummaries.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
-              No grade data available for this filter.
-            </div>
+            <EmptyState
+              title="No grade data available"
+              description="No grade data available for this filter."
+            />
           ) : (
             <section className="space-y-3">
               {filteredSummaries.map((summary) => {

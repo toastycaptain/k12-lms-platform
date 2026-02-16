@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import CommunicatePage from "@/app/communicate/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";
@@ -77,7 +78,7 @@ describe("Communicate Page", () => {
             ]
           : [];
       }
-      if (path === "/api/v1/message_threads") {
+      if (path === "/api/v1/message_threads" || path.startsWith("/api/v1/message_threads?")) {
         return [
           {
             id: 7,
@@ -120,14 +121,22 @@ describe("Communicate Page", () => {
   });
 
   it("renders Announcements tab by default", async () => {
-    render(<CommunicatePage />);
+    render(
+      <ToastProvider>
+        <CommunicatePage />
+      </ToastProvider>,
+    );
 
     const tab = await screen.findByRole("tab", { name: "Announcements" });
     expect(tab).toHaveAttribute("aria-selected", "true");
   });
 
   it("switches to Messages tab", async () => {
-    render(<CommunicatePage />);
+    render(
+      <ToastProvider>
+        <CommunicatePage />
+      </ToastProvider>,
+    );
 
     fireEvent.click(await screen.findByRole("tab", { name: "Messages" }));
 
@@ -135,14 +144,22 @@ describe("Communicate Page", () => {
   });
 
   it("renders announcement list", async () => {
-    render(<CommunicatePage />);
+    render(
+      <ToastProvider>
+        <CommunicatePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Welcome")).toBeInTheDocument();
     expect(screen.getByText(/Welcome class/)).toBeInTheDocument();
   });
 
   it("renders thread list in Messages tab", async () => {
-    render(<CommunicatePage />);
+    render(
+      <ToastProvider>
+        <CommunicatePage />
+      </ToastProvider>,
+    );
 
     fireEvent.click(await screen.findByRole("tab", { name: "Messages" }));
 
@@ -152,8 +169,12 @@ describe("Communicate Page", () => {
   it("shows empty state for no announcements", async () => {
     setupApi({ announcements: false });
 
-    render(<CommunicatePage />);
+    render(
+      <ToastProvider>
+        <CommunicatePage />
+      </ToastProvider>,
+    );
 
-    expect(await screen.findByText("No announcements yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No announcements yet")).toBeInTheDocument();
   });
 });

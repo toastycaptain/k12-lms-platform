@@ -6,6 +6,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Assignment {
   id: number;
@@ -235,11 +237,9 @@ export default function LearnDashboardPage() {
               <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
             </div>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading assignments...</p>
+              <DashboardSkeleton />
             ) : upcomingAssignments.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                No upcoming assignments.
-              </div>
+              <EmptyState title="No upcoming assignments" description="You're all caught up!" />
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {upcomingAssignments.map((assignment) => {
@@ -271,11 +271,12 @@ export default function LearnDashboardPage() {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-gray-900">Recent Grades</h2>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading grades...</p>
+              <DashboardSkeleton />
             ) : latestGrades.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                No graded work yet.
-              </div>
+              <EmptyState
+                title="No graded work yet"
+                description="Grades will appear here once assignments are graded."
+              />
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {latestGrades.map((submission) => {
@@ -315,11 +316,9 @@ export default function LearnDashboardPage() {
               </Link>
             </div>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading courses...</p>
+              <DashboardSkeleton />
             ) : courseCards.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                You are not enrolled in any courses.
-              </div>
+              <EmptyState title="No courses" description="You are not enrolled in any courses." />
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {courseCards.map((card) => (

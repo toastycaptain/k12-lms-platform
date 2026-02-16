@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import AdminStandardsPage from "@/app/admin/standards/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 
 vi.mock("next/navigation", () => ({
@@ -91,7 +92,11 @@ describe("Admin Standards Page", () => {
   });
 
   it("renders standards list", async () => {
-    render(<AdminStandardsPage />);
+    render(
+      <ToastProvider>
+        <AdminStandardsPage />
+      </ToastProvider>,
+    );
 
     fireEvent.click(await screen.findByRole("button", { name: /NGSS/i }));
 
@@ -101,7 +106,11 @@ describe("Admin Standards Page", () => {
   });
 
   it("shows import CSV button", async () => {
-    render(<AdminStandardsPage />);
+    render(
+      <ToastProvider>
+        <AdminStandardsPage />
+      </ToastProvider>,
+    );
 
     fireEvent.click(await screen.findByRole("button", { name: /NGSS/i }));
 
@@ -110,7 +119,11 @@ describe("Admin Standards Page", () => {
   });
 
   it("renders framework cards", async () => {
-    render(<AdminStandardsPage />);
+    render(
+      <ToastProvider>
+        <AdminStandardsPage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("button", { name: /NGSS/i })).toBeInTheDocument();
   });
@@ -118,8 +131,12 @@ describe("Admin Standards Page", () => {
   it("handles empty standards list", async () => {
     setupApi([]);
 
-    render(<AdminStandardsPage />);
+    render(
+      <ToastProvider>
+        <AdminStandardsPage />
+      </ToastProvider>,
+    );
 
-    expect(await screen.findByText("No standard frameworks found.")).toBeInTheDocument();
+    expect(await screen.findByText("No standard frameworks found")).toBeInTheDocument();
   });
 });

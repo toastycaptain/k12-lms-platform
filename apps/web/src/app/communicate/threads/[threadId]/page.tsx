@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Participant {
   id: number;
@@ -113,7 +115,7 @@ export default function MessageThreadDetailPage() {
         method: "POST",
         body: JSON.stringify({ body: body.trim() }),
       });
-      setMessages((current) => [ ...current, created ]);
+      setMessages((current) => [...current, created]);
       setBody("");
     } catch (sendError) {
       setError(sendError instanceof ApiError ? sendError.message : "Failed to send message.");
@@ -148,11 +150,17 @@ export default function MessageThreadDetailPage() {
 
           <div className="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4">
             {loading ? (
-              <p className="text-sm text-gray-500">Loading thread...</p>
+              <ListSkeleton />
             ) : !thread ? (
-              <p className="text-sm text-gray-500">Thread not found.</p>
+              <EmptyState
+                title="Thread not found"
+                description="This thread may have been removed."
+              />
             ) : messages.length === 0 ? (
-              <p className="text-sm text-gray-500">No messages yet.</p>
+              <EmptyState
+                title="No messages yet"
+                description="Send a message to start the conversation."
+              />
             ) : (
               <div className="space-y-3">
                 {messages.map((message) => {
@@ -160,16 +168,27 @@ export default function MessageThreadDetailPage() {
                   const senderRole = roleLabel(message.sender?.roles || []);
 
                   return (
-                    <div key={message.id} className={`flex ${fromCurrentUser ? "justify-end" : "justify-start"}`}>
-                      <article className={`max-w-[80%] rounded-lg p-3 ${fromCurrentUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"}`}>
+                    <div
+                      key={message.id}
+                      className={`flex ${fromCurrentUser ? "justify-end" : "justify-start"}`}
+                    >
+                      <article
+                        className={`max-w-[80%] rounded-lg p-3 ${fromCurrentUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"}`}
+                      >
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-xs font-semibold">
-                            {message.sender ? fullName(message.sender) : `User #${message.sender_id}`}
+                            {message.sender
+                              ? fullName(message.sender)
+                              : `User #${message.sender_id}`}
                           </p>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${fromCurrentUser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${fromCurrentUser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+                          >
                             {senderRole}
                           </span>
-                          <span className={`text-[10px] ${fromCurrentUser ? "text-blue-100" : "text-gray-500"}`}>
+                          <span
+                            className={`text-[10px] ${fromCurrentUser ? "text-blue-100" : "text-gray-500"}`}
+                          >
                             {formatDate(message.created_at)}
                           </span>
                         </div>
@@ -183,7 +202,10 @@ export default function MessageThreadDetailPage() {
             )}
           </div>
 
-          <form onSubmit={(event) => void sendMessage(event)} className="rounded-lg border border-gray-200 bg-white p-3">
+          <form
+            onSubmit={(event) => void sendMessage(event)}
+            className="rounded-lg border border-gray-200 bg-white p-3"
+          >
             <div className="flex items-end gap-2">
               <textarea
                 value={body}

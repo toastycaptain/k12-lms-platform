@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import LearnCoursePage from "@/app/learn/courses/[courseId]/page";
+import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildCourse } from "@/test/factories";
@@ -132,20 +133,32 @@ describe("Student Course View Page", () => {
   });
 
   it("renders course name for student", async () => {
-    render(<LearnCoursePage />);
+    render(
+      <ToastProvider>
+        <LearnCoursePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Biology 101" })).toBeInTheDocument();
   });
 
   it("renders module list with progress", async () => {
-    render(<LearnCoursePage />);
+    render(
+      <ToastProvider>
+        <LearnCoursePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Module 1: Foundations")).toBeInTheDocument();
     expect(screen.getByText("0/1 items complete")).toBeInTheDocument();
   });
 
   it("renders assignment items with due dates", async () => {
-    render(<LearnCoursePage />);
+    render(
+      <ToastProvider>
+        <LearnCoursePage />
+      </ToastProvider>,
+    );
 
     expect(await screen.findByText("Lab 1")).toBeInTheDocument();
     expect(screen.getByText(/Due/)).toBeInTheDocument();
@@ -154,8 +167,12 @@ describe("Student Course View Page", () => {
   it("shows empty state when no modules", async () => {
     setupApi([]);
 
-    render(<LearnCoursePage />);
+    render(
+      <ToastProvider>
+        <LearnCoursePage />
+      </ToastProvider>,
+    );
 
-    expect(await screen.findByText("No published modules yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No published modules yet")).toBeInTheDocument();
   });
 });
