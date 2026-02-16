@@ -1,6 +1,6 @@
 class AiTaskPolicyPolicy < ApplicationPolicy
   def index?
-    admin_user?
+    true
   end
 
   def show?
@@ -21,11 +21,7 @@ class AiTaskPolicyPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      if user.has_role?(:admin)
-        scope.all
-      else
-        raise Pundit::NotAuthorizedError
-      end
+      scope.all
     end
   end
 

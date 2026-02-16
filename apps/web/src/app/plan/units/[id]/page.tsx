@@ -78,6 +78,7 @@ export default function UnitPlannerPage() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiTaskType, setAiTaskType] = useState("lesson_plan");
 
   // Form state
   const [title, setTitle] = useState("");
@@ -193,6 +194,31 @@ export default function UnitPlannerPage() {
   const removeListItem = (list: string[], setList: (items: string[]) => void, index: number) => {
     if (list.length <= 1) return;
     setList(list.filter((_, i) => i !== index));
+  };
+
+  const appendAiListContent = (
+    setList: (updater: (previous: string[]) => string[]) => void,
+    content: string,
+  ) => {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
+
+    setList((previous) => {
+      if (previous.length === 0 || (previous.length === 1 && previous[0].trim() === "")) {
+        return [trimmedContent];
+      }
+
+      return [...previous, trimmedContent];
+    });
+  };
+
+  const handleAiApply = (content: string) => {
+    if (aiTaskType === "assessment" || aiTaskType === "differentiation") {
+      appendAiListContent(setEssentialQuestions, content);
+      return;
+    }
+
+    setDescription((previous) => [previous, content].filter(Boolean).join("\n\n"));
   };
 
   const filteredStandards = allStandards.filter(
@@ -497,7 +523,13 @@ export default function UnitPlannerPage() {
               )}
             </div>
 
-            {showAiPanel && <AiAssistantPanel unitId={Number(unitId)} />}
+            {showAiPanel && (
+              <AiAssistantPanel
+                unitId={Number(unitId)}
+                onTaskTypeChange={setAiTaskType}
+                onApply={handleAiApply}
+              />
+            )}
           </div>
 
           {/* Right Context Panel — UX §3.2 */}

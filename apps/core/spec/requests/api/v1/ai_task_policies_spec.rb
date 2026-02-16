@@ -36,12 +36,17 @@ RSpec.describe "Api::V1::AiTaskPolicies", type: :request do
       expect(response.parsed_body.length).to eq(1)
     end
 
-    it "denies access for teacher" do
+    it "lists policies for teacher" do
+      Current.tenant = tenant
+      provider = create(:ai_provider_config, tenant: tenant, created_by: admin)
+      create(:ai_task_policy, tenant: tenant, created_by: admin, ai_provider_config: provider)
+      Current.tenant = nil
       mock_session(teacher, tenant: tenant)
 
       get "/api/v1/ai_task_policies"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
     end
   end
 

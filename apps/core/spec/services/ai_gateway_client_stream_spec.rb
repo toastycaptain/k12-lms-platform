@@ -70,6 +70,36 @@ RSpec.describe AiGatewayClient do
       expect(result).to eq("Hello!")
     end
 
+    it "yields stream metadata events with nil token" do
+      request = build_stream_request
+      response = instance_double(Faraday::Response, success?: true, status: 200, body: nil)
+
+      allow(conn).to receive(:post).with("/v1/generate_stream") do |_path, &block|
+        block.call(request)
+        request.options.on_data.call("data: {\"done\":true,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30}}\n\n", 0, nil)
+        response
+      end
+
+      events = []
+      result = described_class.generate_stream(provider: "openai", model: "gpt-4o-mini", messages: messages) do |token, parsed|
+        events << { token: token, parsed: parsed }
+      end
+
+      expect(result).to eq("")
+      expect(events).to include(
+        hash_including(
+          token: nil,
+          parsed: hash_including(
+            "usage" => hash_including(
+              "prompt_tokens" => 10,
+              "completion_tokens" => 20,
+              "total_tokens" => 30
+            )
+          )
+        )
+      )
+    end
+
     it "raises AiGatewayError when stream endpoint returns non-success status" do
       request = build_stream_request
       response = instance_double(Faraday::Response, success?: false, status: 503, body: { "error" => "unavailable" })

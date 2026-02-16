@@ -3,6 +3,14 @@ import AiAssistantPanel from "@/components/AiAssistantPanel";
 import { apiFetch, ApiError } from "@/lib/api";
 import { apiFetchStream, isAbortError } from "@/lib/api-stream";
 
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({
+    user: {
+      roles: ["teacher"],
+    },
+  }),
+}));
+
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
   ApiError: class ApiError extends Error {
@@ -28,15 +36,25 @@ describe("AiAssistantPanel", () => {
   const mockedApiFetchStream = vi.mocked(apiFetchStream);
   const mockedIsAbortError = vi.mocked(isAbortError);
 
+  async function waitForPanelReady() {
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "lesson_plan" })).toBeEnabled();
+    });
+  }
+
   beforeEach(() => {
     mockedApiFetch.mockImplementation(async (path: string) => {
+      if (path === "/api/v1/ai_provider_configs") {
+        return [{ id: 1, status: "active" }] as never;
+      }
+
       if (path === "/api/v1/ai_task_policies") {
         return [
-          { id: 1, task_type: "lesson_plan", enabled: true },
-          { id: 2, task_type: "unit_plan", enabled: true },
-          { id: 3, task_type: "differentiation", enabled: true },
-          { id: 4, task_type: "assessment", enabled: true },
-          { id: 5, task_type: "rewrite", enabled: true },
+          { id: 1, task_type: "lesson_plan", enabled: true, allowed_roles: ["teacher"] },
+          { id: 2, task_type: "unit_plan", enabled: true, allowed_roles: ["teacher"] },
+          { id: 3, task_type: "differentiation", enabled: true, allowed_roles: ["teacher"] },
+          { id: 4, task_type: "assessment", enabled: true, allowed_roles: ["teacher"] },
+          { id: 5, task_type: "rewrite", enabled: true, allowed_roles: ["teacher"] },
         ] as never;
       }
 
@@ -52,6 +70,7 @@ describe("AiAssistantPanel", () => {
 
       return {} as never;
     });
+
     mockedApiFetchStream.mockResolvedValue();
     mockedIsAbortError.mockImplementation(
       (error: unknown) => error instanceof DOMException && error.name === "AbortError",
@@ -62,53 +81,81 @@ describe("AiAssistantPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders task type dropdown with all options", async () => {
+  it("renders task type buttons", async () => {
     render(<AiAssistantPanel />);
 
-    const select = await screen.findByRole("combobox");
-    expect(screen.getByRole("option", { name: "lesson_plan" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "unit_plan" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "differentiation" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "assessment" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "rewrite" })).toBeInTheDocument();
-    expect(select).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "lesson_plan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "unit_plan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "differentiation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "assessment" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "rewrite" })).toBeInTheDocument();
   });
 
-  it("loads AI task policies on mount", async () => {
+  it("loads provider configs and task policies on mount", async () => {
     render(<AiAssistantPanel />);
 
     await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/ai_provider_configs");
       expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/ai_task_policies");
     });
   });
 
-  it("disables task types that are disabled by policy", async () => {
+  it("shows policy banner when policies are loaded", async () => {
+    render(<AiAssistantPanel />);
+
+    expect(
+      await screen.findByText(/AI actions are governed by your school's policy/i),
+    ).toBeInTheDocument();
+  });
+
+  it("grays out unavailable task types", async () => {
     mockedApiFetch.mockImplementation(async (path: string) => {
+      if (path === "/api/v1/ai_provider_configs") {
+        return [{ id: 1, status: "active" }] as never;
+      }
+
       if (path === "/api/v1/ai_task_policies") {
         return [
-          { id: 1, task_type: "lesson_plan", enabled: true },
-          { id: 2, task_type: "unit_plan", enabled: false },
+          { id: 1, task_type: "lesson_plan", enabled: true, allowed_roles: ["teacher"] },
+          { id: 2, task_type: "unit_plan", enabled: false, allowed_roles: ["teacher"] },
         ] as never;
       }
+
       return {} as never;
     });
 
     render(<AiAssistantPanel />);
 
-    const option = await screen.findByRole("option", { name: "unit_plan (disabled)" });
-    expect(option).toBeDisabled();
+    const unavailableTaskButton = await screen.findByRole("button", { name: "unit_plan" });
+    expect(unavailableTaskButton).toBeDisabled();
   });
 
-  it("shows policy hint on 403 error", async () => {
-    mockedApiFetch.mockRejectedValue(new ApiError(403, "forbidden"));
+  it("shows disabled state when no active provider exists", async () => {
+    mockedApiFetch.mockImplementation(async (path: string) => {
+      if (path === "/api/v1/ai_provider_configs") {
+        return [{ id: 1, status: "inactive" }] as never;
+      }
+
+      if (path === "/api/v1/ai_task_policies") {
+        return [
+          { id: 1, task_type: "lesson_plan", enabled: true, allowed_roles: ["teacher"] },
+        ] as never;
+      }
+
+      return {} as never;
+    });
 
     render(<AiAssistantPanel />);
 
-    expect(await screen.findByText(/Policy list is restricted for your role/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText("AI is not configured. Contact your administrator."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
   });
 
   it("generates via stream on Generate click", async () => {
     render(<AiAssistantPanel />);
+    await waitForPanelReady();
 
     fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
       target: { value: "Generate a lesson" },
@@ -128,6 +175,7 @@ describe("AiAssistantPanel", () => {
     });
 
     render(<AiAssistantPanel />);
+    await waitForPanelReady();
 
     fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
       target: { value: "Generate" },
@@ -150,6 +198,7 @@ describe("AiAssistantPanel", () => {
     );
 
     render(<AiAssistantPanel />);
+    await waitForPanelReady();
 
     fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
       target: { value: "Generate" },
@@ -169,6 +218,7 @@ describe("AiAssistantPanel", () => {
     mockedApiFetchStream.mockRejectedValue(new Error("stream down"));
 
     render(<AiAssistantPanel />);
+    await waitForPanelReady();
 
     fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
       target: { value: "Generate" },
@@ -181,16 +231,20 @@ describe("AiAssistantPanel", () => {
         expect.objectContaining({ method: "POST" }),
       );
     });
+
     expect(await screen.findByText(/Fallback response/)).toBeInTheDocument();
   });
 
   it("disables Generate when prompt is empty", async () => {
     render(<AiAssistantPanel />);
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
+    });
 
     expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
   });
 
-  it("copy to clipboard button", async () => {
+  it("copies response to clipboard", async () => {
     mockedApiFetchStream.mockImplementation(async (_path, _body, _onToken, onDone) => {
       onDone?.("Copy me");
     });
@@ -202,6 +256,7 @@ describe("AiAssistantPanel", () => {
     });
 
     render(<AiAssistantPanel />);
+    await waitForPanelReady();
 
     fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
       target: { value: "Generate" },
@@ -214,5 +269,26 @@ describe("AiAssistantPanel", () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith("Copy me");
     });
+  });
+
+  it("applies generated response with callback", async () => {
+    mockedApiFetchStream.mockImplementation(async (_path, _body, _onToken, onDone) => {
+      onDone?.("Apply me");
+    });
+
+    const onApply = vi.fn();
+    render(<AiAssistantPanel onApply={onApply} />);
+    await waitForPanelReady();
+
+    fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
+      target: { value: "Generate" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    const button = await screen.findByRole("button", { name: "Apply" });
+    fireEvent.click(button);
+
+    expect(onApply).toHaveBeenCalledWith("Apply me");
+    expect(screen.getByText("Applied to editor.")).toBeInTheDocument();
   });
 });

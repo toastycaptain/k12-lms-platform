@@ -50,6 +50,7 @@ export default function LessonEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiTaskType, setAiTaskType] = useState("lesson_plan");
 
   // Form state
   const [title, setTitle] = useState("");
@@ -159,6 +160,15 @@ export default function LessonEditorPage() {
     } catch {
       // Handle error
     }
+  };
+
+  const handleAiApply = (content: string) => {
+    if (aiTaskType === "lesson_plan" || aiTaskType === "assessment") {
+      setActivities((previous) => [previous, content].filter(Boolean).join("\n\n"));
+      return;
+    }
+
+    setObjectives((previous) => [previous, content].filter(Boolean).join("\n\n"));
   };
 
   if (loading) {
@@ -422,7 +432,13 @@ export default function LessonEditorPage() {
             )}
           </div>
 
-          {showAiPanel && <AiAssistantPanel lessonId={Number(lessonId)} />}
+          {showAiPanel && (
+            <AiAssistantPanel
+              lessonId={Number(lessonId)}
+              onTaskTypeChange={setAiTaskType}
+              onApply={handleAiApply}
+            />
+          )}
         </div>
       </AppShell>
     </ProtectedRoute>

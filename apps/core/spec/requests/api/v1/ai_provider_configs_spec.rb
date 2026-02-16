@@ -26,21 +26,27 @@ RSpec.describe "Api::V1::AiProviderConfigs", type: :request do
     it "lists configs for admin" do
       mock_session(admin, tenant: tenant)
       Current.tenant = tenant
-      create(:ai_provider_config, tenant: tenant, created_by: admin)
+      create(:ai_provider_config, tenant: tenant, created_by: admin, api_key: "secret-key")
       Current.tenant = nil
 
       get "/api/v1/ai_provider_configs"
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first).not_to have_key("api_key")
     end
 
-    it "denies access for teacher" do
+    it "lists sanitized configs for teacher" do
+      Current.tenant = tenant
+      create(:ai_provider_config, tenant: tenant, created_by: admin, api_key: "secret-key")
+      Current.tenant = nil
       mock_session(teacher, tenant: tenant)
 
       get "/api/v1/ai_provider_configs"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first).not_to have_key("api_key")
     end
   end
 

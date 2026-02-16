@@ -8,19 +8,29 @@ RSpec.describe AiProviderConfigPolicy, type: :policy do
   before { Current.tenant = tenant }
   after { Current.tenant = nil }
 
-  permissions :index?, :show?, :create?, :update?, :destroy?, :activate?, :deactivate? do
-    let(:admin) do
-      user = create(:user, tenant: tenant)
-      user.add_role(:admin)
-      user
-    end
-    let(:teacher) do
-      user = create(:user, tenant: tenant)
-      user.add_role(:teacher)
-      user
-    end
-    let(:record) { create(:ai_provider_config, tenant: tenant, created_by: admin) }
+  let(:admin) do
+    user = create(:user, tenant: tenant)
+    user.add_role(:admin)
+    user
+  end
+  let(:teacher) do
+    user = create(:user, tenant: tenant)
+    user.add_role(:teacher)
+    user
+  end
+  let(:record) { create(:ai_provider_config, tenant: tenant, created_by: admin) }
 
+  permissions :index? do
+    it "permits admins" do
+      expect(policy).to permit(admin, record)
+    end
+
+    it "permits non-admin users" do
+      expect(policy).to permit(teacher, record)
+    end
+  end
+
+  permissions :show?, :create?, :update?, :destroy?, :activate?, :deactivate? do
     it "permits admins" do
       expect(policy).to permit(admin, record)
     end

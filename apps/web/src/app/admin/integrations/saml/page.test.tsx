@@ -33,6 +33,7 @@ vi.mock("@/lib/auth-context", () => ({
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+  getApiOrigin: vi.fn(() => "http://localhost:3001"),
   ApiError: class ApiError extends Error {
     status: number;
 

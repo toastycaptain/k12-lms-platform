@@ -3,11 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { apiFetchStream, isAbortError } from "@/lib/api-stream";
+import { useAuth } from "@/lib/auth-context";
 
 interface AiTaskPolicy {
   id: number;
   task_type: string;
   enabled: boolean;
+  allowed_roles?: string[];
+}
+
+interface AiProviderConfig {
+  id: number;
+  status: "active" | "inactive";
 }
 
 interface InvocationResponse {
@@ -22,6 +29,8 @@ interface AiAssistantPanelProps {
   unitId?: number;
   lessonId?: number;
   context?: Record<string, string>;
+  onApply?: (content: string) => void;
+  onTaskTypeChange?: (taskType: string) => void;
 }
 
 const TASK_TYPES = ["lesson_plan", "unit_plan", "differentiation", "assessment", "rewrite"];
@@ -30,7 +39,11 @@ export default function AiAssistantPanel({
   unitId,
   lessonId,
   context = {},
+  onApply,
+  onTaskTypeChange,
 }: AiAssistantPanelProps) {
+  const { user } = useAuth();
+
   const [taskType, setTaskType] = useState<string>("lesson_plan");
   const [prompt, setPrompt] = useState("");
   const [responseText, setResponseText] = useState("");
@@ -38,49 +51,92 @@ export default function AiAssistantPanel({
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [policyHint, setPolicyHint] = useState<string | null>(null);
+  const [applyHint, setApplyHint] = useState<string | null>(null);
+  const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
+  const [policiesLoaded, setPoliciesLoaded] = useState(false);
   const [enabledTasks, setEnabledTasks] = useState<Record<string, boolean>>(
-    Object.fromEntries(TASK_TYPES.map((value) => [value, true])) as Record<string, boolean>,
+    Object.fromEntries(TASK_TYPES.map((value) => [value, false])) as Record<string, boolean>,
   );
 
   const streamAbortRef = useRef<AbortController | null>(null);
+  const userRoles = user?.roles ?? [];
+  const userRolesKey = useMemo(() => userRoles.slice().sort().join("|"), [userRoles]);
 
   useEffect(() => {
-    async function loadPolicies() {
+    onTaskTypeChange?.(taskType);
+  }, [onTaskTypeChange, taskType]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCapabilities() {
+      setPoliciesLoaded(false);
+      setPolicyHint(null);
+
       try {
-        const policies = await apiFetch<AiTaskPolicy[]>("/api/v1/ai_task_policies");
+        const [configs, policies] = await Promise.all([
+          apiFetch<AiProviderConfig[]>("/api/v1/ai_provider_configs"),
+          apiFetch<AiTaskPolicy[]>("/api/v1/ai_task_policies"),
+        ]);
+
+        if (cancelled) return;
+
+        const hasActiveProvider = configs.some((config) => config.status === "active");
+        setProviderConfigured(hasActiveProvider);
+
         const enabledMap = Object.fromEntries(TASK_TYPES.map((value) => [value, false])) as Record<
           string,
           boolean
         >;
-        policies.forEach((policy) => {
-          if (TASK_TYPES.includes(policy.task_type)) {
-            enabledMap[policy.task_type] = policy.enabled;
-          }
-        });
-        setEnabledTasks(enabledMap);
 
-        if (!enabledMap[taskType]) {
-          const fallback = TASK_TYPES.find((value) => enabledMap[value]) || "lesson_plan";
-          setTaskType(fallback);
+        policies.forEach((policy) => {
+          if (!TASK_TYPES.includes(policy.task_type) || !policy.enabled) return;
+
+          const allowedRoles = Array.isArray(policy.allowed_roles) ? policy.allowed_roles : [];
+          const roleAllowed =
+            allowedRoles.length === 0 || userRoles.some((role) => allowedRoles.includes(role));
+          enabledMap[policy.task_type] = roleAllowed;
+        });
+
+        setEnabledTasks(enabledMap);
+        setPoliciesLoaded(true);
+
+        const firstEnabledTask = TASK_TYPES.find((value) => enabledMap[value]);
+        setTaskType((previousTaskType) => {
+          if (enabledMap[previousTaskType]) return previousTaskType;
+          return firstEnabledTask || previousTaskType;
+        });
+
+        if (!hasActiveProvider) {
+          setPolicyHint("AI is not configured. Contact your administrator.");
+        } else if (!firstEnabledTask) {
+          setPolicyHint("No AI task types are enabled for your role.");
         }
       } catch (e) {
-        if (e instanceof ApiError && e.status === 403) {
-          setPolicyHint(
-            "Policy list is restricted for your role. Generation endpoint still enforces policy access.",
-          );
+        if (!cancelled) {
           setEnabledTasks(
-            Object.fromEntries(TASK_TYPES.map((value) => [value, true])) as Record<string, boolean>,
+            Object.fromEntries(TASK_TYPES.map((value) => [value, false])) as Record<
+              string,
+              boolean
+            >,
           );
-        } else {
-          setPolicyHint(
-            "Could not load policy availability. Proceeding with default task options.",
-          );
+          setProviderConfigured(false);
+
+          if (e instanceof ApiError) {
+            setPolicyHint(e.message);
+          } else {
+            setPolicyHint("Unable to load AI configuration. Contact your administrator.");
+          }
         }
       }
     }
 
-    void loadPolicies();
-  }, [taskType]);
+    void loadCapabilities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userRolesKey]);
 
   useEffect(() => {
     return () => {
@@ -113,9 +169,20 @@ export default function AiAssistantPanel({
     const trimmedPrompt = prompt.trim();
     if (!trimmedPrompt) return;
 
+    if (!providerConfigured) {
+      setError("AI is not configured. Contact your administrator.");
+      return;
+    }
+
+    if (!enabledTasks[taskType]) {
+      setError("This task type is not available for your role.");
+      return;
+    }
+
     setLoading(true);
     setStreaming(true);
     setError(null);
+    setApplyHint(null);
     setResponseText("");
 
     let streamFailed = false;
@@ -190,31 +257,60 @@ export default function AiAssistantPanel({
     await navigator.clipboard.writeText(responseText);
   }
 
+  function applyContent() {
+    if (!responseText || !onApply) return;
+    onApply(responseText);
+    setApplyHint("Applied to editor.");
+  }
+
+  const restrictedTaskCount = TASK_TYPES.filter((taskName) => !enabledTasks[taskName]).length;
+
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-gray-900">AI Assistant</h3>
+      {policiesLoaded && (
+        <div className="mt-2 rounded-md border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-sky-800">
+          AI actions are governed by your school&apos;s policy.
+          {restrictedTaskCount > 0 && " Some tasks are unavailable for your role."}
+        </div>
+      )}
       {policyHint && <p className="mt-1 text-xs text-gray-500">{policyHint}</p>}
       {error && <p className="mt-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">{error}</p>}
+      {applyHint && (
+        <p className="mt-2 rounded bg-green-50 px-2 py-1 text-xs text-green-700">{applyHint}</p>
+      )}
 
       <div className="mt-3 space-y-2">
         <label className="block text-xs font-medium text-gray-700">Task Type</label>
-        <select
-          value={taskType}
-          onChange={(e) => setTaskType(e.target.value)}
-          className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
-        >
-          {TASK_TYPES.map((value) => (
-            <option key={value} value={value} disabled={!enabledTasks[value]}>
-              {value}
-              {!enabledTasks[value] ? " (disabled)" : ""}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-2 gap-2">
+          {TASK_TYPES.map((value) => {
+            const available = Boolean(enabledTasks[value]) && providerConfigured === true;
+            const selected = taskType === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTaskType(value)}
+                disabled={!available}
+                className={`rounded border px-2 py-1.5 text-left text-xs ${
+                  selected
+                    ? "border-blue-600 bg-blue-50 text-blue-700"
+                    : "border-gray-300 bg-white text-gray-700"
+                } ${!available ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400" : ""}`}
+              >
+                {value}
+              </button>
+            );
+          })}
+        </div>
 
         <label className="block text-xs font-medium text-gray-700">Prompt</label>
         <textarea
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => {
+            setPrompt(e.target.value);
+            setApplyHint(null);
+          }}
           rows={5}
           placeholder="Describe what you'd like the AI to help with..."
           className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
@@ -223,7 +319,7 @@ export default function AiAssistantPanel({
         <div className="flex items-center gap-2">
           <button
             onClick={() => void generate()}
-            disabled={loading || !prompt.trim() || !enabledTasks[taskType]}
+            disabled={loading || !prompt.trim() || !enabledTasks[taskType] || !providerConfigured}
             className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Generating..." : "Generate"}
@@ -251,13 +347,22 @@ export default function AiAssistantPanel({
             <p className="text-xs text-gray-500">No response yet.</p>
           )}
         </div>
-        <button
-          onClick={() => void copyToClipboard()}
-          disabled={!responseText}
-          className="mt-2 rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-        >
-          Copy to Clipboard
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            onClick={applyContent}
+            disabled={!responseText || !onApply}
+            className="rounded bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            Apply
+          </button>
+          <button
+            onClick={() => void copyToClipboard()}
+            disabled={!responseText}
+            className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Copy to Clipboard
+          </button>
+        </div>
       </div>
     </section>
   );

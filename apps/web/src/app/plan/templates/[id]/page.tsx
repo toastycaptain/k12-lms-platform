@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AiAssistantPanel from "@/components/AiAssistantPanel";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Template {
@@ -63,6 +64,8 @@ export default function TemplateEditorPage() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiTaskType, setAiTaskType] = useState("lesson_plan");
 
   // Form state
   const [name, setName] = useState("");
@@ -221,6 +224,31 @@ export default function TemplateEditorPage() {
     setList(list.filter((_, i) => i !== index));
   };
 
+  const appendAiListContent = (
+    setList: (updater: (previous: string[]) => string[]) => void,
+    content: string,
+  ) => {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
+
+    setList((previous) => {
+      if (previous.length === 0 || (previous.length === 1 && previous[0].trim() === "")) {
+        return [trimmedContent];
+      }
+
+      return [...previous, trimmedContent];
+    });
+  };
+
+  const handleAiApply = (content: string) => {
+    if (aiTaskType === "assessment" || aiTaskType === "differentiation") {
+      appendAiListContent(setEnduringUnderstandings, content);
+      return;
+    }
+
+    setDescription((previous) => [previous, content].filter(Boolean).join("\n\n"));
+  };
+
   const filteredStandards = allStandards.filter(
     (s) =>
       standardSearch &&
@@ -269,6 +297,12 @@ export default function TemplateEditorPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAiPanel((prev) => !prev)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  {showAiPanel ? "Hide AI Assistant" : "AI Assistant"}
+                </button>
                 {isEditable && (
                   <>
                     <button
@@ -499,6 +533,14 @@ export default function TemplateEditorPage() {
                 </div>
               )}
             </div>
+
+            {showAiPanel && (
+              <AiAssistantPanel
+                context={{ template_id: templateId }}
+                onTaskTypeChange={setAiTaskType}
+                onApply={handleAiApply}
+              />
+            )}
           </div>
 
           {/* Right Context Panel — Version History */}
