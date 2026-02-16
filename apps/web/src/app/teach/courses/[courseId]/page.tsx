@@ -402,6 +402,12 @@ export default function CourseHomePage() {
               >
                 View Gradebook
               </Link>
+              <Link
+                href={`/teach/courses/${courseId}/quiz-performance`}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Quiz Analytics
+              </Link>
             </div>
           </section>
 

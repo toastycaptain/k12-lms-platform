@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       resources :courses do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
+        get :quiz_performance, on: :member, controller: "quiz_analytics", action: "course_summary"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :course_modules, controller: "course_modules", only: [ :index ]
         resources :assignments, only: [ :index, :create ]
@@ -154,6 +155,7 @@ Rails.application.routes.draw do
           post :close
           post :reorder_items, controller: "quiz_items"
           get :results
+          get :analytics, controller: "quiz_analytics", action: "show"
         end
         resources :quiz_items, only: [ :index, :create ]
         resources :quiz_attempts, only: [ :index, :create ], path: "attempts"

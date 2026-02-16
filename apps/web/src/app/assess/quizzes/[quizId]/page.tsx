@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
@@ -22,6 +23,7 @@ interface Quiz {
   lock_at: string | null;
   status: string;
   points_possible: number;
+  course_id: number;
 }
 
 interface QuizItem {
@@ -139,12 +141,18 @@ export default function QuizBuilderPage() {
       const updated = await apiFetch<Quiz>(`/api/v1/quizzes/${quizId}`, {
         method: "PATCH",
         body: JSON.stringify({
-          title, description, instructions, quiz_type: quizType,
+          title,
+          description,
+          instructions,
+          quiz_type: quizType,
           time_limit_minutes: timeLimit ? parseInt(timeLimit) : null,
           attempts_allowed: parseInt(attemptsAllowed),
-          shuffle_questions: shuffleQuestions, shuffle_choices: shuffleChoices,
+          shuffle_questions: shuffleQuestions,
+          shuffle_choices: shuffleChoices,
           show_results: showResults,
-          due_at: dueAt || null, unlock_at: unlockAt || null, lock_at: lockAt || null,
+          due_at: dueAt || null,
+          unlock_at: unlockAt || null,
+          lock_at: lockAt || null,
         }),
       });
       setQuiz(updated);
@@ -158,7 +166,10 @@ export default function QuizBuilderPage() {
   async function fetchBankQuestions(bankId: string) {
     setSelectedBank(bankId);
     setSelectedQuestions(new Set());
-    if (!bankId) { setBankQuestions([]); return; }
+    if (!bankId) {
+      setBankQuestions([]);
+      return;
+    }
     try {
       const data = await apiFetch<Question[]>(`/api/v1/question_banks/${bankId}/questions`);
       const existingIds = new Set(items.map((i) => i.question_id));
@@ -313,7 +324,13 @@ export default function QuizBuilderPage() {
   }
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="text-sm text-gray-500">Loading...</div>
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   const STATUS_COLORS: Record<string, string> = {
@@ -331,17 +348,37 @@ export default function QuizBuilderPage() {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">Quiz Builder</h1>
               {quiz && (
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[quiz.status] || ""}`}>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[quiz.status] || ""}`}
+                >
                   {quiz.status}
                 </span>
               )}
             </div>
             <div className="flex gap-2">
+              {quiz?.course_id && (
+                <Link
+                  href={`/teach/courses/${quiz.course_id}/quiz-performance`}
+                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Quiz Performance
+                </Link>
+              )}
               {quiz?.status === "draft" && (
-                <button onClick={publishQuiz} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">Publish</button>
+                <button
+                  onClick={publishQuiz}
+                  className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Publish
+                </button>
               )}
               {quiz?.status === "published" && (
-                <button onClick={closeQuiz} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700">Close</button>
+                <button
+                  onClick={closeQuiz}
+                  className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Close
+                </button>
               )}
             </div>
           </div>
@@ -352,20 +389,39 @@ export default function QuizBuilderPage() {
               <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Instructions</label>
-                <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={2} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  rows={2}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Quiz Type</label>
-                  <select value={quizType} onChange={(e) => setQuizType(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                  <select
+                    value={quizType}
+                    onChange={(e) => setQuizType(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  >
                     <option value="standard">Standard</option>
                     <option value="practice">Practice</option>
                     <option value="survey">Survey</option>
@@ -373,7 +429,11 @@ export default function QuizBuilderPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Show Results</label>
-                  <select value={showResults} onChange={(e) => setShowResults(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                  <select
+                    value={showResults}
+                    onChange={(e) => setShowResults(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  >
                     <option value="after_submit">After Submit</option>
                     <option value="after_due_date">After Due Date</option>
                     <option value="never">Never</option>
@@ -382,39 +442,81 @@ export default function QuizBuilderPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Time Limit (min)</label>
-                  <input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+                  <label className="block text-sm font-medium text-gray-700">
+                    Time Limit (min)
+                  </label>
+                  <input
+                    type="number"
+                    value={timeLimit}
+                    onChange={(e) => setTimeLimit(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Attempts Allowed</label>
-                  <input type="number" value={attemptsAllowed} onChange={(e) => setAttemptsAllowed(e.target.value)} min="1" className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+                  <label className="block text-sm font-medium text-gray-700">
+                    Attempts Allowed
+                  </label>
+                  <input
+                    type="number"
+                    value={attemptsAllowed}
+                    onChange={(e) => setAttemptsAllowed(e.target.value)}
+                    min="1"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
               <div className="flex gap-6">
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={shuffleQuestions} onChange={(e) => setShuffleQuestions(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={shuffleQuestions}
+                    onChange={(e) => setShuffleQuestions(e.target.checked)}
+                  />
                   Shuffle Questions
                 </label>
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={shuffleChoices} onChange={(e) => setShuffleChoices(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={shuffleChoices}
+                    onChange={(e) => setShuffleChoices(e.target.checked)}
+                  />
                   Shuffle Choices
                 </label>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Due At</label>
-                  <input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+                  <input
+                    type="datetime-local"
+                    value={dueAt}
+                    onChange={(e) => setDueAt(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Unlock At</label>
-                  <input type="datetime-local" value={unlockAt} onChange={(e) => setUnlockAt(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+                  <input
+                    type="datetime-local"
+                    value={unlockAt}
+                    onChange={(e) => setUnlockAt(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Lock At</label>
-                  <input type="datetime-local" value={lockAt} onChange={(e) => setLockAt(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+                  <input
+                    type="datetime-local"
+                    value={lockAt}
+                    onChange={(e) => setLockAt(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                  />
                 </div>
               </div>
-              <button onClick={saveSettings} disabled={saving} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+              <button
+                onClick={saveSettings}
+                disabled={saving}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
                 {saving ? "Saving..." : "Save Settings"}
               </button>
             </div>
@@ -423,8 +525,12 @@ export default function QuizBuilderPage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-gray-200 bg-white p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Questions ({items.length})</h2>
-                  <span className="text-sm text-gray-500">{quiz?.points_possible || 0} pts total</span>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Questions ({items.length})
+                  </h2>
+                  <span className="text-sm text-gray-500">
+                    {quiz?.points_possible || 0} pts total
+                  </span>
                 </div>
 
                 {items.length === 0 ? (
@@ -435,11 +541,25 @@ export default function QuizBuilderPage() {
                       <div key={item.id} className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="flex flex-col">
-                            <button onClick={() => reorder("up", idx)} disabled={idx === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none">&uarr;</button>
-                            <button onClick={() => reorder("down", idx)} disabled={idx === items.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none">&darr;</button>
+                            <button
+                              onClick={() => reorder("up", idx)}
+                              disabled={idx === 0}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none"
+                            >
+                              &uarr;
+                            </button>
+                            <button
+                              onClick={() => reorder("down", idx)}
+                              disabled={idx === items.length - 1}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs leading-none"
+                            >
+                              &darr;
+                            </button>
                           </div>
                           <span className="text-xs text-gray-400">{idx + 1}.</span>
-                          <span className="text-sm text-gray-900 truncate">Q#{item.question_id}</span>
+                          <span className="text-sm text-gray-900 truncate">
+                            Q#{item.question_id}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <input
@@ -451,7 +571,12 @@ export default function QuizBuilderPage() {
                             step="0.5"
                           />
                           <span className="text-xs text-gray-500">pts</span>
-                          <button onClick={() => removeItem(item.id)} className="text-sm text-red-600 hover:text-red-800">Remove</button>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="text-sm text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -462,28 +587,43 @@ export default function QuizBuilderPage() {
               {/* Add Questions from Bank */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-3">
                 <h3 className="font-medium text-gray-900">Add from Question Bank</h3>
-                <select value={selectedBank} onChange={(e) => fetchBankQuestions(e.target.value)} className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                <select
+                  value={selectedBank}
+                  onChange={(e) => fetchBankQuestions(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                >
                   <option value="">Select a bank</option>
                   {banks.map((b) => (
-                    <option key={b.id} value={b.id}>{b.title}</option>
+                    <option key={b.id} value={b.id}>
+                      {b.title}
+                    </option>
                   ))}
                 </select>
                 {bankQuestions.length > 0 && (
                   <>
                     <div className="max-h-48 overflow-y-auto divide-y divide-gray-100">
                       {bankQuestions.map((q) => (
-                        <label key={q.id} className="flex items-center gap-2 py-1.5 text-sm cursor-pointer">
+                        <label
+                          key={q.id}
+                          className="flex items-center gap-2 py-1.5 text-sm cursor-pointer"
+                        >
                           <input
                             type="checkbox"
                             checked={selectedQuestions.has(q.id)}
                             onChange={(e) => {
                               const next = new Set(selectedQuestions);
-                              if (e.target.checked) { next.add(q.id); } else { next.delete(q.id); }
+                              if (e.target.checked) {
+                                next.add(q.id);
+                              } else {
+                                next.delete(q.id);
+                              }
                               setSelectedQuestions(next);
                             }}
                           />
                           <span className="truncate">{q.prompt}</span>
-                          <span className="text-xs text-gray-400 flex-shrink-0">{q.question_type}</span>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {q.question_type}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -557,7 +697,9 @@ export default function QuizBuilderPage() {
                   </h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600">Student User ID</label>
+                      <label className="block text-xs font-medium text-gray-600">
+                        Student User ID
+                      </label>
                       <input
                         type="number"
                         value={accomUserId}
@@ -567,7 +709,9 @@ export default function QuizBuilderPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600">Extra Time (min)</label>
+                      <label className="block text-xs font-medium text-gray-600">
+                        Extra Time (min)
+                      </label>
                       <input
                         type="number"
                         value={accomExtraTime}
@@ -577,7 +721,9 @@ export default function QuizBuilderPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600">Extra Attempts</label>
+                      <label className="block text-xs font-medium text-gray-600">
+                        Extra Attempts
+                      </label>
                       <input
                         type="number"
                         value={accomExtraAttempts}
@@ -606,7 +752,13 @@ export default function QuizBuilderPage() {
                     </button>
                     {editingAccomId && (
                       <button
-                        onClick={() => { setEditingAccomId(null); setAccomUserId(""); setAccomExtraTime("0"); setAccomExtraAttempts("0"); setAccomNotes(""); }}
+                        onClick={() => {
+                          setEditingAccomId(null);
+                          setAccomUserId("");
+                          setAccomExtraTime("0");
+                          setAccomExtraAttempts("0");
+                          setAccomNotes("");
+                        }}
                         className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
                         Cancel
