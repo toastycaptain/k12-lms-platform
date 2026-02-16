@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface Course {
@@ -210,43 +211,52 @@ export default function SubmissionsInboxPage() {
               <p className="text-sm text-gray-500">No submissions match your filters</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-700">Student</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Assignment</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Course</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Submitted</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Status</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row) => (
-                    <tr key={row.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/teach/submissions/${row.id}/grade`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {row.studentName}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-gray-900">{row.assignmentTitle}</td>
-                      <td className="px-4 py-3 text-gray-500">{row.courseName}</td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {row.submittedAt ? new Date(row.submittedAt).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={row.status} />
-                      </td>
-                      <td className="px-4 py-3 text-gray-900">{row.grade || "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              caption="Submission inbox rows"
+              data={filteredRows}
+              keyExtractor={(row) => row.id}
+              columns={[
+                {
+                  key: "student",
+                  header: "Student",
+                  primary: true,
+                  render: (row) => (
+                    <Link
+                      href={`/teach/submissions/${row.id}/grade`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {row.studentName}
+                    </Link>
+                  ),
+                },
+                {
+                  key: "assignment",
+                  header: "Assignment",
+                  render: (row) => row.assignmentTitle,
+                },
+                {
+                  key: "course",
+                  header: "Course",
+                  render: (row) => row.courseName,
+                },
+                {
+                  key: "submitted_at",
+                  header: "Submitted",
+                  render: (row) =>
+                    row.submittedAt ? new Date(row.submittedAt).toLocaleDateString() : "-",
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  render: (row) => <StatusBadge status={row.status} />,
+                },
+                {
+                  key: "grade",
+                  header: "Grade",
+                  render: (row) => row.grade || "-",
+                },
+              ]}
+            />
           )}
         </div>
       </AppShell>

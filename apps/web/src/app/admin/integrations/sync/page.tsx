@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 
 interface IntegrationConfig {
   id: number;
@@ -83,7 +84,11 @@ function LevelIcon({ level }: { level: string }) {
     warn: "text-yellow-500",
     error: "text-red-500",
   };
-  return <span className={`text-xs font-bold ${colors[level] || "text-gray-400"}`}>{level.toUpperCase()}</span>;
+  return (
+    <span className={`text-xs font-bold ${colors[level] || "text-gray-400"}`}>
+      {level.toUpperCase()}
+    </span>
+  );
 }
 
 export default function SyncDashboardPage() {
@@ -340,7 +345,8 @@ export default function SyncDashboardPage() {
                           </div>
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>
-                              {run.records_processed} processed / {run.records_succeeded} ok / {run.records_failed} failed
+                              {run.records_processed} processed / {run.records_succeeded} ok /{" "}
+                              {run.records_failed} failed
                             </span>
                             <span>
                               {run.started_at
@@ -377,10 +383,7 @@ export default function SyncDashboardPage() {
                           ) : (
                             <div className="space-y-1">
                               {filteredLogs.map((log) => (
-                                <div
-                                  key={log.id}
-                                  className="flex items-start gap-2 text-xs"
-                                >
+                                <div key={log.id} className="flex items-start gap-2 text-xs">
                                   <LevelIcon level={log.level} />
                                   <span className="text-gray-400">
                                     {new Date(log.created_at).toLocaleTimeString()}
@@ -392,9 +395,7 @@ export default function SyncDashboardPage() {
                                     </span>
                                   )}
                                   {log.external_id && (
-                                    <span className="text-gray-400">
-                                      ext:{log.external_id}
-                                    </span>
+                                    <span className="text-gray-400">ext:{log.external_id}</span>
                                   )}
                                 </div>
                               ))}
@@ -431,57 +432,56 @@ export default function SyncDashboardPage() {
                   <p className="text-sm text-gray-500">No sync mappings found.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          Local Type
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          Local ID
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          External Type
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          External ID
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          Last Synced
-                        </th>
-                        <th className="px-4 py-2 text-left font-medium text-gray-700">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredMappings.map((m) => (
-                        <tr key={m.id}>
-                          <td className="px-4 py-2 text-gray-900">{m.local_type}</td>
-                          <td className="px-4 py-2 text-gray-500">{m.local_id}</td>
-                          <td className="px-4 py-2 text-gray-500">{m.external_type}</td>
-                          <td className="px-4 py-2 text-gray-500 font-mono text-xs">
-                            {m.external_id}
-                          </td>
-                          <td className="px-4 py-2 text-gray-400 text-xs">
-                            {m.last_synced_at
-                              ? new Date(m.last_synced_at).toLocaleString()
-                              : "Never"}
-                          </td>
-                          <td className="px-4 py-2">
-                            <button
-                              onClick={() => handleDeleteMapping(m.id)}
-                              className="text-xs text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ResponsiveTable
+                  caption="Synchronization mappings"
+                  data={filteredMappings}
+                  keyExtractor={(mapping) => mapping.id}
+                  columns={[
+                    {
+                      key: "local_type",
+                      header: "Local Type",
+                      primary: true,
+                      render: (mapping) => mapping.local_type,
+                    },
+                    {
+                      key: "local_id",
+                      header: "Local ID",
+                      render: (mapping) => mapping.local_id,
+                    },
+                    {
+                      key: "external_type",
+                      header: "External Type",
+                      render: (mapping) => mapping.external_type,
+                    },
+                    {
+                      key: "external_id",
+                      header: "External ID",
+                      render: (mapping) => (
+                        <span className="font-mono text-xs">{mapping.external_id}</span>
+                      ),
+                    },
+                    {
+                      key: "last_synced",
+                      header: "Last Synced",
+                      render: (mapping) =>
+                        mapping.last_synced_at
+                          ? new Date(mapping.last_synced_at).toLocaleString()
+                          : "Never",
+                    },
+                    {
+                      key: "actions",
+                      header: "Actions",
+                      render: (mapping) => (
+                        <button
+                          onClick={() => handleDeleteMapping(mapping.id)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      ),
+                    },
+                  ]}
+                />
               )}
             </div>
           )}

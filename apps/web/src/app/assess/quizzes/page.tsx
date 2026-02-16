@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface Course {
@@ -154,43 +155,46 @@ export default function QuizLibraryPage() {
               <p className="text-sm text-gray-500">No quizzes found for the current filters.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-700">Title</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Course</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Status</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Due</th>
-                    <th className="px-4 py-3 font-medium text-gray-700">Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row) => (
-                    <tr key={row.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/assess/quizzes/${row.id}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {row.title}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">{row.courseName}</td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={row.status} />
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {row.dueAt ? new Date(row.dueAt).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {row.pointsPossible != null ? row.pointsPossible : "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              caption="Quiz library rows"
+              data={filteredRows}
+              keyExtractor={(row) => row.id}
+              columns={[
+                {
+                  key: "title",
+                  header: "Title",
+                  primary: true,
+                  render: (row) => (
+                    <Link
+                      href={`/assess/quizzes/${row.id}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {row.title}
+                    </Link>
+                  ),
+                },
+                {
+                  key: "course",
+                  header: "Course",
+                  render: (row) => row.courseName,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  render: (row) => <StatusBadge status={row.status} />,
+                },
+                {
+                  key: "due",
+                  header: "Due",
+                  render: (row) => (row.dueAt ? new Date(row.dueAt).toLocaleDateString() : "-"),
+                },
+                {
+                  key: "points",
+                  header: "Points",
+                  render: (row) => (row.pointsPossible != null ? row.pointsPossible : "-"),
+                },
+              ]}
+            />
           )}
         </div>
       </AppShell>

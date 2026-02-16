@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface Assignment {
@@ -187,26 +188,34 @@ export default function StudentSubmissionPage() {
           {rubric && (
             <div className="rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="text-sm font-semibold text-gray-900">Rubric: {rubric.title}</h3>
-              <table className="mt-3 w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="pb-2 font-medium text-gray-700">Criterion</th>
-                    <th className="pb-2 font-medium text-gray-700">Points</th>
-                    <th className="pb-2 font-medium text-gray-700">Ratings</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rubric.rubric_criteria?.map((c) => (
-                    <tr key={c.id} className="border-b">
-                      <td className="py-2 text-gray-900">{c.title}</td>
-                      <td className="py-2 text-gray-500">{c.points}</td>
-                      <td className="py-2 text-gray-500">
-                        {c.rubric_ratings?.map((r) => `${r.description} (${r.points})`).join(", ")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="mt-3">
+                <ResponsiveTable
+                  caption="Rubric criteria"
+                  data={rubric.rubric_criteria || []}
+                  keyExtractor={(criterion) => criterion.id}
+                  columns={[
+                    {
+                      key: "criterion",
+                      header: "Criterion",
+                      primary: true,
+                      render: (criterion) => criterion.title,
+                    },
+                    {
+                      key: "points",
+                      header: "Points",
+                      render: (criterion) => criterion.points,
+                    },
+                    {
+                      key: "ratings",
+                      header: "Ratings",
+                      render: (criterion) =>
+                        criterion.rubric_ratings
+                          ?.map((rating) => `${rating.description} (${rating.points})`)
+                          .join(", "),
+                    },
+                  ]}
+                />
+              </div>
             </div>
           )}
 

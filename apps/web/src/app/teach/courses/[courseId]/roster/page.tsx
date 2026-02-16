@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface Course {
@@ -116,26 +117,29 @@ export default function CourseRosterPage() {
               No students enrolled.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3 font-semibold text-gray-700">Student</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Email</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Section</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {studentRows.map((row) => (
-                    <tr key={row.id} className="border-b last:border-b-0">
-                      <td className="px-4 py-3 text-gray-900">{row.name}</td>
-                      <td className="px-4 py-3 text-gray-600">{row.email}</td>
-                      <td className="px-4 py-3 text-gray-600">{row.sectionName}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              caption="Course roster"
+              data={studentRows}
+              keyExtractor={(row) => row.id}
+              columns={[
+                {
+                  key: "name",
+                  header: "Student",
+                  primary: true,
+                  render: (row) => row.name,
+                },
+                {
+                  key: "email",
+                  header: "Email",
+                  render: (row) => row.email,
+                },
+                {
+                  key: "section",
+                  header: "Section",
+                  render: (row) => row.sectionName,
+                },
+              ]}
+            />
           )}
         </div>
       </AppShell>

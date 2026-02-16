@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface Assignment {
@@ -366,6 +367,12 @@ export default function CourseSubmissionsInboxPage() {
               >
                 {runningBulkAction ? "Returning..." : "Return All"}
               </button>
+              <button
+                onClick={toggleSelectAllVisible}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                {allVisibleSelected ? "Clear Visible" : "Select Visible"}
+              </button>
               <span className="text-sm text-gray-500">{selectedIds.size} selected</span>
             </div>
           </div>
@@ -377,56 +384,57 @@ export default function CourseSubmissionsInboxPage() {
               <p className="text-sm text-gray-500">No submissions match the current filters.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAllVisible}
-                      />
-                    </th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Student</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Assignment</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Submitted</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row) => (
-                    <tr
-                      key={row.id}
-                      onClick={() =>
-                        router.push(
-                          `/teach/courses/${courseId}/assignments/${row.assignmentId}/grade/${row.id}`,
-                        )
-                      }
-                      className="cursor-pointer border-b hover:bg-gray-50"
-                    >
-                      <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(row.id)}
-                          onChange={() => toggleSelect(row.id)}
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-gray-900">{row.studentName}</td>
-                      <td className="px-4 py-3 text-gray-700">{row.assignmentTitle}</td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={row.status} />
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">{row.grade ?? "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              caption="Course submissions"
+              data={filteredRows}
+              keyExtractor={(row) => row.id}
+              onRowClick={(row) =>
+                router.push(
+                  `/teach/courses/${courseId}/assignments/${row.assignmentId}/grade/${row.id}`,
+                )
+              }
+              columns={[
+                {
+                  key: "selected",
+                  header: "Selected",
+                  render: (row) => (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(row.id)}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={() => toggleSelect(row.id)}
+                    />
+                  ),
+                },
+                {
+                  key: "student",
+                  header: "Student",
+                  primary: true,
+                  render: (row) => row.studentName,
+                },
+                {
+                  key: "assignment",
+                  header: "Assignment",
+                  render: (row) => row.assignmentTitle,
+                },
+                {
+                  key: "submitted_at",
+                  header: "Submitted",
+                  render: (row) =>
+                    row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-",
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  render: (row) => <StatusBadge status={row.status} />,
+                },
+                {
+                  key: "grade",
+                  header: "Grade",
+                  render: (row) => row.grade ?? "-",
+                },
+              ]}
+            />
           )}
         </div>
       </AppShell>

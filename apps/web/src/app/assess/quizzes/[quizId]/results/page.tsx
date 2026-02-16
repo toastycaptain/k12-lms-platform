@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { apiFetch } from "@/lib/api";
 
 interface QuizResult {
@@ -151,60 +152,73 @@ export default function QuizResultsPage() {
           </div>
 
           {/* Attempts Table */}
-          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Student</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Attempt</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Score</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">%</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Submitted</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {sortedAttempts.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">User #{a.user_id}</td>
-                    <td className="px-4 py-3">#{a.attempt_number}</td>
-                    <td className="px-4 py-3 font-medium">
-                      {a.score != null ? `${a.score} / ${results?.quiz.points_possible}` : "--"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {a.percentage != null ? `${Math.round(a.percentage)}%` : "--"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[a.status] || ""}`}
-                      >
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {a.submitted_at ? new Date(a.submitted_at).toLocaleString() : "--"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/assess/attempts/${a.id}/grade`}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Grade
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-                {sortedAttempts.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      No attempts found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {sortedAttempts.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
+              No attempts found
+            </div>
+          ) : (
+            <ResponsiveTable
+              caption="Quiz attempts"
+              data={sortedAttempts}
+              keyExtractor={(attempt) => attempt.id}
+              columns={[
+                {
+                  key: "student",
+                  header: "Student",
+                  primary: true,
+                  render: (attempt) => `User #${attempt.user_id}`,
+                },
+                {
+                  key: "attempt",
+                  header: "Attempt",
+                  render: (attempt) => `#${attempt.attempt_number}`,
+                },
+                {
+                  key: "score",
+                  header: "Score",
+                  render: (attempt) =>
+                    attempt.score != null
+                      ? `${attempt.score} / ${results?.quiz.points_possible ?? "--"}`
+                      : "--",
+                },
+                {
+                  key: "percentage",
+                  header: "%",
+                  render: (attempt) =>
+                    attempt.percentage != null ? `${Math.round(attempt.percentage)}%` : "--",
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  render: (attempt) => (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[attempt.status] || ""}`}
+                    >
+                      {attempt.status}
+                    </span>
+                  ),
+                },
+                {
+                  key: "submitted_at",
+                  header: "Submitted",
+                  render: (attempt) =>
+                    attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleString() : "--",
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  render: (attempt) => (
+                    <Link
+                      href={`/assess/attempts/${attempt.id}/grade`}
+                      className="font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      Grade
+                    </Link>
+                  ),
+                },
+              ]}
+            />
+          )}
         </div>
       </AppShell>
     </ProtectedRoute>
