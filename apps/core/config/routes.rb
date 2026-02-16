@@ -3,6 +3,13 @@ Rails.application.routes.draw do
   get "/auth/:provider/callback", to: "api/v1/sessions#omniauth_callback"
   get "/auth/failure", to: "api/v1/sessions#failure"
 
+  # LTI 1.3 Protocol Endpoints
+  namespace :lti do
+    match "oidc_login", to: "launches#oidc_login", via: [ :get, :post ]
+    post "launch", to: "launches#launch"
+    get "jwks", to: "launches#jwks"
+  end
+
   namespace :api do
     namespace :v1 do
       get "/health", to: "health#show"
@@ -221,6 +228,10 @@ Rails.application.routes.draw do
           post :deactivate
         end
         resources :lti_resource_links, only: [ :index, :show, :create, :update, :destroy ]
+      end
+      get "lti_resource_links/:id", to: "lti_resource_links_lookup#show", as: :lti_resource_link
+      namespace :lti do
+        post "deep_link_response", to: "/lti/deep_links#create"
       end
       resources :data_retention_policies, only: [ :index, :show, :create, :update, :destroy ] do
         member do

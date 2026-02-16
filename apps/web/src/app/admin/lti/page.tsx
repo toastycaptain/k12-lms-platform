@@ -36,6 +36,11 @@ function statusClass(status: string) {
   return status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700";
 }
 
+function platformBaseUrl() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  return baseUrl.replace(/\/+$/, "").replace(/\/api\/v1$/, "");
+}
+
 export default function LtiManagementPage() {
   const { user } = useAuth();
   const [registrations, setRegistrations] = useState<LtiRegistration[]>([]);
@@ -67,6 +72,14 @@ export default function LtiManagementPage() {
   const selectedRegistrationId = useMemo(() => {
     return registrationForm.id ? Number(registrationForm.id) : null;
   }, [registrationForm.id]);
+  const endpoints = useMemo(() => {
+    const base = platformBaseUrl();
+    return [
+      { label: "OIDC Login URL", value: `${base}/lti/oidc_login` },
+      { label: "Launch URL", value: `${base}/lti/launch` },
+      { label: "JWKS URL", value: `${base}/lti/jwks` },
+    ];
+  }, []);
 
   const isAdmin = user?.roles?.includes("admin") || false;
 
@@ -214,6 +227,15 @@ export default function LtiManagementPage() {
     }
   }
 
+  async function copyEndpoint(label: string, value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setSuccess(`${label} copied.`);
+    } catch {
+      setError("Failed to copy endpoint URL.");
+    }
+  }
+
   if (!isAdmin) {
     return (
       <ProtectedRoute>
@@ -229,6 +251,29 @@ export default function LtiManagementPage() {
       <AppShell>
         <div className="space-y-6">
           <h1 className="text-2xl font-bold text-gray-900">LTI Management</h1>
+
+          <section className="rounded-lg border border-blue-100 bg-blue-50 p-5">
+            <h2 className="text-lg font-semibold text-blue-900">Platform Endpoints</h2>
+            <p className="mt-1 text-sm text-blue-800">
+              Provide these URLs to external tool vendors during LTI 1.3 setup.
+            </p>
+            <div className="mt-3 space-y-2">
+              {endpoints.map((endpoint) => (
+                <div key={endpoint.label} className="flex items-center gap-2 rounded border border-blue-200 bg-white px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-blue-900">{endpoint.label}</p>
+                    <p className="truncate text-xs text-blue-700">{endpoint.value}</p>
+                  </div>
+                  <button
+                    onClick={() => void copyEndpoint(endpoint.label, endpoint.value)}
+                    className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50"
+                  >
+                    Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}

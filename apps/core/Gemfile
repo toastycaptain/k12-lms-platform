@@ -31,6 +31,8 @@ gem "google-apis-drive_v3", "~> 0.77"
 
 # HTTP client for AI Gateway and OneRoster
 gem "faraday", "~> 2.14"
+gem "jwt", "~> 2.9"
+gem "json-jwt", "~> 1.16"
 
 # CORS
 gem "rack-cors", "~> 3.0"

@@ -1,10 +1,10 @@
 class LtiResourceLinkPolicy < ApplicationPolicy
   def index?
-    admin_user? || teacher_user?
+    admin_user? || teacher_user? || student_user?
   end
 
   def show?
-    admin_user? || teacher_user?
+    admin_user? || teacher_user? || student_user?
   end
 
   def create?
@@ -21,7 +21,7 @@ class LtiResourceLinkPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if admin_user? || teacher_user?
+      return scope.all if admin_user? || teacher_user? || student_user?
 
       scope.none
     end
@@ -35,6 +35,10 @@ class LtiResourceLinkPolicy < ApplicationPolicy
     def teacher_user?
       user.has_role?(:teacher)
     end
+
+    def student_user?
+      user.has_role?(:student)
+    end
   end
 
   private
@@ -45,5 +49,9 @@ class LtiResourceLinkPolicy < ApplicationPolicy
 
   def teacher_user?
     user.has_role?(:teacher)
+  end
+
+  def student_user?
+    user.has_role?(:student)
   end
 end
