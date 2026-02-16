@@ -87,6 +87,11 @@ export function getAuthUrl(): string {
   return `${apiOrigin()}/auth/google_oauth2`;
 }
 
+export function getSamlAuthUrl(tenantSlug: string): string {
+  const query = tenantSlug ? `?tenant=${encodeURIComponent(tenantSlug)}` : "";
+  return `${apiOrigin()}/auth/saml${query}`;
+}
+
 export function getSignOutUrl(): string {
   return `${apiOrigin()}/api/v1/session`;
 }

@@ -12,29 +12,14 @@ module Api
           return redirect_with_error("authentication_failed")
         end
 
-        tenant = resolve_tenant_from_auth(auth)
-        unless tenant
-          return redirect_with_error("tenant_not_found")
+        case auth.provider
+        when "google_oauth2"
+          handle_google_callback(auth)
+        when "saml"
+          handle_saml_callback(auth)
+        else
+          render json: { error: "Unsupported provider" }, status: :unprocessable_content
         end
-
-        Current.tenant = tenant
-        user = find_or_create_user(auth, tenant)
-        store_google_tokens(user, auth)
-
-        session[:user_id] = user.id
-        session[:tenant_id] = tenant.id
-        audit_event(
-          "session.signed_in",
-          actor: user,
-          auditable: user,
-          metadata: {
-            provider: auth.provider,
-            tenant_id: tenant.id
-          }
-        )
-
-        redirect_to frontend_url + "/auth/callback",
-          allow_other_host: true
       end
 
       def failure
@@ -107,17 +92,118 @@ module Api
           allow_other_host: true
       end
 
+      def handle_google_callback(auth)
+        tenant = resolve_tenant_from_auth(auth)
+        unless tenant
+          return redirect_with_error("tenant_not_found")
+        end
+
+        Current.tenant = tenant
+        user = find_or_create_user(auth, tenant)
+        store_google_tokens(user, auth)
+        complete_sign_in!(user: user, tenant: tenant, provider: auth.provider)
+
+        redirect_to "#{frontend_url}/auth/callback",
+          allow_other_host: true
+      end
+
+      def handle_saml_callback(auth)
+        tenant_slug = params[:tenant].presence || request.host.split(".").first
+        tenant = Tenant.unscoped.find_by(slug: tenant_slug)
+        return render json: { error: "Tenant not found" }, status: :not_found unless tenant
+
+        Current.tenant = tenant
+
+        email = saml_email(auth)
+        if email.blank?
+          return render json: { error: "No email in SAML response" }, status: :unprocessable_content
+        end
+
+        user = User.unscoped.find_by(email: email.downcase, tenant: tenant)
+
+        if user.nil?
+          saml_config = IntegrationConfig.unscoped.find_by(
+            tenant: tenant,
+            provider: "saml",
+            status: "active"
+          )
+
+          unless saml_config&.settings&.dig("auto_provision")
+            return render json: { error: "User not found and auto-provisioning is disabled" }, status: :not_found
+          end
+
+          user = User.unscoped.create!(
+            email: email.downcase,
+            first_name: saml_first_name(auth) || "User",
+            last_name: saml_last_name(auth) || "",
+            tenant: tenant
+          )
+
+          default_role = saml_config.settings["default_role"].presence || "student"
+          user.add_role(default_role)
+        end
+
+        complete_sign_in!(user: user, tenant: tenant, provider: auth.provider)
+
+        redirect_to "#{frontend_url}/dashboard",
+          allow_other_host: true
+      end
+
+      def complete_sign_in!(user:, tenant:, provider:)
+        session[:user_id] = user.id
+        session[:tenant_id] = tenant.id
+        audit_event(
+          "session.signed_in",
+          actor: user,
+          auditable: user,
+          metadata: {
+            provider: provider,
+            tenant_id: tenant.id
+          }
+        )
+      end
+
       def resolve_tenant_from_auth(auth)
-        email_domain = auth.info.email.split("@").last
+        email = auth.info&.email.to_s
+        return nil if email.blank?
+
+        email_domain = email.split("@").last
+        return nil if email_domain.blank?
+
         Tenant.unscoped.find_by(slug: email_domain.split(".").first)
       end
 
       def find_or_create_user(auth, tenant)
-        User.unscoped.find_or_initialize_by(email: auth.info.email, tenant: tenant).tap do |user|
+        User.unscoped.find_or_initialize_by(email: auth.info.email.to_s.downcase, tenant: tenant).tap do |user|
           user.first_name = auth.info.first_name
           user.last_name = auth.info.last_name
           user.save!
         end
+      end
+
+      def saml_email(auth)
+        auth.info&.email.presence ||
+          extract_saml_attribute(auth, "email") ||
+          extract_saml_attribute(auth, "mail")
+      end
+
+      def saml_first_name(auth)
+        auth.info&.first_name.presence ||
+          extract_saml_attribute(auth, "first_name") ||
+          extract_saml_attribute(auth, "givenName")
+      end
+
+      def saml_last_name(auth)
+        auth.info&.last_name.presence ||
+          extract_saml_attribute(auth, "last_name") ||
+          extract_saml_attribute(auth, "sn")
+      end
+
+      def extract_saml_attribute(auth, key)
+        attributes = auth.respond_to?(:attributes) ? auth.attributes : nil
+        value = attributes&.[](key) || attributes&.[](key.to_sym)
+        value = value.first if value.is_a?(Array)
+        value.presence
       end
 
       def store_google_tokens(user, auth)

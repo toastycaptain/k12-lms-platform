@@ -317,6 +317,23 @@ export default function IntegrationsPage() {
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
+          <section className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">SAML Single Sign-On</h2>
+                <p className="text-xs text-gray-600">
+                  Configure SAML identity providers per tenant and test SSO.
+                </p>
+              </div>
+              <Link
+                href="/admin/integrations/saml"
+                className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Open SAML Settings
+              </Link>
+            </div>
+          </section>
+
           <section className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Google Classroom</h2>
