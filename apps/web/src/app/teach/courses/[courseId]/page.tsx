@@ -80,11 +80,13 @@ interface SyncMapping {
   id: number;
   local_type: string;
   local_id: number;
+  external_id: string;
   last_synced_at: string | null;
 }
 
 interface IntegrationConfig {
   id: number;
+  provider: string;
   status: string;
 }
 
@@ -150,6 +152,8 @@ export default function CourseHomePage() {
 
   const [courseMapping, setCourseMapping] = useState<SyncMapping | null>(null);
   const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
+  const [syncingNow, setSyncingNow] = useState(false);
+  const [pushingGrades, setPushingGrades] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -271,17 +275,18 @@ export default function CourseHomePage() {
 
       try {
         const configs = await apiFetch<IntegrationConfig[]>("/api/v1/integration_configs");
-        if (configs.length > 0 && configs[0].status === "active") {
-          const activeConfig = configs[0];
-          setIntegrationConfig(activeConfig);
+        const classroomConfig = configs.find(
+          (config) => config.provider === "google_classroom" && config.status === "active",
+        );
+
+        if (classroomConfig) {
+          setIntegrationConfig(classroomConfig);
 
           const mappings = await apiFetch<SyncMapping[]>(
-            `/api/v1/integration_configs/${activeConfig.id}/sync_mappings?local_type=Course`,
+            `/api/v1/sync_mappings?integration_config_id=${classroomConfig.id}&local_type=Course&local_id=${courseId}`,
           );
-          const mapping = mappings.find(
-            (entry) => entry.local_type === "Course" && entry.local_id === Number(courseId),
-          );
-          setCourseMapping(mapping || null);
+          const mapping = mappings.find((entry) => entry.local_type === "Course");
+          setCourseMapping(mapping ?? null);
         } else {
           setIntegrationConfig(null);
           setCourseMapping(null);
@@ -319,10 +324,12 @@ export default function CourseHomePage() {
       .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
       .slice(0, 5);
   }, [assignments]);
+  const classroomLinked = Boolean(courseMapping);
 
   async function syncNow() {
     if (!integrationConfig) return;
 
+    setSyncingNow(true);
     try {
       if (courseMapping) {
         await apiFetch(`/api/v1/sync_mappings/${courseMapping.id}/sync_roster`, { method: "POST" });
@@ -334,6 +341,46 @@ export default function CourseHomePage() {
       addToast("success", "Sync triggered.");
     } catch {
       addToast("error", "Failed to trigger sync.");
+    } finally {
+      setSyncingNow(false);
+    }
+  }
+
+  async function pushGradesNow() {
+    if (!integrationConfig || !courseMapping) return;
+
+    setPushingGrades(true);
+    try {
+      const assignmentMappings = await apiFetch<SyncMapping[]>(
+        `/api/v1/sync_mappings?integration_config_id=${integrationConfig.id}&local_type=Assignment`,
+      );
+      const mappedAssignmentIds = new Set(assignmentMappings.map((mapping) => mapping.local_id));
+      const mappedCourseAssignments = assignments.filter((assignment) =>
+        mappedAssignmentIds.has(assignment.id),
+      );
+
+      if (mappedCourseAssignments.length === 0) {
+        addToast("error", "No Classroom-linked assignments available for grade passback.");
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        mappedCourseAssignments.map((assignment) =>
+          apiFetch(`/api/v1/assignments/${assignment.id}/sync_grades`, { method: "POST" }),
+        ),
+      );
+      const successCount = results.filter((result) => result.status === "fulfilled").length;
+
+      if (successCount === 0) {
+        addToast("error", "Grade passback could not be triggered for linked assignments.");
+        return;
+      }
+
+      addToast("success", `Grade passback triggered for ${successCount} assignment(s).`);
+    } catch {
+      addToast("error", "Failed to trigger grade passback.");
+    } finally {
+      setPushingGrades(false);
     }
   }
 
@@ -365,8 +412,20 @@ export default function CourseHomePage() {
             <Link href="/teach/courses" className="text-sm text-blue-600 hover:text-blue-800">
               &larr; Back to Courses
             </Link>
-            <h1 className="mt-2 text-2xl font-bold text-gray-900">{course.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">{course.name}</h1>
+              {classroomLinked && (
+                <span className="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800">
+                  Google Classroom
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-500">{course.code}</p>
+            {classroomLinked && courseMapping?.last_synced_at && (
+              <p className="mt-1 text-xs text-gray-500">
+                Last Classroom sync: {new Date(courseMapping.last_synced_at).toLocaleString()}
+              </p>
+            )}
             <p className="mt-3 text-sm text-gray-600">{course.description}</p>
             <div className="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-3">
               <p>
@@ -520,31 +579,65 @@ export default function CourseHomePage() {
             </div>
           </section>
 
-          {integrationConfig && (
-            <section className="rounded-lg border border-gray-200 bg-white p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Classroom Sync</h2>
-                  <p className="text-sm text-gray-600">
-                    {courseMapping
-                      ? "Linked to Google Classroom"
-                      : "Not linked to Google Classroom"}
-                  </p>
-                  {courseMapping?.last_synced_at && (
-                    <p className="text-xs text-gray-500">
-                      Last sync: {new Date(courseMapping.last_synced_at).toLocaleString()}
+          <section className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Classroom Sync</h2>
+                {integrationConfig ? (
+                  <>
+                    <p className="text-sm text-gray-600">
+                      {classroomLinked
+                        ? "Linked to Google Classroom"
+                        : "Integration active, but this course is not linked yet"}
                     </p>
-                  )}
-                </div>
-                <button
-                  onClick={() => void syncNow()}
-                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  Sync Now
-                </button>
+                    {!classroomLinked && (
+                      <Link
+                        href="/admin/integrations"
+                        className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        Connect to Google Classroom
+                      </Link>
+                    )}
+                    {courseMapping?.last_synced_at && (
+                      <p className="text-xs text-gray-500">
+                        Last sync: {new Date(courseMapping.last_synced_at).toLocaleString()}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Google Classroom is not connected for this school.
+                  </p>
+                )}
               </div>
-            </section>
-          )}
+
+              {integrationConfig ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => void syncNow()}
+                    disabled={syncingNow}
+                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {syncingNow ? "Syncing..." : "Sync Now"}
+                  </button>
+                  <button
+                    onClick={() => void pushGradesNow()}
+                    disabled={!classroomLinked || pushingGrades}
+                    className="rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                  >
+                    {pushingGrades ? "Pushing..." : "Push Grades"}
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/admin/integrations"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Connect to Google Classroom
+                </Link>
+              )}
+            </div>
+          </section>
         </div>
       </AppShell>
     </ProtectedRoute>

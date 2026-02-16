@@ -9,10 +9,11 @@
   },
   "editor": {
     "documentSidebar": {
-      "url": "{NEXT_PUBLIC_BASE_URL}/addon"
+      "url": "{NEXT_PUBLIC_BASE_URL}/addon/workspace"
     },
     "presentationSidebar": {
-      "url": "{NEXT_PUBLIC_BASE_URL}/addon"
+      "url": "{NEXT_PUBLIC_BASE_URL}/addon/workspace"
     }
-  }
+  },
+  "classroomAddonUrl": "{NEXT_PUBLIC_BASE_URL}/addon/classroom"
 }
