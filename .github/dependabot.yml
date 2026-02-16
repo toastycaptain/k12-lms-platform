@@ -1,31 +1,67 @@
 version: 2
+
 updates:
+  # Ruby gems (apps/core)
   - package-ecosystem: bundler
     directory: "/apps/core"
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 10
+    groups:
+      ruby-minor-patch:
+        update-types:
+          - minor
+          - patch
 
+  # npm packages (apps/web)
   - package-ecosystem: npm
     directory: "/apps/web"
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 10
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
 
+  # Python packages (apps/ai-gateway)
   - package-ecosystem: pip
     directory: "/apps/ai-gateway"
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 10
+    groups:
+      python-minor-patch:
+        update-types:
+          - minor
+          - patch
 
+  # GitHub Actions
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch
 
+  # Docker base images (apps/core)
   - package-ecosystem: docker
     directory: "/apps/core"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      docker-minor-patch:
+        update-types:
+          - minor
+          - patch

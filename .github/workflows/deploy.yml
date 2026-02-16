@@ -1,76 +1,217 @@
+# Required GitHub secrets:
+# - RAILWAY_TOKEN: Railway API token for CLI authentication
+# - RAILWAY_PROJECT_ID: Railway project ID (production)
+# - RAILWAY_STAGING_PROJECT_ID: Railway project ID (staging)
+# - RAILWAY_STAGING_ENVIRONMENT_ID: Railway environment ID for staging
+# - PRODUCTION_CORE_URL: Production URL for k12-core (e.g., https://core.example.com)
+# - PRODUCTION_WEB_URL: Production URL for k12-web (e.g., https://app.example.com)
+# - STAGING_CORE_URL: Staging URL for k12-core
+# - STAGING_WEB_URL: Staging URL for k12-web
+#
+# NOTE: `workflow_run` handles production and staging after CI succeeds.
+# CI is intentionally unchanged in this task. A fallback `push` trigger for `staging`
+# is included so staging deploys can still run if CI is not configured for that branch.
+
 name: Deploy
 
 on:
   workflow_run:
     workflows: ["Monorepo CI"]
     types: [completed]
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  deploy_staging:
-    if: >-
-      ${{
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main'
-      }}
-    name: Deploy staging
-    runs-on: ubuntu-latest
-    environment: staging
-    defaults:
-      run:
-        working-directory: apps/core
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ruby-4.0.1
-      - name: Install gems
-        run: bundle install --jobs 4 --retry 3
-      - name: Build and push image
-        run: bundle exec kamal build
-      - name: Deploy to staging
-        run: bundle exec kamal deploy --destination staging
-      - name: Smoke test liveness
-        run: curl -fsS "${{ secrets.STAGING_APP_URL }}/up"
-      - name: Smoke test readiness
-        run: curl -fsS "${{ secrets.STAGING_APP_URL }}/api/v1/health"
-    env:
-      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   deploy_production:
     if: >-
       ${{
+        github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.head_branch == 'main'
       }}
     name: Deploy production
     runs-on: ubuntu-latest
-    needs: deploy_staging
     environment: production
-    defaults:
-      run:
-        working-directory: apps/core
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+          fetch-depth: 0
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      # ===========================================================
+      # IMPORTANT: Before deploying destructive migrations (dropping
+      # columns, tables, or altering data), manually create a backup:
+      #   1. Run scripts/backup.sh on the production database, OR
+      #   2. Create a Supabase snapshot from the dashboard
+      # The migration step does NOT create automatic backups.
+      # ===========================================================
+      - name: Run database migrations
+        id: migrate
+        run: |
+          echo "--- Starting database migration ---"
+          railway run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
+          echo "--- Migration complete ---"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Upload migration log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          ruby-version: ruby-4.0.1
-      - name: Install gems
-        run: bundle install --jobs 4 --retry 3
-      - name: Deploy to production
-        run: bundle exec kamal deploy --destination production
-      - name: Post-deploy smoke test
-        run: curl -fsS "${{ secrets.PRODUCTION_APP_URL }}/api/v1/health"
-    env:
-      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: migration-log-${{ github.run_number }}
+          path: migration_output.log
+          retention-days: 30
+
+      - name: Deploy k12-core
+        run: railway up -s k12-core --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy k12-sidekiq
+        run: railway up -s k12-sidekiq --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy k12-web
+        run: railway up -s k12-web --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Wait for deployments to stabilize
+        run: sleep 60
+
+      - name: Smoke tests
+        id: smoke
+        run: bash scripts/smoke-test.sh "${{ secrets.PRODUCTION_CORE_URL }}" "${{ secrets.PRODUCTION_WEB_URL }}"
+
+      - name: Rollback on failure
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          echo "Health checks failed. Initiating rollback..."
+          railway down -s k12-core -y || true
+          railway down -s k12-sidekiq -y || true
+          railway down -s k12-web -y || true
+          echo "Rollback triggered. Manual verification required."
+          echo "::error::Deployment failed health checks. Services have been rolled back."
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Create release tag
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          SHORT_SHA=$(git rev-parse --short=7 HEAD)
+          TAG="v$(date -u +%Y%m%d)-${SHORT_SHA}"
+          echo "Creating tag: ${TAG}"
+          git tag -a "$TAG" -m "Production deploy ${TAG}"
+          git push origin "$TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate changelog
+        if: success()
+        run: |
+          SHORT_SHA=$(git rev-parse --short=7 HEAD)
+          TAG="v$(date -u +%Y%m%d)-${SHORT_SHA}"
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "## Release ${TAG}" > changelog.txt
+          echo "" >> changelog.txt
+          if [[ -n "$PREV_TAG" ]]; then
+            echo "Changes since ${PREV_TAG}:" >> changelog.txt
+            echo "" >> changelog.txt
+            git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges >> changelog.txt
+          else
+            echo "Initial release." >> changelog.txt
+          fi
+          echo "" >> changelog.txt
+          echo "---" >> changelog.txt
+          cat changelog.txt
+
+      - name: Upload changelog
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-${{ github.run_number }}
+          path: changelog.txt
+          retention-days: 90
+
+  deploy_staging:
+    if: >-
+      ${{
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.head_branch == 'staging') ||
+        (github.event_name == 'push' && github.ref_name == 'staging')
+      }}
+    name: Deploy staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Run database migrations (staging)
+        run: |
+          echo "--- Starting staging database migration ---"
+          railway run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
+          echo "--- Staging migration complete ---"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
+
+      - name: Upload migration log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-migration-log-${{ github.run_number }}
+          path: migration_output.log
+          retention-days: 14
+
+      - name: Deploy k12-core (staging)
+        run: railway up -s k12-core --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
+
+      - name: Deploy k12-sidekiq (staging)
+        run: railway up -s k12-sidekiq --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
+
+      - name: Deploy k12-web (staging)
+        run: railway up -s k12-web --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
+
+      - name: Wait for deployments to stabilize
+        run: sleep 60
+
+      - name: Smoke tests (staging)
+        run: bash scripts/smoke-test.sh "${{ secrets.STAGING_CORE_URL }}" "${{ secrets.STAGING_WEB_URL }}"
