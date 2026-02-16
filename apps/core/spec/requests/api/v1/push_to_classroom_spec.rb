@@ -18,6 +18,8 @@ RSpec.describe "Api::V1::Assignments push_to_classroom", type: :request do
   end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
   after do
     Current.tenant = nil
@@ -38,7 +40,12 @@ RSpec.describe "Api::V1::Assignments push_to_classroom", type: :request do
       a
     end
 
-    before { config }
+    before do
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+      Current.tenant = nil
+      config
+    end
 
     it "triggers push for teacher with published assignment" do
       mock_session(teacher, tenant: tenant)

@@ -14,34 +14,15 @@ RSpec.describe QuestionBankPolicy, type: :policy do
   before { Current.tenant = tenant }
   after { Current.tenant = nil }
 
-  permissions :index? do
-    it "permits all users" do
-      expect(policy).to permit(admin, record)
-      expect(policy).to permit(teacher, record)
-      expect(policy).to permit(student, record)
-    end
-  end
-
-  permissions :show?, :update?, :destroy?, :archive? do
-    it "permits privileged users and owner" do
+  permissions :index?, :show?, :create?, :update?, :destroy?, :archive? do
+    it "permits admin, curriculum lead, and teacher roles" do
       expect(policy).to permit(admin, record)
       expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(teacher, record)
+      expect(policy).to permit(other_teacher, record)
     end
 
-    it "denies other teacher" do
-      expect(policy).not_to permit(other_teacher, record)
-    end
-  end
-
-  permissions :create? do
-    it "permits privileged users and teachers" do
-      expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
-      expect(policy).to permit(teacher, record)
-    end
-
-    it "denies student" do
+    it "denies students" do
       expect(policy).not_to permit(student, record)
     end
   end
@@ -50,12 +31,12 @@ RSpec.describe QuestionBankPolicy, type: :policy do
     let!(:own_bank) { create(:question_bank, tenant: tenant, created_by: teacher) }
     let!(:other_bank) { create(:question_bank, tenant: tenant, created_by: other_teacher) }
 
-    it "returns all for privileged" do
+    it "returns all for admin" do
       expect(described_class::Scope.new(admin, QuestionBank).resolve).to include(own_bank, other_bank)
     end
 
-    it "returns only own for teacher" do
-      expect(described_class::Scope.new(teacher, QuestionBank).resolve).to contain_exactly(own_bank)
+    it "returns all for teacher" do
+      expect(described_class::Scope.new(teacher, QuestionBank).resolve).to include(own_bank, other_bank)
     end
 
     it "returns none for students" do

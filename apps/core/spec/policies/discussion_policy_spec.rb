@@ -36,22 +36,25 @@ RSpec.describe DiscussionPolicy, type: :policy do
   end
 
   permissions :show? do
-    it "permits privileged users and enrolled users" do
+    it "permits admin and enrolled users" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(teacher, record)
       expect(policy).to permit(student, record)
     end
+
+    it "denies curriculum lead" do
+      expect(policy).not_to permit(curriculum_lead, record)
+    end
   end
 
-  permissions :create?, :update?, :destroy?, :lock? do
-    it "permits privileged and teaching teacher" do
+  permissions :create?, :update?, :destroy?, :lock?, :unlock? do
+    it "permits admin and teaching teacher" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies unrelated teacher" do
+    it "denies curriculum lead and unrelated teacher" do
+      expect(policy).not_to permit(curriculum_lead, record)
       expect(policy).not_to permit(unrelated_teacher, create(:discussion, tenant: tenant, course: other_course, created_by: other_teacher))
     end
   end
@@ -66,9 +69,10 @@ RSpec.describe DiscussionPolicy, type: :policy do
       expect(scope).to include(teacher_owned_discussion, taught_course_discussion, hidden_discussion)
     end
 
-    it "returns owned and taught-course for teacher" do
+    it "returns taught-course discussions for teacher" do
       scope = described_class::Scope.new(teacher, Discussion).resolve
-      expect(scope).to include(teacher_owned_discussion, taught_course_discussion)
+      expect(scope).to include(taught_course_discussion)
+      expect(scope).not_to include(teacher_owned_discussion)
       expect(scope).not_to include(hidden_discussion)
     end
 

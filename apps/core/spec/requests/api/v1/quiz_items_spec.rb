@@ -16,11 +16,24 @@ RSpec.describe "Api::V1::QuizItems" do
     Current.tenant = nil
     u
   end
+  let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) do
     Current.tenant = tenant
-    c = create(:course, tenant: tenant)
+    c = create(:course, tenant: tenant, academic_year: academic_year)
     Current.tenant = nil
     c
+  end
+  let(:term) do
+    Current.tenant = tenant
+    t = create(:term, tenant: tenant, academic_year: academic_year)
+    Current.tenant = nil
+    t
+  end
+  let(:section) do
+    Current.tenant = tenant
+    s = create(:section, tenant: tenant, course: course, term: term)
+    Current.tenant = nil
+    s
   end
   let(:quiz) do
     Current.tenant = tenant
@@ -45,6 +58,12 @@ RSpec.describe "Api::V1::QuizItems" do
     q = create(:question, :true_false, tenant: tenant, question_bank: bank, created_by: teacher)
     Current.tenant = nil
     q
+  end
+
+  before do
+    Current.tenant = tenant
+    create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+    Current.tenant = nil
   end
 
   after { Current.tenant = nil }

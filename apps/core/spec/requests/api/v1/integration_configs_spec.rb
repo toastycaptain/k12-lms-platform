@@ -16,6 +16,13 @@ RSpec.describe "Api::V1::IntegrationConfigs", type: :request do
     Current.tenant = nil
     u
   end
+  let(:curriculum_lead) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:curriculum_lead)
+    Current.tenant = nil
+    u
+  end
 
   after do
     Current.tenant = nil
@@ -37,6 +44,14 @@ RSpec.describe "Api::V1::IntegrationConfigs", type: :request do
 
     it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
+
+      get "/api/v1/integration_configs"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "returns 403 for curriculum lead" do
+      mock_session(curriculum_lead, tenant: tenant)
 
       get "/api/v1/integration_configs"
 

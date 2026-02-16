@@ -16,10 +16,10 @@ RSpec.describe SyncLogPolicy, type: :policy do
   after { Current.tenant = nil }
 
   permissions :index? do
-    it "permits privileged users and teachers" do
+    it "permits admin only" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
-      expect(policy).to permit(teacher, record)
+      expect(policy).not_to permit(curriculum_lead, record)
+      expect(policy).not_to permit(teacher, record)
     end
 
     it "denies students" do
@@ -34,12 +34,13 @@ RSpec.describe SyncLogPolicy, type: :policy do
       create(:sync_log, tenant: tenant, sync_run: other_run)
     end
 
-    it "returns all for privileged users" do
+    it "returns all for admin" do
       expect(described_class::Scope.new(admin, SyncLog).resolve).to contain_exactly(teacher_log, other_log)
     end
 
-    it "returns own triggered logs for teachers" do
-      expect(described_class::Scope.new(teacher, SyncLog).resolve).to contain_exactly(teacher_log)
+    it "returns none for non-admin users" do
+      expect(described_class::Scope.new(curriculum_lead, SyncLog).resolve).to be_empty
+      expect(described_class::Scope.new(teacher, SyncLog).resolve).to be_empty
     end
 
     it "returns none for students" do

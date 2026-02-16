@@ -23,17 +23,36 @@ RSpec.describe "Api::V1::QuizAccommodations" do
     Current.tenant = nil
     u
   end
+  let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) do
     Current.tenant = tenant
-    c = create(:course, tenant: tenant)
+    c = create(:course, tenant: tenant, academic_year: academic_year)
     Current.tenant = nil
     c
+  end
+  let(:term) do
+    Current.tenant = tenant
+    t = create(:term, tenant: tenant, academic_year: academic_year)
+    Current.tenant = nil
+    t
+  end
+  let(:section) do
+    Current.tenant = tenant
+    s = create(:section, tenant: tenant, course: course, term: term)
+    Current.tenant = nil
+    s
   end
   let(:quiz) do
     Current.tenant = tenant
     q = create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published", time_limit_minutes: 60)
     Current.tenant = nil
     q
+  end
+
+  before do
+    Current.tenant = tenant
+    create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+    Current.tenant = nil
   end
 
   after { Current.tenant = nil }
@@ -90,6 +109,7 @@ RSpec.describe "Api::V1::QuizAccommodations" do
     it "lists only the current student's accommodation as student" do
       mock_session(student, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
       own = create(:quiz_accommodation, tenant: tenant, quiz: quiz, user: student)
       create(:quiz_accommodation, tenant: tenant, quiz: quiz, user: other_student)
       Current.tenant = nil

@@ -4,15 +4,15 @@ class DiscussionPolicy < ApplicationPolicy
   end
 
   def show?
-    privileged_user? || owns_discussion? || enrolled_in_course?(record.course_id)
+    admin_user? || enrolled_in_course?(record.course_id)
   end
 
   def create?
-    privileged_user? || (user.has_role?(:teacher) && teaches_course?(record.course_id))
+    admin_user? || teacher_enrolled_in_course?(record.course_id)
   end
 
   def update?
-    privileged_user? || owns_discussion? || teaches_course?(record.course_id)
+    admin_user? || teacher_enrolled_in_course?(record.course_id)
   end
 
   def destroy?
@@ -20,27 +20,28 @@ class DiscussionPolicy < ApplicationPolicy
   end
 
   def lock?
-    update?
+    admin_user? || teacher_enrolled_in_course?(record.course_id)
+  end
+
+  def unlock?
+    lock?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if privileged_user?
+      return scope.all if admin_user?
 
-      if user.has_role?(:teacher)
-        return scope.where(created_by_id: user.id)
-          .or(scope.where(course_id: taught_course_ids))
-          .distinct
-      end
-
-      if user.has_role?(:student)
-        return scope.where(course_id: enrolled_student_course_ids)
-      end
+      return scope.where(course_id: taught_course_ids).distinct if user.has_role?(:teacher)
+      return scope.where(course_id: enrolled_student_course_ids) if user.has_role?(:student)
 
       scope.none
     end
 
     private
+
+    def admin_user?
+      user.has_role?(:admin)
+    end
 
     def taught_course_ids
       Enrollment.joins(:section)
@@ -59,11 +60,13 @@ class DiscussionPolicy < ApplicationPolicy
 
   private
 
-  def owns_discussion?
-    record.created_by_id == user.id
+  def admin_user?
+    user.has_role?(:admin)
   end
 
-  def teaches_course?(course_id)
+  def teacher_enrolled_in_course?(course_id)
+    return false unless course_id && user.has_role?(:teacher)
+
     Enrollment.joins(:section).exists?(
       user_id: user.id,
       role: "teacher",

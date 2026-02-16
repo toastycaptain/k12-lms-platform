@@ -16,11 +16,24 @@ RSpec.describe "Api::V1::ManualGrading" do
     Current.tenant = nil
     u
   end
+  let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) do
     Current.tenant = tenant
-    c = create(:course, tenant: tenant)
+    c = create(:course, tenant: tenant, academic_year: academic_year)
     Current.tenant = nil
     c
+  end
+  let(:term) do
+    Current.tenant = tenant
+    t = create(:term, tenant: tenant, academic_year: academic_year)
+    Current.tenant = nil
+    t
+  end
+  let(:section) do
+    Current.tenant = tenant
+    s = create(:section, tenant: tenant, course: course, term: term)
+    Current.tenant = nil
+    s
   end
   let(:bank) do
     Current.tenant = tenant
@@ -61,6 +74,13 @@ RSpec.describe "Api::V1::ManualGrading" do
     a.submit!
     Current.tenant = nil
     a
+  end
+
+  before do
+    Current.tenant = tenant
+    create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+    create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+    Current.tenant = nil
   end
 
   after { Current.tenant = nil }

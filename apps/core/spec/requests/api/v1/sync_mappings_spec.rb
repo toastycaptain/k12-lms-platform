@@ -56,7 +56,7 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
       expect(response.parsed_body.length).to eq(2)
     end
 
-    it "returns sync mappings for teacher" do
+    it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
@@ -66,11 +66,10 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
 
       get "/api/v1/integration_configs/#{integration_config.id}/sync_mappings"
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.length).to eq(1)
+      expect(response).to have_http_status(:forbidden)
     end
 
-    it "does not return mappings for courses the teacher does not teach" do
+    it "returns 403 for teacher regardless of course mappings" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       create(:sync_mapping, tenant: tenant, integration_config: integration_config,
@@ -79,8 +78,7 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
 
       get "/api/v1/integration_configs/#{integration_config.id}/sync_mappings"
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to be_empty
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 403 for student" do
@@ -122,6 +120,17 @@ RSpec.describe "Api::V1::SyncMappings", type: :request do
       expect(response.parsed_body["id"]).to eq(mapping.id)
       expect(response.parsed_body["local_type"]).to eq("Course")
       expect(response.parsed_body["external_id"]).to eq("gc_1")
+    end
+
+    it "returns 403 for teacher" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      mapping = create(:sync_mapping, tenant: tenant, integration_config: integration_config,
+        local_type: "Course", local_id: 1, external_type: "classroom_course", external_id: "gc_1")
+      Current.tenant = nil
+
+      get "/api/v1/sync_mappings/#{mapping.id}"
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

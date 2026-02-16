@@ -4,32 +4,36 @@ class DiscussionPostPolicy < ApplicationPolicy
   end
 
   def create?
-    privileged_user? || owns_post? || enrolled_in_course?(record.discussion.course_id)
+    enrolled_in_course?(record.discussion.course_id) && discussion_open?(record.discussion)
   end
 
   def destroy?
-    privileged_user? || owns_post? || teaches_course?(record.discussion.course_id)
+    admin_user? || owns_post? || teacher_enrolled_in_course?(record.discussion.course_id)
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if privileged_user?
+      return scope.all if admin_user?
 
-      if user.has_role?(:teacher)
-        return scope.joins(:discussion)
-          .where(created_by_id: user.id)
-          .or(scope.joins(:discussion).where(discussions: { course_id: taught_course_ids }))
-          .distinct
-      end
-
-      if user.has_role?(:student)
-        return scope.joins(:discussion).where(discussions: { course_id: enrolled_student_course_ids })
-      end
+      return teacher_scope if user.has_role?(:teacher)
+      return student_scope if user.has_role?(:student)
 
       scope.none
     end
 
     private
+
+    def admin_user?
+      user.has_role?(:admin)
+    end
+
+    def teacher_scope
+      scope.joins(:discussion).where(discussions: { course_id: taught_course_ids }).distinct
+    end
+
+    def student_scope
+      scope.joins(:discussion).where(discussions: { course_id: enrolled_student_course_ids }).distinct
+    end
 
     def taught_course_ids
       Enrollment.joins(:section)
@@ -52,7 +56,13 @@ class DiscussionPostPolicy < ApplicationPolicy
     record.created_by_id == user.id
   end
 
-  def teaches_course?(course_id)
+  def admin_user?
+    user.has_role?(:admin)
+  end
+
+  def teacher_enrolled_in_course?(course_id)
+    return false unless course_id && user.has_role?(:teacher)
+
     Enrollment.joins(:section).exists?(
       user_id: user.id,
       role: "teacher",
@@ -65,5 +75,9 @@ class DiscussionPostPolicy < ApplicationPolicy
       user_id: user.id,
       sections: { course_id: course_id }
     )
+  end
+
+  def discussion_open?(discussion)
+    discussion.status != "locked"
   end
 end

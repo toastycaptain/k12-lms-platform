@@ -18,6 +18,8 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
   end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
   let(:assignment) do
     Current.tenant = tenant
     a = create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "published", points_possible: 100)
@@ -29,6 +31,13 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
     s = create(:submission, tenant: tenant, assignment: assignment, user: student, status: "submitted", submitted_at: Time.current)
     Current.tenant = nil
     s
+  end
+
+  before do
+    Current.tenant = tenant
+    create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+    create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+    Current.tenant = nil
   end
 
   after { Current.tenant = nil }
@@ -107,10 +116,6 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
     it "returns gradebook for course" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
-      term = create(:term, tenant: tenant, academic_year: academic_year)
-      section = create(:section, tenant: tenant, course: course, term: term)
-      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
-      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
       create(:submission, tenant: tenant, assignment: assignment, user: student, status: "graded", grade: 85)
       Current.tenant = nil
 

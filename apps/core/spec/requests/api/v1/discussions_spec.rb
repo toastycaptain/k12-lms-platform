@@ -25,6 +25,7 @@ RSpec.describe "Api::V1::Discussions", type: :request do
   end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:other_course) { create(:course, tenant: tenant, academic_year: academic_year) }
   let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
   let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
@@ -34,6 +35,7 @@ RSpec.describe "Api::V1::Discussions", type: :request do
     it "lists discussions" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       create(:discussion, tenant: tenant, course: course, created_by: teacher)
       Current.tenant = nil
 
@@ -42,13 +44,13 @@ RSpec.describe "Api::V1::Discussions", type: :request do
       expect(response.parsed_body.length).to eq(1)
     end
 
-    it "does not expose discussions in courses the teacher does not own or teach" do
+    it "does not expose discussions in courses the teacher does not teach" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
-      create(:discussion, tenant: tenant, course: course, created_by: other_teacher, title: "Restricted Discussion")
+      create(:discussion, tenant: tenant, course: other_course, created_by: other_teacher, title: "Restricted Discussion")
       Current.tenant = nil
 
-      get "/api/v1/courses/#{course.id}/discussions"
+      get "/api/v1/courses/#{other_course.id}/discussions"
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to be_empty
     end
@@ -84,6 +86,9 @@ RSpec.describe "Api::V1::Discussions", type: :request do
 
     it "updates a discussion" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       patch "/api/v1/discussions/#{discussion.id}", params: { status: "locked" }
       expect(response).to have_http_status(:ok)
@@ -138,12 +143,13 @@ RSpec.describe "Api::V1::Discussions", type: :request do
       Current.tenant = nil
 
       post "/api/v1/discussions/#{discussion.id}/posts", params: { content: "This should fail" }
-      expect(response).to have_http_status(:unprocessable_content)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "deletes a post" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
       dp = create(:discussion_post, tenant: tenant, discussion: discussion, created_by: teacher)
       Current.tenant = nil
 

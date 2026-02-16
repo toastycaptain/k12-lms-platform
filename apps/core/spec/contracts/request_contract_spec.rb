@@ -77,6 +77,9 @@ RSpec.describe "Request contracts", type: :request do
 
   describe "GET /api/v1/assignments/{id}/submissions" do
     it "returns responses matching Submission schema" do
+      term = create(:term, tenant: tenant, academic_year: academic_year)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
       assignment = create(:assignment, tenant: tenant, course: course, created_by: teacher)
       create(:submission, tenant: tenant, assignment: assignment, user: student)
 

@@ -73,12 +73,12 @@ RSpec.describe "Api::V1::DiscussionPosts", type: :request do
       expect(response.parsed_body["created_by_id"]).to eq(student.id)
     end
 
-    it "allows creating a post because policy permits post owner creation" do
+    it "returns 403 for unenrolled users" do
       mock_session(outsider, tenant: tenant)
 
-      post "/api/v1/discussions/#{discussion.id}/posts", params: { content: "Allowed by current policy" }
+      post "/api/v1/discussions/#{discussion.id}/posts", params: { content: "Not allowed" }
 
-      expect(response).to have_http_status(:created)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 422 for invalid params" do

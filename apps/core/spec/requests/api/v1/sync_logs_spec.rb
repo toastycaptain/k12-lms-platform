@@ -56,7 +56,7 @@ RSpec.describe "Api::V1::SyncLogs", type: :request do
       expect(response.parsed_body.length).to eq(2)
     end
 
-    it "returns sync logs for teacher who triggered the run" do
+    it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       teacher_run = create(:sync_run, tenant: tenant, integration_config: integration_config,
@@ -66,8 +66,7 @@ RSpec.describe "Api::V1::SyncLogs", type: :request do
 
       get "/api/v1/sync_runs/#{teacher_run.id}/sync_logs"
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.length).to eq(1)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 403 for student" do

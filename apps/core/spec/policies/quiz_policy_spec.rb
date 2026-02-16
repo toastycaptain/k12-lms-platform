@@ -70,9 +70,10 @@ RSpec.describe QuizPolicy, type: :policy do
       expect(scope).to include(teacher_owned_quiz, taught_course_quiz, student_visible_quiz, hidden_quiz)
     end
 
-    it "returns owned and taught-course quizzes for teacher" do
+    it "returns taught-course quizzes for teacher" do
       scope = described_class::Scope.new(teacher, Quiz).resolve
-      expect(scope).to include(teacher_owned_quiz, taught_course_quiz, student_visible_quiz)
+      expect(scope).to include(taught_course_quiz, student_visible_quiz)
+      expect(scope).not_to include(teacher_owned_quiz)
       expect(scope).not_to include(hidden_quiz)
     end
 

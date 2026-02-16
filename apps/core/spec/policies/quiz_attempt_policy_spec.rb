@@ -36,26 +36,36 @@ RSpec.describe QuizAttemptPolicy, type: :policy do
   end
 
   permissions :show? do
-    it "permits privileged, owner, and managing teacher" do
+    it "permits admin, owner, and teacher in the quiz course" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(student, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies unrelated teacher" do
-      expect(policy).not_to permit(unrelated_teacher, create(:quiz_attempt, tenant: tenant, quiz: quiz, user: student))
+    it "denies curriculum lead and unrelated teacher" do
+      expect(policy).not_to permit(curriculum_lead, record)
+      unrelated_attempt = build(:quiz_attempt, tenant: tenant, quiz: quiz, user: student, attempt_number: 2)
+      expect(policy).not_to permit(unrelated_teacher, unrelated_attempt)
     end
   end
 
   permissions :create? do
     let(:new_attempt) { build(:quiz_attempt, tenant: tenant, quiz: quiz, user: student, attempt_number: 2) }
 
-    it "permits privileged users, managing teacher, and enrolled student" do
-      expect(policy).to permit(admin, new_attempt)
-      expect(policy).to permit(curriculum_lead, new_attempt)
-      expect(policy).to permit(teacher, new_attempt)
+    it "permits enrolled students on published quizzes" do
       expect(policy).to permit(student, new_attempt)
+    end
+
+    it "denies admin, curriculum lead, and teachers" do
+      expect(policy).not_to permit(admin, new_attempt)
+      expect(policy).not_to permit(curriculum_lead, new_attempt)
+      expect(policy).not_to permit(teacher, new_attempt)
+    end
+
+    it "denies students for draft quizzes" do
+      draft_quiz = create(:quiz, tenant: tenant, course: course, created_by: other_teacher, status: "draft")
+      draft_attempt = build(:quiz_attempt, tenant: tenant, quiz: draft_quiz, user: student, attempt_number: 1)
+      expect(policy).not_to permit(student, draft_attempt)
     end
   end
 
@@ -67,13 +77,13 @@ RSpec.describe QuizAttemptPolicy, type: :policy do
   end
 
   permissions :grade_all? do
-    it "permits privileged and managing teacher" do
+    it "permits admin and teacher in the quiz course" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies owner student" do
+    it "denies curriculum lead and owner student" do
+      expect(policy).not_to permit(curriculum_lead, record)
       expect(policy).not_to permit(student, record)
     end
   end
@@ -86,7 +96,7 @@ RSpec.describe QuizAttemptPolicy, type: :policy do
       create(:quiz_attempt, tenant: tenant, quiz: other_quiz, user: student)
     end
 
-    it "returns all for privileged users" do
+    it "returns all for admin" do
       scope = described_class::Scope.new(admin, QuizAttempt).resolve
       expect(scope).to include(student_attempt, other_quiz_attempt)
     end

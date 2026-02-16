@@ -90,10 +90,20 @@ RSpec.describe "Api::V1::QuestionBanks" do
       expect(response.parsed_body["id"]).to eq(bank.id)
     end
 
-    it "returns 403 for teachers who do not own the bank" do
+    it "allows teachers to view shared banks they do not own" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       bank = create(:question_bank, tenant: tenant, created_by: other_teacher)
+      Current.tenant = nil
+
+      get "/api/v1/question_banks/#{bank.id}"
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "returns 403 for students" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      bank = create(:question_bank, tenant: tenant, created_by: teacher)
       Current.tenant = nil
 
       get "/api/v1/question_banks/#{bank.id}"

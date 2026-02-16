@@ -37,27 +37,33 @@ RSpec.describe DiscussionPostPolicy, type: :policy do
   end
 
   permissions :create? do
-    it "permits privileged and enrolled users" do
-      expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
+    it "permits enrolled users when discussion is open" do
       expect(policy).to permit(student, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies unrelated student" do
+    it "denies unenrolled users and privileged users without enrollment" do
+      expect(policy).not_to permit(admin, record)
+      expect(policy).not_to permit(curriculum_lead, record)
       expect(policy).not_to permit(other_student, record)
+    end
+
+    it "denies posting when discussion is locked" do
+      locked_discussion = create(:discussion, tenant: tenant, course: course, created_by: other_teacher, status: "locked")
+      locked_post = build(:discussion_post, tenant: tenant, discussion: locked_discussion, created_by: student)
+      expect(policy).not_to permit(student, locked_post)
     end
   end
 
   permissions :destroy? do
-    it "permits privileged, owner, and teacher in course" do
+    it "permits admin, owner, and teacher in course" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(student, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies unrelated student" do
+    it "denies curriculum lead and unrelated student" do
+      expect(policy).not_to permit(curriculum_lead, record)
       expect(policy).not_to permit(other_student, record)
     end
   end
@@ -70,7 +76,7 @@ RSpec.describe DiscussionPostPolicy, type: :policy do
       create(:discussion_post, tenant: tenant, discussion: hidden_discussion, created_by: other_teacher)
     end
 
-    it "returns all for privileged users" do
+    it "returns all for admin" do
       scope = described_class::Scope.new(admin, DiscussionPost).resolve
       expect(scope).to include(student_post, teacher_post, hidden_post)
     end

@@ -1,18 +1,18 @@
 class QuestionBankPolicy < ApplicationPolicy
   def index?
-    true
+    content_creator?
   end
 
   def show?
-    privileged_user? || owns_bank?
+    content_creator?
   end
 
   def create?
-    privileged_user? || user.has_role?(:teacher)
+    content_creator?
   end
 
   def update?
-    privileged_user? || owns_bank?
+    content_creator?
   end
 
   def destroy?
@@ -25,16 +25,19 @@ class QuestionBankPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if privileged_user?
-      return scope.where(created_by_id: user.id) if user.has_role?(:teacher)
+      content_creator? ? scope.all : scope.none
+    end
 
-      scope.none
+    private
+
+    def content_creator?
+      user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:teacher)
     end
   end
 
   private
 
-  def owns_bank?
-    record.created_by_id == user.id
+  def content_creator?
+    user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:teacher)
   end
 end

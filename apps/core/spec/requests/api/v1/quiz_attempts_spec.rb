@@ -16,6 +16,13 @@ RSpec.describe "Api::V1::QuizAttempts" do
     Current.tenant = nil
     u
   end
+  let(:other_student) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:student)
+    Current.tenant = nil
+    u
+  end
   let(:course) do
     Current.tenant = tenant
     c = create(:course, tenant: tenant)
@@ -79,7 +86,7 @@ RSpec.describe "Api::V1::QuizAttempts" do
       Current.tenant = nil
 
       post "/api/v1/quizzes/#{draft_quiz.id}/attempts"
-      expect(response).to have_http_status(:unprocessable_content)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "rejects when quiz is locked" do
@@ -120,6 +127,7 @@ RSpec.describe "Api::V1::QuizAttempts" do
     it "lists attempts for the quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       create(:quiz_attempt, tenant: tenant, quiz: quiz, user: student, attempt_number: 1)
       Current.tenant = nil
 
@@ -145,6 +153,16 @@ RSpec.describe "Api::V1::QuizAttempts" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       attempt = create(:quiz_attempt, tenant: tenant, quiz: other_quiz, user: student, attempt_number: 1)
+      Current.tenant = nil
+
+      get "/api/v1/quiz_attempts/#{attempt.id}"
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "returns 403 for other students" do
+      mock_session(other_student, tenant: tenant)
+      Current.tenant = tenant
+      attempt = create(:quiz_attempt, tenant: tenant, quiz: quiz, user: student, attempt_number: 1)
       Current.tenant = nil
 
       get "/api/v1/quiz_attempts/#{attempt.id}"

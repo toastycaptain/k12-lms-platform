@@ -1,47 +1,53 @@
 class IntegrationConfigPolicy < ApplicationPolicy
   def index?
-    privileged_user?
+    admin_user?
   end
 
   def show?
-    privileged_user?
+    admin_user?
   end
 
   def create?
-    privileged_user?
+    admin_user?
   end
 
   def update?
-    privileged_user?
+    admin_user?
   end
 
   def destroy?
-    privileged_user?
+    admin_user?
   end
 
   def activate?
-    privileged_user?
+    admin_user?
   end
 
   def deactivate?
-    privileged_user?
+    admin_user?
   end
 
   def sync_courses?
-    privileged_user?
+    admin_user?
   end
 
   def sync_organizations?
-    privileged_user?
+    admin_user?
   end
 
   def sync_users?
-    privileged_user?
+    admin_user?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      privileged_user? ? scope.all : scope.none
+      user.has_role?(:admin) ? scope.all : scope.none
     end
+  end
+
+  private
+
+  def admin_user?
+    user.has_role?(:admin)
   end
 end

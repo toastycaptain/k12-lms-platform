@@ -15,21 +15,18 @@ RSpec.describe SyncRunPolicy, type: :policy do
   after { Current.tenant = nil }
 
   permissions :index? do
-    it "permits privileged users and teachers" do
+    it "permits admin only" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
-      expect(policy).to permit(teacher, record)
+      expect(policy).not_to permit(curriculum_lead, record)
+      expect(policy).not_to permit(teacher, record)
     end
   end
 
   permissions :show? do
-    it "permits privileged users and owner teacher" do
+    it "permits admin only" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
-      expect(policy).to permit(teacher, record)
-    end
-
-    it "denies other teachers" do
+      expect(policy).not_to permit(curriculum_lead, record)
+      expect(policy).not_to permit(teacher, record)
       expect(policy).not_to permit(other_teacher, record)
     end
   end
@@ -38,12 +35,13 @@ RSpec.describe SyncRunPolicy, type: :policy do
     let!(:own_run) { create(:sync_run, tenant: tenant, integration_config: integration_config, triggered_by: teacher) }
     let!(:other_run) { create(:sync_run, tenant: tenant, integration_config: integration_config, triggered_by: other_teacher) }
 
-    it "returns all for privileged users" do
+    it "returns all for admin" do
       expect(described_class::Scope.new(admin, SyncRun).resolve).to contain_exactly(own_run, other_run)
     end
 
-    it "returns only own runs for teacher" do
-      expect(described_class::Scope.new(teacher, SyncRun).resolve).to contain_exactly(own_run)
+    it "returns none for non-admin users" do
+      expect(described_class::Scope.new(curriculum_lead, SyncRun).resolve).to be_empty
+      expect(described_class::Scope.new(teacher, SyncRun).resolve).to be_empty
     end
   end
 end

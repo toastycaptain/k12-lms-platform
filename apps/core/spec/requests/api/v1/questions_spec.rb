@@ -131,6 +131,16 @@ RSpec.describe "Api::V1::Questions" do
       expect(response.parsed_body["id"]).to eq(question.id)
       expect(response.parsed_body["prompt"]).to eq(question.prompt)
     end
+
+    it "returns 403 for students" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      question = create(:question, tenant: tenant, question_bank: bank, created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/questions/#{question.id}"
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "PATCH /api/v1/questions/:id" do

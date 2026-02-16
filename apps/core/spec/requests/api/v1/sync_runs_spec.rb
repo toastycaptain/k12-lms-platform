@@ -50,7 +50,7 @@ RSpec.describe "Api::V1::SyncRuns", type: :request do
       expect(response.parsed_body.length).to eq(2)
     end
 
-    it "returns only own sync runs for teacher" do
+    it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       create(:sync_run, tenant: tenant, integration_config: integration_config, triggered_by: teacher)
@@ -59,8 +59,7 @@ RSpec.describe "Api::V1::SyncRuns", type: :request do
 
       get "/api/v1/integration_configs/#{integration_config.id}/sync_runs"
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.length).to eq(1)
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "returns 403 for student" do
@@ -139,24 +138,11 @@ RSpec.describe "Api::V1::SyncRuns", type: :request do
       expect(response.parsed_body["status"]).to eq("pending")
     end
 
-    it "shows a sync run for teacher" do
+    it "returns 403 for teacher" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
       run = create(:sync_run, tenant: tenant, integration_config: integration_config,
         triggered_by: teacher)
-      Current.tenant = nil
-
-      get "/api/v1/sync_runs/#{run.id}"
-
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["id"]).to eq(run.id)
-    end
-
-    it "returns 403 when teacher requests another user's sync run" do
-      mock_session(teacher, tenant: tenant)
-      Current.tenant = tenant
-      run = create(:sync_run, tenant: tenant, integration_config: integration_config,
-        triggered_by: admin)
       Current.tenant = nil
 
       get "/api/v1/sync_runs/#{run.id}"

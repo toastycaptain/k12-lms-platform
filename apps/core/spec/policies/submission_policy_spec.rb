@@ -37,14 +37,15 @@ RSpec.describe SubmissionPolicy, type: :policy do
   end
 
   permissions :show? do
-    it "permits privileged, owner, and managing teacher" do
+    it "permits admin, owner, and teacher in the assignment course" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(student, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies other student" do
+    it "denies curriculum lead and unrelated users" do
+      expect(policy).not_to permit(curriculum_lead, record)
+      expect(policy).not_to permit(other_teacher, record)
       expect(policy).not_to permit(other_student, record)
     end
   end
@@ -56,50 +57,56 @@ RSpec.describe SubmissionPolicy, type: :policy do
       expect(policy).to permit(student, new_submission)
     end
 
-    it "denies teachers" do
+    it "denies teachers and unenrolled students" do
       expect(policy).not_to permit(teacher, new_submission)
+      expect(policy).not_to permit(other_student, new_submission)
     end
   end
 
-  permissions :grade? do
-    it "permits privileged and managing teacher" do
+  permissions :update?, :grade? do
+    it "permits admin and teacher in the assignment course" do
       expect(policy).to permit(admin, record)
-      expect(policy).to permit(curriculum_lead, record)
       expect(policy).to permit(teacher, record)
     end
 
-    it "denies student" do
+    it "denies curriculum lead, students, and unrelated teachers" do
+      expect(policy).not_to permit(curriculum_lead, record)
       expect(policy).not_to permit(student, record)
+      expect(policy).not_to permit(other_teacher, record)
     end
   end
 
   describe "Scope" do
-    let!(:teacher_owned_assignment_submission) do
-      owner_assignment = create(:assignment, tenant: tenant, course: other_course, created_by: teacher, status: "published")
-      create(:submission, tenant: tenant, assignment: owner_assignment, user: other_student)
-    end
     let!(:taught_course_submission) do
       create(:submission, tenant: tenant, assignment: assignment, user: other_student)
     end
+
+    let!(:cross_course_submission) do
+      other_assignment = create(:assignment, tenant: tenant, course: other_course, created_by: teacher, status: "published")
+      create(:submission, tenant: tenant, assignment: other_assignment, user: other_student)
+    end
+
     let!(:student_own_submission) do
-      create(:submission, tenant: tenant, assignment: assignment, user: student)
+      student_assignment = create(:assignment, tenant: tenant, course: course, created_by: other_teacher, status: "published")
+      create(:submission, tenant: tenant, assignment: student_assignment, user: student)
     end
 
     it "returns all for admin" do
       scope = described_class::Scope.new(admin, Submission).resolve
-      expect(scope).to include(teacher_owned_assignment_submission, taught_course_submission, student_own_submission)
+      expect(scope).to include(taught_course_submission, cross_course_submission, student_own_submission)
     end
 
-    it "returns managed submissions for teacher" do
+    it "returns only submissions in taught courses for teacher" do
       scope = described_class::Scope.new(teacher, Submission).resolve
-      expect(scope).to include(teacher_owned_assignment_submission, taught_course_submission, student_own_submission)
+      expect(scope).to include(taught_course_submission, student_own_submission)
+      expect(scope).not_to include(cross_course_submission)
     end
 
     it "returns own submissions for student" do
       scope = described_class::Scope.new(student, Submission).resolve
       expect(scope).to include(student_own_submission)
-      expect(scope).not_to include(teacher_owned_assignment_submission)
       expect(scope).not_to include(taught_course_submission)
+      expect(scope).not_to include(cross_course_submission)
     end
   end
 end

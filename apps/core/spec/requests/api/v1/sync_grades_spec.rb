@@ -18,6 +18,8 @@ RSpec.describe "Api::V1::Assignments sync_grades", type: :request do
   end
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:term) { create(:term, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course, term: term) }
 
   after do
     Current.tenant = nil
@@ -51,7 +53,13 @@ RSpec.describe "Api::V1::Assignments sync_grades", type: :request do
       m
     end
 
-    before { config; coursework_mapping }
+    before do
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+      Current.tenant = nil
+      config
+      coursework_mapping
+    end
 
     it "triggers grade sync for teacher" do
       mock_session(teacher, tenant: tenant)

@@ -166,6 +166,17 @@ RSpec.describe "Api::V1::Assignments", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["title"]).to eq(assignment.title)
     end
+
+    it "returns 403 for student when assignment is draft" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: student, section: section, role: "student")
+      draft_assignment = create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      Current.tenant = nil
+
+      get "/api/v1/assignments/#{draft_assignment.id}"
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "PATCH /api/v1/assignments/:id" do
@@ -178,6 +189,9 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
     it "updates an assignment" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       patch "/api/v1/assignments/#{assignment.id}", params: { title: "Updated Title" }
       expect(response).to have_http_status(:ok)
@@ -195,6 +209,9 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
     it "deletes for teacher" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       delete "/api/v1/assignments/#{assignment.id}"
       expect(response).to have_http_status(:no_content)
@@ -218,6 +235,9 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
     it "publishes a draft assignment" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/assignments/#{assignment.id}/publish"
       expect(response).to have_http_status(:ok)
@@ -227,6 +247,7 @@ RSpec.describe "Api::V1::Assignments", type: :request do
     it "returns 422 if not draft" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       assignment.update!(status: "published")
       Current.tenant = nil
 
@@ -245,6 +266,9 @@ RSpec.describe "Api::V1::Assignments", type: :request do
 
     it "closes a published assignment" do
       mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/assignments/#{assignment.id}/close"
       expect(response).to have_http_status(:ok)

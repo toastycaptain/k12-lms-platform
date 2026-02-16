@@ -1,27 +1,39 @@
 class QuestionPolicy < ApplicationPolicy
   def index?
-    true
+    content_creator?
   end
 
   def show?
-    true
+    content_creator?
   end
 
   def create?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    content_creator?
   end
 
   def update?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    content_creator?
   end
 
   def destroy?
-    user.has_role?(:admin) || user.has_role?(:teacher)
+    content_creator?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      content_creator? ? scope.all : scope.none
     end
+
+    private
+
+    def content_creator?
+      user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:teacher)
+    end
+  end
+
+  private
+
+  def content_creator?
+    user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:teacher)
   end
 end

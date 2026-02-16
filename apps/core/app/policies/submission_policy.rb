@@ -4,38 +4,42 @@ class SubmissionPolicy < ApplicationPolicy
   end
 
   def show?
-    privileged_user? || owns_submission? || manages_assignment_course?
+    admin_user? || owns_submission? || teacher_enrolled_in_assignment_course?
   end
 
   def create?
     user.has_role?(:student) && enrolled_student_in_course?(record.assignment.course_id)
   end
 
+  def update?
+    admin_user? || teacher_enrolled_in_assignment_course?
+  end
+
   def grade?
-    privileged_user? || manages_assignment_course?
+    update?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if privileged_user?
+      return scope.all if admin_user?
 
-      if user.has_role?(:teacher)
-        return scope.joins(:assignment)
-          .where(assignments: { created_by_id: user.id })
-          .or(
-            scope.joins(:assignment).where(assignments: { course_id: taught_course_ids })
-          )
-          .distinct
-      end
-
-      if user.has_role?(:student)
-        return scope.where(user_id: user.id)
-      end
+      return teacher_scope if user.has_role?(:teacher)
+      return scope.where(user_id: user.id) if user.has_role?(:student)
 
       scope.none
     end
 
     private
+
+    def admin_user?
+      user.has_role?(:admin)
+    end
+
+    def teacher_scope
+      scope.joins(:assignment)
+        .where(assignments: { course_id: taught_course_ids })
+        .distinct
+    end
 
     def taught_course_ids
       Enrollment.joins(:section)
@@ -51,11 +55,17 @@ class SubmissionPolicy < ApplicationPolicy
     record.user_id == user.id
   end
 
-  def manages_assignment_course?
-    record.assignment.created_by_id == user.id || teaches_course?(record.assignment.course_id)
+  def admin_user?
+    user.has_role?(:admin)
+  end
+
+  def teacher_enrolled_in_assignment_course?
+    user.has_role?(:teacher) && teaches_course?(record.assignment.course_id)
   end
 
   def teaches_course?(course_id)
+    return false unless course_id
+
     Enrollment.joins(:section).exists?(
       user_id: user.id,
       role: "teacher",

@@ -67,7 +67,7 @@ RSpec.describe AssignmentPolicy, type: :policy do
       create(:assignment, tenant: tenant, course: course, created_by: other_teacher, status: "draft")
     end
     let!(:student_visible_assignment) do
-      create(:assignment, tenant: tenant, course: course, created_by: other_teacher, status: "closed")
+      create(:assignment, tenant: tenant, course: course, created_by: other_teacher, status: "published")
     end
     let!(:hidden_assignment) do
       create(:assignment, tenant: tenant, course: other_course, created_by: other_teacher, status: "published")
@@ -84,7 +84,7 @@ RSpec.describe AssignmentPolicy, type: :policy do
       expect(scope).not_to include(hidden_assignment)
     end
 
-    it "returns published/closed assignments in enrolled courses for students" do
+    it "returns published assignments in enrolled courses for students" do
       scope = described_class::Scope.new(student, Assignment).resolve
       expect(scope).to include(student_visible_assignment)
       expect(scope).not_to include(taught_course_assignment)

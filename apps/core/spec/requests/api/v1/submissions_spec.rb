@@ -94,6 +94,7 @@ RSpec.describe "Api::V1::Submissions", type: :request do
     it "teacher sees all submissions" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       create(:submission, tenant: tenant, assignment: assignment, user: student, status: "submitted", submitted_at: Time.current)
       create(:submission, tenant: tenant, assignment: assignment, user: other_student, status: "submitted", submitted_at: Time.current)
       Current.tenant = nil

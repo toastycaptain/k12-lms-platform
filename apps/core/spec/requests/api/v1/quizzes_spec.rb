@@ -29,6 +29,12 @@ RSpec.describe "Api::V1::Quizzes" do
     Current.tenant = nil
     c
   end
+  let(:other_course) do
+    Current.tenant = tenant
+    c = create(:course, tenant: tenant)
+    Current.tenant = nil
+    c
+  end
   let(:term) do
     Current.tenant = tenant
     t = create(:term, tenant: tenant, academic_year: course.academic_year)
@@ -48,6 +54,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "lists quizzes for a course" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       create(:quiz, tenant: tenant, course: course, created_by: teacher)
       create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published")
       Current.tenant = nil
@@ -60,6 +67,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "filters by status" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "draft")
       create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published")
       Current.tenant = nil
@@ -69,15 +77,29 @@ RSpec.describe "Api::V1::Quizzes" do
       expect(response.parsed_body.length).to eq(1)
     end
 
-    it "does not expose quizzes for courses the teacher does not own or teach" do
+    it "does not expose quizzes for courses the teacher does not teach" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
-      create(:quiz, tenant: tenant, course: course, created_by: other_teacher, title: "Restricted Quiz")
+      create(:quiz, tenant: tenant, course: other_course, created_by: other_teacher, title: "Restricted Quiz")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{other_course.id}/quizzes"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
+
+    it "hides draft quizzes from enrolled students" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: student, section: section, role: "student")
+      create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published")
       Current.tenant = nil
 
       get "/api/v1/courses/#{course.id}/quizzes"
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to be_empty
+      expect(response.parsed_body.length).to eq(1)
+      expect(response.parsed_body.first["status"]).to eq("published")
     end
   end
 
@@ -115,6 +137,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "shows a quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher)
       Current.tenant = nil
 
@@ -128,6 +151,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "updates a quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher)
       Current.tenant = nil
 
@@ -141,6 +165,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "deletes a quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher)
       Current.tenant = nil
 
@@ -153,6 +178,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "publishes a draft quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "draft")
       Current.tenant = nil
 
@@ -164,6 +190,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "rejects publishing a non-draft quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published")
       Current.tenant = nil
 
@@ -176,6 +203,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "closes a published quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "published")
       Current.tenant = nil
 
@@ -187,6 +215,7 @@ RSpec.describe "Api::V1::Quizzes" do
     it "rejects closing a draft quiz" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
       quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher, status: "draft")
       Current.tenant = nil
 
