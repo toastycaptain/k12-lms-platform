@@ -16,6 +16,6 @@ COPY --from=builder /usr/local/bundle /usr/local/bundle
 COPY --from=builder /app /app
 RUN mkdir -p /app/log /app/tmp && chown -R appuser:appgroup /app/log /app/tmp
 USER appuser
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s --start-period=15s CMD curl -f http://localhost:3000/up || exit 1
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s CMD curl -f http://localhost:${PORT:-8080}/up || exit 1
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
