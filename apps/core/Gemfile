@@ -47,9 +47,8 @@ gem "sentry-rails", "~> 6.3"
 # Windows timezone data
 gem "tzinfo-data", "~> 1.0", platforms: %i[windows jruby]
 
-# Caching / Queue
-gem "solid_cache", "~> 1.0"
-gem "solid_queue", "~> 1.3"
+# Redis (used by Sidekiq and cache store)
+gem "redis", "~> 5.0"
 
 gem "bootsnap", "~> 1.23", require: false
 gem "kamal", "~> 2.10", require: false
