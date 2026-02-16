@@ -47,7 +47,13 @@ jobs:
           fetch-depth: 0
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: |
+          npm install -g @railway/cli || true
+          if command -v railway >/dev/null 2>&1; then
+            echo "RAILWAY_CMD=railway" >> "$GITHUB_ENV"
+          else
+            echo "RAILWAY_CMD=npx @railway/cli" >> "$GITHUB_ENV"
+          fi
 
       # ===========================================================
       # IMPORTANT: Before deploying destructive migrations (dropping
@@ -60,7 +66,7 @@ jobs:
         id: migrate
         run: |
           echo "--- Starting database migration ---"
-          railway run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
+          $RAILWAY_CMD run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
           echo "--- Migration complete ---"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -75,19 +81,19 @@ jobs:
           retention-days: 30
 
       - name: Deploy k12-core
-        run: railway up -s k12-core --detach
+        run: $RAILWAY_CMD up -s k12-core --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
       - name: Deploy k12-sidekiq
-        run: railway up -s k12-sidekiq --detach
+        run: $RAILWAY_CMD up -s k12-sidekiq --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
       - name: Deploy k12-web
-        run: railway up -s k12-web --detach
+        run: $RAILWAY_CMD up -s k12-web --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
@@ -103,9 +109,9 @@ jobs:
         if: failure() && steps.smoke.outcome == 'failure'
         run: |
           echo "Health checks failed. Initiating rollback..."
-          railway down -s k12-core -y || true
-          railway down -s k12-sidekiq -y || true
-          railway down -s k12-web -y || true
+          $RAILWAY_CMD down -s k12-core -y || true
+          $RAILWAY_CMD down -s k12-sidekiq -y || true
+          $RAILWAY_CMD down -s k12-web -y || true
           echo "Rollback triggered. Manual verification required."
           echo "::error::Deployment failed health checks. Services have been rolled back."
         env:
@@ -169,12 +175,18 @@ jobs:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: |
+          npm install -g @railway/cli || true
+          if command -v railway >/dev/null 2>&1; then
+            echo "RAILWAY_CMD=railway" >> "$GITHUB_ENV"
+          else
+            echo "RAILWAY_CMD=npx @railway/cli" >> "$GITHUB_ENV"
+          fi
 
       - name: Run database migrations (staging)
         run: |
           echo "--- Starting staging database migration ---"
-          railway run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
+          $RAILWAY_CMD run -s k12-core -- bundle exec rails db:migrate 2>&1 | tee migration_output.log
           echo "--- Staging migration complete ---"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -190,21 +202,21 @@ jobs:
           retention-days: 14
 
       - name: Deploy k12-core (staging)
-        run: railway up -s k12-core --detach
+        run: $RAILWAY_CMD up -s k12-core --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
 
       - name: Deploy k12-sidekiq (staging)
-        run: railway up -s k12-sidekiq --detach
+        run: $RAILWAY_CMD up -s k12-sidekiq --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_STAGING_ENVIRONMENT_ID }}
 
       - name: Deploy k12-web (staging)
-        run: railway up -s k12-web --detach
+        run: $RAILWAY_CMD up -s k12-web --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_STAGING_PROJECT_ID }}
