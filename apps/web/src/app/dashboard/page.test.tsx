@@ -39,11 +39,7 @@ describe("DashboardPage", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedUseAuth = vi.mocked(useAuth);
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("renders dashboard data using API responses", async () => {
+  beforeEach(() => {
     mockedUseAuth.mockReturnValue({
       user: {
         id: 10,
@@ -61,7 +57,13 @@ describe("DashboardPage", () => {
       signOut: async () => {},
       refresh: async () => {},
     });
+  });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders dashboard data using API responses", async () => {
     mockedApiFetch.mockImplementation(async (path: string) => {
       if (path === "/api/v1/unit_plans") {
         return [
@@ -90,8 +92,39 @@ describe("DashboardPage", () => {
     render(<DashboardPage />);
 
     expect(screen.getByText("Welcome, Taylor Teacher")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("Unit 1")).toBeInTheDocument());
+    expect(await screen.findByText("Unit 1")).toBeInTheDocument();
     expect(screen.getByText("Biology")).toBeInTheDocument();
     expect(screen.getByText("BIO-101")).toBeInTheDocument();
+  });
+
+  it("renders loading skeleton initially", () => {
+    mockedApiFetch.mockImplementation(() => new Promise(() => {}) as Promise<never>);
+
+    render(<DashboardPage />);
+
+    expect(screen.getAllByText("Loading...").length).toBeGreaterThan(0);
+  });
+
+  it("renders empty state when no units or courses", async () => {
+    mockedApiFetch.mockImplementation(async (path: string) => {
+      if (path === "/api/v1/unit_plans") return [] as never;
+      if (path === "/api/v1/courses") return [] as never;
+      return [] as never;
+    });
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByText("No unit plans yet.")).toBeInTheDocument();
+    expect(screen.getByText("No courses found.")).toBeInTheDocument();
+  });
+
+  it("handles API error gracefully", async () => {
+    mockedApiFetch.mockRejectedValue(new Error("boom"));
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("No unit plans yet.")).toBeInTheDocument();
+    });
   });
 });

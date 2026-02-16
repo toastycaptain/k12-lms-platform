@@ -8,7 +8,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 function Probe() {
-  const { user, loading, error, signOut } = useAuth();
+  const { user, loading, error, signOut, refresh } = useAuth();
 
   return (
     <div>
@@ -17,6 +17,9 @@ function Probe() {
       <div data-testid="error">{error || ""}</div>
       <button type="button" onClick={() => void signOut()}>
         Sign Out
+      </button>
+      <button type="button" onClick={() => void refresh()}>
+        Refresh
       </button>
     </div>
   );
@@ -106,5 +109,74 @@ describe("AuthProvider", () => {
       "http://localhost:3001/api/v1/session",
       expect.objectContaining({ method: "DELETE", credentials: "include" }),
     );
+  });
+
+  it("refresh reloads the user", async () => {
+    mockedFetchCurrentUser
+      .mockResolvedValueOnce({
+        id: 1,
+        email: "teacher1@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 1,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      })
+      .mockResolvedValueOnce({
+        id: 1,
+        email: "teacher2@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 1,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      });
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    expect(await screen.findByText("teacher1@example.com")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("user")).toHaveTextContent("teacher2@example.com"),
+    );
+    expect(mockedFetchCurrentUser).toHaveBeenCalledTimes(2);
+  });
+
+  it("handles non-Error rejection in refresh", async () => {
+    mockedFetchCurrentUser
+      .mockResolvedValueOnce({
+        id: 3,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 1,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      })
+      .mockRejectedValueOnce("network down");
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    expect(await screen.findByText("teacher@example.com")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("none"));
+    expect(screen.getByTestId("error")).toHaveTextContent("Unable to fetch current user");
   });
 });

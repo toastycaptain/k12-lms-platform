@@ -122,4 +122,120 @@ describe("ProtectedRoute", () => {
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/unauthorized"));
     expect(screen.queryByText("Admin content")).not.toBeInTheDocument();
   });
+
+  it("redirects to /setup when onboarding is incomplete", async () => {
+    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 33,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 4,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: false,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute>
+        <div>Private content</div>
+      </ProtectedRoute>,
+    );
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/setup"));
+  });
+
+  it("does not redirect to /setup for exempt paths", async () => {
+    mockedUsePathname.mockReturnValue("/setup");
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 33,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 4,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: false,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute>
+        <div>Setup content</div>
+      </ProtectedRoute>,
+    );
+
+    expect(screen.getByText("Setup content")).toBeInTheDocument();
+    await waitFor(() => expect(replaceMock).not.toHaveBeenCalledWith("/setup"));
+  });
+
+  it("redirects from /setup to /dashboard when onboarding is already complete", async () => {
+    mockedUsePathname.mockReturnValue("/setup");
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 33,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 4,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute>
+        <div>Setup content</div>
+      </ProtectedRoute>,
+    );
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/dashboard"));
+  });
+
+  it("accepts custom unauthorizedRedirect path", async () => {
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 22,
+        email: "student@example.com",
+        first_name: "Sam",
+        last_name: "Student",
+        tenant_id: 3,
+        roles: ["student"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute requiredRoles={["admin"]} unauthorizedRedirect="/forbidden">
+        <div>Admin content</div>
+      </ProtectedRoute>,
+    );
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/forbidden"));
+  });
 });
