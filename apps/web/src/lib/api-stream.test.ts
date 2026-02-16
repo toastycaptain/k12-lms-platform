@@ -1,5 +1,10 @@
 import { apiFetchStream, isAbortError } from "@/lib/api-stream";
 
+vi.mock("@/lib/api", () => ({
+  buildApiUrl: vi.fn((path: string) => `http://localhost:3001${path}`),
+  getCsrfToken: vi.fn(async () => "csrf-token"),
+}));
+
 function streamResponse(chunks: string[], status = 200): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

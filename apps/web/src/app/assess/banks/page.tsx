@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
 import { Pagination } from "@/components/Pagination";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -78,11 +78,12 @@ export default function QuestionBankListPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-      await fetch(`${API_BASE}/api/v1/question_banks/${bankId}/import_qti`, {
+      const csrfToken = await getCsrfToken();
+      await fetch(buildApiUrl(`/api/v1/question_banks/${bankId}/import_qti`), {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers: { "X-CSRF-Token": csrfToken },
       });
     } catch {
       // ignore

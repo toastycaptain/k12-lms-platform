@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # OmniAuth callback routes
-  get "/auth/:provider/callback", to: "api/v1/sessions#omniauth_callback"
+  match "/auth/:provider/callback", to: "api/v1/sessions#omniauth_callback", via: [ :get, :post ]
   get "/auth/failure", to: "api/v1/sessions#failure"
 
   # LTI 1.3 Protocol Endpoints
@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/health", to: "health#show"
+      get "/csrf", to: "csrf#show"
       get "saml/metadata", to: "saml#metadata"
 
       delete "/session", to: "sessions#destroy"

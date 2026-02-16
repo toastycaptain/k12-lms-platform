@@ -1,7 +1,7 @@
 class Rack::Attack
   # Auth endpoints — prevent credential stuffing
-  throttle("auth/ip", limit: 10, period: 60) do |req|
-    req.ip if req.path.start_with?("/auth") && req.post?
+  throttle("auth/ip", limit: 5, period: 60) do |req|
+    req.ip if req.path.start_with?("/auth/")
   end
 
   # Addon endpoints — external-facing
@@ -10,13 +10,16 @@ class Rack::Attack
   end
 
   # AI generation — expensive operations
-  throttle("ai/ip", limit: 20, period: 60) do |req|
-    req.ip if req.path.start_with?("/api/v1/ai_invocations") && req.post?
+  throttle("ai/user", limit: 20, period: 60) do |req|
+    next unless req.post?
+    next unless req.path.start_with?("/api/v1/ai/") || req.path.start_with?("/api/v1/ai_invocations")
+
+    req.env["rack.session"]&.dig("user_id") || req.ip
   end
 
   # General API — prevent abuse
   throttle("api/ip", limit: 300, period: 60) do |req|
-    req.ip if req.path.start_with?("/api/")
+    req.ip if req.path.start_with?("/api/v1/")
   end
 
   # JSON 429 response

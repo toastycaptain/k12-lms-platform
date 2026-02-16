@@ -100,11 +100,17 @@ module Api
 
         Current.tenant = tenant
         user = find_or_create_user(auth, tenant)
+        unless user
+          return redirect_with_error("identity_missing")
+        end
+
         store_google_tokens(user, auth)
         complete_sign_in!(user: user, tenant: tenant, provider: auth.provider)
 
         redirect_to "#{frontend_url}/auth/callback",
           allow_other_host: true
+      rescue ActiveRecord::RecordInvalid
+        redirect_with_error("authentication_failed")
       end
 
       def handle_saml_callback(auth)
@@ -143,9 +149,11 @@ module Api
           user.add_role(default_role)
         end
 
+        attach_identity!(user: user, provider: auth.provider.to_s, uid: auth.uid.to_s)
+
         complete_sign_in!(user: user, tenant: tenant, provider: auth.provider)
 
-        redirect_to "#{frontend_url}/dashboard",
+        redirect_to "#{frontend_url}/auth/callback",
           allow_other_host: true
       end
 
@@ -174,11 +182,20 @@ module Api
       end
 
       def find_or_create_user(auth, tenant)
-        User.unscoped.find_or_initialize_by(email: auth.info.email.to_s.downcase, tenant: tenant).tap do |user|
-          user.first_name = auth.info.first_name
-          user.last_name = auth.info.last_name
-          user.save!
-        end
+        provider = auth.provider.to_s
+        uid = auth.uid.to_s
+        email = auth.info&.email.to_s.downcase
+
+        user = find_user_by_identity(provider: provider, uid: uid, tenant: tenant)
+        user ||= find_user_by_email(email: email, tenant: tenant)
+        return nil if user.nil? && email.blank?
+
+        user ||= User.unscoped.new(email: email, tenant: tenant)
+        user.first_name = auth.info&.first_name
+        user.last_name = auth.info&.last_name
+        attach_identity!(user: user, provider: provider, uid: uid)
+        user.save!
+        user
       end
 
       def saml_email(auth)
@@ -214,6 +231,31 @@ module Api
         attrs[:google_token_expires_at] = Time.at(auth.credentials.expires_at) if auth.credentials.expires_at.present?
 
         user.update!(attrs)
+      end
+
+      def find_user_by_identity(provider:, uid:, tenant:)
+        return nil if provider.blank? || uid.blank?
+
+        User.unscoped
+          .where(tenant: tenant)
+          .where("preferences -> 'auth_identities' ->> ? = ?", provider, uid)
+          .first
+      end
+
+      def find_user_by_email(email:, tenant:)
+        return nil if email.blank?
+
+        User.unscoped.find_by(email: email, tenant: tenant)
+      end
+
+      def attach_identity!(user:, provider:, uid:)
+        return if provider.blank? || uid.blank?
+
+        preferences = user.preferences.is_a?(Hash) ? user.preferences.deep_dup : {}
+        identities = preferences["auth_identities"].is_a?(Hash) ? preferences["auth_identities"].dup : {}
+        identities[provider] = uid
+        preferences["auth_identities"] = identities
+        user.preferences = preferences
       end
 
       def current_user_params

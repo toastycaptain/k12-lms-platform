@@ -1,26 +1,10 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const API_V1_PREFIX = "/api/v1";
+import { buildApiUrl, getCsrfToken } from "@/lib/api";
 
 interface StreamEvent {
   token?: string;
   done?: boolean;
   content?: string;
   error?: string;
-}
-
-function normalizedBaseUrl(): string {
-  return API_BASE_URL.replace(/\/+$/, "");
-}
-
-function buildUrl(path: string): string {
-  const base = normalizedBaseUrl();
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  if (base.endsWith(API_V1_PREFIX) && normalizedPath.startsWith(API_V1_PREFIX)) {
-    return `${base}${normalizedPath.slice(API_V1_PREFIX.length)}`;
-  }
-
-  return `${base}${normalizedPath}`;
 }
 
 export function isAbortError(error: unknown): boolean {
@@ -35,14 +19,24 @@ export async function apiFetchStream(
   onError?: (error: string) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const response = await fetch(buildUrl(path), {
+  const headers = new Headers({ "Content-Type": "application/json" });
+  headers.set("X-CSRF-Token", await getCsrfToken());
+
+  const requestOptions: RequestInit = {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
     cache: "no-store",
     body: JSON.stringify(body),
     signal,
-  });
+  };
+
+  let response = await fetch(buildApiUrl(path), requestOptions);
+
+  if (!response.ok && (response.status === 403 || response.status === 422)) {
+    headers.set("X-CSRF-Token", await getCsrfToken(true));
+    response = await fetch(buildApiUrl(path), requestOptions);
+  }
 
   if (!response.ok || !response.body) {
     const text = await response.text();

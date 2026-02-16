@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -176,11 +176,12 @@ export default function QuestionBankEditorPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-      const res = await fetch(`${API_BASE}/api/v1/question_banks/${bankId}/import_qti`, {
+      const csrfToken = await getCsrfToken();
+      const res = await fetch(buildApiUrl(`/api/v1/question_banks/${bankId}/import_qti`), {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers: { "X-CSRF-Token": csrfToken },
       });
       if (res.ok) {
         setImportResult("Import started. Questions will appear shortly.");

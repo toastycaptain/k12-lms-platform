@@ -2,9 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ApiError } from "@/lib/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { ApiError, buildApiUrl } from "@/lib/api";
 
 interface UnitPlanRow {
   id: number;
@@ -49,7 +47,7 @@ async function addonFetch<T>(path: string, token: string, options: RequestInit =
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     ...options,
     headers,
     cache: "no-store",
@@ -101,8 +99,12 @@ function AddonSidebarInner() {
   const [aiResult, setAiResult] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
-  const [fileId, setFileId] = useState(searchParams.get("fileId") || searchParams.get("docId") || "");
-  const [fileTitle, setFileTitle] = useState(searchParams.get("title") || "Google Workspace Attachment");
+  const [fileId, setFileId] = useState(
+    searchParams.get("fileId") || searchParams.get("docId") || "",
+  );
+  const [fileTitle, setFileTitle] = useState(
+    searchParams.get("title") || "Google Workspace Attachment",
+  );
   const [fileUrl, setFileUrl] = useState(searchParams.get("url") || "");
 
   const [loading, setLoading] = useState(true);
@@ -174,7 +176,10 @@ function AddonSidebarInner() {
       try {
         const [lessonRows, standardRows] = await Promise.all([
           addonFetch<LessonRow[]>(`/api/v1/addon/unit_plans/${selectedUnitId}/lessons`, addonToken),
-          addonFetch<StandardRow[]>(`/api/v1/addon/unit_plans/${selectedUnitId}/standards`, addonToken),
+          addonFetch<StandardRow[]>(
+            `/api/v1/addon/unit_plans/${selectedUnitId}/standards`,
+            addonToken,
+          ),
         ]);
         setLessons(lessonRows);
         setAlignedStandards(standardRows);
@@ -242,17 +247,21 @@ function AddonSidebarInner() {
     setSuccess(null);
 
     try {
-      const response = await addonFetch<{ content?: string }>("/api/v1/addon/ai_generate", addonToken, {
-        method: "POST",
-        body: JSON.stringify({
-          task_type: taskType,
-          prompt: aiPrompt.trim(),
-          context: {
-            selected_unit_id: selectedUnitId,
-            selected_lesson_ids: lessons.map((l) => l.id),
-          },
-        }),
-      });
+      const response = await addonFetch<{ content?: string }>(
+        "/api/v1/addon/ai_generate",
+        addonToken,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            task_type: taskType,
+            prompt: aiPrompt.trim(),
+            context: {
+              selected_unit_id: selectedUnitId,
+              selected_lesson_ids: lessons.map((l) => l.id),
+            },
+          }),
+        },
+      );
       setAiResult(response.content || "");
     } catch (e) {
       const message = e instanceof Error ? e.message : "AI generation failed.";
@@ -284,7 +293,9 @@ function AddonSidebarInner() {
       </header>
 
       {error && <div className="rounded-md bg-rose-50 p-2 text-xs text-rose-700">{error}</div>}
-      {success && <div className="rounded-md bg-emerald-50 p-2 text-xs text-emerald-700">{success}</div>}
+      {success && (
+        <div className="rounded-md bg-emerald-50 p-2 text-xs text-emerald-700">{success}</div>
+      )}
 
       <section className="rounded-lg border border-slate-200 bg-white p-3">
         <h2 className="text-sm font-semibold text-slate-900">Recent Unit Plans</h2>
@@ -294,7 +305,9 @@ function AddonSidebarInner() {
               key={plan.id}
               onClick={() => setSelectedUnitId(plan.id)}
               className={`block w-full rounded-md px-2 py-1.5 text-left text-xs ${
-                selectedUnitId === plan.id ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50"
+                selectedUnitId === plan.id
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-700 hover:bg-slate-50"
               }`}
             >
               {plan.title}
@@ -303,7 +316,9 @@ function AddonSidebarInner() {
           {unitPlans.length === 0 && <p className="text-xs text-slate-500">No unit plans found.</p>}
         </div>
 
-        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Lessons</h3>
+        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Lessons
+        </h3>
         <div className="mt-1 space-y-1">
           {lessons.map((lesson) => (
             <div key={lesson.id} className="rounded-md border border-slate-200 p-2">
@@ -316,7 +331,9 @@ function AddonSidebarInner() {
               </button>
             </div>
           ))}
-          {selectedUnitId && lessons.length === 0 && <p className="text-xs text-slate-500">No lessons in this unit.</p>}
+          {selectedUnitId && lessons.length === 0 && (
+            <p className="text-xs text-slate-500">No lessons in this unit.</p>
+          )}
         </div>
 
         <div className="mt-3 grid grid-cols-1 gap-2">
@@ -373,10 +390,15 @@ function AddonSidebarInner() {
           ))}
         </div>
 
-        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Aligned to Selected Unit</h3>
+        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Aligned to Selected Unit
+        </h3>
         <div className="mt-1 space-y-1">
           {alignedStandards.map((standard) => (
-            <div key={standard.id} className="rounded border border-blue-100 bg-blue-50 p-2 text-xs text-blue-800">
+            <div
+              key={standard.id}
+              className="rounded border border-blue-100 bg-blue-50 p-2 text-xs text-blue-800"
+            >
               {standard.code} · {standard.description}
             </div>
           ))}
@@ -439,7 +461,9 @@ function AddonSidebarInner() {
               </p>
             </div>
           ))}
-          {publishedTemplates.length === 0 && <p className="text-xs text-slate-500">No published templates.</p>}
+          {publishedTemplates.length === 0 && (
+            <p className="text-xs text-slate-500">No published templates.</p>
+          )}
         </div>
       </section>
     </div>

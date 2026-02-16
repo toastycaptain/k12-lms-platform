@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { fetchCurrentUser, getSignOutUrl, type CurrentUser } from "@/lib/api";
+import { apiFetch, fetchCurrentUser, type CurrentUser } from "@/lib/api";
 
 interface AuthContextValue {
   user: CurrentUser | null;
@@ -40,10 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      await fetch(getSignOutUrl(), {
-        method: "DELETE",
-        credentials: "include",
-      });
+      await apiFetch("/api/v1/session", { method: "DELETE" });
     } finally {
       setUser(null);
     }

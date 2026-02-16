@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
@@ -41,8 +41,7 @@ function statusClass(status: string) {
 }
 
 function platformBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  return baseUrl.replace(/\/+$/, "").replace(/\/api\/v1$/, "");
+  return getApiOrigin();
 }
 
 export default function LtiManagementPage() {

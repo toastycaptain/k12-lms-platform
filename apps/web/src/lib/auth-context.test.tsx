@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
-import { fetchCurrentUser, getSignOutUrl } from "@/lib/api";
+import { apiFetch, fetchCurrentUser } from "@/lib/api";
 
 vi.mock("@/lib/api", () => ({
+  apiFetch: vi.fn(),
   fetchCurrentUser: vi.fn(),
-  getSignOutUrl: vi.fn(() => "http://localhost:3001/api/v1/session"),
 }));
 
 function Probe() {
@@ -26,16 +26,10 @@ function Probe() {
 }
 
 describe("AuthProvider", () => {
+  const mockedApiFetch = vi.mocked(apiFetch);
   const mockedFetchCurrentUser = vi.mocked(fetchCurrentUser);
-  const mockedGetSignOutUrl = vi.mocked(getSignOutUrl);
-  const fetchMock = vi.fn();
-
-  beforeEach(() => {
-    vi.stubGlobal("fetch", fetchMock);
-  });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
 
@@ -92,7 +86,7 @@ describe("AuthProvider", () => {
       onboarding_complete: true,
       preferences: {},
     });
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+    mockedApiFetch.mockResolvedValueOnce(undefined);
 
     render(
       <AuthProvider>
@@ -104,10 +98,9 @@ describe("AuthProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign Out" }));
 
     await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("none"));
-    expect(mockedGetSignOutUrl).toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3001/api/v1/session",
-      expect.objectContaining({ method: "DELETE", credentials: "include" }),
+    expect(mockedApiFetch).toHaveBeenCalledWith(
+      "/api/v1/session",
+      expect.objectContaining({ method: "DELETE" }),
     );
   });
 

@@ -40,8 +40,10 @@ interface DeepLinkResponse {
 }
 
 function originUrl(): string {
-  if (typeof window === "undefined") return "http://localhost:3000";
-  return window.location.origin;
+  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL;
+  if (configuredOrigin) return configuredOrigin.replace(/\/+$/, "");
+  if (typeof window === "undefined") return "";
+  return window.location.origin.replace(/\/+$/, "");
 }
 
 function LtiDeepLinkContent() {
@@ -175,7 +177,9 @@ function LtiDeepLinkContent() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">LTI Deep Linking</h1>
-          <p className="text-sm text-gray-600">Select content to send back to the requesting platform.</p>
+          <p className="text-sm text-gray-600">
+            Select content to send back to the requesting platform.
+          </p>
         </div>
         <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
           Cancel
@@ -211,7 +215,12 @@ function LtiDeepLinkContent() {
         {!loading && (
           <div className="space-y-3">
             <div>
-              <label htmlFor="deep-link-course-filter" className="mb-1 block text-xs font-medium text-gray-700">Course Filter</label>
+              <label
+                htmlFor="deep-link-course-filter"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
+                Course Filter
+              </label>
               <select
                 id="deep-link-course-filter"
                 value={selectedCourseId}
@@ -230,7 +239,10 @@ function LtiDeepLinkContent() {
             {activeTab === "courses" && (
               <div className="space-y-2">
                 {courses.map((course) => (
-                  <div key={course.id} className="flex items-center justify-between rounded border border-gray-200 px-3 py-2">
+                  <div
+                    key={course.id}
+                    className="flex items-center justify-between rounded border border-gray-200 px-3 py-2"
+                  >
                     <div>
                       <p className="text-sm font-medium text-gray-900">{course.name}</p>
                       <p className="text-xs text-gray-500">{course.code || "Course"}</p>
@@ -250,18 +262,25 @@ function LtiDeepLinkContent() {
                     </button>
                   </div>
                 ))}
-                {courses.length === 0 && <p className="text-sm text-gray-500">No courses available.</p>}
+                {courses.length === 0 && (
+                  <p className="text-sm text-gray-500">No courses available.</p>
+                )}
               </div>
             )}
 
             {activeTab === "assignments" && (
               <div className="space-y-2">
-                {!selectedCourse && <p className="text-sm text-gray-500">Select a course to view assignments.</p>}
+                {!selectedCourse && (
+                  <p className="text-sm text-gray-500">Select a course to view assignments.</p>
+                )}
                 {selectedCourse && assignments.length === 0 && (
                   <p className="text-sm text-gray-500">No assignments found for this course.</p>
                 )}
                 {assignments.map((assignment) => (
-                  <div key={assignment.id} className="flex items-center justify-between rounded border border-gray-200 px-3 py-2">
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between rounded border border-gray-200 px-3 py-2"
+                  >
                     <p className="text-sm text-gray-900">{assignment.title}</p>
                     <button
                       onClick={() =>
@@ -283,10 +302,17 @@ function LtiDeepLinkContent() {
 
             {activeTab === "quizzes" && (
               <div className="space-y-2">
-                {!selectedCourse && <p className="text-sm text-gray-500">Select a course to view quizzes.</p>}
-                {selectedCourse && quizzes.length === 0 && <p className="text-sm text-gray-500">No quizzes found for this course.</p>}
+                {!selectedCourse && (
+                  <p className="text-sm text-gray-500">Select a course to view quizzes.</p>
+                )}
+                {selectedCourse && quizzes.length === 0 && (
+                  <p className="text-sm text-gray-500">No quizzes found for this course.</p>
+                )}
                 {quizzes.map((quiz) => (
-                  <div key={quiz.id} className="flex items-center justify-between rounded border border-gray-200 px-3 py-2">
+                  <div
+                    key={quiz.id}
+                    className="flex items-center justify-between rounded border border-gray-200 px-3 py-2"
+                  >
                     <p className="text-sm text-gray-900">{quiz.title}</p>
                     <button
                       onClick={() =>
@@ -313,14 +339,22 @@ function LtiDeepLinkContent() {
         <h2 className="text-sm font-semibold text-gray-900">Selected Items</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {selectedItems.map((item) => (
-            <span key={item.key} className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-800">
+            <span
+              key={item.key}
+              className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-800"
+            >
               {item.title}
-              <button onClick={() => removeItem(item.key)} className="text-blue-700 hover:text-blue-900">
+              <button
+                onClick={() => removeItem(item.key)}
+                className="text-blue-700 hover:text-blue-900"
+              >
                 Remove
               </button>
             </span>
           ))}
-          {selectedItems.length === 0 && <p className="text-sm text-gray-500">No items selected yet.</p>}
+          {selectedItems.length === 0 && (
+            <p className="text-sm text-gray-500">No items selected yet.</p>
+          )}
         </div>
 
         <div className="mt-4 flex items-center gap-2">

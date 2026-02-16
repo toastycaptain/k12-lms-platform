@@ -1,7 +1,10 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
+  include ActionController::RequestForgeryProtection
   include Paginatable
   include Pundit::Authorization
+
+  protect_from_forgery with: :exception, unless: :csrf_exempt_request?, if: :csrf_protection_enabled?
 
   before_action :authenticate_user!
   after_action :verify_authorized, unless: -> { skip_authorization? || action_name == "index" }
@@ -12,6 +15,7 @@ class ApplicationController < ActionController::API
   end
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+  rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_authenticity_token
 
   private
 
@@ -84,5 +88,17 @@ class ApplicationController < ActionController::API
 
   def record_not_found
     render json: { error: "Not found" }, status: :not_found
+  end
+
+  def invalid_authenticity_token
+    render json: { error: "Invalid CSRF token" }, status: :forbidden
+  end
+
+  def csrf_exempt_request?
+    request.authorization.to_s.start_with?("Bearer ")
+  end
+
+  def csrf_protection_enabled?
+    !Rails.env.test? || ActionController::Base.allow_forgery_protection
   end
 end

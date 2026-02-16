@@ -1,10 +1,27 @@
-import { apiFetch, fetchCurrentUser, getAuthUrl, getSamlAuthUrl, getSignOutUrl } from "@/lib/api";
+import {
+  __resetApiClientStateForTests,
+  apiFetch,
+  fetchCurrentUser,
+  getAuthUrl,
+  getSamlAuthUrl,
+  getSignOutUrl,
+} from "@/lib/api";
 
 describe("apiFetch", () => {
   const fetchMock = vi.fn();
 
+  function mockCsrfToken(token = "csrf-token") {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ token }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  }
+
   beforeEach(() => {
     vi.stubGlobal("fetch", fetchMock);
+    __resetApiClientStateForTests();
   });
 
   afterEach(() => {
@@ -13,6 +30,7 @@ describe("apiFetch", () => {
   });
 
   it("returns parsed JSON on success and sends default headers", async () => {
+    mockCsrfToken();
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -26,7 +44,13 @@ describe("apiFetch", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:3001/api/v1/csrf",
+      expect.objectContaining({ method: "GET", credentials: "include" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       "http://localhost:3001/api/v1/courses",
       expect.objectContaining({
         method: "POST",
@@ -35,10 +59,11 @@ describe("apiFetch", () => {
       }),
     );
 
-    const options = fetchMock.mock.calls[0][1] as RequestInit;
+    const options = fetchMock.mock.calls[1][1] as RequestInit;
     const headers = options.headers as Headers;
     expect(headers.get("Accept")).toBe("application/json");
     expect(headers.get("Content-Type")).toBe("application/json");
+    expect(headers.get("X-CSRF-Token")).toBe("csrf-token");
   });
 
   it("raises ApiError for 401 responses and preserves status/message", async () => {
@@ -76,6 +101,7 @@ describe("apiFetch", () => {
   });
 
   it("returns undefined for 204 No Content responses", async () => {
+    mockCsrfToken();
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
 
     const result = await apiFetch("/api/v1/session", { method: "DELETE" });
@@ -105,6 +131,7 @@ describe("apiFetch", () => {
   });
 
   it("does not set Content-Type for FormData bodies", async () => {
+    mockCsrfToken();
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -119,9 +146,36 @@ describe("apiFetch", () => {
       body: form,
     });
 
-    const options = fetchMock.mock.calls[0][1] as RequestInit;
+    const options = fetchMock.mock.calls[1][1] as RequestInit;
     const headers = options.headers as Headers;
     expect(headers.get("Content-Type")).toBeNull();
+  });
+
+  it("retries mutation requests with a refreshed CSRF token on 422", async () => {
+    mockCsrfToken("token-1");
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "Invalid CSRF token" }), {
+        status: 422,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    mockCsrfToken("token-2");
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const result = await apiFetch<{ ok: boolean }>("/api/v1/courses", {
+      method: "POST",
+      body: JSON.stringify({ title: "Math" }),
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    const finalRequestHeaders = fetchMock.mock.calls[3][1]?.headers as Headers;
+    expect(finalRequestHeaders.get("X-CSRF-Token")).toBe("token-2");
   });
 
   it('includes credentials: "include" on every request', async () => {
@@ -147,7 +201,9 @@ describe("apiFetch", () => {
 
     const scopedFetchMock = vi.fn();
     vi.stubGlobal("fetch", scopedFetchMock);
-    const { apiFetch: scopedApiFetch } = await import("@/lib/api");
+    const { apiFetch: scopedApiFetch, __resetApiClientStateForTests: resetScoped } =
+      await import("@/lib/api");
+    resetScoped();
 
     scopedFetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
@@ -166,6 +222,7 @@ describe("apiFetch", () => {
     process.env.NEXT_PUBLIC_API_URL = previousUrl;
     vi.resetModules();
     vi.stubGlobal("fetch", fetchMock);
+    __resetApiClientStateForTests();
   });
 
   it("getAuthUrl returns correct URL", () => {

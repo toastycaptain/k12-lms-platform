@@ -37,6 +37,24 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.signed_in")
       end
 
+      it "finds existing user by provider uid identity" do
+        Current.tenant = tenant
+        existing_user = create(
+          :user,
+          email: "legacy@example.com",
+          tenant: tenant,
+          preferences: { "auth_identities" => { "google_oauth2" => "123456789" } }
+        )
+        Current.tenant = nil
+
+        expect {
+          get "/auth/google_oauth2/callback"
+        }.not_to change(User.unscoped, :count)
+
+        expect(response).to have_http_status(:redirect)
+        expect(existing_user.reload.first_name).to eq("Jane")
+      end
+
       it "finds existing user by email within tenant" do
         Current.tenant = tenant
         existing_user = create(:user, email: "teacher@example.com", tenant: tenant)
@@ -84,6 +102,14 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(user.google_refresh_token).to eq("google-refresh-token")
         expect(user.google_token_expires_at).to be_present
       end
+
+      it "establishes session for subsequent /api/v1/me requests" do
+        get "/auth/google_oauth2/callback"
+
+        get "/api/v1/me"
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body.dig("user", "email")).to eq("teacher@example.com")
+      end
     end
 
     context "with failed OmniAuth response" do
@@ -103,14 +129,37 @@ RSpec.describe "Api::V1::Sessions", type: :request do
       Current.tenant = nil
 
       mock_session(user, tenant: tenant)
+      get "/api/v1/csrf"
+      token = response.parsed_body["token"]
 
       expect {
-        delete "/api/v1/session"
+        delete "/api/v1/session", headers: { "X-CSRF-Token" => token }
       }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["message"]).to eq("Signed out successfully")
       expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.signed_out")
+    end
+
+    it "invalidates /api/v1/me after sign out" do
+      OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+        provider: "google_oauth2",
+        uid: "987654321",
+        info: {
+          email: "signout@example.com",
+          first_name: "Sign",
+          last_name: "Out"
+        }
+      )
+      get "/auth/google_oauth2/callback"
+      get "/api/v1/csrf"
+      token = response.parsed_body["token"]
+
+      delete "/api/v1/session", headers: { "X-CSRF-Token" => token }
+      expect(response).to have_http_status(:ok)
+
+      get "/api/v1/me"
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
@@ -180,11 +229,13 @@ RSpec.describe "Api::V1::Sessions", type: :request do
       user = create(:user, tenant: tenant)
       Current.tenant = nil
       mock_session(user, tenant: tenant)
+      get "/api/v1/csrf"
+      token = response.parsed_body["token"]
 
       patch "/api/v1/me", params: {
         onboarding_complete: true,
         preferences: { subjects: [ "Math" ], grade_levels: [ "6" ] }
-      }
+      }, headers: { "X-CSRF-Token" => token }
 
       expect(response).to have_http_status(:ok)
       user.reload

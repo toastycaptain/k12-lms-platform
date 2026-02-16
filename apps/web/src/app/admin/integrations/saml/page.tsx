@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
@@ -68,14 +68,6 @@ function initialFormState(): SamlFormState {
   };
 }
 
-function apiOrigin(): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(
-    /\/+$/,
-    "",
-  );
-  return base.replace(/\/api\/v1$/, "");
-}
-
 function statusClass(status: string): string {
   if (status === "active") return "bg-green-100 text-green-700";
   if (status === "error") return "bg-red-100 text-red-700";
@@ -94,12 +86,12 @@ export default function SamlIntegrationPage() {
 
   const metadataUrl = useMemo(() => {
     if (!tenantSlug) return "";
-    return `${apiOrigin()}/api/v1/saml/metadata?tenant=${encodeURIComponent(tenantSlug)}`;
+    return `${getApiOrigin()}/api/v1/saml/metadata?tenant=${encodeURIComponent(tenantSlug)}`;
   }, [tenantSlug]);
 
   const samlStartUrl = useMemo(() => {
     if (!tenantSlug) return "";
-    return `${apiOrigin()}/auth/saml?tenant=${encodeURIComponent(tenantSlug)}`;
+    return `${getApiOrigin()}/auth/saml?tenant=${encodeURIComponent(tenantSlug)}`;
   }, [tenantSlug]);
 
   const loadConfig = useCallback(async () => {

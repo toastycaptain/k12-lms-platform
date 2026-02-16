@@ -60,7 +60,7 @@ RSpec.describe "Api::V1::Sessions SAML", type: :request do
       get "/auth/saml/callback", params: { tenant: tenant.slug }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.headers["Location"]).to include("/dashboard")
+      expect(response.headers["Location"]).to include("/auth/callback")
       expect(session_store[:user_id]).to eq(user.id)
       expect(session_store[:tenant_id]).to eq(tenant.id)
     end
