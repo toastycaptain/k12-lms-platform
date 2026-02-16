@@ -118,4 +118,24 @@ RSpec.describe AiGenerationJob, type: :job do
     expect(notification.user_id).to eq(teacher.id)
     expect(notification.notifiable).to eq(invocation)
   end
+
+  it "raises when invocation record is missing" do
+    expect {
+      described_class.perform_now(999_999)
+    }.to raise_error(ActiveRecord::RecordNotFound)
+  end
+
+  it "is idempotent when invocation is already completed" do
+    Current.tenant = tenant
+    invocation.update!(status: "completed", completed_at: Time.current)
+    Current.tenant = nil
+    allow(AiGatewayClient).to receive(:generate)
+
+    expect {
+      described_class.perform_now(invocation.id)
+    }.not_to change(Notification, :count)
+
+    expect(AiGatewayClient).not_to have_received(:generate)
+    expect(invocation.reload.status).to eq("completed")
+  end
 end

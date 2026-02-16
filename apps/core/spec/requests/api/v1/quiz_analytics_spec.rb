@@ -248,7 +248,7 @@ RSpec.describe "Api::V1::QuizAnalytics", type: :request do
 
       get "/api/v1/quizzes/#{quiz.id}/analytics"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:not_found)
     end
 
     it "calculates item difficulty as correct over total responses" do

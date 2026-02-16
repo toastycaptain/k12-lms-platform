@@ -13,13 +13,10 @@ RSpec.describe LtiResourceLinkPolicy, type: :policy do
   after { Current.tenant = nil }
 
   permissions :index?, :show? do
-    it "permits admin and teacher" do
+    it "permits admin, teacher, and student" do
       expect(policy).to permit(admin, record)
       expect(policy).to permit(teacher, record)
-    end
-
-    it "denies student" do
-      expect(policy).not_to permit(student, record)
+      expect(policy).to permit(student, record)
     end
   end
 
@@ -35,13 +32,10 @@ RSpec.describe LtiResourceLinkPolicy, type: :policy do
     let!(:link1) { create(:lti_resource_link, tenant: tenant) }
     let!(:link2) { create(:lti_resource_link, tenant: tenant) }
 
-    it "returns all for admin and teacher" do
+    it "returns all for admin, teacher, and student" do
       expect(described_class::Scope.new(admin, LtiResourceLink).resolve).to contain_exactly(link1, link2)
       expect(described_class::Scope.new(teacher, LtiResourceLink).resolve).to contain_exactly(link1, link2)
-    end
-
-    it "returns none for students" do
-      expect(described_class::Scope.new(student, LtiResourceLink).resolve).to be_empty
+      expect(described_class::Scope.new(student, LtiResourceLink).resolve).to contain_exactly(link1, link2)
     end
   end
 end

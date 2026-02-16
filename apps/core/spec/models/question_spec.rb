@@ -20,12 +20,16 @@ RSpec.describe Question, type: :model do
 
   describe "#auto_gradable?" do
     it "returns true for auto gradable types" do
-      question = build(:question, tenant: tenant, question_type: "multiple_choice")
-      expect(question.auto_gradable?).to eq(true)
+      %w[multiple_choice true_false short_answer matching fill_in_blank].each do |type|
+        question = build(:question, tenant: tenant, question_type: type)
+
+        expect(question.auto_gradable?).to eq(true), "expected #{type} to be auto gradable"
+      end
     end
 
     it "returns false for essay" do
       question = build(:question, :essay, tenant: tenant)
+
       expect(question.auto_gradable?).to eq(false)
     end
   end

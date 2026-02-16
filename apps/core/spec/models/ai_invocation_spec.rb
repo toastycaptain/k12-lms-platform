@@ -21,7 +21,7 @@ RSpec.describe AiInvocation, type: :model do
   end
 
   describe "status methods" do
-    let(:record) { create(:ai_invocation, tenant: tenant, status: "pending") }
+    let(:record) { create(:ai_invocation, tenant: tenant, status: "pending", context: { "messages" => [] }) }
 
     it "completes with token stats" do
       record.complete!(tokens: { prompt: 1, completion: 2, total: 3 }, duration: 44)
@@ -35,10 +35,29 @@ RSpec.describe AiInvocation, type: :model do
       expect(record.completed_at).to be_present
     end
 
+    it "normalizes alternative token key names" do
+      record.complete!(tokens: { "prompt_tokens" => 4, "completion_tokens" => 6, "total_tokens" => 10 }, duration: 50)
+
+      record.reload
+      expect(record.prompt_tokens).to eq(4)
+      expect(record.completion_tokens).to eq(6)
+      expect(record.total_tokens).to eq(10)
+    end
+
+    it "stores response payload in context" do
+      response = { "content" => "hello" }
+
+      record.complete!(tokens: { prompt: 1, completion: 1, total: 2 }, duration: 30, response_hash: response)
+
+      expect(record.reload.context["response"]).to eq(response)
+    end
+
     it "fails with error message" do
       record.fail!("gateway error")
+
       expect(record.reload.status).to eq("failed")
       expect(record.error_message).to eq("gateway error")
+      expect(record.completed_at).to be_present
     end
   end
 

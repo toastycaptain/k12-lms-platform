@@ -16,16 +16,28 @@ RSpec.describe AiTaskPolicy, type: :model do
     it { should validate_inclusion_of(:task_type).in_array(AiTaskPolicy::VALID_TASK_TYPES) }
     it { should validate_numericality_of(:max_tokens_limit).is_greater_than(0).allow_nil }
     it { should validate_numericality_of(:temperature_limit).is_greater_than_or_equal_to(0).is_less_than_or_equal_to(2).allow_nil }
+
+    it "enforces task type uniqueness within tenant" do
+      provider = create(:ai_provider_config, tenant: tenant)
+      creator = create(:user, tenant: tenant)
+      create(:ai_task_policy, tenant: tenant, ai_provider_config: provider, created_by: creator, task_type: "lesson_plan")
+      duplicate = build(:ai_task_policy, tenant: tenant, ai_provider_config: provider, created_by: creator, task_type: "lesson_plan")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:task_type]).to include("has already been taken")
+    end
   end
 
   describe "custom methods" do
     let(:provider) { create(:ai_provider_config, tenant: tenant, default_model: "base-model") }
     let(:policy_record) do
-      create(:ai_task_policy,
+      create(
+        :ai_task_policy,
         tenant: tenant,
         ai_provider_config: provider,
         allowed_roles: [ "teacher" ],
-        model_override: "override-model")
+        model_override: "override-model"
+      )
     end
 
     it "checks allowed role" do
@@ -33,8 +45,21 @@ RSpec.describe AiTaskPolicy, type: :model do
       expect(policy_record.allowed_for_role?("student")).to eq(false)
     end
 
-    it "returns effective model" do
+    it "allows all roles when allowed_roles is blank" do
+      policy_record.update!(allowed_roles: [])
+
+      expect(policy_record.allowed_for_role?("teacher")).to eq(true)
+      expect(policy_record.allowed_for_role?("student")).to eq(true)
+    end
+
+    it "returns effective model override when present" do
       expect(policy_record.effective_model).to eq("override-model")
+    end
+
+    it "falls back to provider default model" do
+      policy_record.update!(model_override: nil)
+
+      expect(policy_record.effective_model).to eq("base-model")
     end
   end
 

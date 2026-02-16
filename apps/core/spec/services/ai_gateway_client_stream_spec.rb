@@ -54,6 +54,39 @@ RSpec.describe AiGatewayClient do
       expect(result).to eq("A")
     end
 
+    it "handles chunks split across on_data callbacks" do
+      request = build_stream_request
+      response = instance_double(Faraday::Response, success?: true, status: 200, body: nil)
+
+      allow(conn).to receive(:post).with("/v1/generate_stream") do |_path, &block|
+        block.call(request)
+        request.options.on_data.call("data: {\"content\":\"Hel", 0, nil)
+        request.options.on_data.call("lo\"}\n\ndata: {\"content\":\"!\"}\n\n", 0, nil)
+        response
+      end
+
+      result = described_class.generate_stream(provider: "openai", model: "gpt-4o-mini", messages: messages)
+
+      expect(result).to eq("Hello!")
+    end
+
+    it "raises AiGatewayError when stream endpoint returns non-success status" do
+      request = build_stream_request
+      response = instance_double(Faraday::Response, success?: false, status: 503, body: { "error" => "unavailable" })
+
+      allow(conn).to receive(:post).with("/v1/generate_stream") do |_path, &block|
+        block.call(request)
+        response
+      end
+
+      expect {
+        described_class.generate_stream(provider: "openai", model: "gpt-4o-mini", messages: messages)
+      }.to raise_error(described_class::AiGatewayError, /AI Gateway stream error: 503/) do |error|
+        expect(error.status_code).to eq(503)
+        expect(error.response_body).to eq({ "error" => "unavailable" })
+      end
+    end
+
     it "raises AiGatewayError on stream connection failures" do
       request = build_stream_request
       allow(conn).to receive(:post).with("/v1/generate_stream").and_yield(request).and_raise(Faraday::ConnectionFailed.new("timeout"))
