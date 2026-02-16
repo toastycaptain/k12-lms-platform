@@ -14,5 +14,6 @@ elsif Rails.env.test? || Rails.env.development?
     key
   end
 else
-  raise "LTI_PRIVATE_KEY environment variable is required in production"
+  Rails.logger.warn("LTI_PRIVATE_KEY not set — LTI 1.3 features will be unavailable")
+  nil
 end

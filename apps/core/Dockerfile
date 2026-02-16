@@ -10,10 +10,11 @@ COPY . .
 # --- Runtime ---
 FROM ruby:4.0.1-slim AS runtime
 RUN apt-get update -qq && apt-get install -y libpq5 libyaml-0-2 curl && rm -rf /var/lib/apt/lists/*
-RUN groupadd --system appgroup && useradd --system --gid appgroup appuser
+RUN groupadd --system appgroup && useradd --system --create-home --gid appgroup appuser
 WORKDIR /app
 COPY --from=builder /usr/local/bundle /usr/local/bundle
 COPY --from=builder /app /app
+RUN mkdir -p /app/log /app/tmp && chown -R appuser:appgroup /app/log /app/tmp
 USER appuser
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s CMD curl -f http://localhost:3000/up || exit 1

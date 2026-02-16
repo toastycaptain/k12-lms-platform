@@ -85,31 +85,9 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  primary: &primary_production
-    <<: *default
-    database: core_production
-    username: core
-    password: <%= ENV["CORE_DATABASE_PASSWORD"] %>
-  cache:
-    <<: *primary_production
-    database: core_production_cache
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    database: core_production_queue
-    migrations_paths: db/queue_migrate
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
 
 staging:
-  primary: &primary_staging
-    <<: *default
-    database: core_staging
-    username: core
-    password: <%= ENV["CORE_DATABASE_PASSWORD"] %>
-  cache:
-    <<: *primary_staging
-    database: core_staging_cache
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_staging
-    database: core_staging_queue
-    migrations_paths: db/queue_migrate
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
