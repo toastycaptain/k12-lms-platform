@@ -1,8 +1,7 @@
 class IntegrationConfig < ApplicationRecord
   include TenantScoped
 
-  # encrypts :settings — requires ACTIVE_RECORD_ENCRYPTION_* env vars to be configured
-  # Re-enable once encryption keys are provisioned in production
+  encrypts :settings
 
   VALID_PROVIDERS = %w[google_classroom google_workspace oneroster saml].freeze
   VALID_STATUSES = %w[inactive active error].freeze
