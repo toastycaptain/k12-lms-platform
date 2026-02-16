@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Course {
   id: number;
@@ -338,7 +340,7 @@ export default function CourseHomePage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-sm text-gray-500">Loading course home...</p>
+          <CourseHomeSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -422,7 +424,10 @@ export default function CourseHomePage() {
               </Link>
             </div>
             {modules.length === 0 ? (
-              <p className="text-sm text-gray-500">No modules yet.</p>
+              <EmptyState
+                title="No modules yet"
+                description="Create modules to organize your course content."
+              />
             ) : (
               <div className="space-y-2">
                 {modules.map((moduleEntry) => {
@@ -451,7 +456,10 @@ export default function CourseHomePage() {
             <section className="rounded-lg border border-gray-200 bg-white p-6">
               <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
               {recentActivity.length === 0 ? (
-                <p className="mt-3 text-sm text-gray-500">No recent activity.</p>
+                <EmptyState
+                  title="No recent activity."
+                  description="Activity will appear here as students interact with this course."
+                />
               ) : (
                 <ul className="mt-3 space-y-2">
                   {recentActivity.map((item) => (
@@ -469,7 +477,10 @@ export default function CourseHomePage() {
             <section className="rounded-lg border border-gray-200 bg-white p-6">
               <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
               {upcomingAssignments.length === 0 ? (
-                <p className="mt-3 text-sm text-gray-500">No upcoming assignments.</p>
+                <EmptyState
+                  title="No upcoming assignments."
+                  description="Assignments with due dates will appear here."
+                />
               ) : (
                 <ul className="mt-3 space-y-2">
                   {upcomingAssignments.map((assignment) => (

@@ -100,16 +100,16 @@ describe("Gradebook Page", () => {
   it("renders student grade rows", async () => {
     render(<GradebookPage />);
 
-    expect(await screen.findByText("Sam Student")).toBeInTheDocument();
-    expect(screen.getByText("Pat Learner")).toBeInTheDocument();
-    expect(screen.getByText("92")).toBeInTheDocument();
+    expect((await screen.findAllByText("Sam Student")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Pat Learner").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("92").length).toBeGreaterThan(0);
   });
 
   it("renders assignment column values", async () => {
     render(<GradebookPage />);
 
-    expect(await screen.findByText("Unit Reflection")).toBeInTheDocument();
-    expect(screen.getByText("Cell Quiz")).toBeInTheDocument();
+    expect((await screen.findAllByText("Unit Reflection")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cell Quiz").length).toBeGreaterThan(0);
   });
 
   it("handles empty gradebook", async () => {
@@ -117,7 +117,7 @@ describe("Gradebook Page", () => {
 
     render(<GradebookPage />);
 
-    expect(await screen.findByText("No gradebook records yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No gradebook records yet")).toBeInTheDocument();
   });
 
   it("handles loading state", () => {
@@ -125,6 +125,6 @@ describe("Gradebook Page", () => {
 
     render(<GradebookPage />);
 
-    expect(screen.getByText("Loading gradebook...")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Loading").length).toBeGreaterThan(0);
   });
 });

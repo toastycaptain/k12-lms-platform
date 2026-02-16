@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
+import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface UnitPlan {
   id: number;
@@ -204,7 +206,7 @@ export default function UnitPlannerPage() {
     return (
       <ProtectedRoute requiredRoles={TEACHER_ROLES}>
         <AppShell>
-          <p className="text-gray-500">Loading...</p>
+          <QuizSkeleton />
         </AppShell>
       </ProtectedRoute>
     );
@@ -471,9 +473,12 @@ export default function UnitPlannerPage() {
                 )}
               </div>
               {lessons.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                  <p className="text-sm text-gray-500">No lessons yet.</p>
-                </div>
+                <EmptyState
+                  title="No lessons yet"
+                  description="Add lessons to build out this unit plan."
+                  actionLabel="Add Lesson"
+                  actionHref={`/plan/units/${unitId}/lessons/new`}
+                />
               ) : (
                 <div className="space-y-2">
                   {lessons.map((lesson, index) => (

@@ -6,6 +6,9 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { ResponsiveTable } from "@/components/ResponsiveTable";
 
 interface GradebookRow {
   user_id: number;
@@ -79,6 +82,37 @@ export default function GradebookPage() {
     });
   }, [rows, usersById]);
 
+  const columns = useMemo(
+    () => [
+      {
+        key: "student",
+        header: "Student",
+        primary: true,
+        render: (row: GradebookRow) => {
+          const user = usersById[row.user_id];
+          return user ? `${user.first_name} ${user.last_name}` : `User #${row.user_id}`;
+        },
+      },
+      {
+        key: "assignment",
+        header: "Assignment",
+        render: (row: GradebookRow) =>
+          assignmentsById[row.assignment_id]?.title || `Assignment #${row.assignment_id}`,
+      },
+      {
+        key: "status",
+        header: "Status",
+        render: (row: GradebookRow) => row.status,
+      },
+      {
+        key: "grade",
+        header: "Grade",
+        render: (row: GradebookRow) => row.grade || "-",
+      },
+    ],
+    [assignmentsById, usersById],
+  );
+
   return (
     <ProtectedRoute requiredRoles={TEACHER_ROLES}>
       <AppShell>
@@ -94,45 +128,19 @@ export default function GradebookPage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading gradebook...</p>
+            <GradebookSkeleton />
           ) : displayRows.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-              No gradebook records yet.
-            </div>
+            <EmptyState
+              title="No gradebook records yet"
+              description="Grades will appear here as students submit assignments."
+            />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3 font-semibold text-gray-700">Student</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Assignment</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayRows.map((row, index) => {
-                    const user = usersById[row.user_id];
-                    const assignment = assignmentsById[row.assignment_id];
-                    return (
-                      <tr
-                        key={`${row.user_id}-${row.assignment_id}-${index}`}
-                        className="border-b last:border-b-0"
-                      >
-                        <td className="px-4 py-3 text-gray-900">
-                          {user ? `${user.first_name} ${user.last_name}` : `User #${row.user_id}`}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {assignment?.title || `Assignment #${row.assignment_id}`}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">{row.status}</td>
-                        <td className="px-4 py-3 text-gray-600">{row.grade || "-"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={columns}
+              data={displayRows}
+              keyExtractor={(row) => `${row.user_id}-${row.assignment_id}-${row.status}`}
+              caption="Gradebook records"
+            />
           )}
         </div>
       </AppShell>

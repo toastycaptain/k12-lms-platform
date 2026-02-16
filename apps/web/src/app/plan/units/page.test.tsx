@@ -71,7 +71,7 @@ describe("Plan Units Page", () => {
 
   function mockUnits(units: Array<Record<string, unknown>>) {
     mockedApiFetch.mockImplementation(async (path: string) => {
-      if (path === "/api/v1/unit_plans") return units as never;
+      if (path.startsWith("/api/v1/unit_plans")) return units as never;
       if (path === "/api/v1/courses") {
         return [{ id: 1, name: "Biology", code: "BIO-101" }] as never;
       }

@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 interface UnitPlan {
   id: number;
@@ -82,17 +84,14 @@ export default function DashboardPage() {
               </Link>
             </div>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading...</p>
+              <DashboardSkeleton />
             ) : unitPlans.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                <p className="text-sm text-gray-500">No unit plans yet.</p>
-                <Link
-                  href="/plan/units"
-                  className="mt-2 inline-block text-sm font-medium text-blue-600 hover:text-blue-800"
-                >
-                  Create your first unit plan
-                </Link>
-              </div>
+              <EmptyState
+                title="No unit plans yet."
+                description="Create your first unit plan to get started."
+                actionLabel="Create Unit Plan"
+                actionHref="/plan/units/new"
+              />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {unitPlans.map((unit) => (
@@ -115,11 +114,12 @@ export default function DashboardPage() {
           <section>
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Your Courses</h2>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading...</p>
+              <DashboardSkeleton />
             ) : courses.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                <p className="text-sm text-gray-500">No courses found.</p>
-              </div>
+              <EmptyState
+                title="No courses found."
+                description="Courses will appear here once they are assigned."
+              />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {courses.map((course) => (

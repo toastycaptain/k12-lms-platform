@@ -171,6 +171,6 @@ describe("Teach Course Home Page", () => {
 
     render(<CourseHomePage />);
 
-    expect(await screen.findByText("No modules yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No modules yet")).toBeInTheDocument();
   });
 });

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 
 interface UnitPlan {
   id: number;
@@ -49,16 +52,20 @@ export default function UnitLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCourse, setFilterCourse] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [units, allCourses] = await Promise.all([
-          apiFetch<UnitPlan[]>("/api/v1/unit_plans"),
+          apiFetch<UnitPlan[]>(`/api/v1/unit_plans?page=${page}&per_page=${perPage}`),
           apiFetch<Course[]>("/api/v1/courses"),
         ]);
         setUnitPlans(units);
         setCourses(allCourses);
+        setTotalPages(units.length < perPage ? page : page + 1);
 
         // Fetch version counts for each unit
         const counts: Record<number, number> = {};
@@ -82,7 +89,7 @@ export default function UnitLibraryPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [page, perPage]);
 
   const courseMap = useMemo(() => {
     const map: Record<number, Course> = {};
@@ -151,15 +158,18 @@ export default function UnitLibraryPage() {
 
           {/* Unit Cards */}
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <ListSkeleton />
           ) : filteredUnits.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-500">
-                {unitPlans.length === 0
-                  ? "No unit plans yet. Create your first one!"
-                  : "No units match your filters."}
-              </p>
-            </div>
+            <EmptyState
+              title={unitPlans.length === 0 ? "No unit plans yet" : "No units match your filters"}
+              description={
+                unitPlans.length === 0
+                  ? "Create your first unit plan to start building curriculum."
+                  : "Adjust your search or filter settings to view results."
+              }
+              actionLabel={unitPlans.length === 0 ? "Create Unit Plan" : undefined}
+              actionHref={unitPlans.length === 0 ? "/plan/units/new" : undefined}
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredUnits.map((unit) => (
@@ -183,6 +193,17 @@ export default function UnitLibraryPage() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            perPage={perPage}
+            onPerPageChange={(nextPerPage) => {
+              setPerPage(nextPerPage);
+              setPage(1);
+            }}
+          />
         </div>
       </AppShell>
     </ProtectedRoute>

@@ -144,6 +144,6 @@ describe("Plan Unit Editor Page", () => {
 
     render(<UnitPlannerPage />);
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Loading").length).toBeGreaterThan(0);
   });
 });
