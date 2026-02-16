@@ -87,6 +87,17 @@ RSpec.describe AiGatewayClient do
       end
     end
 
+    it "raises AiGatewayError on stream timeout" do
+      request = build_stream_request
+      allow(conn).to receive(:post).with("/v1/generate_stream").and_yield(request).and_raise(Faraday::TimeoutError.new("execution expired"))
+
+      expect {
+        described_class.generate_stream(provider: "openai", model: "gpt-4o-mini", messages: messages)
+      }.to raise_error(described_class::AiGatewayError, /Stream request failed/) do |error|
+        expect(error.status_code).to eq(502)
+      end
+    end
+
     it "raises AiGatewayError on stream connection failures" do
       request = build_stream_request
       allow(conn).to receive(:post).with("/v1/generate_stream").and_yield(request).and_raise(Faraday::ConnectionFailed.new("timeout"))

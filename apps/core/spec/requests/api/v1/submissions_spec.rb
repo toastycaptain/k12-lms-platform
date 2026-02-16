@@ -151,6 +151,49 @@ RSpec.describe "Api::V1::Submissions", type: :request do
     end
   end
 
+  describe "GET /api/v1/submissions (filter edge cases)" do
+    it "returns all own submissions when no status filter provided" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:submission, tenant: tenant, assignment: assignment, user: student, status: "submitted", submitted_at: Time.current)
+      second_assignment = create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "published")
+      create(:submission, tenant: tenant, assignment: second_assignment, user: student, status: "graded", submitted_at: Time.current)
+      Current.tenant = nil
+
+      get "/api/v1/submissions"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(2)
+    end
+
+    it "returns empty array when status filter matches nothing" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:submission, tenant: tenant, assignment: assignment, user: student, status: "submitted", submitted_at: Time.current)
+      Current.tenant = nil
+
+      get "/api/v1/submissions", params: { status: "graded" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
+  end
+
+  describe "GET /api/v1/assignments/:assignment_id/submissions (pagination)" do
+    it "supports pagination params" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      3.times do |i|
+        u = create(:user, tenant: tenant)
+        create(:submission, tenant: tenant, assignment: assignment, user: u, status: "submitted", submitted_at: Time.current)
+      end
+      Current.tenant = nil
+
+      get "/api/v1/assignments/#{assignment.id}/submissions", params: { page: 2, per_page: 1 }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+  end
+
   describe "GET /api/v1/submissions" do
     it "returns scoped submissions and supports status filter" do
       mock_session(student, tenant: tenant)

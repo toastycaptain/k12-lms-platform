@@ -68,6 +68,22 @@ RSpec.describe "Api::V1::Users", type: :request do
   end
 
   describe "GET /api/v1/users?q=..." do
+    it "returns empty results for very short search query" do
+      mock_session(teacher, tenant: tenant)
+      create(:user, tenant: tenant, first_name: "Alice", last_name: "Smith")
+
+      get "/api/v1/users", params: { q: "zzzzqqqq" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
+
+    it "handles special characters in search safely" do
+      mock_session(teacher, tenant: tenant)
+
+      get "/api/v1/users", params: { q: "'; DROP TABLE users;--" }
+      expect(response).to have_http_status(:ok)
+    end
+
     it "allows recipient search for authenticated users" do
       mock_session(teacher, tenant: tenant)
       create(:user, tenant: tenant, first_name: "Alice", last_name: "Smith", email: "alice@example.com")

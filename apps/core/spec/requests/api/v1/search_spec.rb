@@ -66,6 +66,30 @@ RSpec.describe "Api::V1::Search", type: :request do
       expect(results.find { |result| result["type"] == "assignment" }["url"]).to eq("/teach/courses/#{course.id}/assignments/#{assignment.id}")
     end
 
+    it "returns empty results for empty string query" do
+      mock_session(admin, tenant: tenant)
+
+      get "/api/v1/search", params: { q: "" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["results"]).to eq([])
+    end
+
+    it "returns empty results for whitespace-only query" do
+      mock_session(admin, tenant: tenant)
+
+      get "/api/v1/search", params: { q: "   " }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["results"]).to eq([])
+    end
+
+    it "handles special characters safely" do
+      mock_session(admin, tenant: tenant)
+
+      get "/api/v1/search", params: { q: "%; DROP TABLE courses;--" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["results"]).to eq([])
+    end
+
     it "uses learn URLs for student-only users" do
       mock_session(student, tenant: tenant)
 

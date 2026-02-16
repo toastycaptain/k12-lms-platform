@@ -36,6 +36,17 @@ RSpec.describe "Api::V1::Notifications", type: :request do
       expect(response.parsed_body.first["title"]).to eq("Mine")
     end
 
+    it "supports pagination params" do
+      mock_session(user, tenant: tenant)
+      Current.tenant = tenant
+      create_list(:notification, 3, tenant: tenant, user: user)
+      Current.tenant = nil
+
+      get "/api/v1/notifications", params: { page: 2, per_page: 1 }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+
     it "supports unread_only filter" do
       mock_session(user, tenant: tenant)
       Current.tenant = tenant

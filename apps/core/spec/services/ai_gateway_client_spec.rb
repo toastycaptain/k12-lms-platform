@@ -101,6 +101,24 @@ RSpec.describe AiGatewayClient do
         expect(error.response_body).to eq({ "error" => "Internal error" })
       }
     end
+
+    it "raises Faraday::TimeoutError when the request times out" do
+      request = build_request
+      allow(conn).to receive(:post).with("/v1/generate").and_yield(request).and_raise(Faraday::TimeoutError.new("execution expired"))
+
+      expect {
+        described_class.generate(provider: "openai", model: "gpt-4o-mini", messages: messages)
+      }.to raise_error(Faraday::TimeoutError, /execution expired/)
+    end
+
+    it "raises Faraday::ConnectionFailed when the connection fails" do
+      request = build_request
+      allow(conn).to receive(:post).with("/v1/generate").and_yield(request).and_raise(Faraday::ConnectionFailed.new("Connection refused"))
+
+      expect {
+        described_class.generate(provider: "openai", model: "gpt-4o-mini", messages: messages)
+      }.to raise_error(Faraday::ConnectionFailed, /Connection refused/)
+    end
   end
 
   private

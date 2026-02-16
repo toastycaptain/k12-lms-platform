@@ -33,6 +33,22 @@ RSpec.describe "Api::V1::MessageThreads", type: :request do
     end
   end
 
+  describe "GET /api/v1/message_threads (pagination)" do
+    it "supports pagination params" do
+      mock_session(user, tenant: tenant)
+      Current.tenant = tenant
+      3.times do
+        thread = create(:message_thread, tenant: tenant, course: course)
+        create(:message_thread_participant, tenant: tenant, message_thread: thread, user: user)
+      end
+      Current.tenant = nil
+
+      get "/api/v1/message_threads", params: { page: 2, per_page: 1 }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+  end
+
   describe "GET /api/v1/message_threads/:id" do
     it "returns thread with participants and messages for participants" do
       mock_session(user, tenant: tenant)

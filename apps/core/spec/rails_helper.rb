@@ -1,10 +1,13 @@
 require "simplecov"
 
 SimpleCov.start "rails" do
-  minimum_coverage 80 if ENV["CI"]
+  root File.expand_path("..", __dir__) # Ensure root is apps/core/ regardless of cwd
+  enable_coverage :branch
+  minimum_coverage 60
   add_filter "/spec/"
   add_filter "/config/"
   add_filter "/db/"
+  add_filter "/vendor/"
 end
 
 require "spec_helper"

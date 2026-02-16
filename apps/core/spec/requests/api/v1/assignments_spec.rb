@@ -63,6 +63,29 @@ RSpec.describe "Api::V1::Assignments", type: :request do
       expect(response.parsed_body.first["status"]).to eq("published")
     end
 
+    it "returns all assignments when status filter is not provided" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "published")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}/assignments"
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(2)
+    end
+
+    it "returns empty array for non-matching status filter" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:assignment, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      Current.tenant = nil
+
+      get "/api/v1/courses/#{course.id}/assignments", params: { status: "published" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to be_empty
+    end
+
     it "does not expose assignments from untaught courses to teachers" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant

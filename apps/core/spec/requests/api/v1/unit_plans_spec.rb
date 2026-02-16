@@ -111,6 +111,19 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
       expect(response.parsed_body.length).to eq(1)
     end
 
+    it "supports pagination params" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      create_list(:unit_plan, 3, tenant: tenant, course: course, created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans", params: { page: 2, per_page: 1 }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.length).to eq(1)
+    end
+
     it "returns owned and taught-course unit plans, excluding unrelated ones" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
