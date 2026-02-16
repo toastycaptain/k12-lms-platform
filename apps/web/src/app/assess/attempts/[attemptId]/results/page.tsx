@@ -93,7 +93,13 @@ export default function AttemptResultsPage() {
   }, [attemptId]);
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading results...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="text-sm text-gray-500">Loading results...</div>
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   const showDetailedResults = quiz?.show_results === "after_submit";
@@ -111,17 +117,26 @@ export default function AttemptResultsPage() {
     <ProtectedRoute>
       <AppShell>
         <div className="mx-auto max-w-3xl space-y-6">
-          <Link href={`/assess/quizzes/${quiz?.id}/take`} className="text-sm text-blue-600 hover:text-blue-800">
+          <Link
+            href={`/assess/quizzes/${quiz?.id}/take`}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
             &larr; Back to quiz
           </Link>
 
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Quiz Results</h1>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              attempt?.status === "graded" ? "bg-green-100 text-green-800" :
-              attempt?.status === "submitted" ? "bg-blue-100 text-blue-800" :
-              "bg-yellow-100 text-yellow-800"
-            }`}>{attempt?.status}</span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                attempt?.status === "graded"
+                  ? "bg-green-100 text-green-800"
+                  : attempt?.status === "submitted"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-yellow-200 text-yellow-900"
+              }`}
+            >
+              {attempt?.status}
+            </span>
           </div>
 
           {/* Score Summary */}
@@ -147,7 +162,9 @@ export default function AttemptResultsPage() {
               {attempt?.time_spent_seconds != null && (
                 <div>
                   <span className="text-gray-500 block">Time Spent</span>
-                  <span className="text-xl font-bold">{formatDuration(attempt.time_spent_seconds)}</span>
+                  <span className="text-xl font-bold">
+                    {formatDuration(attempt.time_spent_seconds)}
+                  </span>
                 </div>
               )}
             </div>
@@ -168,19 +185,27 @@ export default function AttemptResultsPage() {
                 if (!question) return null;
 
                 return (
-                  <div key={ans.id} className="rounded-lg border border-gray-200 bg-white p-4 space-y-2">
+                  <div
+                    key={ans.id}
+                    className="rounded-lg border border-gray-200 bg-white p-4 space-y-2"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-500">Question {idx + 1}</span>
                       <div className="flex items-center gap-2">
                         {ans.is_correct != null && (
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            ans.is_correct ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              ans.is_correct
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
                             {ans.is_correct ? "Correct" : "Incorrect"}
                           </span>
                         )}
                         <span className="text-xs text-gray-400">
-                          {ans.points_awarded != null ? ans.points_awarded : "--"} / {question.points} pts
+                          {ans.points_awarded != null ? ans.points_awarded : "--"} /{" "}
+                          {question.points} pts
                         </span>
                       </div>
                     </div>

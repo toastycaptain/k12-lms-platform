@@ -75,6 +75,41 @@ function newFrameworkDraft(): FrameworkDraft {
   };
 }
 
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ",") {
+        fields.push(current.trim());
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+  }
+
+  fields.push(current.trim());
+  return fields;
+}
+
 function newStandardDraft(): StandardDraft {
   return {
     code: "",
@@ -95,21 +130,32 @@ export default function AdminStandardsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showCreateFramework, setShowCreateFramework] = useState(false);
-  const [createFrameworkDraft, setCreateFrameworkDraft] = useState<FrameworkDraft>(newFrameworkDraft());
+  const [createFrameworkDraft, setCreateFrameworkDraft] =
+    useState<FrameworkDraft>(newFrameworkDraft());
+  const [savingFramework, setSavingFramework] = useState(false);
 
   const [editingFrameworkId, setEditingFrameworkId] = useState<number | null>(null);
-  const [editingFrameworkDraft, setEditingFrameworkDraft] = useState<FrameworkDraft>(newFrameworkDraft());
+  const [editingFrameworkDraft, setEditingFrameworkDraft] =
+    useState<FrameworkDraft>(newFrameworkDraft());
 
-  const [standardDraftByFramework, setStandardDraftByFramework] = useState<Record<number, StandardDraft>>({});
+  const [standardDraftByFramework, setStandardDraftByFramework] = useState<
+    Record<number, StandardDraft>
+  >({});
   const [editingStandardId, setEditingStandardId] = useState<number | null>(null);
-  const [editingStandardDraft, setEditingStandardDraft] = useState<Omit<StandardDraft, "parent_id">>({
+  const [editingStandardDraft, setEditingStandardDraft] = useState<
+    Omit<StandardDraft, "parent_id">
+  >({
     code: "",
     description: "",
     grade_band: "",
   });
 
-  const [bulkImportInputByFramework, setBulkImportInputByFramework] = useState<Record<number, string>>({});
-  const [importStatusByFramework, setImportStatusByFramework] = useState<Record<number, ImportStatus>>({});
+  const [bulkImportInputByFramework, setBulkImportInputByFramework] = useState<
+    Record<number, string>
+  >({});
+  const [importStatusByFramework, setImportStatusByFramework] = useState<
+    Record<number, ImportStatus>
+  >({});
 
   const fetchFrameworks = useCallback(async () => {
     setLoading(true);
@@ -128,13 +174,16 @@ export default function AdminStandardsPage() {
       const counts: Record<number, number> = {};
       frameworkData.forEach((framework, index) => {
         const result = countResults[index];
-        counts[framework.id] =
-          result && result.status === "fulfilled" ? result.value.length : 0;
+        counts[framework.id] = result && result.status === "fulfilled" ? result.value.length : 0;
       });
 
       setStandardCounts(counts);
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load standard frameworks.");
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to load standard frameworks.",
+      );
     } finally {
       setLoading(false);
     }
@@ -152,7 +201,9 @@ export default function AdminStandardsPage() {
       setFrameworkTrees((current) => ({ ...current, [frameworkId]: tree }));
       setStandardCounts((current) => ({ ...current, [frameworkId]: countTreeNodes(tree) }));
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load standards tree.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to load standards tree.",
+      );
     } finally {
       setTreeLoadingFrameworkIds((current) => current.filter((id) => id !== frameworkId));
     }
@@ -181,6 +232,7 @@ export default function AdminStandardsPage() {
   }
 
   async function createFramework(): Promise<void> {
+    setSavingFramework(true);
     try {
       await apiFetch("/api/v1/standard_frameworks", {
         method: "POST",
@@ -191,7 +243,11 @@ export default function AdminStandardsPage() {
       setShowCreateFramework(false);
       await fetchFrameworks();
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to create framework.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to create framework.",
+      );
+    } finally {
+      setSavingFramework(false);
     }
   }
 
@@ -215,7 +271,9 @@ export default function AdminStandardsPage() {
       setEditingFrameworkId(null);
       await fetchFrameworks();
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to update framework.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to update framework.",
+      );
     }
   }
 
@@ -232,7 +290,9 @@ export default function AdminStandardsPage() {
       }
       await fetchFrameworks();
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to delete framework.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to delete framework.",
+      );
     }
   }
 
@@ -259,7 +319,9 @@ export default function AdminStandardsPage() {
       }));
       await fetchFrameworkTree(frameworkId);
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to create standard.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to create standard.",
+      );
     }
   }
 
@@ -288,7 +350,9 @@ export default function AdminStandardsPage() {
       setEditingStandardId(null);
       await fetchFrameworkTree(frameworkId);
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to update standard.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to update standard.",
+      );
     }
   }
 
@@ -305,7 +369,9 @@ export default function AdminStandardsPage() {
       }
       await fetchFrameworkTree(frameworkId);
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to delete standard.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to delete standard.",
+      );
     }
   }
 
@@ -345,7 +411,7 @@ export default function AdminStandardsPage() {
     }));
 
     for (const [index, line] of lines.entries()) {
-      const parts = line.split(",").map((part) => part.trim());
+      const parts = parseCSVLine(line);
       const code = parts[0] || "";
       const description = parts[1] || "";
       const gradeBand = parts[2] || null;
@@ -431,7 +497,10 @@ export default function AdminStandardsPage() {
               <textarea
                 value={editingStandardDraft.description}
                 onChange={(event) =>
-                  setEditingStandardDraft((current) => ({ ...current, description: event.target.value }))
+                  setEditingStandardDraft((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
                 }
                 className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
                 placeholder="Description"
@@ -441,7 +510,10 @@ export default function AdminStandardsPage() {
                 type="text"
                 value={editingStandardDraft.grade_band}
                 onChange={(event) =>
-                  setEditingStandardDraft((current) => ({ ...current, grade_band: event.target.value }))
+                  setEditingStandardDraft((current) => ({
+                    ...current,
+                    grade_band: event.target.value,
+                  }))
                 }
                 className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
                 placeholder="Grade Band"
@@ -506,7 +578,9 @@ export default function AdminStandardsPage() {
           <header className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Standards Management</h1>
-              <p className="text-sm text-gray-600">Create frameworks, manage standards, and bulk import CSV rows.</p>
+              <p className="text-sm text-gray-600">
+                Create frameworks, manage standards, and bulk import CSV rows.
+              </p>
             </div>
             <button
               type="button"
@@ -517,7 +591,11 @@ export default function AdminStandardsPage() {
             </button>
           </header>
 
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {showCreateFramework && (
             <section className="rounded-lg border border-gray-200 bg-white p-4">
@@ -536,7 +614,10 @@ export default function AdminStandardsPage() {
                   type="text"
                   value={createFrameworkDraft.jurisdiction}
                   onChange={(event) =>
-                    setCreateFrameworkDraft((current) => ({ ...current, jurisdiction: event.target.value }))
+                    setCreateFrameworkDraft((current) => ({
+                      ...current,
+                      jurisdiction: event.target.value,
+                    }))
                   }
                   placeholder="Jurisdiction"
                   className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -545,7 +626,10 @@ export default function AdminStandardsPage() {
                   type="text"
                   value={createFrameworkDraft.subject}
                   onChange={(event) =>
-                    setCreateFrameworkDraft((current) => ({ ...current, subject: event.target.value }))
+                    setCreateFrameworkDraft((current) => ({
+                      ...current,
+                      subject: event.target.value,
+                    }))
                   }
                   placeholder="Subject"
                   className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -554,7 +638,10 @@ export default function AdminStandardsPage() {
                   type="text"
                   value={createFrameworkDraft.version}
                   onChange={(event) =>
-                    setCreateFrameworkDraft((current) => ({ ...current, version: event.target.value }))
+                    setCreateFrameworkDraft((current) => ({
+                      ...current,
+                      version: event.target.value,
+                    }))
                   }
                   placeholder="Version"
                   className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -564,9 +651,10 @@ export default function AdminStandardsPage() {
                 <button
                   type="button"
                   onClick={() => void createFramework()}
-                  className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  disabled={savingFramework}
+                  className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Save Framework
+                  {savingFramework ? "Saving..." : "Save Framework"}
                 </button>
               </div>
             </section>
@@ -587,7 +675,10 @@ export default function AdminStandardsPage() {
                 const treeLoading = treeLoadingFrameworkIds.includes(framework.id);
 
                 return (
-                  <article key={framework.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                  <article
+                    key={framework.id}
+                    className="rounded-lg border border-gray-200 bg-white p-4"
+                  >
                     {editingFrameworkId === framework.id ? (
                       <div className="space-y-3">
                         <h2 className="text-sm font-semibold text-gray-900">Edit Framework</h2>
@@ -596,7 +687,10 @@ export default function AdminStandardsPage() {
                             type="text"
                             value={editingFrameworkDraft.name}
                             onChange={(event) =>
-                              setEditingFrameworkDraft((current) => ({ ...current, name: event.target.value }))
+                              setEditingFrameworkDraft((current) => ({
+                                ...current,
+                                name: event.target.value,
+                              }))
                             }
                             placeholder="Name"
                             className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -605,7 +699,10 @@ export default function AdminStandardsPage() {
                             type="text"
                             value={editingFrameworkDraft.jurisdiction}
                             onChange={(event) =>
-                              setEditingFrameworkDraft((current) => ({ ...current, jurisdiction: event.target.value }))
+                              setEditingFrameworkDraft((current) => ({
+                                ...current,
+                                jurisdiction: event.target.value,
+                              }))
                             }
                             placeholder="Jurisdiction"
                             className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -614,7 +711,10 @@ export default function AdminStandardsPage() {
                             type="text"
                             value={editingFrameworkDraft.subject}
                             onChange={(event) =>
-                              setEditingFrameworkDraft((current) => ({ ...current, subject: event.target.value }))
+                              setEditingFrameworkDraft((current) => ({
+                                ...current,
+                                subject: event.target.value,
+                              }))
                             }
                             placeholder="Subject"
                             className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -623,7 +723,10 @@ export default function AdminStandardsPage() {
                             type="text"
                             value={editingFrameworkDraft.version}
                             onChange={(event) =>
-                              setEditingFrameworkDraft((current) => ({ ...current, version: event.target.value }))
+                              setEditingFrameworkDraft((current) => ({
+                                ...current,
+                                version: event.target.value,
+                              }))
                             }
                             placeholder="Version"
                             className="rounded border border-gray-300 px-3 py-2 text-sm"
@@ -654,12 +757,17 @@ export default function AdminStandardsPage() {
                             onClick={() => toggleFramework(framework.id)}
                             className="text-left"
                           >
-                            <h2 className="text-lg font-semibold text-gray-900">{framework.name}</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                              {framework.name}
+                            </h2>
                             <p className="text-sm text-gray-600">
-                              {framework.jurisdiction || "No jurisdiction"} • {framework.subject || "No subject"} •{" "}
+                              {framework.jurisdiction || "No jurisdiction"} •{" "}
+                              {framework.subject || "No subject"} •{" "}
                               {framework.version || "No version"}
                             </p>
-                            <p className="text-xs text-gray-500">{standardCounts[framework.id] || 0} standards</p>
+                            <p className="text-xs text-gray-500">
+                              {standardCounts[framework.id] || 0} standards
+                            </p>
                           </button>
                           <div className="flex gap-2">
                             <button
@@ -751,7 +859,9 @@ export default function AdminStandardsPage() {
                             </section>
 
                             <section className="rounded border border-gray-200 bg-gray-50 p-3">
-                              <h3 className="text-sm font-semibold text-gray-900">Bulk Import (CSV)</h3>
+                              <h3 className="text-sm font-semibold text-gray-900">
+                                Bulk Import (CSV)
+                              </h3>
                               <p className="mt-1 text-xs text-gray-600">
                                 Format: code,description,grade_band,parent_code
                               </p>
@@ -779,15 +889,23 @@ export default function AdminStandardsPage() {
                               {importStatus && (
                                 <div className="mt-2 rounded border border-gray-200 bg-white p-2 text-xs text-gray-700">
                                   <p>
-                                    Created: <span className="font-semibold text-green-700">{importStatus.created}</span>
+                                    Created:{" "}
+                                    <span className="font-semibold text-green-700">
+                                      {importStatus.created}
+                                    </span>
                                   </p>
                                   <p>
-                                    Errors: <span className="font-semibold text-red-700">{importStatus.errors}</span>
+                                    Errors:{" "}
+                                    <span className="font-semibold text-red-700">
+                                      {importStatus.errors}
+                                    </span>
                                   </p>
                                   {importStatus.messages.length > 0 && (
                                     <ul className="mt-1 space-y-1 text-red-700">
                                       {importStatus.messages.slice(0, 10).map((message, index) => (
-                                        <li key={`${framework.id}-import-msg-${index}`}>{message}</li>
+                                        <li key={`${framework.id}-import-msg-${index}`}>
+                                          {message}
+                                        </li>
                                       ))}
                                     </ul>
                                   )}
@@ -796,11 +914,15 @@ export default function AdminStandardsPage() {
                             </section>
 
                             <section className="space-y-2">
-                              <h3 className="text-sm font-semibold text-gray-900">Standards Tree</h3>
+                              <h3 className="text-sm font-semibold text-gray-900">
+                                Standards Tree
+                              </h3>
                               {treeLoading ? (
                                 <p className="text-sm text-gray-500">Loading tree...</p>
                               ) : expandedFrameworkTree.length === 0 ? (
-                                <p className="text-sm text-gray-500">No standards in this framework.</p>
+                                <p className="text-sm text-gray-500">
+                                  No standards in this framework.
+                                </p>
                               ) : (
                                 <div className="space-y-2">
                                   {expandedFrameworkTree.map((node) =>

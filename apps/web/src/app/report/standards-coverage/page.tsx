@@ -93,9 +93,7 @@ export default function StandardsCoverageReportPage() {
     return {
       totalFrameworks: frameworks.length,
       overallCoverage:
-        totalStandards > 0
-          ? Number(((coveredStandards * 100) / totalStandards).toFixed(1))
-          : 0,
+        totalStandards > 0 ? Number(((coveredStandards * 100) / totalStandards).toFixed(1)) : 0,
       fullyUncoveredStandards: frameworks.reduce(
         (total, framework) => total + framework.uncovered.length,
         0,
@@ -126,7 +124,11 @@ export default function StandardsCoverageReportPage() {
         setSelectedCourseId(firstCourseInYear ? String(firstCourseInYear.id) : "");
       }
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load standards coverage report.");
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to load standards coverage report.",
+      );
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,11 @@ export default function StandardsCoverageReportPage() {
       setYearCoverage(data);
     } catch (requestError) {
       setYearCoverage(null);
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load academic year standards coverage.");
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to load academic year standards coverage.",
+      );
     } finally {
       setCoverageLoading(false);
     }
@@ -165,7 +171,11 @@ export default function StandardsCoverageReportPage() {
       setCourseCoverage(data);
     } catch (requestError) {
       setCourseCoverage(null);
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load course drill-down.");
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : "Unable to load course drill-down.",
+      );
     } finally {
       setCourseLoading(false);
     }
@@ -191,9 +201,7 @@ export default function StandardsCoverageReportPage() {
       return;
     }
 
-    const stillValid = yearCourses.some(
-      (course) => String(course.id) === selectedCourseId,
-    );
+    const stillValid = yearCourses.some((course) => String(course.id) === selectedCourseId);
 
     if (!stillValid) {
       const firstCourse = yearCourses[0];
@@ -225,7 +233,11 @@ export default function StandardsCoverageReportPage() {
             </p>
           </header>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {loading ? (
             <p className="text-sm text-gray-500">Loading standards coverage report...</p>
@@ -234,16 +246,28 @@ export default function StandardsCoverageReportPage() {
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="rounded border border-gray-200 bg-gray-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Total Frameworks</p>
-                    <p className="mt-1 text-2xl font-semibold text-gray-900">{summaryStats.totalFrameworks}</p>
+                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                      Total Frameworks
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-gray-900">
+                      {summaryStats.totalFrameworks}
+                    </p>
                   </div>
                   <div className="rounded border border-gray-200 bg-gray-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Overall Coverage</p>
-                    <p className="mt-1 text-2xl font-semibold text-gray-900">{percentLabel(summaryStats.overallCoverage)}</p>
+                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                      Overall Coverage
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-gray-900">
+                      {percentLabel(summaryStats.overallCoverage)}
+                    </p>
                   </div>
                   <div className="rounded border border-gray-200 bg-gray-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Fully Uncovered Standards</p>
-                    <p className="mt-1 text-2xl font-semibold text-red-700">{summaryStats.fullyUncoveredStandards}</p>
+                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                      Fully Uncovered Standards
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-red-700">
+                      {summaryStats.fullyUncoveredStandards}
+                    </p>
                   </div>
                 </div>
               </section>
@@ -269,13 +293,18 @@ export default function StandardsCoverageReportPage() {
                 {coverageLoading ? (
                   <p className="mt-4 text-sm text-gray-500">Loading framework coverage...</p>
                 ) : !yearCoverage || yearCoverage.frameworks.length === 0 ? (
-                  <p className="mt-4 text-sm text-gray-500">No framework coverage data is available for this academic year.</p>
+                  <p className="mt-4 text-sm text-gray-500">
+                    No framework coverage data is available for this academic year.
+                  </p>
                 ) : (
                   <div className="mt-4 space-y-3">
                     {yearCoverage.frameworks.map((framework) => {
                       const expanded = expandedFrameworkIds.includes(framework.framework_id);
                       return (
-                        <article key={framework.framework_id} className="rounded border border-gray-200 bg-gray-50 p-4">
+                        <article
+                          key={framework.framework_id}
+                          className="rounded border border-gray-200 bg-gray-50 p-4"
+                        >
                           <button
                             type="button"
                             onClick={() => toggleFramework(framework.framework_id)}
@@ -283,11 +312,16 @@ export default function StandardsCoverageReportPage() {
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
-                                <h2 className="text-sm font-semibold text-gray-900">{framework.framework_name}</h2>
-                                <p className="text-xs text-gray-500">{framework.subject || "General"}</p>
+                                <h2 className="text-sm font-semibold text-gray-900">
+                                  {framework.framework_name}
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                  {framework.subject || "General"}
+                                </p>
                               </div>
                               <p className="text-sm font-semibold text-gray-800">
-                                {framework.covered_standards} of {framework.total_standards} standards covered
+                                {framework.covered_standards} of {framework.total_standards}{" "}
+                                standards covered
                               </p>
                             </div>
 
@@ -301,27 +335,40 @@ export default function StandardsCoverageReportPage() {
                             >
                               <div
                                 className={`h-2 rounded ${progressBarClass(framework.coverage_percentage)}`}
-                                style={{ width: `${Math.min(100, framework.coverage_percentage)}%` }}
+                                style={{
+                                  width: `${Math.min(100, framework.coverage_percentage)}%`,
+                                }}
                               />
                             </div>
-                            <p className="mt-1 text-xs text-gray-600">{percentLabel(framework.coverage_percentage)}</p>
+                            <p className="mt-1 text-xs text-gray-600">
+                              {percentLabel(framework.coverage_percentage)}
+                            </p>
                           </button>
 
                           {expanded && (
                             <div className="mt-3 rounded border border-gray-200 bg-white p-3">
-                              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">Uncovered Standards</h3>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                Uncovered Standards
+                              </h3>
                               {framework.uncovered.length === 0 ? (
-                                <p className="mt-2 text-sm text-green-700">All standards in this framework are covered.</p>
+                                <p className="mt-2 text-sm text-green-700">
+                                  All standards in this framework are covered.
+                                </p>
                               ) : (
                                 <ul className="mt-2 space-y-2">
                                   {framework.uncovered.map((standard) => (
-                                    <li key={standard.id} className="rounded border border-red-100 bg-red-50 p-2">
+                                    <li
+                                      key={standard.id}
+                                      className="rounded border border-red-100 bg-red-50 p-2"
+                                    >
                                       <p className="text-sm font-medium text-red-900">
                                         {standard.code}
                                         {standard.grade_band ? ` (${standard.grade_band})` : ""}
                                       </p>
                                       <p className="text-xs text-red-800">{standard.description}</p>
-                                      <p className="mt-1 text-xs font-medium text-red-700">This standard has no aligned content.</p>
+                                      <p className="mt-1 text-xs font-medium text-red-700">
+                                        This standard has no aligned content.
+                                      </p>
                                     </li>
                                   ))}
                                 </ul>
@@ -338,7 +385,8 @@ export default function StandardsCoverageReportPage() {
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h2 className="text-lg font-semibold text-gray-900">Course Drill-Down</h2>
                 <p className="text-sm text-gray-600">
-                  Compare covered standards by source type (assignment vs. unit plan) for a specific course.
+                  Compare covered standards by source type (assignment vs. unit plan) for a specific
+                  course.
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-end gap-4">
@@ -362,25 +410,40 @@ export default function StandardsCoverageReportPage() {
                 {courseLoading ? (
                   <p className="mt-4 text-sm text-gray-500">Loading course coverage...</p>
                 ) : !selectedCourseId || !courseCoverage ? (
-                  <p className="mt-4 text-sm text-gray-500">Select a course to inspect coverage sources.</p>
+                  <p className="mt-4 text-sm text-gray-500">
+                    Select a course to inspect coverage sources.
+                  </p>
                 ) : (
                   <div className="mt-4 space-y-3">
                     {courseCoverage.frameworks.map((framework) => (
-                      <article key={`course-framework-${framework.framework_id}`} className="rounded border border-gray-200 bg-gray-50 p-4">
+                      <article
+                        key={`course-framework-${framework.framework_id}`}
+                        className="rounded border border-gray-200 bg-gray-50 p-4"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-gray-900">{framework.framework_name}</h3>
-                          <p className="text-xs text-gray-600">{percentLabel(framework.coverage_percentage)}</p>
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {framework.framework_name}
+                          </h3>
+                          <p className="text-xs text-gray-600">
+                            {percentLabel(framework.coverage_percentage)}
+                          </p>
                         </div>
                         <p className="text-xs text-gray-600">
-                          {framework.covered_standards} of {framework.total_standards} standards covered
+                          {framework.covered_standards} of {framework.total_standards} standards
+                          covered
                         </p>
 
                         {framework.covered.length === 0 ? (
-                          <p className="mt-2 text-sm text-gray-500">No covered standards for this framework in the selected course.</p>
+                          <p className="mt-2 text-sm text-gray-500">
+                            No covered standards for this framework in the selected course.
+                          </p>
                         ) : (
                           <div className="mt-2 space-y-2">
                             {framework.covered.map((standard) => (
-                              <div key={standard.id} className="rounded border border-gray-200 bg-white p-2">
+                              <div
+                                key={standard.id}
+                                className="rounded border border-gray-200 bg-white p-2"
+                              >
                                 <p className="text-sm font-medium text-gray-900">{standard.code}</p>
                                 <p className="text-xs text-gray-600">{standard.description}</p>
                                 <div className="mt-1 flex flex-wrap gap-2">

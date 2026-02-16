@@ -84,7 +84,9 @@ export default function CommunicatePage() {
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
-  const [announcementValidationError, setAnnouncementValidationError] = useState<string | null>(null);
+  const [announcementValidationError, setAnnouncementValidationError] = useState<string | null>(
+    null,
+  );
 
   const canCreateAnnouncement = useMemo(
     () => (user?.roles || []).some((role) => role === "admin" || role === "teacher"),
@@ -138,7 +140,12 @@ export default function CommunicatePage() {
 
   async function submitAnnouncement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canCreateAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()) {
+    if (
+      !canCreateAnnouncement ||
+      !announcementCourseId ||
+      !announcementTitle.trim() ||
+      !announcementMessage.trim()
+    ) {
       setAnnouncementValidationError("Course, title, and message are required.");
       announce("Announcement form has validation errors");
       return;
@@ -168,7 +175,9 @@ export default function CommunicatePage() {
       await loadAnnouncements();
     } catch (submitError) {
       announce("Failed to post announcement");
-      setError(submitError instanceof ApiError ? submitError.message : "Failed to create announcement.");
+      setError(
+        submitError instanceof ApiError ? submitError.message : "Failed to create announcement.",
+      );
     } finally {
       setSubmittingAnnouncement(false);
     }
@@ -181,10 +190,13 @@ export default function CommunicatePage() {
 
   function participantPreview(thread: MessageThread): string {
     const currentUserId = user?.id;
-    const visibleParticipants = thread.participants.filter((participant) => participant.id !== currentUserId);
+    const visibleParticipants = thread.participants.filter(
+      (participant) => participant.id !== currentUserId,
+    );
     const names = visibleParticipants.slice(0, 3).map(fullName).filter(Boolean);
     if (names.length === 0) return "No participants";
-    if (visibleParticipants.length > 3) return `${names.join(", ")} +${visibleParticipants.length - 3}`;
+    if (visibleParticipants.length > 3)
+      return `${names.join(", ")} +${visibleParticipants.length - 3}`;
     return names.join(", ");
   }
 
@@ -197,10 +209,26 @@ export default function CommunicatePage() {
             <p className="text-sm text-gray-600">Announcements and direct course messaging.</p>
           </div>
 
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-md bg-green-50 p-3 text-sm text-green-700"
+            >
+              {success}
+            </div>
+          )}
 
-          <div role="tablist" aria-label="Communication tabs" className="flex items-center gap-2 border-b border-gray-200">
+          <div
+            role="tablist"
+            aria-label="Communication tabs"
+            className="flex items-center gap-2 border-b border-gray-200"
+          >
             <button
               id="communicate-tab-announcements"
               role="tab"
@@ -211,11 +239,13 @@ export default function CommunicatePage() {
               onKeyDown={(event) => {
                 if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
                   event.preventDefault();
-                  activateTab(event.key === "ArrowRight" ? "messages" : "messages");
+                  activateTab("messages");
                 }
               }}
               className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                activeTab === "announcements" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
+                activeTab === "announcements"
+                  ? "border-blue-600 text-blue-700"
+                  : "border-transparent text-gray-500"
               }`}
             >
               Announcements
@@ -230,11 +260,13 @@ export default function CommunicatePage() {
               onKeyDown={(event) => {
                 if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
                   event.preventDefault();
-                  activateTab(event.key === "ArrowRight" ? "announcements" : "announcements");
+                  activateTab("announcements");
                 }
               }}
               className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                activeTab === "messages" ? "border-blue-600 text-blue-700" : "border-transparent text-gray-500"
+                activeTab === "messages"
+                  ? "border-blue-600 text-blue-700"
+                  : "border-transparent text-gray-500"
               }`}
             >
               Messages
@@ -263,18 +295,32 @@ export default function CommunicatePage() {
 
               {showAnnouncementForm && canCreateAnnouncement && (
                 <FocusTrap active={showAnnouncementForm}>
-                  <form onSubmit={(event) => void submitAnnouncement(event)} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+                  <form
+                    onSubmit={(event) => void submitAnnouncement(event)}
+                    className="space-y-3 rounded-lg border border-gray-200 bg-white p-4"
+                  >
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
-                        <label htmlFor="announcement-course" className="mb-1 block text-sm font-medium text-gray-700">Course</label>
+                        <label
+                          htmlFor="announcement-course"
+                          className="mb-1 block text-sm font-medium text-gray-700"
+                        >
+                          Course
+                        </label>
                         <select
                           id="announcement-course"
                           value={announcementCourseId}
                           onChange={(event) => setAnnouncementCourseId(event.target.value)}
                           required
                           aria-required="true"
-                          aria-invalid={Boolean(announcementValidationError && !announcementCourseId)}
-                          aria-describedby={announcementValidationError && !announcementCourseId ? "announcement-form-error" : undefined}
+                          aria-invalid={Boolean(
+                            announcementValidationError && !announcementCourseId,
+                          )}
+                          aria-describedby={
+                            announcementValidationError && !announcementCourseId
+                              ? "announcement-form-error"
+                              : undefined
+                          }
                           className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                         >
                           {courses.map((course) => (
@@ -285,15 +331,26 @@ export default function CommunicatePage() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="announcement-title" className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                        <label
+                          htmlFor="announcement-title"
+                          className="mb-1 block text-sm font-medium text-gray-700"
+                        >
+                          Title
+                        </label>
                         <input
                           id="announcement-title"
                           value={announcementTitle}
                           onChange={(event) => setAnnouncementTitle(event.target.value)}
                           required
                           aria-required="true"
-                          aria-invalid={Boolean(announcementValidationError && !announcementTitle.trim())}
-                          aria-describedby={announcementValidationError && !announcementTitle.trim() ? "announcement-form-error" : undefined}
+                          aria-invalid={Boolean(
+                            announcementValidationError && !announcementTitle.trim(),
+                          )}
+                          aria-describedby={
+                            announcementValidationError && !announcementTitle.trim()
+                              ? "announcement-form-error"
+                              : undefined
+                          }
                           className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                           placeholder="Announcement title"
                         />
@@ -301,15 +358,26 @@ export default function CommunicatePage() {
                     </div>
 
                     <div>
-                      <label htmlFor="announcement-message" className="mb-1 block text-sm font-medium text-gray-700">Message</label>
+                      <label
+                        htmlFor="announcement-message"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Message
+                      </label>
                       <textarea
                         id="announcement-message"
                         value={announcementMessage}
                         onChange={(event) => setAnnouncementMessage(event.target.value)}
                         required
                         aria-required="true"
-                        aria-invalid={Boolean(announcementValidationError && !announcementMessage.trim())}
-                        aria-describedby={announcementValidationError && !announcementMessage.trim() ? "announcement-form-error" : undefined}
+                        aria-invalid={Boolean(
+                          announcementValidationError && !announcementMessage.trim(),
+                        )}
+                        aria-describedby={
+                          announcementValidationError && !announcementMessage.trim()
+                            ? "announcement-form-error"
+                            : undefined
+                        }
                         className="min-h-28 w-full rounded border border-gray-300 px-3 py-2 text-sm"
                         placeholder="Write your announcement"
                       />
@@ -323,7 +391,12 @@ export default function CommunicatePage() {
 
                     <button
                       type="submit"
-                      disabled={submittingAnnouncement || !announcementCourseId || !announcementTitle.trim() || !announcementMessage.trim()}
+                      disabled={
+                        submittingAnnouncement ||
+                        !announcementCourseId ||
+                        !announcementTitle.trim() ||
+                        !announcementMessage.trim()
+                      }
                       className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                     >
                       {submittingAnnouncement ? "Posting..." : "Post Announcement"}
@@ -340,16 +413,27 @@ export default function CommunicatePage() {
                 ) : (
                   <div className="space-y-3">
                     {announcements.map((announcement) => (
-                      <article key={announcement.id} className="rounded border border-gray-200 bg-gray-50 p-4">
+                      <article
+                        key={announcement.id}
+                        className="rounded border border-gray-200 bg-gray-50 p-4"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-gray-900">{announcement.title}</h3>
-                          <span className="text-xs text-gray-500">{formatDate(announcement.created_at)}</span>
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {announcement.title}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {formatDate(announcement.created_at)}
+                          </span>
                         </div>
-                        <p className="mt-1 text-sm text-gray-700">{preview(announcement.message)}</p>
+                        <p className="mt-1 text-sm text-gray-700">
+                          {preview(announcement.message)}
+                        </p>
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                           <span>{announcement.created_by_name || "Unknown author"}</span>
                           <span>•</span>
-                          <span>{announcement.course_name || `Course #${announcement.course_id}`}</span>
+                          <span>
+                            {announcement.course_name || `Course #${announcement.course_id}`}
+                          </span>
                         </div>
                       </article>
                     ))}
@@ -369,7 +453,10 @@ export default function CommunicatePage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Message Threads</h2>
-                <Link href="/communicate/compose" className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                <Link
+                  href="/communicate/compose"
+                  className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
                   New Message
                 </Link>
               </div>
@@ -402,7 +489,9 @@ export default function CommunicatePage() {
                         </div>
                         <p className="mt-1 text-xs text-gray-500">{participantPreview(thread)}</p>
                         <p className="mt-1 text-sm text-gray-700">
-                          {thread.last_message ? preview(thread.last_message.body, 120) : "No messages yet"}
+                          {thread.last_message
+                            ? preview(thread.last_message.body, 120)
+                            : "No messages yet"}
                         </p>
                       </Link>
                     ))}

@@ -419,6 +419,11 @@ export default function LearnCoursePage() {
               <div className="h-2 rounded-full bg-gray-200">
                 <div
                   className="h-2 rounded-full bg-blue-600"
+                  role="progressbar"
+                  aria-valuenow={overallProgress.pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Overall course progress"
                   style={{ width: `${overallProgress.pct}%` }}
                 />
               </div>
@@ -481,6 +486,11 @@ export default function LearnCoursePage() {
                         <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
                           <div
                             className="h-2 rounded-full bg-blue-600"
+                            role="progressbar"
+                            aria-valuenow={modulePct}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`${view.moduleEntry.title} completion`}
                             style={{ width: `${modulePct}%` }}
                           />
                         </div>

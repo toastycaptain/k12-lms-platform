@@ -49,7 +49,7 @@ module Api
         response.headers["Cache-Control"] = "no-cache"
         response.headers["X-Accel-Buffering"] = "no"
 
-        token_count = 0
+        chunk_count = 0
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         begin
@@ -61,15 +61,15 @@ module Api
             max_tokens: max_tokens,
             temperature: temperature
           ) do |token, _parsed|
-            token_count += 1
+            chunk_count += 1
             response.stream.write("data: #{({ token: token, invocation_id: invocation.id }).to_json}\n\n")
           end
 
           duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
           invocation.complete!(
             tokens: {
-              completion: token_count,
-              total: token_count
+              completion_chunks: chunk_count,
+              total_chunks: chunk_count
             },
             duration: duration,
             response_hash: { content: full_text }

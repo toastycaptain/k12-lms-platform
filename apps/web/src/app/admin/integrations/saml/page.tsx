@@ -67,7 +67,10 @@ function initialFormState(): SamlFormState {
 }
 
 function apiOrigin(): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(/\/+$/, "");
+  const base = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(
+    /\/+$/,
+    "",
+  );
   return base.replace(/\/api\/v1$/, "");
 }
 
@@ -129,7 +132,9 @@ export default function SamlIntegrationPage() {
         });
       }
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to load SAML settings.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to load SAML settings.",
+      );
     } finally {
       setLoading(false);
     }
@@ -185,7 +190,9 @@ export default function SamlIntegrationPage() {
 
       await loadConfig();
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to save SAML settings.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to save SAML settings.",
+      );
     } finally {
       setSaving(false);
     }
@@ -207,7 +214,9 @@ export default function SamlIntegrationPage() {
       setSuccess(`SAML ${action}d successfully.`);
       await loadConfig();
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : "Unable to toggle SAML status.");
+      setError(
+        requestError instanceof ApiError ? requestError.message : "Unable to toggle SAML status.",
+      );
     } finally {
       setToggling(false);
     }
@@ -265,16 +274,22 @@ export default function SamlIntegrationPage() {
               &larr; Back to Integrations
             </Link>
             <h1 className="mt-2 text-2xl font-bold text-gray-900">SAML SSO</h1>
-            <p className="text-sm text-gray-600">Configure tenant-specific SAML identity provider settings.</p>
+            <p className="text-sm text-gray-600">
+              Configure tenant-specific SAML identity provider settings.
+            </p>
           </header>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>
+          )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Current Status</h2>
-              <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusClass(config?.status || "inactive")}`}>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${statusClass(config?.status || "inactive")}`}
+              >
                 {config?.status || "inactive"}
               </span>
             </div>
@@ -288,11 +303,7 @@ export default function SamlIntegrationPage() {
                 onClick={() => void toggleStatus()}
                 className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {toggling
-                  ? "Updating..."
-                  : config?.status === "active"
-                    ? "Deactivate"
-                    : "Activate"}
+                {toggling ? "Updating..." : config?.status === "active" ? "Deactivate" : "Activate"}
               </button>
             </div>
           </section>
@@ -301,77 +312,171 @@ export default function SamlIntegrationPage() {
             <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                type="text"
-                value={form.idp_sso_url}
-                onChange={(event) => setForm((current) => ({ ...current, idp_sso_url: event.target.value }))}
-                placeholder="IdP SSO URL (required)"
-                className="rounded border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <input
-                type="text"
-                value={form.idp_slo_url}
-                onChange={(event) => setForm((current) => ({ ...current, idp_slo_url: event.target.value }))}
-                placeholder="IdP SLO URL (optional)"
-                className="rounded border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <textarea
-                value={form.idp_cert}
-                onChange={(event) => setForm((current) => ({ ...current, idp_cert: event.target.value }))}
-                rows={4}
-                placeholder="IdP Certificate (PEM)"
-                className="rounded border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <input
-                type="text"
-                value={form.idp_cert_fingerprint}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, idp_cert_fingerprint: event.target.value }))
-                }
-                placeholder="Certificate Fingerprint"
-                className="rounded border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <select
-                value={form.name_id_format}
-                onChange={(event) => setForm((current) => ({ ...current, name_id_format: event.target.value }))}
-                className="rounded border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              >
-                {NAME_ID_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <div className="sm:col-span-2">
+                <label htmlFor="issuer" className="mb-1 block text-sm font-medium text-gray-700">
+                  Issuer / Entity ID
+                </label>
+                <input
+                  id="issuer"
+                  type="text"
+                  value={form.issuer}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, issuer: event.target.value }))
+                  }
+                  placeholder="Issuer / Entity ID"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="idp_sso_url"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  IdP SSO URL
+                </label>
+                <input
+                  id="idp_sso_url"
+                  type="text"
+                  value={form.idp_sso_url}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, idp_sso_url: event.target.value }))
+                  }
+                  placeholder="IdP SSO URL (required)"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="idp_slo_url"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  IdP SLO URL
+                </label>
+                <input
+                  id="idp_slo_url"
+                  type="text"
+                  value={form.idp_slo_url}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, idp_slo_url: event.target.value }))
+                  }
+                  placeholder="IdP SLO URL (optional)"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="idp_cert" className="mb-1 block text-sm font-medium text-gray-700">
+                  IdP Certificate
+                </label>
+                <textarea
+                  id="idp_cert"
+                  value={form.idp_cert}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, idp_cert: event.target.value }))
+                  }
+                  rows={4}
+                  placeholder="IdP Certificate (PEM)"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="idp_cert_fingerprint"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Certificate Fingerprint
+                </label>
+                <input
+                  id="idp_cert_fingerprint"
+                  type="text"
+                  value={form.idp_cert_fingerprint}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, idp_cert_fingerprint: event.target.value }))
+                  }
+                  placeholder="Certificate Fingerprint"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="name_id_format"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Name ID Format
+                </label>
+                <select
+                  id="name_id_format"
+                  value={form.name_id_format}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, name_id_format: event.target.value }))
+                  }
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                >
+                  {NAME_ID_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
               <h3 className="text-sm font-semibold text-gray-900">Attribute Mapping</h3>
               <div className="grid gap-3 sm:grid-cols-3">
-                <input
-                  type="text"
-                  value={form.email_attr}
-                  onChange={(event) => setForm((current) => ({ ...current, email_attr: event.target.value }))}
-                  placeholder="Email attribute"
-                  className="rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  value={form.first_name_attr}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, first_name_attr: event.target.value }))
-                  }
-                  placeholder="First name attribute"
-                  className="rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  value={form.last_name_attr}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, last_name_attr: event.target.value }))
-                  }
-                  placeholder="Last name attribute"
-                  className="rounded border border-gray-300 px-3 py-2 text-sm"
-                />
+                <div>
+                  <label
+                    htmlFor="email_attr"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    Email Attribute
+                  </label>
+                  <input
+                    id="email_attr"
+                    type="text"
+                    value={form.email_attr}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, email_attr: event.target.value }))
+                    }
+                    placeholder="Email attribute"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="first_name_attr"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    First Name Attribute
+                  </label>
+                  <input
+                    id="first_name_attr"
+                    type="text"
+                    value={form.first_name_attr}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, first_name_attr: event.target.value }))
+                    }
+                    placeholder="First name attribute"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="last_name_attr"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    Last Name Attribute
+                  </label>
+                  <input
+                    id="last_name_attr"
+                    type="text"
+                    value={form.last_name_attr}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, last_name_attr: event.target.value }))
+                    }
+                    placeholder="Last name attribute"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
               </div>
             </div>
 
@@ -416,7 +521,8 @@ export default function SamlIntegrationPage() {
           <section className="rounded-lg border border-gray-200 bg-white p-5 space-y-3">
             <h2 className="text-lg font-semibold text-gray-900">SP Metadata</h2>
             <p className="text-sm text-gray-600">
-              Provide this URL to your identity provider to configure the service provider connection.
+              Provide this URL to your identity provider to configure the service provider
+              connection.
             </p>
             <p className="break-all rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
               {metadataUrl || "Tenant slug unavailable"}

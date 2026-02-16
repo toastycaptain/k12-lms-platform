@@ -23,12 +23,14 @@ interface Course {
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
     published: "bg-green-100 text-green-800",
     archived: "bg-gray-100 text-gray-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -66,7 +68,9 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               Welcome, {user?.first_name} {user?.last_name}
             </h1>
-            <p className="mt-1 text-sm text-gray-500">Here&apos;s an overview of your planning activity.</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Here&apos;s an overview of your planning activity.
+            </p>
           </div>
 
           {/* Recent Unit Plans */}

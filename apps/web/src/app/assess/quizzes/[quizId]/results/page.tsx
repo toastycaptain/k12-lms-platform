@@ -49,13 +49,18 @@ export default function QuizResultsPage() {
   }, [quizId]);
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading results...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="text-sm text-gray-500">Loading results...</div>
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   const allAttempts = results?.attempts || [];
-  const filteredAttempts = statusFilter === "all"
-    ? allAttempts
-    : allAttempts.filter((a) => a.status === statusFilter);
+  const filteredAttempts =
+    statusFilter === "all" ? allAttempts : allAttempts.filter((a) => a.status === statusFilter);
 
   const sortedAttempts = [...filteredAttempts].sort((a, b) => {
     if (sortBy === "score") return (b.score || 0) - (a.score || 0);
@@ -65,24 +70,27 @@ export default function QuizResultsPage() {
   // Summary stats
   const gradedAttempts = allAttempts.filter((a) => a.status === "graded");
   const totalAttempts = allAttempts.length;
-  const avgScore = gradedAttempts.length > 0
-    ? gradedAttempts.reduce((sum, a) => sum + (a.score || 0), 0) / gradedAttempts.length
-    : 0;
-  const avgPercentage = gradedAttempts.length > 0
-    ? gradedAttempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / gradedAttempts.length
-    : 0;
-  const highestScore = gradedAttempts.length > 0
-    ? Math.max(...gradedAttempts.map((a) => a.score || 0))
-    : 0;
-  const lowestScore = gradedAttempts.length > 0
-    ? Math.min(...gradedAttempts.map((a) => a.score || 0))
-    : 0;
-  const completionRate = totalAttempts > 0
-    ? Math.round((allAttempts.filter((a) => a.status !== "in_progress").length / totalAttempts) * 100)
-    : 0;
+  const avgScore =
+    gradedAttempts.length > 0
+      ? gradedAttempts.reduce((sum, a) => sum + (a.score || 0), 0) / gradedAttempts.length
+      : 0;
+  const avgPercentage =
+    gradedAttempts.length > 0
+      ? gradedAttempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / gradedAttempts.length
+      : 0;
+  const highestScore =
+    gradedAttempts.length > 0 ? Math.max(...gradedAttempts.map((a) => a.score || 0)) : 0;
+  const lowestScore =
+    gradedAttempts.length > 0 ? Math.min(...gradedAttempts.map((a) => a.score || 0)) : 0;
+  const completionRate =
+    totalAttempts > 0
+      ? Math.round(
+          (allAttempts.filter((a) => a.status !== "in_progress").length / totalAttempts) * 100,
+        )
+      : 0;
 
   const STATUS_COLORS: Record<string, string> = {
-    in_progress: "bg-yellow-100 text-yellow-800",
+    in_progress: "bg-yellow-200 text-yellow-900",
     submitted: "bg-blue-100 text-blue-800",
     graded: "bg-green-100 text-green-800",
   };
@@ -93,7 +101,10 @@ export default function QuizResultsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link href={`/assess/quizzes/${quizId}`} className="text-sm text-blue-600 hover:text-blue-800">
+              <Link
+                href={`/assess/quizzes/${quizId}`}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
                 &larr; Back to quiz
               </Link>
               <h1 className="mt-1 text-2xl font-bold text-gray-900">Quiz Results</h1>
@@ -165,7 +176,9 @@ export default function QuizResultsPage() {
                       {a.percentage != null ? `${Math.round(a.percentage)}%` : "--"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[a.status] || ""}`}>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[a.status] || ""}`}
+                      >
                         {a.status}
                       </span>
                     </td>

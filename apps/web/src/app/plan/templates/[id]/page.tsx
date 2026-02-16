@@ -36,7 +36,7 @@ interface Standard {
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
     published: "bg-green-100 text-green-800",
     archived: "bg-gray-100 text-gray-600",
   };
@@ -128,7 +128,12 @@ export default function TemplateEditorPage() {
       await apiFetch(`/api/v1/templates/${templateId}`, {
         method: "PATCH",
         body: JSON.stringify({
-          template: { name, subject: subject || null, grade_level: gradeLevel || null, description: description || null },
+          template: {
+            name,
+            subject: subject || null,
+            grade_level: gradeLevel || null,
+            description: description || null,
+          },
         }),
       });
 
@@ -210,11 +215,7 @@ export default function TemplateEditorPage() {
     setList(updated);
   };
 
-  const removeListItem = (
-    list: string[],
-    setList: (items: string[]) => void,
-    index: number,
-  ) => {
+  const removeListItem = (list: string[], setList: (items: string[]) => void, index: number) => {
     if (list.length <= 1) return;
     setList(list.filter((_, i) => i !== index));
   };
@@ -257,18 +258,13 @@ export default function TemplateEditorPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Link
-                  href="/plan/templates"
-                  className="text-sm text-gray-400 hover:text-gray-600"
-                >
+                <Link href="/plan/templates" className="text-sm text-gray-400 hover:text-gray-600">
                   &larr; Back
                 </Link>
                 <h1 className="text-2xl font-bold text-gray-900">Template Editor</h1>
                 <StatusBadge status={template.status} />
                 {currentVersion && (
-                  <span className="text-sm text-gray-400">
-                    v{currentVersion.version_number}
-                  </span>
+                  <span className="text-sm text-gray-400">v{currentVersion.version_number}</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -370,9 +366,7 @@ export default function TemplateEditorPage() {
 
             {/* Essential Questions */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Essential Questions
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Essential Questions</label>
               <div className="mt-1 space-y-2">
                 {essentialQuestions.map((q, i) => (
                   <div key={i} className="flex gap-2">
@@ -388,9 +382,7 @@ export default function TemplateEditorPage() {
                     />
                     {isEditable && essentialQuestions.length > 1 && (
                       <button
-                        onClick={() =>
-                          removeListItem(essentialQuestions, setEssentialQuestions, i)
-                        }
+                        onClick={() => removeListItem(essentialQuestions, setEssentialQuestions, i)}
                         className="text-sm text-red-500 hover:text-red-700"
                       >
                         Remove
@@ -446,9 +438,7 @@ export default function TemplateEditorPage() {
                 ))}
                 {isEditable && (
                   <button
-                    onClick={() =>
-                      addListItem(enduringUnderstandings, setEnduringUnderstandings)
-                    }
+                    onClick={() => addListItem(enduringUnderstandings, setEnduringUnderstandings)}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     + Add Understanding
@@ -459,9 +449,7 @@ export default function TemplateEditorPage() {
 
             {/* Standards Alignment */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Standards Alignment
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Standards Alignment</label>
               {isEditable && (
                 <input
                   type="text"
@@ -529,9 +517,7 @@ export default function TemplateEditorPage() {
                     v{v.version_number}: {v.title}
                   </div>
                 ))}
-                {versions.length === 0 && (
-                  <p className="text-sm text-gray-400">No versions yet.</p>
-                )}
+                {versions.length === 0 && <p className="text-sm text-gray-400">No versions yet.</p>}
               </div>
             </div>
           </div>

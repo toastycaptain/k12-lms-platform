@@ -232,7 +232,11 @@ export default function LearnGradesPage() {
             </p>
           </header>
 
-          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <section className="rounded-lg border border-gray-200 bg-white p-4">
             <div className="grid gap-3 sm:grid-cols-2">

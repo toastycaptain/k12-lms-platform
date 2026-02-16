@@ -2,7 +2,7 @@ module Api
   module V1
     class QuizAnalyticsController < ApplicationController
       def show
-        quiz = Quiz.includes(:quiz_items, :questions).find(quiz_id_param)
+        quiz = policy_scope(Quiz).includes(:quiz_items, :questions).find(quiz_id_param)
         authorize quiz, :results?
 
         attempts = quiz.quiz_attempts.where(status: "graded")
@@ -23,7 +23,7 @@ module Api
       end
 
       def course_summary
-        course = Course.find(course_id_param)
+        course = policy_scope(Course).find(course_id_param)
         authorize course, :show?
 
         quizzes = course.quizzes.where(status: %w[published closed]).order(:id)

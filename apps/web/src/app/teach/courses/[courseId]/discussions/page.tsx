@@ -25,7 +25,7 @@ const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     open: "bg-green-100 text-green-800",
-    locked: "bg-yellow-100 text-yellow-800",
+    locked: "bg-yellow-200 text-yellow-900",
     archived: "bg-gray-100 text-gray-600",
   };
   return (

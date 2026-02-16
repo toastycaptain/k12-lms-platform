@@ -89,6 +89,20 @@ RSpec.describe AiGenerationJob, type: :job do
     expect(invocation.error_message).to include("Gateway unavailable")
   end
 
+  it "marks invocation failed and re-raises when gateway raises StandardError" do
+    allow(AiGatewayClient).to receive(:generate).and_raise(
+      StandardError.new("something unexpected")
+    )
+
+    expect {
+      described_class.perform_now(invocation.id)
+    }.to raise_error(StandardError, "something unexpected")
+
+    invocation.reload
+    expect(invocation.status).to eq("failed")
+    expect(invocation.error_message).to include("something unexpected")
+  end
+
   it "creates a notification on completion" do
     allow(AiGatewayClient).to receive(:generate).and_return(
       "content" => "Generated lesson",

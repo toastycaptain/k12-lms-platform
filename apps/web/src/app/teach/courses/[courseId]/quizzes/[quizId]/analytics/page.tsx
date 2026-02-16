@@ -289,6 +289,11 @@ export default function QuizAnalyticsPage() {
                           <div className="h-3 w-full rounded bg-gray-100">
                             <div
                               className={`h-3 rounded ${bucket.barClass}`}
+                              role="progressbar"
+                              aria-valuenow={count}
+                              aria-valuemin={0}
+                              aria-valuemax={maxDistributionCount}
+                              aria-label={`Score range ${bucket.key}: ${count} students`}
                               style={{ width: `${width}%` }}
                             />
                           </div>

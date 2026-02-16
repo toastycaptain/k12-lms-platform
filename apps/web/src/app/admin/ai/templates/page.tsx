@@ -24,11 +24,13 @@ function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     draft: "bg-gray-100 text-gray-700",
     active: "bg-green-100 text-green-800",
-    archived: "bg-yellow-100 text-yellow-800",
+    archived: "bg-yellow-200 text-yellow-900",
   };
 
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-700"}`}>
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-700"}`}
+    >
       {status}
     </span>
   );
@@ -157,17 +159,25 @@ export default function AiTemplatesPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">AI Templates</h1>
             <div className="flex items-center gap-2">
-              <Link href="/admin/ai" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 Providers
               </Link>
-              <Link href="/admin/ai/policies" className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+              <Link
+                href="/admin/ai/policies"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              >
                 Policies
               </Link>
             </div>
           </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>
+          )}
 
           {loading ? (
             <p className="text-sm text-gray-500">Loading AI templates...</p>
@@ -177,7 +187,10 @@ export default function AiTemplatesPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Templates</h2>
                 <div className="mt-3 space-y-2">
                   {templates.map((template) => (
-                    <div key={template.id} className="rounded border border-gray-200 bg-gray-50 p-3">
+                    <div
+                      key={template.id}
+                      className="rounded border border-gray-200 bg-gray-50 p-3"
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <button
                           onClick={() =>
@@ -208,7 +221,9 @@ export default function AiTemplatesPage() {
                       </div>
                     </div>
                   ))}
-                  {templates.length === 0 && <p className="text-sm text-gray-500">No templates configured.</p>}
+                  {templates.length === 0 && (
+                    <p className="text-sm text-gray-500">No templates configured.</p>
+                  )}
                 </div>
               </section>
 
@@ -254,7 +269,9 @@ export default function AiTemplatesPage() {
 
                   <textarea
                     value={form.system_prompt}
-                    onChange={(e) => setForm((prev) => ({ ...prev, system_prompt: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, system_prompt: e.target.value }))
+                    }
                     placeholder="System prompt"
                     rows={4}
                     className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"
@@ -262,7 +279,9 @@ export default function AiTemplatesPage() {
 
                   <textarea
                     value={form.user_prompt_template}
-                    onChange={(e) => setForm((prev) => ({ ...prev, user_prompt_template: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, user_prompt_template: e.target.value }))
+                    }
                     placeholder="User prompt template"
                     rows={4}
                     className="rounded border border-gray-300 px-3 py-2 text-sm md:col-span-2"

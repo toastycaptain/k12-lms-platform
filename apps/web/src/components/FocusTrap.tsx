@@ -5,9 +5,10 @@ import { type ReactNode, useEffect, useRef } from "react";
 interface FocusTrapProps {
   active: boolean;
   children: ReactNode;
+  onEscape?: () => void;
 }
 
-export function FocusTrap({ active, children }: FocusTrapProps) {
+export function FocusTrap({ active, children, onEscape }: FocusTrapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,6 +25,12 @@ export function FocusTrap({ active, children }: FocusTrapProps) {
     first?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && onEscape) {
+        event.preventDefault();
+        onEscape();
+        return;
+      }
+
       if (event.key !== "Tab") return;
 
       if (event.shiftKey && document.activeElement === first) {
@@ -37,7 +44,7 @@ export function FocusTrap({ active, children }: FocusTrapProps) {
 
     container.addEventListener("keydown", handleKeyDown);
     return () => container.removeEventListener("keydown", handleKeyDown);
-  }, [active]);
+  }, [active, onEscape]);
 
   return <div ref={containerRef}>{children}</div>;
 }

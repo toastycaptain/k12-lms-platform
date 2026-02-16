@@ -41,10 +41,12 @@ function StatusBadge({ status }: { status: string }) {
     submitted: "bg-blue-100 text-blue-800",
     graded: "bg-purple-100 text-purple-800",
     returned: "bg-green-100 text-green-800",
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -115,9 +117,7 @@ export default function SubmissionsInboxPage() {
   });
 
   const pendingCount = rows.filter((r) => r.status === "submitted").length;
-  const gradedToday = rows.filter(
-    (r) => r.status === "graded" || r.status === "returned",
-  ).length;
+  const gradedToday = rows.filter((r) => r.status === "graded" || r.status === "returned").length;
   const needsReview = rows.filter((r) => r.status === "submitted").length;
 
   const filteredAssignments = filterCourse
@@ -133,7 +133,9 @@ export default function SubmissionsInboxPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Submissions Inbox</h1>
-            <p className="mt-1 text-sm text-gray-500">All student submissions across your courses</p>
+            <p className="mt-1 text-sm text-gray-500">
+              All student submissions across your courses
+            </p>
           </div>
 
           {/* Stats */}

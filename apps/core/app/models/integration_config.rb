@@ -1,6 +1,8 @@
 class IntegrationConfig < ApplicationRecord
   include TenantScoped
 
+  encrypts :settings
+
   VALID_PROVIDERS = %w[google_classroom google_workspace oneroster saml].freeze
   VALID_STATUSES = %w[inactive active error].freeze
 

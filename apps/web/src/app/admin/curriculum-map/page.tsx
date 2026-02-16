@@ -103,7 +103,9 @@ export default function CurriculumMapPage() {
   const [coverageLoading, setCoverageLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedCell, setSelectedCell] = useState<{ standardId: number; courseId: number } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ standardId: number; courseId: number } | null>(
+    null,
+  );
 
   const [assignTarget, setAssignTarget] = useState<GapStandard | null>(null);
   const [assignCourseId, setAssignCourseId] = useState<string>("");
@@ -113,8 +115,7 @@ export default function CurriculumMapPage() {
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
 
-  const canAccess =
-    user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
+  const canAccess = user?.roles?.includes("admin") || user?.roles?.includes("curriculum_lead");
 
   const yearCourses = useMemo(
     () => courses.filter((course) => String(course.academic_year_id) === selectedYear),
@@ -187,7 +188,8 @@ export default function CurriculumMapPage() {
     () =>
       gapGroups.reduce(
         (total, framework) =>
-          total + framework.grades.reduce((gradeTotal, group) => gradeTotal + group.standards.length, 0),
+          total +
+          framework.grades.reduce((gradeTotal, group) => gradeTotal + group.standards.length, 0),
         0,
       ),
     [gapGroups],
@@ -228,7 +230,11 @@ export default function CurriculumMapPage() {
       } catch (requestError) {
         setYearCoverage(null);
         setCourseCoverage({});
-        setError(requestError instanceof ApiError ? requestError.message : "Unable to load curriculum coverage.");
+        setError(
+          requestError instanceof ApiError
+            ? requestError.message
+            : "Unable to load curriculum coverage.",
+        );
       } finally {
         setCoverageLoading(false);
       }
@@ -260,7 +266,11 @@ export default function CurriculumMapPage() {
           setSelectedFramework(String(frameworkData[0].id));
         }
       } catch (requestError) {
-        setError(requestError instanceof ApiError ? requestError.message : "Unable to initialize curriculum map data.");
+        setError(
+          requestError instanceof ApiError
+            ? requestError.message
+            : "Unable to initialize curriculum map data.",
+        );
       } finally {
         setLoading(false);
       }
@@ -393,9 +403,7 @@ export default function CurriculumMapPage() {
           return;
         }
 
-        const selectedPlan = unitPlans.find(
-          (plan) => String(plan.id) === selectedUnitPlanId,
-        );
+        const selectedPlan = unitPlans.find((plan) => String(plan.id) === selectedUnitPlanId);
 
         if (!selectedPlan?.current_version_id) {
           setAssignError("The selected unit plan does not have a current version.");
@@ -412,7 +420,9 @@ export default function CurriculumMapPage() {
       await fetchCoverage(selectedYear);
       closeAssignModal();
     } catch (requestError) {
-      setAssignError(requestError instanceof ApiError ? requestError.message : "Unable to create alignment.");
+      setAssignError(
+        requestError instanceof ApiError ? requestError.message : "Unable to create alignment.",
+      );
     } finally {
       setAssigning(false);
     }
@@ -443,7 +453,11 @@ export default function CurriculumMapPage() {
             <p className="text-sm text-gray-500">Loading curriculum map...</p>
           ) : (
             <>
-              {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+              {error && (
+                <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
 
               <section className="flex flex-wrap items-end gap-4">
                 <div>
@@ -462,7 +476,9 @@ export default function CurriculumMapPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Standard Framework</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Standard Framework
+                  </label>
                   <select
                     value={selectedFramework}
                     onChange={(event) => {
@@ -479,7 +495,11 @@ export default function CurriculumMapPage() {
                   </select>
                 </div>
 
-                <div role="tablist" aria-label="Curriculum map views" className="ml-auto flex gap-2">
+                <div
+                  role="tablist"
+                  aria-label="Curriculum map views"
+                  className="ml-auto flex gap-2"
+                >
                   <button
                     type="button"
                     id="curriculum-tab-matrix"
@@ -566,118 +586,123 @@ export default function CurriculumMapPage() {
                   tabIndex={0}
                 >
                   {matrixStandards.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                    <p className="text-sm text-gray-500">No standards data available for this framework.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-200 bg-white text-sm">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-700">
-                              Standard
-                            </th>
-                            {yearCourses.map((course) => (
-                              <th
-                                key={course.id}
-                                className="px-3 py-2 text-center font-medium text-gray-700"
-                              >
-                                {course.code || course.name}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {matrixStandards.map((standard) => (
-                            <tr key={standard.id} className="hover:bg-gray-50">
-                              <td
-                                className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-gray-900"
-                                title={standard.description}
-                              >
-                                {standard.code}
-                              </td>
-                              {yearCourses.map((course) => {
-                                const covered = isCovered(standard.id, course.id);
-                                const isSelected =
-                                  selectedCell?.standardId === standard.id &&
-                                  selectedCell?.courseId === course.id;
-
-                                return (
-                                  <td key={`${standard.id}-${course.id}`} className="px-3 py-2 text-center">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setSelectedCell({
-                                          standardId: standard.id,
-                                          courseId: course.id,
-                                        })
-                                      }
-                                      className={`w-full rounded px-2 py-1 ${
-                                        covered
-                                          ? "bg-green-100 text-green-800"
-                                          : "bg-red-100 text-red-700"
-                                      } ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""}`}
-                                      aria-pressed={isSelected}
-                                      aria-label={`${standard.code} in ${course.name}: ${covered ? "Covered" : "Gap"}`}
-                                    >
-                                      {covered ? "Covered" : "Gap"}
-                                    </button>
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
+                      <p className="text-sm text-gray-500">
+                        No standards data available for this framework.
+                      </p>
                     </div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto rounded-lg border border-gray-200">
+                        <table className="min-w-full divide-y divide-gray-200 bg-white text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-700">
+                                Standard
+                              </th>
+                              {yearCourses.map((course) => (
+                                <th
+                                  key={course.id}
+                                  className="px-3 py-2 text-center font-medium text-gray-700"
+                                >
+                                  {course.code || course.name}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {matrixStandards.map((standard) => (
+                              <tr key={standard.id} className="hover:bg-gray-50">
+                                <td
+                                  className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-gray-900"
+                                  title={standard.description}
+                                >
+                                  {standard.code}
+                                </td>
+                                {yearCourses.map((course) => {
+                                  const covered = isCovered(standard.id, course.id);
+                                  const isSelected =
+                                    selectedCell?.standardId === standard.id &&
+                                    selectedCell?.courseId === course.id;
 
-                    {selectedCell && (
-                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-                        <h3 className="text-sm font-medium text-blue-900">Coverage Detail</h3>
-                        {(() => {
-                          const standard = matrixStandards.find(
-                            (entry) => entry.id === selectedCell.standardId,
-                          );
-                          const course = yearCourses.find(
-                            (entry) => entry.id === selectedCell.courseId,
-                          );
-                          const cellData = getCellCoverage(
-                            selectedCell.standardId,
-                            selectedCell.courseId,
-                          );
-                          const covered = isCovered(
-                            selectedCell.standardId,
-                            selectedCell.courseId,
-                          );
-
-                          return (
-                            <div className="mt-2 space-y-1 text-sm text-blue-800">
-                              <p>
-                                <span className="font-medium">Standard:</span> {standard?.code} —{" "}
-                                {standard?.description}
-                              </p>
-                              <p>
-                                <span className="font-medium">Course:</span> {course?.name}
-                              </p>
-                              <p>
-                                <span className="font-medium">Status:</span>{" "}
-                                {covered ? "Covered" : "Gap"}
-                              </p>
-                              {covered && (
-                                <p>
-                                  <span className="font-medium">Sources:</span>{" "}
-                                  {cellData?.covered_by_assignment ? "Assignment " : ""}
-                                  {cellData?.covered_by_unit_plan ? "Unit Plan" : ""}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })()}
+                                  return (
+                                    <td
+                                      key={`${standard.id}-${course.id}`}
+                                      className="px-3 py-2 text-center"
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setSelectedCell({
+                                            standardId: standard.id,
+                                            courseId: course.id,
+                                          })
+                                        }
+                                        className={`w-full rounded px-2 py-1 ${
+                                          covered
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-700"
+                                        } ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""}`}
+                                        aria-pressed={isSelected}
+                                        aria-label={`${standard.code} in ${course.name}: ${covered ? "Covered" : "Gap"}`}
+                                      >
+                                        {covered ? "Covered" : "Gap"}
+                                      </button>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
-                  </>
-                )}
+
+                      {selectedCell && (
+                        <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+                          <h3 className="text-sm font-medium text-blue-900">Coverage Detail</h3>
+                          {(() => {
+                            const standard = matrixStandards.find(
+                              (entry) => entry.id === selectedCell.standardId,
+                            );
+                            const course = yearCourses.find(
+                              (entry) => entry.id === selectedCell.courseId,
+                            );
+                            const cellData = getCellCoverage(
+                              selectedCell.standardId,
+                              selectedCell.courseId,
+                            );
+                            const covered = isCovered(
+                              selectedCell.standardId,
+                              selectedCell.courseId,
+                            );
+
+                            return (
+                              <div className="mt-2 space-y-1 text-sm text-blue-800">
+                                <p>
+                                  <span className="font-medium">Standard:</span> {standard?.code} —{" "}
+                                  {standard?.description}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Course:</span> {course?.name}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Status:</span>{" "}
+                                  {covered ? "Covered" : "Gap"}
+                                </p>
+                                {covered && (
+                                  <p>
+                                    <span className="font-medium">Sources:</span>{" "}
+                                    {cellData?.covered_by_assignment ? "Assignment " : ""}
+                                    {cellData?.covered_by_unit_plan ? "Unit Plan" : ""}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </section>
               ) : (
                 <section
@@ -694,7 +719,9 @@ export default function CurriculumMapPage() {
 
                   {gapGroups.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                      <p className="text-sm text-gray-500">No uncovered standards found for this academic year.</p>
+                      <p className="text-sm text-gray-500">
+                        No uncovered standards found for this academic year.
+                      </p>
                     </div>
                   ) : (
                     gapGroups.map((framework) => (
@@ -702,11 +729,15 @@ export default function CurriculumMapPage() {
                         key={`gap-framework-${framework.frameworkId}`}
                         className="rounded-lg border border-gray-200 bg-white p-4"
                       >
-                        <h2 className="text-lg font-semibold text-gray-900">{framework.frameworkName}</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {framework.frameworkName}
+                        </h2>
                         <div className="mt-3 space-y-3">
                           {framework.grades.map((gradeGroup) => (
                             <section key={`grade-${framework.frameworkId}-${gradeGroup.grade}`}>
-                              <h3 className="text-sm font-semibold text-gray-700">Grade Band: {gradeGroup.grade}</h3>
+                              <h3 className="text-sm font-semibold text-gray-700">
+                                Grade Band: {gradeGroup.grade}
+                              </h3>
                               <div className="mt-2 space-y-2">
                                 {gradeGroup.standards.map((gap) => (
                                   <div
@@ -715,7 +746,9 @@ export default function CurriculumMapPage() {
                                   >
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                       <div>
-                                        <p className="text-sm font-semibold text-red-900">{gap.code}</p>
+                                        <p className="text-sm font-semibold text-red-900">
+                                          {gap.code}
+                                        </p>
                                         <p className="text-sm text-red-800">{gap.description}</p>
                                         <p className="text-xs text-red-700">
                                           Grade Band: {gap.grade_band || "Unspecified"}
@@ -820,7 +853,9 @@ export default function CurriculumMapPage() {
                     </div>
                   )}
 
-                  {assignError && <p className="rounded bg-red-50 p-2 text-xs text-red-700">{assignError}</p>}
+                  {assignError && (
+                    <p className="rounded bg-red-50 p-2 text-xs text-red-700">{assignError}</p>
+                  )}
 
                   <button
                     type="button"

@@ -559,14 +559,26 @@ export default function AssignmentEditorPage() {
             </div>
           </div>
 
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           {message && (
-            <div role="status" aria-live="polite" className="rounded-md bg-green-50 p-3 text-sm text-green-700">{message}</div>
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-md bg-green-50 p-3 text-sm text-green-700"
+            >
+              {message}
+            </div>
           )}
 
           <section className="grid gap-4 rounded-lg border border-gray-200 bg-white p-6 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label htmlFor="assignment-title" className="block text-sm font-medium text-gray-700">Title</label>
+              <label htmlFor="assignment-title" className="block text-sm font-medium text-gray-700">
+                Title
+              </label>
               <input
                 id="assignment-title"
                 value={title}
@@ -578,7 +590,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div className="md:col-span-2">
-              <p id="assignment-description-label" className="block text-sm font-medium text-gray-700">Description</p>
+              <p
+                id="assignment-description-label"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Description
+              </p>
               <div className="mt-1 flex flex-wrap gap-1 rounded-t-md border border-b-0 border-gray-300 bg-gray-50 px-2 py-1">
                 <button
                   type="button"
@@ -655,7 +672,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label htmlFor="assignment-points-possible" className="block text-sm font-medium text-gray-700">Points Possible</label>
+              <label
+                htmlFor="assignment-points-possible"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Points Possible
+              </label>
               <input
                 id="assignment-points-possible"
                 type="number"
@@ -667,7 +689,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label htmlFor="assignment-submission-type" className="block text-sm font-medium text-gray-700">Submission Type</label>
+              <label
+                htmlFor="assignment-submission-type"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Submission Type
+              </label>
               <select
                 id="assignment-submission-type"
                 value={submissionType}
@@ -690,7 +717,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label htmlFor="assignment-due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
+              <label
+                htmlFor="assignment-due-date"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Due Date
+              </label>
               <input
                 id="assignment-due-date"
                 type="datetime-local"
@@ -701,7 +733,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label htmlFor="assignment-available-from" className="block text-sm font-medium text-gray-700">Available From</label>
+              <label
+                htmlFor="assignment-available-from"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Available From
+              </label>
               <input
                 id="assignment-available-from"
                 type="datetime-local"
@@ -712,7 +749,12 @@ export default function AssignmentEditorPage() {
             </div>
 
             <div>
-              <label htmlFor="assignment-available-until" className="block text-sm font-medium text-gray-700">Available Until</label>
+              <label
+                htmlFor="assignment-available-until"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Available Until
+              </label>
               <input
                 id="assignment-available-until"
                 type="datetime-local"
@@ -762,20 +804,38 @@ export default function AssignmentEditorPage() {
                 <div className="space-y-2 border-t border-blue-200 pt-4">
                   <p className="text-sm font-medium text-gray-800">Create New Rubric</p>
                   <div className="grid gap-2 md:grid-cols-[1fr_200px_auto]">
-                    <input
-                      value={newRubricTitle}
-                      onChange={(event) => setNewRubricTitle(event.target.value)}
-                      placeholder="Rubric title"
-                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      value={newRubricPoints}
-                      onChange={(event) => setNewRubricPoints(event.target.value)}
-                      placeholder="Points"
-                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
+                    <div>
+                      <label
+                        htmlFor="rubric-title"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Criterion
+                      </label>
+                      <input
+                        id="rubric-title"
+                        value={newRubricTitle}
+                        onChange={(event) => setNewRubricTitle(event.target.value)}
+                        placeholder="Rubric title"
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="rubric-points"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Points
+                      </label>
+                      <input
+                        id="rubric-points"
+                        type="number"
+                        min={0}
+                        value={newRubricPoints}
+                        onChange={(event) => setNewRubricPoints(event.target.value)}
+                        placeholder="Points"
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
                     <button
                       onClick={createAndAttachRubric}
                       className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -798,18 +858,36 @@ export default function AssignmentEditorPage() {
                   </span>
                 </GoogleDrivePicker>
               )}
-              <input
-                value={manualResourceTitle}
-                onChange={(event) => setManualResourceTitle(event.target.value)}
-                placeholder="Resource title"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                value={manualResourceUrl}
-                onChange={(event) => setManualResourceUrl(event.target.value)}
-                placeholder="https://example.com/resource"
-                className="min-w-72 rounded-md border border-gray-300 px-3 py-2 text-sm"
-              />
+              <div>
+                <label
+                  htmlFor="resource-title"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Resource Title
+                </label>
+                <input
+                  id="resource-title"
+                  value={manualResourceTitle}
+                  onChange={(event) => setManualResourceTitle(event.target.value)}
+                  placeholder="Resource title"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="resource-url"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Resource URL
+                </label>
+                <input
+                  id="resource-url"
+                  value={manualResourceUrl}
+                  onChange={(event) => setManualResourceUrl(event.target.value)}
+                  placeholder="https://example.com/resource"
+                  className="min-w-72 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
               <button
                 onClick={attachManualResource}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"

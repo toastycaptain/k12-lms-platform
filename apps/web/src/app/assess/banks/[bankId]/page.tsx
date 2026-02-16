@@ -48,7 +48,7 @@ const QUESTION_TYPES = [
 const TYPE_BADGES: Record<string, string> = {
   multiple_choice: "bg-blue-100 text-blue-800",
   true_false: "bg-purple-100 text-purple-800",
-  short_answer: "bg-yellow-100 text-yellow-800",
+  short_answer: "bg-yellow-200 text-yellow-900",
   essay: "bg-green-100 text-green-800",
   matching: "bg-orange-100 text-orange-800",
   fill_in_blank: "bg-pink-100 text-pink-800",
@@ -325,7 +325,9 @@ export default function QuestionBankEditorPage() {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-xl font-bold text-gray-900">Edit Question Bank</h1>
               {bank && (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${bank.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${bank.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+                >
                   {bank.status}
                 </span>
               )}
@@ -417,9 +419,7 @@ export default function QuestionBankEditorPage() {
                     }}
                   />
                 </label>
-                {importResult && (
-                  <span className="text-sm text-gray-600">{importResult}</span>
-                )}
+                {importResult && <span className="text-sm text-gray-600">{importResult}</span>}
               </div>
             </div>
           </div>
@@ -521,22 +521,16 @@ export default function QuestionBankEditorPage() {
 
                 {qType === "true_false" && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Correct Answer</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Correct Answer
+                    </label>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-1 text-sm">
-                        <input
-                          type="radio"
-                          checked={tfValue}
-                          onChange={() => setTfValue(true)}
-                        />
+                        <input type="radio" checked={tfValue} onChange={() => setTfValue(true)} />
                         True
                       </label>
                       <label className="flex items-center gap-1 text-sm">
-                        <input
-                          type="radio"
-                          checked={!tfValue}
-                          onChange={() => setTfValue(false)}
-                        />
+                        <input type="radio" checked={!tfValue} onChange={() => setTfValue(false)} />
                         False
                       </label>
                     </div>

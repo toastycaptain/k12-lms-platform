@@ -423,11 +423,17 @@ export default function ModuleEditorPage() {
             </button>
           </div>
 
-          {error && <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && (
+            <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <section className="space-y-3 rounded-lg border border-gray-200 bg-white p-6">
             <div>
-              <label htmlFor="module-title" className="block text-sm font-medium text-gray-700">Title</label>
+              <label htmlFor="module-title" className="block text-sm font-medium text-gray-700">
+                Title
+              </label>
               <input
                 id="module-title"
                 value={title}
@@ -436,7 +442,12 @@ export default function ModuleEditorPage() {
               />
             </div>
             <div>
-              <label htmlFor="module-description" className="block text-sm font-medium text-gray-700">Description</label>
+              <label
+                htmlFor="module-description"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Description
+              </label>
               <textarea
                 id="module-description"
                 value={description}
@@ -479,23 +490,41 @@ export default function ModuleEditorPage() {
             {showAddItem && (
               <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
                 <div className="grid gap-3 sm:grid-cols-[180px_1fr_auto]">
-                  <select
-                    value={newItemType}
-                    onChange={(event) => setNewItemType(event.target.value)}
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                  >
-                    {ITEM_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={newItemTitle}
-                    onChange={(event) => setNewItemTitle(event.target.value)}
-                    placeholder="Item title"
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                  />
+                  <div>
+                    <label
+                      htmlFor="add-item-type"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Item Type
+                    </label>
+                    <select
+                      id="add-item-type"
+                      value={newItemType}
+                      onChange={(event) => setNewItemType(event.target.value)}
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      {ITEM_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="add-item-title"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Item Title
+                    </label>
+                    <input
+                      id="add-item-title"
+                      value={newItemTitle}
+                      onChange={(event) => setNewItemTitle(event.target.value)}
+                      placeholder="Item title"
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
                   <button
                     onClick={addItem}
                     disabled={addingItem || !newItemTitle.trim()}
@@ -510,22 +539,40 @@ export default function ModuleEditorPage() {
             {showAddExisting && (
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={existingType}
-                    onChange={(event) =>
-                      setExistingType(event.target.value as "assignment" | "quiz")
-                    }
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                  >
-                    <option value="assignment">Assignment</option>
-                    <option value="quiz">Quiz</option>
-                  </select>
-                  <input
-                    value={existingSearch}
-                    onChange={(event) => setExistingSearch(event.target.value)}
-                    placeholder="Search by title"
-                    className="min-w-60 rounded-md border border-gray-300 px-3 py-2 text-sm"
-                  />
+                  <div>
+                    <label
+                      htmlFor="add-existing-type"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Content Type
+                    </label>
+                    <select
+                      id="add-existing-type"
+                      value={existingType}
+                      onChange={(event) =>
+                        setExistingType(event.target.value as "assignment" | "quiz")
+                      }
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      <option value="assignment">Assignment</option>
+                      <option value="quiz">Quiz</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="add-existing-search"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Search
+                    </label>
+                    <input
+                      id="add-existing-search"
+                      value={existingSearch}
+                      onChange={(event) => setExistingSearch(event.target.value)}
+                      placeholder="Search by title"
+                      className="min-w-60 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   {existingSearchResults.map((entry) => (

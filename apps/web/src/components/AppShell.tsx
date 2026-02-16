@@ -142,7 +142,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Left sidebar nav — UX §3.2 */}
       <aside
         id="primary-sidebar"
-        aria-label="Main navigation"
+        aria-label="Sidebar"
         className={`fixed inset-y-0 left-0 z-40 w-60 flex-shrink-0 border-r border-gray-200 bg-white transition-transform md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -214,7 +214,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header role="banner" className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+        <header
+          role="banner"
+          className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6"
+        >
           <div className="flex min-w-0 flex-1 items-center gap-4 pr-4">
             <button
               className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"

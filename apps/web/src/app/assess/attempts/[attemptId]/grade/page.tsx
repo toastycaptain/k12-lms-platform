@@ -77,7 +77,9 @@ export default function AttemptGradePage() {
         const [quizData, answersData, attemptsData] = await Promise.all([
           apiFetch<Quiz>(`/api/v1/quizzes/${attemptData.quiz_id}`),
           apiFetch<AttemptAnswer[]>(`/api/v1/quiz_attempts/${attemptId}/answers`),
-          apiFetch<{ attempts: AllAttempt[] }>(`/api/v1/quizzes/${attemptData.quiz_id}/results`).then((r) => r.attempts).catch(() => []),
+          apiFetch<{ attempts: AllAttempt[] }>(`/api/v1/quizzes/${attemptData.quiz_id}/results`)
+            .then((r) => r.attempts)
+            .catch(() => []),
         ]);
         setQuiz(quizData);
         setAnswers(answersData);
@@ -118,7 +120,11 @@ export default function AttemptGradePage() {
 
   function updateGrade(answerId: number, field: "points_awarded" | "feedback", value: string) {
     const newGrades = new Map(grades);
-    const entry = newGrades.get(answerId) || { attempt_answer_id: answerId, points_awarded: "", feedback: "" };
+    const entry = newGrades.get(answerId) || {
+      attempt_answer_id: answerId,
+      points_awarded: "",
+      feedback: "",
+    };
     entry[field] = value;
     newGrades.set(answerId, entry);
     setGrades(newGrades);
@@ -156,7 +162,13 @@ export default function AttemptGradePage() {
   const nextAttempt = currentIdx < allAttempts.length - 1 ? allAttempts[currentIdx + 1] : null;
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="text-sm text-gray-500">Loading...</div>
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   return (
@@ -165,7 +177,10 @@ export default function AttemptGradePage() {
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link href={`/assess/quizzes/${quiz?.id}/results`} className="text-sm text-blue-600 hover:text-blue-800">
+              <Link
+                href={`/assess/quizzes/${quiz?.id}/results`}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
                 &larr; Back to results
               </Link>
               <h1 className="mt-1 text-2xl font-bold text-gray-900">Grade Attempt</h1>
@@ -174,14 +189,21 @@ export default function AttemptGradePage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                attempt?.status === "graded" ? "bg-green-100 text-green-800" :
-                attempt?.status === "submitted" ? "bg-blue-100 text-blue-800" :
-                "bg-yellow-100 text-yellow-800"
-              }`}>{attempt?.status}</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  attempt?.status === "graded"
+                    ? "bg-green-100 text-green-800"
+                    : attempt?.status === "submitted"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-yellow-200 text-yellow-900"
+                }`}
+              >
+                {attempt?.status}
+              </span>
               {attempt?.score != null && (
                 <span className="text-sm font-medium text-gray-700">
-                  {attempt.score} / {quiz?.points_possible} ({attempt.percentage != null ? `${Math.round(attempt.percentage)}%` : "--"})
+                  {attempt.score} / {quiz?.points_possible} (
+                  {attempt.percentage != null ? `${Math.round(attempt.percentage)}%` : "--"})
                 </span>
               )}
             </div>
@@ -195,15 +217,24 @@ export default function AttemptGradePage() {
               const grade = grades.get(ans.id);
 
               return (
-                <div key={ans.id} className="rounded-lg border border-gray-200 bg-white p-5 space-y-3">
+                <div
+                  key={ans.id}
+                  className="rounded-lg border border-gray-200 bg-white p-5 space-y-3"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">Question {idx + 1}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">{question.question_type}</span>
+                      <span className="text-xs rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">
+                        {question.question_type}
+                      </span>
                       {ans.is_correct != null && (
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          ans.is_correct ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            ans.is_correct
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
                           {ans.is_correct ? "Correct" : "Incorrect"}
                         </span>
                       )}
@@ -220,13 +251,17 @@ export default function AttemptGradePage() {
                   {question.question_type !== "essay" && (
                     <div className="text-sm">
                       <span className="font-medium text-gray-700">Correct Answer: </span>
-                      <span className="text-gray-600">{JSON.stringify(question.correct_answer)}</span>
+                      <span className="text-gray-600">
+                        {JSON.stringify(question.correct_answer)}
+                      </span>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600">Points (max {question.points})</label>
+                      <label className="block text-xs font-medium text-gray-600">
+                        Points (max {question.points})
+                      </label>
                       <input
                         type="number"
                         value={grade?.points_awarded || ""}

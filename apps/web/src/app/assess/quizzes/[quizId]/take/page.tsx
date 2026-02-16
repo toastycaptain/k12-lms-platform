@@ -65,20 +65,31 @@ export default function QuizTakePage() {
       });
       router.push(`/assess/attempts/${attempt.id}`);
     } catch {
-      setError("Unable to start attempt. The quiz may be locked or you have reached the maximum attempts.");
+      setError(
+        "Unable to start attempt. The quiz may be locked or you have reached the maximum attempts.",
+      );
       setStarting(false);
     }
   }
 
   if (loading) {
-    return <ProtectedRoute><AppShell><div className="text-sm text-gray-500">Loading...</div></AppShell></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="text-sm text-gray-500">Loading...</div>
+        </AppShell>
+      </ProtectedRoute>
+    );
   }
 
   return (
     <ProtectedRoute>
       <AppShell>
         <div className="mx-auto max-w-2xl space-y-6">
-          <Link href={`/assess/quizzes/${quizId}`} className="text-sm text-blue-600 hover:text-blue-800">
+          <Link
+            href={`/assess/quizzes/${quizId}`}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
             &larr; Back to quiz
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{quiz?.title}</h1>
@@ -94,7 +105,9 @@ export default function QuizTakePage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Time Limit:</span>{" "}
-                <span className="font-medium">{quiz?.time_limit_minutes ? `${quiz.time_limit_minutes} minutes` : "None"}</span>
+                <span className="font-medium">
+                  {quiz?.time_limit_minutes ? `${quiz.time_limit_minutes} minutes` : "None"}
+                </span>
               </div>
               <div>
                 <span className="text-gray-500">Points:</span>{" "}
@@ -144,11 +157,17 @@ export default function QuizTakePage() {
                     className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm hover:shadow-sm"
                   >
                     <span>Attempt #{a.attempt_number}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      a.status === "graded" ? "bg-green-100 text-green-800" :
-                      a.status === "submitted" ? "bg-blue-100 text-blue-800" :
-                      "bg-yellow-100 text-yellow-800"
-                    }`}>{a.status}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        a.status === "graded"
+                          ? "bg-green-100 text-green-800"
+                          : a.status === "submitted"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-200 text-yellow-900"
+                      }`}
+                    >
+                      {a.status}
+                    </span>
                   </Link>
                 ))}
               </div>

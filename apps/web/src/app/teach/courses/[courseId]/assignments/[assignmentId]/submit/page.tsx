@@ -43,13 +43,15 @@ interface Rubric {
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
+    draft: "bg-yellow-200 text-yellow-900",
     submitted: "bg-blue-100 text-blue-800",
     graded: "bg-purple-100 text-purple-800",
     returned: "bg-green-100 text-green-800",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}
+    >
       {status}
     </span>
   );
@@ -81,7 +83,9 @@ export default function StudentSubmissionPage() {
 
       // Check for existing submission
       try {
-        const submissions = await apiFetch<Submission[]>(`/api/v1/assignments/${assignmentId}/submissions`);
+        const submissions = await apiFetch<Submission[]>(
+          `/api/v1/assignments/${assignmentId}/submissions`,
+        );
         if (submissions.length > 0) {
           setSubmission(submissions[0]);
         }
@@ -148,7 +152,10 @@ export default function StudentSubmissionPage() {
       <AppShell>
         <div className="mx-auto max-w-3xl space-y-6">
           <div>
-            <Link href={`/teach/courses/${courseId}`} className="text-sm text-blue-600 hover:text-blue-800">
+            <Link
+              href={`/teach/courses/${courseId}`}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
               &larr; Back to course
             </Link>
             <h1 className="mt-2 text-2xl font-bold text-gray-900">{assignment.title}</h1>
@@ -217,7 +224,12 @@ export default function StudentSubmissionPage() {
               )}
               {submission.body && <p className="text-sm text-gray-600">{submission.body}</p>}
               {submission.url && (
-                <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                <a
+                  href={submission.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline"
+                >
                   {submission.url}
                 </a>
               )}
@@ -265,7 +277,9 @@ export default function StudentSubmissionPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">URL (optional)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      URL (optional)
+                    </label>
                     <input
                       type="url"
                       value={url}

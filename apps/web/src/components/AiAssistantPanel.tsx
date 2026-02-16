@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
-import { apiFetchStream } from "@/lib/api-stream";
+import { apiFetchStream, isAbortError } from "@/lib/api-stream";
 
 interface AiTaskPolicy {
   id: number;
@@ -26,11 +26,11 @@ interface AiAssistantPanelProps {
 
 const TASK_TYPES = ["lesson_plan", "unit_plan", "differentiation", "assessment", "rewrite"];
 
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
-}
-
-export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiAssistantPanelProps) {
+export default function AiAssistantPanel({
+  unitId,
+  lessonId,
+  context = {},
+}: AiAssistantPanelProps) {
   const [taskType, setTaskType] = useState<string>("lesson_plan");
   const [prompt, setPrompt] = useState("");
   const [responseText, setResponseText] = useState("");
@@ -48,7 +48,10 @@ export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiA
     async function loadPolicies() {
       try {
         const policies = await apiFetch<AiTaskPolicy[]>("/api/v1/ai_task_policies");
-        const enabledMap = Object.fromEntries(TASK_TYPES.map((value) => [value, false])) as Record<string, boolean>;
+        const enabledMap = Object.fromEntries(TASK_TYPES.map((value) => [value, false])) as Record<
+          string,
+          boolean
+        >;
         policies.forEach((policy) => {
           if (TASK_TYPES.includes(policy.task_type)) {
             enabledMap[policy.task_type] = policy.enabled;
@@ -62,10 +65,16 @@ export default function AiAssistantPanel({ unitId, lessonId, context = {} }: AiA
         }
       } catch (e) {
         if (e instanceof ApiError && e.status === 403) {
-          setPolicyHint("Policy list is restricted for your role. Generation endpoint still enforces policy access.");
-          setEnabledTasks(Object.fromEntries(TASK_TYPES.map((value) => [value, true])) as Record<string, boolean>);
+          setPolicyHint(
+            "Policy list is restricted for your role. Generation endpoint still enforces policy access.",
+          );
+          setEnabledTasks(
+            Object.fromEntries(TASK_TYPES.map((value) => [value, true])) as Record<string, boolean>,
+          );
         } else {
-          setPolicyHint("Could not load policy availability. Proceeding with default task options.");
+          setPolicyHint(
+            "Could not load policy availability. Proceeding with default task options.",
+          );
         }
       }
     }
