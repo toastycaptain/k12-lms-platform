@@ -65,6 +65,10 @@ const NAV_ITEMS: NavItem[] = [
     label: "Report",
     href: "/report",
     roles: ["admin", "curriculum_lead", "teacher"],
+    children: [
+      { label: "Overview", href: "/report" },
+      { label: "Standards Coverage", href: "/report/standards-coverage" },
+    ],
   },
   {
     id: "communicate",
@@ -86,6 +90,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "LTI", href: "/admin/lti" },
       { label: "Data Retention", href: "/admin/retention" },
       { label: "Curriculum Map", href: "/admin/curriculum-map" },
+      { label: "Standards", href: "/admin/standards" },
       { label: "Approval Queue", href: "/admin/approvals" },
     ],
   },

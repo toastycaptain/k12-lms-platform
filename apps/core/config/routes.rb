@@ -13,11 +13,11 @@ Rails.application.routes.draw do
       get "/search", to: "search#index"
 
       resources :academic_years do
-        get :standards_coverage, on: :member, controller: "standards_coverage", action: "academic_year_coverage"
+        get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_academic_year"
       end
       resources :terms
       resources :courses do
-        get :standards_coverage, on: :member, controller: "standards_coverage", action: "course_coverage"
+        get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_course"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
         get :quiz_performance, on: :member, controller: "quiz_analytics", action: "course_summary"
         resources :modules, controller: "course_modules", only: [ :index, :create ]

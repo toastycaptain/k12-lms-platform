@@ -1,61 +1,113 @@
 module Api
   module V1
     class StandardsCoverageController < ApplicationController
-      def course_coverage
-        course = Course.find(params[:id])
-        authorize course, :show?
+      def by_academic_year
+        academic_year = AcademicYear.find(params[:academic_year_id] || params[:id])
+        authorize :standards_coverage, :index?
 
-        framework_id = params[:standard_framework_id]
-        return render json: { error: "standard_framework_id is required" }, status: :bad_request unless framework_id
+        course_ids = policy_scope(Course).where(academic_year_id: academic_year.id).pluck(:id)
 
-        standards = Standard.where(standard_framework_id: framework_id)
-        unit_plans = UnitPlan.where(course: course).where.not(status: "archived")
-
-        coverage = build_coverage(standards, unit_plans)
-        render json: coverage
+        render json: {
+          academic_year_id: academic_year.id,
+          academic_year: academic_year.name,
+          frameworks: build_framework_reports(course_ids, include_source_details: false)
+        }
       end
 
-      def academic_year_coverage
-        academic_year = AcademicYear.find(params[:id])
-        authorize academic_year, :show?
+      def by_course
+        authorize :standards_coverage, :index?
+        course = policy_scope(Course).find(params[:course_id] || params[:id])
 
-        framework_id = params[:standard_framework_id]
-        return render json: { error: "standard_framework_id is required" }, status: :bad_request unless framework_id
-
-        standards = Standard.where(standard_framework_id: framework_id)
-        courses = Course.where(academic_year: academic_year)
-        unit_plans = UnitPlan.where(course_id: courses.select(:id)).where.not(status: "archived")
-
-        coverage = build_coverage(standards, unit_plans)
-        render json: coverage
+        render json: {
+          course_id: course.id,
+          course_name: course.name,
+          frameworks: build_framework_reports([ course.id ], include_source_details: true)
+        }
       end
 
       private
 
-      def build_coverage(standards, unit_plans)
-        current_version_ids = unit_plans.where.not(current_version_id: nil).pluck(:current_version_id)
+      def build_framework_reports(course_ids, include_source_details:)
+        assignment_map = assignment_alignment_map(course_ids)
+        unit_map = unit_alignment_map(course_ids)
+        covered_standard_ids = (assignment_map.keys + unit_map.keys).uniq
 
-        covered_map = UnitVersionStandard
-          .where(unit_version_id: current_version_ids)
-          .where(standard_id: standards.select(:id))
-          .includes(:unit_version)
-          .each_with_object({}) do |uvs, hash|
-            unit_plan_id = uvs.unit_version.unit_plan_id
-            hash[uvs.standard_id] ||= []
-            hash[uvs.standard_id] << unit_plan_id unless hash[uvs.standard_id].include?(unit_plan_id)
-          end
+        policy_scope(StandardFramework).includes(:standards).order(:name).map do |framework|
+          framework_standards = framework.standards.to_a.sort_by { |standard| standard.code.to_s }
+          covered_standards = framework_standards.select { |standard| covered_standard_ids.include?(standard.id) }
+          uncovered_standards = framework_standards.reject { |standard| covered_standard_ids.include?(standard.id) }
+          total_standards = framework_standards.length
 
-        standards.map do |standard|
-          unit_plan_ids = covered_map[standard.id] || []
           {
-            standard_id: standard.id,
-            code: standard.code,
-            description: standard.description,
-            grade_band: standard.grade_band,
-            covered: unit_plan_ids.any?,
-            unit_plan_ids: unit_plan_ids
+            framework_id: framework.id,
+            framework_name: framework.name,
+            subject: framework.subject,
+            total_standards: total_standards,
+            covered_standards: covered_standards.length,
+            coverage_percentage: total_standards.positive? ? ((covered_standards.length * 100.0) / total_standards).round(1) : 0.0,
+            covered: covered_standards.map { |standard|
+              standard_payload(
+                standard,
+                assignment_map: assignment_map,
+                unit_map: unit_map,
+                include_source_details: include_source_details
+              )
+            },
+            uncovered: uncovered_standards.map { |standard|
+              standard_payload(
+                standard,
+                assignment_map: assignment_map,
+                unit_map: unit_map,
+                include_source_details: include_source_details
+              )
+            }
           }
         end
+      end
+
+      def assignment_alignment_map(course_ids)
+        return {} if course_ids.empty?
+
+        AssignmentStandard
+          .joins(:assignment)
+          .where(assignments: { course_id: course_ids })
+          .pluck(:standard_id, :assignment_id)
+          .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(standard_id, assignment_id), map|
+            map[standard_id] << assignment_id unless map[standard_id].include?(assignment_id)
+          end
+      end
+
+      def unit_alignment_map(course_ids)
+        return {} if course_ids.empty?
+
+        UnitVersionStandard
+          .joins(unit_version: :unit_plan)
+          .where(unit_plans: { course_id: course_ids })
+          .pluck(:standard_id, "unit_versions.unit_plan_id")
+          .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(standard_id, unit_plan_id), map|
+            map[standard_id] << unit_plan_id unless map[standard_id].include?(unit_plan_id)
+          end
+      end
+
+      def standard_payload(standard, assignment_map:, unit_map:, include_source_details:)
+        assignment_ids = assignment_map[standard.id] || []
+        unit_plan_ids = unit_map[standard.id] || []
+
+        payload = {
+          id: standard.id,
+          code: standard.code,
+          description: standard.description.to_s.truncate(100),
+          grade_band: standard.grade_band
+        }
+
+        return payload unless include_source_details
+
+        payload.merge(
+          covered_by_assignment: assignment_ids.any?,
+          covered_by_unit_plan: unit_plan_ids.any?,
+          assignment_ids: assignment_ids,
+          unit_plan_ids: unit_plan_ids
+        )
       end
     end
   end
