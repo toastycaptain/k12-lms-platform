@@ -14,7 +14,7 @@ export async function pollInvocation(
   const { apiFetch } = await import("./api");
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const response = await apiFetch<InvocationResponse>(`/ai_invocations/${invocationId}`);
+    const response = await apiFetch<InvocationResponse>(`/api/v1/ai_invocations/${invocationId}`);
 
     if (response.status === "completed") {
       onComplete(response);

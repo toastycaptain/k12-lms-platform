@@ -90,6 +90,6 @@ describe("pollInvocation", () => {
 
     await pollInvocation(1, vi.fn(), vi.fn(), 100, 1);
 
-    expect(mockedApiFetch).toHaveBeenCalledWith("/ai_invocations/1");
+    expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/ai_invocations/1");
   });
 });
