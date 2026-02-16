@@ -43,7 +43,19 @@ vi.mock("@/components/ProtectedRoute", () => ({
 }));
 
 vi.mock("@/components/AiAssistantPanel", () => ({
-  default: () => <div>AI Assistant</div>,
+  default: ({
+    onApply,
+    onTaskTypeChange,
+  }: {
+    onApply?: (content: string) => void;
+    onTaskTypeChange?: (taskType: string) => void;
+  }) => (
+    <div>
+      <p>AI Assistant</p>
+      <button onClick={() => onTaskTypeChange?.("assessment")}>Set Assessment Task</button>
+      <button onClick={() => onApply?.("AI generated essential question")}>Apply AI Draft</button>
+    </div>
+  ),
 }));
 
 describe("Plan Unit Editor Page", () => {
@@ -137,6 +149,16 @@ describe("Plan Unit Editor Page", () => {
     fireEvent.click(await screen.findByRole("button", { name: "AI Assistant" }));
 
     expect(screen.getByText("AI Assistant")).toBeInTheDocument();
+  });
+
+  it("applies AI output into the unit planning form", async () => {
+    render(<UnitPlannerPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "AI Assistant" }));
+    fireEvent.click(screen.getByRole("button", { name: "Set Assessment Task" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply AI Draft" }));
+
+    expect(await screen.findByDisplayValue("AI generated essential question")).toBeInTheDocument();
   });
 
   it("handles loading state", () => {
