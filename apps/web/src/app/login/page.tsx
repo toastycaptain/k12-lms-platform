@@ -4,6 +4,11 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getAuthUrl, getSamlAuthUrl } from "@/lib/api";
+import {
+  buildAuthUrlWithRedirect,
+  persistAuthRedirect,
+  sanitizeRedirectPath,
+} from "@/lib/auth-redirect";
 
 function enabledAuthMethods(): { google: boolean; sso: boolean } {
   const configured = (process.env.NEXT_PUBLIC_AUTH_METHODS || "google,sso")
@@ -22,17 +27,26 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
+  const redirectParam = sanitizeRedirectPath(searchParams.get("redirect"));
 
   const authMethods = useMemo(() => enabledAuthMethods(), []);
   const [showSsoInput, setShowSsoInput] = useState(false);
   const [tenantSlug, setTenantSlug] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const googleAuthHref = useMemo(
+    () => buildAuthUrlWithRedirect(getAuthUrl(), redirectParam),
+    [redirectParam],
+  );
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      router.push(redirectParam || "/dashboard");
     }
-  }, [user, loading, router]);
+  }, [redirectParam, user, loading, router]);
+
+  function startGoogleSignIn(): void {
+    persistAuthRedirect(redirectParam);
+  }
 
   function startSsoSignIn(): void {
     const slug = tenantSlug.trim();
@@ -42,7 +56,8 @@ function LoginContent() {
     }
 
     setLocalError(null);
-    window.location.href = getSamlAuthUrl(slug);
+    persistAuthRedirect(redirectParam);
+    window.location.href = buildAuthUrlWithRedirect(getSamlAuthUrl(slug), redirectParam);
   }
 
   if (loading) {
@@ -68,7 +83,8 @@ function LoginContent() {
         <div className="space-y-3">
           {authMethods.google && (
             <a
-              href={getAuthUrl()}
+              href={googleAuthHref}
+              onClick={startGoogleSignIn}
               className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">

@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import {
+  clearPersistedAuthRedirect,
+  readPersistedAuthRedirect,
+  sanitizeRedirectPath,
+} from "@/lib/auth-redirect";
 
 function formatError(errorParam: string | null): string {
   if (!errorParam) return "Authentication failed.";
@@ -21,6 +26,7 @@ function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const { user, loading, refresh } = useAuth();
   const errorParam = searchParams.get("error");
+  const redirectParam = sanitizeRedirectPath(searchParams.get("redirect"));
 
   useEffect(() => {
     if (errorParam) return;
@@ -30,9 +36,12 @@ function AuthCallbackContent() {
   useEffect(() => {
     if (errorParam) return;
     if (!loading && user) {
-      router.replace("/dashboard");
+      const storedRedirect = readPersistedAuthRedirect();
+      const destination = redirectParam || storedRedirect || "/dashboard";
+      clearPersistedAuthRedirect();
+      router.replace(destination);
     }
-  }, [errorParam, loading, router, user]);
+  }, [errorParam, loading, redirectParam, router, user]);
 
   if (loading && !errorParam) {
     return (
@@ -50,7 +59,9 @@ function AuthCallbackContent() {
           <p className="mt-2 text-sm text-gray-600">{formatError(errorParam)}</p>
           <div className="mt-4 flex items-center gap-3">
             <Link
-              href="/login"
+              href={
+                redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login"
+              }
               className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               Back to login
@@ -77,7 +88,9 @@ function AuthCallbackContent() {
           </p>
           <div className="mt-4">
             <Link
-              href="/login"
+              href={
+                redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login"
+              }
               className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Return to login

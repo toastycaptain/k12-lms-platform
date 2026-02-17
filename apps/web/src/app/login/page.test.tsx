@@ -98,6 +98,48 @@ describe("LoginPage", () => {
     });
   });
 
+  it("redirects authenticated user to requested redirect path", async () => {
+    mockedUseSearchParams.mockReturnValue(
+      new URLSearchParams("redirect=/teach/courses/1") as never,
+    );
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 1,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
+    });
+
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/teach/courses/1");
+    });
+  });
+
+  it("preserves redirect param in Google auth URL", () => {
+    mockedUseSearchParams.mockReturnValue(
+      new URLSearchParams("redirect=/teach/courses/1/gradebook") as never,
+    );
+
+    render(<LoginPage />);
+
+    expect(screen.getByRole("link", { name: "Sign in with Google" })).toHaveAttribute(
+      "href",
+      "http://localhost:3001/auth/google_oauth2?redirect=%2Fteach%2Fcourses%2F1%2Fgradebook",
+    );
+  });
+
   it("shows auth error from URL params", () => {
     mockedUseSearchParams.mockReturnValue(new URLSearchParams("error=failed") as never);
 
