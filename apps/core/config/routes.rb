@@ -114,6 +114,8 @@ Rails.application.routes.draw do
           member do
             post :create_version
             get :versions
+            post :export_pdf
+            get :export_pdf_status
           end
         end
       end

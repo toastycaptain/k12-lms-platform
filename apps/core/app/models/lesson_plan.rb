@@ -7,6 +7,7 @@ class LessonPlan < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :current_version, class_name: "LessonVersion", optional: true
   has_many :lesson_versions, dependent: :destroy
+  has_one_attached :exported_pdf
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

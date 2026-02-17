@@ -2,7 +2,7 @@ module Api
   module V1
     class LessonPlansController < ApplicationController
       before_action :set_unit_plan
-      before_action :set_lesson_plan, only: [ :show, :update, :destroy, :create_version, :versions ]
+      before_action :set_lesson_plan, only: [ :show, :update, :destroy, :create_version, :versions, :export_pdf, :export_pdf_status ]
 
       def index
         @lesson_plans = policy_scope(LessonPlan).where(unit_plan: @unit_plan).order(:position)
@@ -51,6 +51,24 @@ module Api
         render json: @lesson_plan.lesson_versions.order(version_number: :desc)
       end
 
+      def export_pdf
+        authorize @lesson_plan, :show?
+        job = LessonPdfExportJob.perform_later(@lesson_plan.id)
+        render json: { job_id: job.provider_job_id, status: "queued" }, status: :accepted
+      end
+
+      def export_pdf_status
+        authorize @lesson_plan, :show?
+        if @lesson_plan.exported_pdf.attached?
+          render json: {
+            status: "completed",
+            download_url: rails_blob_url(@lesson_plan.exported_pdf, disposition: "attachment")
+          }
+        else
+          render json: { status: "processing" }
+        end
+      end
+
       private
 
       def set_unit_plan
@@ -59,7 +77,7 @@ module Api
 
       def set_lesson_plan
         @lesson_plan = @unit_plan.lesson_plans.find(params[:id])
-        authorize @lesson_plan unless %w[create_version versions].include?(action_name)
+        authorize @lesson_plan unless %w[create_version versions export_pdf export_pdf_status].include?(action_name)
       end
 
       def lesson_plan_params

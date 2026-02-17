@@ -49,6 +49,9 @@ export default function LessonEditorPage() {
   const [resources, setResources] = useState<ResourceLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiTaskType, setAiTaskType] = useState("lesson_plan");
 
@@ -171,6 +174,40 @@ export default function LessonEditorPage() {
     setObjectives((previous) => [previous, content].filter(Boolean).join("\n\n"));
   };
 
+  const handleExportPdf = async () => {
+    setExporting(true);
+    setExportError(null);
+    setExportMessage(null);
+
+    try {
+      await apiFetch(`/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}/export_pdf`, {
+        method: "POST",
+      });
+      setExportMessage("Generating lesson PDF...");
+
+      setTimeout(async () => {
+        try {
+          const status = await apiFetch<{ status: string; download_url?: string }>(
+            `/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}/export_pdf_status`,
+          );
+
+          if (status.status === "completed" && status.download_url) {
+            setExportMessage("PDF is ready. Opening download...");
+            window.open(status.download_url, "_blank", "noopener,noreferrer");
+          } else {
+            setExportMessage("PDF is still processing. Please export again shortly.");
+          }
+        } catch {
+          setExportError("Unable to check lesson PDF export status.");
+        }
+      }, 1500);
+    } catch {
+      setExportError("Failed to start lesson PDF export.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -213,6 +250,13 @@ export default function LessonEditorPage() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={handleExportPdf}
+                disabled={exporting}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {exporting ? "Exporting..." : "Export PDF"}
+              </button>
+              <button
                 onClick={() => setShowAiPanel((prev) => !prev)}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
@@ -229,6 +273,13 @@ export default function LessonEditorPage() {
               )}
             </div>
           </div>
+
+          {exportError && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{exportError}</div>
+          )}
+          {exportMessage && (
+            <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700">{exportMessage}</div>
+          )}
 
           {/* Title */}
           <div>

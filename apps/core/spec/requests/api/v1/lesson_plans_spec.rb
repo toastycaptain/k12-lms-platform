@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::LessonPlans", type: :request do
+  include ActiveJob::TestHelper
+
   let!(:tenant) { create(:tenant) }
   let(:teacher) do
     Current.tenant = tenant
@@ -20,6 +22,7 @@ RSpec.describe "Api::V1::LessonPlans", type: :request do
   end
 
   after do
+    clear_enqueued_jobs
     Current.tenant = nil
     Current.user = nil
   end
@@ -136,6 +139,56 @@ RSpec.describe "Api::V1::LessonPlans", type: :request do
       versions = response.parsed_body
       expect(versions.length).to eq(2)
       expect(versions.first["version_number"]).to eq(2)
+    end
+  end
+
+  describe "POST /api/v1/unit_plans/:unit_plan_id/lesson_plans/:id/export_pdf" do
+    it "enqueues a lesson PDF export job" do
+      mock_session(teacher, tenant: tenant)
+      data = setup_data
+      Current.tenant = tenant
+      lesson_plan = create(:lesson_plan, tenant: tenant, unit_plan: data[:unit_plan], created_by: teacher)
+      lesson_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      expect {
+        post "/api/v1/unit_plans/#{data[:unit_plan].id}/lesson_plans/#{lesson_plan.id}/export_pdf"
+      }.to have_enqueued_job(LessonPdfExportJob).with(lesson_plan.id)
+
+      expect(response).to have_http_status(:accepted)
+      expect(response.parsed_body["status"]).to eq("queued")
+    end
+  end
+
+  describe "GET /api/v1/unit_plans/:unit_plan_id/lesson_plans/:id/export_pdf_status" do
+    it "returns processing when no PDF is attached" do
+      mock_session(teacher, tenant: tenant)
+      data = setup_data
+      Current.tenant = tenant
+      lesson_plan = create(:lesson_plan, tenant: tenant, unit_plan: data[:unit_plan], created_by: teacher)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{data[:unit_plan].id}/lesson_plans/#{lesson_plan.id}/export_pdf_status"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("processing")
+    end
+
+    it "returns completed with download URL when PDF is attached" do
+      mock_session(teacher, tenant: tenant)
+      data = setup_data
+      Current.tenant = tenant
+      lesson_plan = create(:lesson_plan, tenant: tenant, unit_plan: data[:unit_plan], created_by: teacher)
+      lesson_plan.create_version!(title: "v1")
+      LessonPdfExportJob.perform_now(lesson_plan.id)
+      Current.tenant = nil
+
+      get "/api/v1/unit_plans/#{data[:unit_plan].id}/lesson_plans/#{lesson_plan.id}/export_pdf_status"
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["status"]).to eq("completed")
+      expect(body["download_url"]).to be_present
     end
   end
 end
