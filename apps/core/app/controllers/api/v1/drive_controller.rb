@@ -5,33 +5,102 @@ module Api
 
       def create_document
         authorize :drive
-        drive_service = GoogleDriveService.new(Current.user)
-        result = drive_service.create_document(params[:title])
+        result = drive_service.create_document(
+          params[:title],
+          mime_type: params[:mime_type].presence || "application/vnd.google-apps.document"
+        )
 
-        if params[:linkable_type].present? && params[:linkable_id].present?
-          create_resource_link(result)
-        end
+        create_resource_link(result) if linkable_requested?
+        return if performed?
 
         render json: result, status: :created
       end
 
       def create_presentation
         authorize :drive
-        drive_service = GoogleDriveService.new(Current.user)
         result = drive_service.create_presentation(params[:title])
 
-        if params[:linkable_type].present? && params[:linkable_id].present?
-          create_resource_link(result)
-        end
+        create_resource_link(result) if linkable_requested?
+        return if performed?
 
         render json: result, status: :created
       end
 
       def show_file
         authorize :drive
-        drive_service = GoogleDriveService.new(Current.user)
         result = drive_service.get_file(params[:file_id])
         render json: result
+      end
+
+      def share
+        authorize :drive, :share?
+        unless params[:file_id].present?
+          render json: { error: "file_id is required" }, status: :unprocessable_content
+          return
+        end
+
+        result = if params[:emails].present?
+          drive_service.share_file_batch(
+            params[:file_id],
+            emails: Array(params[:emails]),
+            role: params[:role].presence || "reader"
+          )
+        else
+          unless params[:email].present?
+            render json: { error: "email or emails is required" }, status: :unprocessable_content
+            return
+          end
+
+          drive_service.share_file(
+            params[:file_id],
+            email: params[:email],
+            role: params[:role].presence || "reader"
+          )
+        end
+
+        render json: result
+      end
+
+      def folder
+        authorize :drive, :folder?
+
+        if request.post?
+          unless params[:name].present?
+            render json: { error: "name is required" }, status: :unprocessable_content
+            return
+          end
+
+          parent_id = params[:parent_id]
+          folder = drive_service.create_folder(params[:name], parent_id: parent_id)
+          attach_course_folder!(folder) if params[:course_id].present? && parent_id.blank?
+          render json: folder, status: :created
+        else
+          render json: drive_service.list_files(
+            folder_id: params[:folder_id],
+            query: params[:query],
+            page_size: params[:page_size] || 50
+          )
+        end
+      end
+
+      def copy
+        authorize :drive, :copy?
+        unless params[:file_id].present? && params[:new_name].present?
+          render json: { error: "file_id and new_name are required" }, status: :unprocessable_content
+          return
+        end
+
+        result = drive_service.copy_file(
+          params[:file_id],
+          new_name: params[:new_name],
+          folder_id: params[:folder_id]
+        )
+        render json: result, status: :created
+      end
+
+      def preview
+        authorize :drive, :preview?
+        render json: { preview_url: drive_service.preview_url(params[:file_id]) }
       end
 
       def picker_token
@@ -49,13 +118,13 @@ module Api
 
       def require_google_connected
         unless Current.user.google_connected?
-          render json: { error: "Google account not connected" }, status: :unprocessable_entity
+          render json: { error: "Google account not connected" }, status: :unprocessable_content
         end
       end
 
       def create_resource_link(drive_result)
         unless VALID_LINKABLE_TYPES.include?(params[:linkable_type])
-          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
+          render json: { error: "Invalid linkable_type" }, status: :unprocessable_content
           return
         end
 
@@ -65,10 +134,34 @@ module Api
           linkable: linkable,
           url: drive_result[:url],
           title: drive_result[:title] || drive_result[:name],
-          provider: "google_drive",
+          provider: params[:provider].presence || "google_drive",
           drive_file_id: drive_result[:id],
-          mime_type: drive_result[:mime_type]
+          mime_type: drive_result[:mime_type],
+          link_type: params[:link_type].presence || "reference",
+          metadata: resource_link_metadata
         )
+      end
+
+      def linkable_requested?
+        params[:linkable_type].present? && params[:linkable_id].present?
+      end
+
+      def drive_service
+        @drive_service ||= GoogleDriveService.new(Current.user)
+      end
+
+      def attach_course_folder!(folder)
+        course = Course.find(params[:course_id])
+        settings = course.settings.to_h
+        settings["drive_folder_id"] = folder[:id]
+        course.update!(settings: settings)
+      end
+
+      def resource_link_metadata
+        return {} if params[:metadata].blank?
+        return params[:metadata].to_unsafe_h if params[:metadata].respond_to?(:to_unsafe_h)
+
+        params[:metadata]
       end
     end
   end

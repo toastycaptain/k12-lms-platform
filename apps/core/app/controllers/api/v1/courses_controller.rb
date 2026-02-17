@@ -17,6 +17,7 @@ module Api
         authorize @course
 
         if @course.save
+          enqueue_course_folder_if_requested(@course)
           render json: @course, status: :created
         else
           render json: { errors: @course.errors.full_messages }, status: :unprocessable_content
@@ -45,6 +46,13 @@ module Api
 
       def course_params
         params.require(:course).permit(:academic_year_id, :name, :code, :description)
+      end
+
+      def enqueue_course_folder_if_requested(course)
+        return unless ActiveModel::Type::Boolean.new.cast(params[:create_drive_folder])
+        return unless Current.user&.google_connected?
+
+        CreateCourseFolderJob.perform_later(course.id, Current.user.id)
       end
     end
   end

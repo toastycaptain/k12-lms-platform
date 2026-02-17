@@ -2,11 +2,13 @@ class ResourceLink < ApplicationRecord
   include TenantScoped
 
   VALID_PROVIDERS = %w[google_drive upload url].freeze
+  VALID_LINK_TYPES = %w[reference template student_copy].freeze
 
   belongs_to :linkable, polymorphic: true
 
   validates :url, presence: true, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: "must be a valid URL" }
   validates :provider, presence: true, inclusion: { in: VALID_PROVIDERS }
+  validates :link_type, presence: true, inclusion: { in: VALID_LINK_TYPES }
   validate :drive_file_id_required_for_google_drive
 
   private

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000007) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -272,6 +272,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000007) do
     t.text "description"
     t.integer "enrollments_count", default: 0, null: false
     t.string "name", null: false
+    t.jsonb "settings", default: {}, null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
@@ -689,8 +690,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000007) do
   create_table "resource_links", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "drive_file_id"
+    t.string "link_type", default: "reference", null: false
     t.bigint "linkable_id", null: false
     t.string "linkable_type", null: false
+    t.jsonb "metadata", default: {}, null: false
     t.string "mime_type"
     t.string "provider", default: "url", null: false
     t.bigint "tenant_id", null: false
@@ -698,6 +701,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000007) do
     t.datetime "updated_at", null: false
     t.string "url", null: false
     t.index ["drive_file_id"], name: "idx_resource_links_drive_file_id", where: "(drive_file_id IS NOT NULL)"
+    t.index ["linkable_type", "linkable_id", "link_type"], name: "idx_resource_links_linkable_type_kind"
     t.index ["linkable_type", "linkable_id"], name: "index_resource_links_on_linkable"
     t.index ["tenant_id"], name: "index_resource_links_on_tenant_id"
   end

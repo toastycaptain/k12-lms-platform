@@ -1,6 +1,17 @@
 class GoogleTokenService
   attr_reader :user
 
+  class << self
+    def refresh_if_needed!(user)
+      service = new(user)
+      service.refresh! unless service.valid_token?
+    end
+
+    def refresh!(user)
+      new(user).refresh!
+    end
+  end
+
   def initialize(user)
     @user = user
   end

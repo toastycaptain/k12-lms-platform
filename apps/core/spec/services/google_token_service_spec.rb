@@ -92,4 +92,35 @@ RSpec.describe GoogleTokenService do
       expect(service.access_token).to eq("refreshed-token")
     end
   end
+
+  describe ".refresh_if_needed!" do
+    it "refreshes when the token is not valid" do
+      token_service = instance_double(described_class, valid_token?: false, refresh!: true)
+      allow(described_class).to receive(:new).with(user).and_return(token_service)
+
+      described_class.refresh_if_needed!(user)
+
+      expect(token_service).to have_received(:refresh!)
+    end
+
+    it "does not refresh when the token is still valid" do
+      token_service = instance_double(described_class, valid_token?: true, refresh!: true)
+      allow(described_class).to receive(:new).with(user).and_return(token_service)
+
+      described_class.refresh_if_needed!(user)
+
+      expect(token_service).not_to have_received(:refresh!)
+    end
+  end
+
+  describe ".refresh!" do
+    it "delegates refresh to a service instance" do
+      token_service = instance_double(described_class, refresh!: true)
+      allow(described_class).to receive(:new).with(user).and_return(token_service)
+
+      described_class.refresh!(user)
+
+      expect(token_service).to have_received(:refresh!)
+    end
+  end
 end

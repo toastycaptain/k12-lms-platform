@@ -15,6 +15,7 @@ module Api
         authorize @resource_link
 
         if @resource_link.save
+          enqueue_assignment_distribution_if_needed(@resource_link)
           render json: @resource_link, status: :created
         else
           render json: { errors: @resource_link.errors.full_messages }, status: :unprocessable_content
@@ -46,7 +47,15 @@ module Api
       end
 
       def resource_link_params
-        params.require(:resource_link).permit(:url, :title, :mime_type, :drive_file_id, :provider)
+        params.require(:resource_link).permit(:url, :title, :mime_type, :drive_file_id, :provider, :link_type, metadata: {})
+      end
+
+      def enqueue_assignment_distribution_if_needed(resource_link)
+        return unless resource_link.linkable_type == "Assignment"
+        return unless resource_link.provider == "google_drive"
+        return unless resource_link.link_type == "template"
+
+        DistributeAssignmentJob.perform_later(resource_link.linkable_id)
       end
     end
   end

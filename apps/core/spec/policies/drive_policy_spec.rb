@@ -24,4 +24,16 @@ RSpec.describe DrivePolicy, type: :policy do
     expect(described_class.new(curriculum_lead, :drive).picker_token?).to eq(true)
     expect(described_class.new(student, :drive).picker_token?).to eq(false)
   end
+
+  it "permits advanced drive actions only for teacher/admin/curriculum_lead" do
+    expect(described_class.new(admin, :drive).share?).to eq(true)
+    expect(described_class.new(admin, :drive).folder?).to eq(true)
+    expect(described_class.new(admin, :drive).copy?).to eq(true)
+    expect(described_class.new(admin, :drive).preview?).to eq(true)
+
+    expect(described_class.new(student, :drive).share?).to eq(false)
+    expect(described_class.new(student, :drive).folder?).to eq(false)
+    expect(described_class.new(student, :drive).copy?).to eq(false)
+    expect(described_class.new(student, :drive).preview?).to eq(false)
+  end
 end

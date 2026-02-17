@@ -270,6 +270,10 @@ Rails.application.routes.draw do
         post :documents, action: :create_document
         post :presentations, action: :create_presentation
         get "files/:file_id", action: :show_file, as: :file
+        post :share
+        match :folder, action: :folder, via: [ :get, :post ]
+        post :copy
+        get "preview/:file_id", action: :preview, as: :preview
         post :picker_token
       end
 

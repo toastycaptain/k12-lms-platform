@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Courses", type: :request do
+  include ActiveJob::TestHelper
+
   let!(:tenant) { create(:tenant) }
   let(:admin) do
     Current.tenant = tenant
@@ -18,6 +20,7 @@ RSpec.describe "Api::V1::Courses", type: :request do
   end
 
   after do
+    clear_enqueued_jobs
     Current.tenant = nil
     Current.user = nil
   end
@@ -96,6 +99,27 @@ RSpec.describe "Api::V1::Courses", type: :request do
           course: { academic_year_id: ay.id, name: "Math 101", code: "MATH101", description: "Intro to Math" }
         }
       }.to change(Course.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+
+    it "enqueues a course folder job when requested and the creator is google-connected" do
+      mock_session(admin, tenant: tenant)
+      admin.update!(
+        google_refresh_token: "refresh-token",
+        google_access_token: "access-token",
+        google_token_expires_at: 1.hour.from_now
+      )
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      Current.tenant = nil
+
+      expect {
+        post "/api/v1/courses", params: {
+          create_drive_folder: true,
+          course: { academic_year_id: ay.id, name: "Biology 101", code: "BIO101", description: "Biology intro" }
+        }
+      }.to have_enqueued_job(CreateCourseFolderJob).with(kind_of(Integer), admin.id)
 
       expect(response).to have_http_status(:created)
     end

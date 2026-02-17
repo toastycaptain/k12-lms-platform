@@ -6,6 +6,8 @@ FactoryBot.define do
     sequence(:title) { |n| "Resource #{n}" }
     mime_type { "application/pdf" }
     provider { "url" }
+    link_type { "reference" }
+    metadata { {} }
 
     trait :google_drive do
       provider { "google_drive" }

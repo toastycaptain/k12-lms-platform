@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import { apiFetch } from "@/lib/api";
 
@@ -32,6 +32,10 @@ describe("GoogleDrivePicker", () => {
         return this;
       }
 
+      enableFeature() {
+        return this;
+      }
+
       setCallback(
         callback: (data: {
           action: string;
@@ -56,6 +60,9 @@ describe("GoogleDrivePicker", () => {
           DOCS: "DOCS",
           PRESENTATIONS: "PRESENTATIONS",
           SPREADSHEETS: "SPREADSHEETS",
+        },
+        Feature: {
+          MULTISELECT_ENABLED: "MULTISELECT_ENABLED",
         },
       },
     } as never;
@@ -107,24 +114,104 @@ describe("GoogleDrivePicker", () => {
       expect(typeof pickerCallback).toBe("function");
     });
 
-    pickerCallback?.({
-      action: "picked",
-      docs: [
-        {
-          id: "file-1",
-          name: "Doc 1",
-          mimeType: "application/vnd.google-apps.document",
-          url: "https://drive.google.com/doc/1",
-        },
-      ],
+    await act(async () => {
+      pickerCallback?.({
+        action: "picked",
+        docs: [
+          {
+            id: "file-1",
+            name: "Doc 1",
+            mimeType: "application/vnd.google-apps.document",
+            url: "https://drive.google.com/doc/1",
+          },
+        ],
+      });
     });
 
-    expect(onSelect).toHaveBeenCalledWith({
-      id: "file-1",
-      name: "Doc 1",
-      mimeType: "application/vnd.google-apps.document",
-      url: "https://drive.google.com/doc/1",
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "file-1",
+        name: "Doc 1",
+        mimeType: "application/vnd.google-apps.document",
+        url: "https://drive.google.com/doc/1",
+      }),
+    );
+  });
+
+  it("supports multi-select callbacks", async () => {
+    const onSelect = vi.fn();
+    const onSelectMany = vi.fn();
+    render(
+      <GoogleDrivePicker onSelect={onSelect} onSelectMany={onSelectMany}>
+        Pick files
+      </GoogleDrivePicker>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick files" }));
+
+    await waitFor(() => {
+      expect(typeof pickerCallback).toBe("function");
     });
+
+    await act(async () => {
+      pickerCallback?.({
+        action: "picked",
+        docs: [
+          {
+            id: "file-1",
+            name: "Doc 1",
+            mimeType: "application/vnd.google-apps.document",
+            url: "https://drive.google.com/doc/1",
+          },
+          {
+            id: "file-2",
+            name: "Doc 2",
+            mimeType: "application/vnd.google-apps.document",
+            url: "https://drive.google.com/doc/2",
+          },
+        ],
+      });
+    });
+
+    expect(onSelect).toHaveBeenCalledTimes(2);
+    expect(onSelectMany).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "file-1" }),
+        expect.objectContaining({ id: "file-2" }),
+      ]),
+    );
+  });
+
+  it("creates a new file from the selected create option", async () => {
+    const onSelect = vi.fn();
+    mockedApiFetch.mockResolvedValueOnce({
+      id: "created-1",
+      title: "Untitled Sheet",
+      mime_type: "application/vnd.google-apps.spreadsheet",
+      url: "https://docs.google.com/spreadsheets/d/created-1",
+    } as never);
+
+    render(<GoogleDrivePicker onSelect={onSelect}>Pick a file</GoogleDrivePicker>);
+
+    fireEvent.change(screen.getByLabelText("Create new"), { target: { value: "sheet" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/drive/documents", {
+        method: "POST",
+        body: JSON.stringify({
+          title: "Untitled Sheet",
+          mime_type: "application/vnd.google-apps.spreadsheet",
+        }),
+      });
+    });
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "created-1",
+        name: "Untitled Sheet",
+        mimeType: "application/vnd.google-apps.spreadsheet",
+      }),
+    );
   });
 
   it("handles API error gracefully", async () => {
