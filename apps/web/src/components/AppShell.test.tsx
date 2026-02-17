@@ -111,6 +111,26 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Teach" })).toBeInTheDocument();
   });
 
+  it("renders district nav item for district administrators", () => {
+    mockedUseAuth.mockReturnValue({
+      user: createMockUser({ roles: ["district_admin"] }),
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
+    });
+
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("link", { name: "District" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Admin" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Teach" })).not.toBeInTheDocument();
+  });
+
   it("renders nav items filtered by user role (student)", () => {
     mockedUseAuth.mockReturnValue({
       user: createMockUser({ roles: ["student"] }),

@@ -25,7 +25,15 @@ class User < ApplicationRecord
     @cached_role_names ||= roles.loaded? ? roles.map(&:name) : roles.pluck(:name)
   end
 
+  def role_names
+    names = cached_role_names.dup
+    names << "district_admin" if district_admin?
+    names.uniq
+  end
+
   def has_role?(role_name)
+    return district_admin? if role_name.to_s == "district_admin"
+
     cached_role_names.include?(role_name.to_s)
   end
 

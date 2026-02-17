@@ -91,6 +91,22 @@ RSpec.describe User, type: :model do
     it "returns false when user does not have the role" do
       expect(user.has_role?(:admin)).to be(false)
     end
+
+    it "returns true when district_admin flag is set" do
+      user.update!(district_admin: true)
+
+      expect(user.has_role?(:district_admin)).to be(true)
+    end
+  end
+
+  describe "#role_names" do
+    let(:user) { create(:user, tenant: tenant) }
+
+    it "includes district_admin when the flag is enabled" do
+      user.update!(district_admin: true)
+
+      expect(user.role_names).to include("district_admin")
+    end
   end
 
   describe "#add_role" do

@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe Tenant, type: :model do
   describe "associations" do
+    it { should belong_to(:district).optional }
     it { should have_many(:schools).dependent(:destroy) }
   end
 

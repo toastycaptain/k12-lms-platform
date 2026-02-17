@@ -1,4 +1,6 @@
 class Tenant < ApplicationRecord
+  belongs_to :district, optional: true
+
   has_many :schools, dependent: :destroy
   has_many :users, dependent: :destroy
   has_many :roles, dependent: :destroy

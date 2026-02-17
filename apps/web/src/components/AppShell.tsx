@@ -62,22 +62,6 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    id: "report",
-    label: "Report",
-    href: "/report",
-    roles: ["admin", "curriculum_lead", "teacher"],
-    children: [
-      { label: "Overview", href: "/report" },
-      { label: "Standards Coverage", href: "/report/standards-coverage" },
-    ],
-  },
-  {
-    id: "communicate",
-    label: "Communicate",
-    href: "/communicate",
-    roles: ["admin", "curriculum_lead", "teacher", "student"],
-  },
-  {
     id: "admin",
     label: "Admin",
     href: "/admin",
@@ -95,6 +79,35 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Approval Queue", href: "/admin/approvals" },
     ],
   },
+  {
+    id: "district",
+    label: "District",
+    href: "/district",
+    roles: ["district_admin"],
+    children: [
+      { label: "Dashboard", href: "/district/dashboard" },
+      { label: "Schools", href: "/district/schools" },
+      { label: "Standards", href: "/district/standards" },
+      { label: "Templates", href: "/district/templates" },
+      { label: "Users", href: "/district/users" },
+    ],
+  },
+  {
+    id: "report",
+    label: "Report",
+    href: "/report",
+    roles: ["admin", "curriculum_lead", "teacher"],
+    children: [
+      { label: "Overview", href: "/report" },
+      { label: "Standards Coverage", href: "/report/standards-coverage" },
+    ],
+  },
+  {
+    id: "communicate",
+    label: "Communicate",
+    href: "/communicate",
+    roles: ["admin", "curriculum_lead", "teacher", "student"],
+  },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -109,7 +122,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return item.roles.some((role) => roles.includes(role));
   }).filter((item) => {
     if (!isStudentOnly) return true;
-    return !["plan", "teach", "admin"].includes(item.id);
+    return !["plan", "teach", "admin", "district"].includes(item.id);
   });
 
   const homeHref = isStudentOnly ? "/learn/dashboard" : "/dashboard";

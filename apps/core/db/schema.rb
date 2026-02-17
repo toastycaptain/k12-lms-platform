@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -323,6 +323,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
     t.index ["course_id"], name: "index_discussions_on_course_id"
     t.index ["created_by_id"], name: "index_discussions_on_created_by_id"
     t.index ["tenant_id"], name: "index_discussions_on_tenant_id"
+  end
+
+  create_table "districts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_districts_on_slug", unique: true
   end
 
   create_table "enrollments", force: :cascade do |t|
@@ -943,10 +952,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
 
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "district_id"
     t.string "name", null: false
     t.jsonb "settings", default: {}
     t.string "slug", null: false
     t.datetime "updated_at", null: false
+    t.index ["district_id"], name: "index_tenants_on_district_id"
     t.index ["slug"], name: "index_tenants_on_slug", unique: true
   end
 
@@ -1021,6 +1032,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
 
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "district_admin", default: false, null: false
     t.string "email", null: false
     t.string "first_name"
     t.text "google_access_token"
@@ -1181,6 +1193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000009) do
   add_foreign_key "templates", "template_versions", column: "current_version_id"
   add_foreign_key "templates", "tenants"
   add_foreign_key "templates", "users", column: "created_by_id"
+  add_foreign_key "tenants", "districts"
   add_foreign_key "terms", "academic_years"
   add_foreign_key "terms", "tenants"
   add_foreign_key "unit_plans", "courses"

@@ -277,6 +277,13 @@ Rails.application.routes.draw do
         post :picker_token
       end
 
+      namespace :district do
+        get :schools
+        get :standards_coverage
+        get :user_summary
+        post :push_template
+      end
+
       namespace :addon do
         get :unit_plans
         get "unit_plans/:id/lessons", action: :lessons, as: :unit_plan_lessons

@@ -43,7 +43,8 @@ module Api
             email: Current.user.email,
             first_name: Current.user.first_name,
             last_name: Current.user.last_name,
-            roles: Current.user.roles.pluck(:name),
+            roles: Current.user.role_names,
+            district_admin: Current.user.district_admin?,
             google_connected: Current.user.google_connected?,
             onboarding_complete: Current.user.onboarding_complete,
             preferences: Current.user.preferences || {}
@@ -64,7 +65,8 @@ module Api
               email: Current.user.email,
               first_name: Current.user.first_name,
               last_name: Current.user.last_name,
-              roles: Current.user.roles.pluck(:name),
+              roles: Current.user.role_names,
+              district_admin: Current.user.district_admin?,
               google_connected: Current.user.google_connected?,
               onboarding_complete: Current.user.onboarding_complete,
               preferences: Current.user.preferences || {}
