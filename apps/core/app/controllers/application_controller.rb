@@ -30,6 +30,7 @@ class ApplicationController < ActionController::API
   def authenticate_user!
     resolve_tenant
     resolve_user
+    set_request_context
 
     unless Current.user
       render json: { error: "Unauthorized" }, status: :unauthorized
@@ -50,6 +51,11 @@ class ApplicationController < ActionController::API
     return unless Current.tenant && session[:user_id]
 
     Current.user = User.unscoped.find_by(id: session[:user_id], tenant_id: Current.tenant.id)
+  end
+
+  def set_request_context
+    request.env["current_tenant_id"] = Current.tenant&.id
+    request.env["current_user_id"] = Current.user&.id
   end
 
   def tenant_from_session

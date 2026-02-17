@@ -9,6 +9,7 @@ module Api
         auth = request.env["omniauth.auth"]
 
         unless auth
+          MetricsService.increment("auth.failure", tags: { reason: "missing_auth_payload" })
           return redirect_with_error("authentication_failed")
         end
 
@@ -18,11 +19,13 @@ module Api
         when "saml"
           handle_saml_callback(auth)
         else
+          MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "unsupported_provider" })
           render json: { error: "Unsupported provider" }, status: :unprocessable_content
         end
       end
 
       def failure
+        MetricsService.increment("auth.failure", tags: { reason: params[:message].presence || "omniauth_failure" })
         redirect_with_error(params[:message].presence || "authentication_failed")
       end
 
@@ -31,6 +34,10 @@ module Api
           "session.signed_out",
           auditable: Current.user,
           metadata: { tenant_id: Current.tenant&.id }
+        )
+        MetricsService.increment(
+          "auth.sign_out",
+          tags: { tenant_id: Current.tenant&.id, user_id: Current.user&.id }
         )
         reset_session
         render json: { message: "Signed out successfully" }, status: :ok
@@ -97,12 +104,14 @@ module Api
       def handle_google_callback(auth)
         tenant = resolve_tenant_from_auth(auth)
         unless tenant
+          MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "tenant_not_found" })
           return redirect_with_error("tenant_not_found")
         end
 
         Current.tenant = tenant
         user = find_or_create_user(auth, tenant)
         unless user
+          MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "identity_missing" })
           return redirect_with_error("identity_missing")
         end
 
@@ -112,18 +121,23 @@ module Api
         redirect_to "#{frontend_url}/auth/callback",
           allow_other_host: true
       rescue ActiveRecord::RecordInvalid
+        MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "record_invalid" })
         redirect_with_error("authentication_failed")
       end
 
       def handle_saml_callback(auth)
         tenant_slug = params[:tenant].presence || request.host.split(".").first
         tenant = Tenant.unscoped.find_by(slug: tenant_slug)
-        return render json: { error: "Tenant not found" }, status: :not_found unless tenant
+        unless tenant
+          MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "tenant_not_found" })
+          return render json: { error: "Tenant not found" }, status: :not_found
+        end
 
         Current.tenant = tenant
 
         email = saml_email(auth)
         if email.blank?
+          MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "email_missing" })
           return render json: { error: "No email in SAML response" }, status: :unprocessable_content
         end
 
@@ -137,6 +151,7 @@ module Api
           )
 
           unless saml_config&.settings&.dig("auto_provision")
+            MetricsService.increment("auth.failure", tags: { provider: auth.provider, reason: "user_not_found" })
             return render json: { error: "User not found and auto-provisioning is disabled" }, status: :not_found
           end
 
@@ -162,6 +177,14 @@ module Api
       def complete_sign_in!(user:, tenant:, provider:)
         session[:user_id] = user.id
         session[:tenant_id] = tenant.id
+        MetricsService.increment(
+          "auth.success",
+          tags: {
+            provider: provider,
+            tenant_id: tenant.id,
+            user_id: user.id
+          }
+        )
         audit_event(
           "session.signed_in",
           actor: user,

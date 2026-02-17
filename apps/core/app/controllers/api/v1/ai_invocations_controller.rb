@@ -40,6 +40,7 @@ module Api
 
       def create
         authorize AiInvocation
+        request_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         task_type = params[:task_type].to_s
         task_policy = resolve_task_policy(task_type)
         return unless task_policy
@@ -47,11 +48,18 @@ module Api
 
         provider_config = active_provider_config
         unless provider_config
+          MetricsService.increment("ai.invocation.failed", tags: { task_type: task_type, reason: "provider_missing" })
           render json: { error: "No AI provider configured" }, status: :service_unavailable
           return
         end
 
         model = resolved_model(task_policy, provider_config)
+        metric_tags = {
+          task_type: task_type,
+          provider: provider_config.provider_name,
+          model: model
+        }
+        MetricsService.increment("ai.invocation.requested", tags: metric_tags)
         template = AiTemplate.find_by!(id: params[:ai_template_id], tenant: Current.tenant) if params[:ai_template_id].present?
         system_prompt = template&.system_prompt || "You are a helpful K-12 education assistant."
         messages = build_messages(system_prompt)
@@ -76,6 +84,12 @@ module Api
 
         if async_requested?
           AiGenerationJob.perform_later(invocation.id)
+          MetricsService.increment("ai.invocation.queued", tags: metric_tags)
+          MetricsService.timing(
+            "ai.invocation.controller_duration_ms",
+            elapsed_ms(request_started_at),
+            tags: metric_tags.merge(mode: "async")
+          )
           render json: {
             invocation_id: invocation.id,
             status: invocation.status,
@@ -109,6 +123,16 @@ module Api
             },
             duration: duration
           )
+          MetricsService.increment("ai.invocation.completed", tags: metric_tags)
+          MetricsService.timing("ai.invocation.duration_ms", duration, tags: metric_tags)
+          MetricsService.timing(
+            "ai.invocation.controller_duration_ms",
+            elapsed_ms(request_started_at),
+            tags: metric_tags.merge(mode: "sync")
+          )
+          MetricsService.gauge("ai.invocation.prompt_tokens", usage["prompt_tokens"] || 0, tags: metric_tags)
+          MetricsService.gauge("ai.invocation.completion_tokens", usage["completion_tokens"] || 0, tags: metric_tags)
+          MetricsService.gauge("ai.invocation.total_tokens", usage["total_tokens"] || 0, tags: metric_tags)
 
           render json: {
             id: invocation.id,
@@ -119,9 +143,21 @@ module Api
             status: invocation.status
           }
         rescue AiGatewayClient::AiGatewayError => e
+          MetricsService.increment("ai.invocation.failed", tags: metric_tags.merge(error: e.class.name))
+          MetricsService.timing(
+            "ai.invocation.controller_duration_ms",
+            elapsed_ms(request_started_at),
+            tags: metric_tags.merge(mode: "sync", outcome: "failed")
+          )
           invocation.fail!(e.message)
           render json: { error: "AI generation failed: #{e.message}" }, status: :bad_gateway
         rescue StandardError => e
+          MetricsService.increment("ai.invocation.failed", tags: metric_tags.merge(error: e.class.name))
+          MetricsService.timing(
+            "ai.invocation.controller_duration_ms",
+            elapsed_ms(request_started_at),
+            tags: metric_tags.merge(mode: "sync", outcome: "failed")
+          )
           invocation.fail!(e.message)
           render json: { error: "AI generation failed: #{e.message}" }, status: :bad_gateway
         end
@@ -279,6 +315,10 @@ module Api
         Float(value)
       rescue ArgumentError, TypeError
         default
+      end
+
+      def elapsed_ms(started_at)
+        ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round(1)
       end
     end
   end

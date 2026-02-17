@@ -57,11 +57,19 @@ module Api
       def sync_courses
         authorize @integration_config
         unless @integration_config.provider == "google_classroom"
+          MetricsService.increment(
+            "sync.trigger.rejected",
+            tags: { provider: @integration_config.provider, sync_type: "courses" }
+          )
           render json: { error: "sync_courses is only available for google_classroom integrations" }, status: :unprocessable_content
           return
         end
 
         ClassroomCourseSyncJob.perform_later(@integration_config.id, Current.user.id)
+        MetricsService.increment(
+          "sync.triggered",
+          tags: { provider: @integration_config.provider, sync_type: "courses" }
+        )
         audit_event(
           "integration.sync_courses_triggered",
           auditable: @integration_config,
@@ -73,11 +81,19 @@ module Api
       def sync_organizations
         authorize @integration_config
         unless @integration_config.provider == "oneroster"
+          MetricsService.increment(
+            "sync.trigger.rejected",
+            tags: { provider: @integration_config.provider, sync_type: "organizations" }
+          )
           render json: { error: "sync_organizations is only available for oneroster integrations" }, status: :unprocessable_content
           return
         end
 
         OneRosterOrgSyncJob.perform_later(@integration_config.id, Current.user.id)
+        MetricsService.increment(
+          "sync.triggered",
+          tags: { provider: @integration_config.provider, sync_type: "organizations" }
+        )
         audit_event(
           "integration.oneroster_org_sync_triggered",
           auditable: @integration_config,
@@ -89,11 +105,19 @@ module Api
       def sync_users
         authorize @integration_config
         unless @integration_config.provider == "oneroster"
+          MetricsService.increment(
+            "sync.trigger.rejected",
+            tags: { provider: @integration_config.provider, sync_type: "users" }
+          )
           render json: { error: "sync_users is only available for oneroster integrations" }, status: :unprocessable_content
           return
         end
 
         OneRosterUserSyncJob.perform_later(@integration_config.id, Current.user.id)
+        MetricsService.increment(
+          "sync.triggered",
+          tags: { provider: @integration_config.provider, sync_type: "users" }
+        )
         audit_event(
           "integration.oneroster_user_sync_triggered",
           auditable: @integration_config,

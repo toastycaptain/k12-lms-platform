@@ -7,14 +7,18 @@ RSpec.describe "Cross-service health checks", type: :request do
 
       expect([ 200, 503 ]).to include(response.status)
       body = response.parsed_body
-      expect(%w[ok degraded]).to include(body["status"])
-      expect(%w[connected error]).to include(body["database"])
-      expect(%w[connected error]).to include(body["redis"])
+      expect(%w[healthy degraded]).to include(body["status"])
+      expect(body["checks"]).to be_a(Hash)
+      expect(%w[ok error skipped]).to include(body.dig("checks", "database", "status"))
+      expect(%w[ok error skipped]).to include(body.dig("checks", "redis", "status"))
+      expect(%w[ok error skipped]).to include(body.dig("checks", "sidekiq", "status"))
+      expect(%w[ok error skipped]).to include(body.dig("checks", "ai_gateway", "status"))
+      expect(%w[ok error]).to include(body.dig("checks", "migrations", "status"))
 
-      critical_ok = body["database"] == "connected" && body["redis"] == "connected"
+      critical_ok = body["checks"].values.all? { |check| %w[ok skipped].include?(check["status"]) }
       if critical_ok
         expect(response).to have_http_status(:ok)
-        expect(body["status"]).to eq("ok")
+        expect(body["status"]).to eq("healthy")
       else
         expect(response).to have_http_status(:service_unavailable)
         expect(body["status"]).to eq("degraded")
