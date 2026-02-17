@@ -115,8 +115,8 @@ namespace :e2e do
       unit.create_version!(
         title: unit.title,
         description: "Students analyze ecosystems and biodiversity.",
-        essential_questions: ["How do ecosystems stay balanced?"],
-        enduring_understandings: ["Ecosystems are dynamic systems with interdependent species."],
+        essential_questions: [ "How do ecosystems stay balanced?" ],
+        enduring_understandings: [ "Ecosystems are dynamic systems with interdependent species." ],
       )
     end
 
@@ -158,7 +158,7 @@ namespace :e2e do
       record.choices = [
         { key: "A", text: "Mitochondria" },
         { key: "B", text: "Ribosome" },
-        { key: "C", text: "Nucleus" },
+        { key: "C", text: "Nucleus" }
       ]
       record.correct_answer = { key: "A" }
       record.explanation = "Mitochondria produce ATP for the cell."

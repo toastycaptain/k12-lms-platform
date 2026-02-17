@@ -44,7 +44,12 @@ module Core
 
     # Add session/cookie middleware back for OmniAuth
     config.middleware.use ActionDispatch::Cookies
-    config.middleware.use ActionDispatch::Session::CookieStore, key: "_k12_lms_session"
+    config.middleware.use ActionDispatch::Session::CookieStore,
+      key: "_k12_lms_session",
+      httponly: true,
+      secure: Rails.env.production?,
+      same_site: :lax,
+      expire_after: 12.hours
     config.middleware.use RequestTiming
   end
 end

@@ -1,5 +1,6 @@
 class Submission < ApplicationRecord
   include TenantScoped
+  include AttachmentValidatable
 
   VALID_STATUSES = %w[draft submitted graded returned].freeze
 
@@ -8,6 +9,9 @@ class Submission < ApplicationRecord
   belongs_to :graded_by, class_name: "User", optional: true
   has_many :rubric_scores, dependent: :destroy
   has_one_attached :attachment
+  validates_attachment :attachment,
+    content_types: AttachmentValidatable::ALLOWED_SUBMISSION_TYPES,
+    max_size: 50.megabytes
 
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
   validates :user_id, uniqueness: { scope: :assignment_id, message: "already has a submission for this assignment" }

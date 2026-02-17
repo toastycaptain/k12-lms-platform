@@ -3,10 +3,21 @@ class ApplicationController < ActionController::API
   include ActionController::RequestForgeryProtection
   include Paginatable
   include Pundit::Authorization
+  include RateLimitHeaders
+
+  SECURITY_HEADERS = {
+    "X-Frame-Options" => "SAMEORIGIN",
+    "X-Content-Type-Options" => "nosniff",
+    "X-XSS-Protection" => "0",
+    "Referrer-Policy" => "strict-origin-when-cross-origin",
+    "X-Permitted-Cross-Domain-Policies" => "none",
+    "Permissions-Policy" => "camera=(), microphone=(), geolocation=()"
+  }.freeze
 
   protect_from_forgery with: :exception, unless: :csrf_exempt_request?, if: :csrf_protection_enabled?
 
   before_action :authenticate_user!
+  after_action :set_security_headers
   after_action :verify_authorized, unless: -> { skip_authorization? || action_name == "index" }
   after_action :verify_policy_scoped, if: -> { action_name == "index" && !skip_authorization? }
 
@@ -50,7 +61,20 @@ class ApplicationController < ActionController::API
   def resolve_user
     return unless Current.tenant && session[:user_id]
 
+    if session_stale?
+      reset_session
+      return
+    end
+
     Current.user = User.unscoped.find_by(id: session[:user_id], tenant_id: Current.tenant.id)
+    session[:last_seen_at] = Time.current.to_i if Current.user
+  end
+
+  def session_stale?
+    last_seen = session[:last_seen_at]
+    return false unless last_seen
+
+    Time.current.to_i - last_seen.to_i > 12.hours.to_i
   end
 
   def set_request_context
@@ -106,5 +130,9 @@ class ApplicationController < ActionController::API
 
   def csrf_protection_enabled?
     !Rails.env.test? || ActionController::Base.allow_forgery_protection
+  end
+
+  def set_security_headers
+    SECURITY_HEADERS.each { |key, value| response.headers[key] = value }
   end
 end

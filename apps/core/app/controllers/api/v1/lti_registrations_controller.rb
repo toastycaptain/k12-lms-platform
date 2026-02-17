@@ -70,7 +70,11 @@ module Api
           :jwks_url,
           :description,
           :status,
-          settings: {}
+          settings: [
+            :deployment_id,
+            :custom_params,
+            :deep_linking_enabled
+          ]
         )
       end
     end

@@ -47,7 +47,7 @@ module Api
       end
 
       def resource_link_params
-        params.require(:resource_link).permit(:url, :title, :mime_type, :drive_file_id, :provider, :link_type, metadata: {})
+        params.require(:resource_link).permit(:url, :title, :mime_type, :drive_file_id, :provider, :link_type, metadata: [ :source, :description, :thumbnail_url ])
       end
 
       def enqueue_assignment_distribution_if_needed(resource_link)

@@ -1,5 +1,6 @@
 class UnitPlan < ApplicationRecord
   include TenantScoped
+  include AttachmentValidatable
 
   VALID_STATUSES = %w[draft pending_approval published archived].freeze
 
@@ -10,6 +11,9 @@ class UnitPlan < ApplicationRecord
   has_many :lesson_plans, dependent: :destroy
   has_many :approvals, as: :approvable, dependent: :destroy
   has_one_attached :exported_pdf
+  validates_attachment :exported_pdf,
+    content_types: %w[application/pdf],
+    max_size: 100.megabytes
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

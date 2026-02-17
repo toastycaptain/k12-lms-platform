@@ -244,12 +244,9 @@ module Api
       end
 
       def normalized_context
-        context = params[:context]
-        return {} if context.nil?
-        return context.to_unsafe_h if context.respond_to?(:to_unsafe_h)
-        return context.to_h if context.respond_to?(:to_h)
+        return {} if params[:context].nil?
 
-        {}
+        params.permit(context: [ :document_id, :document_title, :document_type, :selection_text ]).to_h[:context] || {}
       end
 
       def task_allowed_for_user?(task_policy)

@@ -49,7 +49,8 @@ module Api
 
       def policy_params
         params.permit(:ai_provider_config_id, :task_type, :enabled, :max_tokens_limit,
-                      :model_override, :requires_approval, :temperature_limit, allowed_roles: [], settings: {})
+                      :model_override, :requires_approval, :temperature_limit, allowed_roles: [],
+                      settings: [ :prompt_template, :system_prompt, :max_context_length ])
       end
     end
   end

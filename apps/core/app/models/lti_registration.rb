@@ -12,7 +12,9 @@ class LtiRegistration < ApplicationRecord
   validates :deployment_id, presence: true
   validates :auth_login_url, presence: true
   validates :auth_token_url, presence: true
-  validates :jwks_url, presence: true
+  validates :jwks_url, presence: true, safe_url: true
+  validates :auth_login_url, safe_url: true
+  validates :auth_token_url, safe_url: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }
 
   def activate!

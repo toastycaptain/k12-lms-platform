@@ -133,7 +133,32 @@ module Api
       end
 
       def integration_config_params
-        params.permit(:provider, settings: {})
+        params.permit(
+          :provider,
+          settings: [
+            :base_url,
+            :client_id,
+            :client_secret,
+            :oauth_token,
+            :oauth_token_secret,
+            :api_key,
+            :sync_enabled,
+            :sync_interval_hours,
+            :roster_sync,
+            :grade_passback,
+            :course_sync,
+            :auto_provision,
+            :default_role,
+            :addon_token,
+            :service_token,
+            :addon_user_id,
+            :service_user_id,
+            :classroom_enabled,
+            :drive_enabled,
+            :auto_sync_enabled,
+            :domain
+          ]
+        )
       end
     end
   end

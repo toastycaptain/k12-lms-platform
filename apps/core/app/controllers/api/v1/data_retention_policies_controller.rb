@@ -60,7 +60,7 @@ module Api
           :action,
           :retention_days,
           :enabled,
-          settings: {}
+          settings: [ :archive_to, :notify_before_days, :exempt_roles ]
         )
       end
     end

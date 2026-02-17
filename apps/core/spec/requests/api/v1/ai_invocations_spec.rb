@@ -226,7 +226,7 @@ RSpec.describe "Api::V1::AiInvocations", type: :request do
       }
 
       expect(response).to have_http_status(:ok)
-      apply_data = response.parsed_body.dig("context", "apply")
+      apply_data = response.parsed_body.dig("safe_context", "apply")
       expect(apply_data).to include(
         "applied_at" => "2026-02-16T12:30:00Z",
         "applied_to" => { "type" => "lesson_plan", "id" => 123 }

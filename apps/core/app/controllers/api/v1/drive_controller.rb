@@ -159,9 +159,8 @@ module Api
 
       def resource_link_metadata
         return {} if params[:metadata].blank?
-        return params[:metadata].to_unsafe_h if params[:metadata].respond_to?(:to_unsafe_h)
 
-        params[:metadata]
+        params.permit(metadata: [ :file_id, :file_name, :mime_type, :icon_url, :thumbnail_url, :web_view_link ]).to_h[:metadata] || {}
       end
     end
   end

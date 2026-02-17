@@ -3,6 +3,7 @@ module Api
     module Testing
       class SessionsController < ApplicationController
         skip_before_action :authenticate_user!
+        before_action :reject_in_production
 
         DEFAULT_EMAIL_BY_ROLE = {
           "admin" => "admin@e2e.local",
@@ -51,6 +52,10 @@ module Api
         end
 
         private
+
+        def reject_in_production
+          head :not_found if Rails.env.production?
+        end
 
         def tenant_slug
           params[:tenant_slug].presence || "e2e-district"

@@ -12,7 +12,7 @@ class GenerateRequest(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=2048, ge=1, le=16384)
     task_type: str | None = None
-    context: dict[str, object] | None = None
+    context: dict[str, str | int | float | bool | None] | None = None
 
 
 class GenerateResponseModel(BaseModel):

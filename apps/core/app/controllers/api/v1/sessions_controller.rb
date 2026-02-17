@@ -284,7 +284,20 @@ module Api
       end
 
       def current_user_params
-        params.permit(:onboarding_complete, preferences: {})
+        params.permit(
+          :onboarding_complete,
+          preferences: [
+            :theme,
+            :locale,
+            :timezone,
+            :email_notifications,
+            :digest_frequency,
+            :dashboard_layout,
+            :sidebar_collapsed,
+            subjects: [],
+            grade_levels: []
+          ]
+        )
       end
     end
   end

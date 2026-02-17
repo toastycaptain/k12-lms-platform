@@ -1,5 +1,6 @@
 class LessonPlan < ApplicationRecord
   include TenantScoped
+  include AttachmentValidatable
 
   VALID_STATUSES = %w[draft published].freeze
 
@@ -8,6 +9,9 @@ class LessonPlan < ApplicationRecord
   belongs_to :current_version, class_name: "LessonVersion", optional: true
   has_many :lesson_versions, dependent: :destroy
   has_one_attached :exported_pdf
+  validates_attachment :exported_pdf,
+    content_types: %w[application/pdf],
+    max_size: 100.megabytes
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

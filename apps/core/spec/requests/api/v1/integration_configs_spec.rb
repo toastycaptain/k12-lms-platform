@@ -120,7 +120,8 @@ RSpec.describe "Api::V1::IntegrationConfigs", type: :request do
       }
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["settings"]["domain"]).to eq("updated.edu")
+      config.reload
+      expect(config.settings["domain"]).to eq("updated.edu")
     end
   end
 

@@ -62,7 +62,8 @@ module Api
       end
 
       def config_params
-        params.permit(:provider_name, :display_name, :default_model, :api_key, :status, available_models: [], settings: {})
+        params.permit(:provider_name, :display_name, :default_model, :api_key, :status, available_models: [],
+                      settings: [ :base_url, :api_version, :organization_id, :max_retries, :timeout ])
       end
 
       def serialize_config(config)

@@ -3,6 +3,12 @@ set -eu
 
 npx lint-staged
 
+# Ensure Python tooling (ruff) is available
+PYTHON_BIN="$(python3 -c 'import sysconfig; print(sysconfig.get_path("scripts"))' 2>/dev/null || true)"
+if [ -n "$PYTHON_BIN" ] && [ -d "$PYTHON_BIN" ]; then
+  export PATH="$PYTHON_BIN:$PATH"
+fi
+
 # Ensure rbenv is available so we use the project Ruby, not system Ruby
 if [ -d "$HOME/.rbenv/bin" ]; then
   export PATH="$HOME/.rbenv/bin:$PATH"

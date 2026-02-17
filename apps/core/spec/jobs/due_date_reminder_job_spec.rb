@@ -37,6 +37,7 @@ RSpec.describe DueDateReminderJob, type: :job do
 
     expect {
       described_class.perform_now(Time.current)
+      Current.tenant = tenant
     }.to change(Notification, :count).by(1)
 
     reminder = Notification.order(:id).last

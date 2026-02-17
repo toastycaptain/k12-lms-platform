@@ -99,6 +99,7 @@ module Lti
     def validate_jwt(token, registration, expected_nonce)
       return nil if token.blank?
 
+      validate_external_url!(registration.jwks_url)
       jwks_response = Faraday.get(registration.jwks_url)
       return nil unless jwks_response.success?
 
@@ -150,6 +151,25 @@ module Lti
         "#{frontend_url}/lti/deep-link?registration_id=#{registration.id}&return_url=#{CGI.escape(return_url || "")}",
         allow_other_host: true
       )
+    end
+
+    def validate_external_url!(url)
+      uri = URI.parse(url)
+      blocked = %w[localhost 127.0.0.1 0.0.0.0 ::1 169.254.169.254 metadata.google.internal]
+      if blocked.include?(uri.host&.downcase)
+        raise SecurityError, "Cannot fetch from internal address: #{uri.host}"
+      end
+
+      begin
+        addr = IPAddr.new(uri.host)
+        if addr.private? || addr.loopback? || addr.link_local?
+          raise SecurityError, "Cannot fetch from private IP: #{uri.host}"
+        end
+      rescue IPAddr::InvalidAddressError
+        # Hostname — fine
+      end
+    rescue URI::InvalidURIError
+      raise SecurityError, "Invalid URL: #{url}"
     end
 
     def frontend_url

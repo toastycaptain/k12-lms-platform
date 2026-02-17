@@ -39,7 +39,7 @@ RSpec.describe IntegrationConfig, type: :model do
 
   describe "activation methods" do
     it "activates when settings is a hash" do
-      config = create(:integration_config, tenant: tenant, status: "inactive", settings: { "ok" => true })
+      config = create(:integration_config, tenant: tenant, status: "inactive", settings: { "sync_enabled" => true })
 
       config.activate!
 

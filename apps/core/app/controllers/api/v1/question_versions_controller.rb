@@ -49,9 +49,9 @@ module Api
 
       def question_version_params
         params.permit(:version_number, :question_type, :content, :explanation, :points, :status,
-          choices: {},
-          correct_answer: {},
-          metadata: {})
+          choices: [ :key, :text, :html, :position ],
+          correct_answer: [ :key, :value, :explanation ],
+          metadata: [ :difficulty, :bloom_level, :source, :tags ])
       end
     end
   end
