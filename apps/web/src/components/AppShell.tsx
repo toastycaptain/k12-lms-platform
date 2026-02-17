@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Dashboard", href: "/learn/dashboard" },
       { label: "My Courses", href: "/learn/courses" },
       { label: "Grades", href: "/learn/grades" },
+      { label: "Progress", href: "/learn/progress" },
     ],
   },
   {

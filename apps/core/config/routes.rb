@@ -262,6 +262,8 @@ Rails.application.routes.draw do
       resources :notification_preferences, param: :event_type, only: [ :index, :update ]
       resources :permissions, only: [ :index, :create, :update, :destroy ]
       resources :guardian_links, only: [ :index, :create, :destroy ]
+      get "students/:student_id/progress", to: "student_progress#show"
+      get "students/:student_id/progress/course/:course_id", to: "student_progress#course_detail"
       resources :schools
       resources :users
 
