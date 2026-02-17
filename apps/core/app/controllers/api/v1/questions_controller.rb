@@ -2,7 +2,7 @@ module Api
   module V1
     class QuestionsController < ApplicationController
       before_action :set_question_bank, only: [ :index, :create ]
-      before_action :set_question, only: [ :show, :update, :destroy ]
+      before_action :set_question, only: [ :show, :update, :destroy, :create_version ]
 
       def index
         questions = policy_scope(Question).where(question_bank: @question_bank)
@@ -41,6 +41,15 @@ module Api
         authorize @question
         @question.destroy!
         head :no_content
+      end
+
+      def create_version
+        authorize @question, :update?
+
+        version = @question.create_version!(created_by: Current.user)
+        render json: version, status: :created
+      rescue ActiveRecord::RecordInvalid => e
+        render json: { errors: e.record.errors.full_messages }, status: :unprocessable_content
       end
 
       private

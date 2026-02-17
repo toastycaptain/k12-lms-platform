@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -332,6 +332,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
     t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
 
+  create_table "guardian_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "guardian_id", null: false
+    t.string "relationship", default: "parent", null: false
+    t.string "status", default: "active", null: false
+    t.bigint "student_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["guardian_id"], name: "index_guardian_links_on_guardian_id"
+    t.index ["student_id"], name: "index_guardian_links_on_student_id"
+    t.index ["tenant_id", "guardian_id", "student_id"], name: "idx_on_tenant_id_guardian_id_student_id_7dc4de2073", unique: true
+    t.index ["tenant_id"], name: "index_guardian_links_on_tenant_id"
+  end
+
   create_table "integration_configs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
@@ -500,6 +514,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "permissions", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.boolean "granted", default: false, null: false
+    t.string "resource", null: false
+    t.bigint "role_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["role_id"], name: "index_permissions_on_role_id"
+    t.index ["tenant_id", "role_id", "resource", "action"], name: "idx_permissions_unique", unique: true
+    t.index ["tenant_id"], name: "index_permissions_on_tenant_id"
+  end
+
   create_table "question_banks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
@@ -517,11 +544,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
     t.index ["tenant_id"], name: "index_question_banks_on_tenant_id"
   end
 
+  create_table "question_versions", force: :cascade do |t|
+    t.jsonb "choices", default: [], null: false
+    t.text "content", null: false
+    t.jsonb "correct_answer"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "explanation"
+    t.jsonb "metadata", default: {}, null: false
+    t.decimal "points", precision: 8, scale: 2, default: "1.0", null: false
+    t.bigint "question_id", null: false
+    t.string "question_type", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", default: 1, null: false
+    t.index ["created_by_id"], name: "index_question_versions_on_created_by_id"
+    t.index ["question_id", "version_number"], name: "index_question_versions_on_question_id_and_version_number", unique: true
+    t.index ["question_id"], name: "index_question_versions_on_question_id"
+    t.index ["tenant_id"], name: "index_question_versions_on_tenant_id"
+  end
+
   create_table "questions", force: :cascade do |t|
     t.jsonb "choices", default: {}
     t.jsonb "correct_answer", default: {}
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
+    t.bigint "current_version_id"
     t.text "explanation"
     t.decimal "points", default: "1.0", null: false
     t.integer "position", default: 0, null: false
@@ -532,6 +581,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_questions_on_created_by_id"
+    t.index ["current_version_id"], name: "index_questions_on_current_version_id"
     t.index ["question_bank_id"], name: "index_questions_on_question_bank_id"
     t.index ["tenant_id"], name: "index_questions_on_tenant_id"
   end
@@ -1004,6 +1054,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
   add_foreign_key "enrollments", "sections"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
+  add_foreign_key "guardian_links", "tenants"
+  add_foreign_key "guardian_links", "users", column: "guardian_id"
+  add_foreign_key "guardian_links", "users", column: "student_id"
   add_foreign_key "integration_configs", "tenants"
   add_foreign_key "integration_configs", "users", column: "created_by_id"
   add_foreign_key "lesson_plans", "lesson_versions", column: "current_version_id"
@@ -1033,9 +1086,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_140000) do
   add_foreign_key "notifications", "tenants"
   add_foreign_key "notifications", "users"
   add_foreign_key "notifications", "users", column: "actor_id"
+  add_foreign_key "permissions", "roles"
+  add_foreign_key "permissions", "tenants"
   add_foreign_key "question_banks", "tenants"
   add_foreign_key "question_banks", "users", column: "created_by_id"
+  add_foreign_key "question_versions", "questions"
+  add_foreign_key "question_versions", "tenants"
+  add_foreign_key "question_versions", "users", column: "created_by_id"
   add_foreign_key "questions", "question_banks"
+  add_foreign_key "questions", "question_versions", column: "current_version_id", on_delete: :nullify
   add_foreign_key "questions", "tenants"
   add_foreign_key "questions", "users", column: "created_by_id"
   add_foreign_key "quiz_accommodations", "quizzes"

@@ -193,7 +193,12 @@ Rails.application.routes.draw do
         end
         resources :questions, only: [ :index, :create ]
       end
-      resources :questions, only: [ :show, :update, :destroy ]
+      resources :questions, only: [ :show, :update, :destroy ] do
+        member do
+          post :create_version
+        end
+        resources :question_versions, only: [ :index, :show, :create ]
+      end
 
       resources :rubrics do
         resources :criteria, controller: "rubric_criteria", only: [ :index, :create ]
@@ -249,6 +254,8 @@ Rails.application.routes.draw do
           patch :read
         end
       end
+      resources :permissions, only: [ :index, :create, :update, :destroy ]
+      resources :guardian_links, only: [ :index, :create, :destroy ]
       resources :schools
       resources :users
 

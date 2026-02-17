@@ -9,6 +9,8 @@ RSpec.describe Question, type: :model do
   describe "associations" do
     it { should belong_to(:question_bank) }
     it { should belong_to(:created_by).class_name("User") }
+    it { should belong_to(:current_version).class_name("QuestionVersion").optional }
+    it { should have_many(:question_versions).dependent(:destroy) }
   end
 
   describe "validations" do
@@ -31,6 +33,18 @@ RSpec.describe Question, type: :model do
       question = build(:question, :essay, tenant: tenant)
 
       expect(question.auto_gradable?).to eq(false)
+    end
+  end
+
+  describe "#create_version!" do
+    it "creates a new version from question attributes and sets current_version" do
+      question = create(:question, tenant: tenant)
+
+      version = question.create_version!(created_by: question.created_by)
+
+      expect(version.version_number).to eq(1)
+      expect(version.content).to eq(question.prompt)
+      expect(question.reload.current_version_id).to eq(version.id)
     end
   end
 

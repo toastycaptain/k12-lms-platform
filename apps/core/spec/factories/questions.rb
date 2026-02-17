@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :question do
     association :tenant
     association :question_bank
-    association :created_by, factory: :user
+    created_by { association :user, tenant: tenant }
     question_type { "multiple_choice" }
     prompt { "What is 2 + 2?" }
     choices { [ { "text" => "3", "key" => "a" }, { "text" => "4", "key" => "b" }, { "text" => "5", "key" => "c" } ] }

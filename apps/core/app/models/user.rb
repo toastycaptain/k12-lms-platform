@@ -12,6 +12,10 @@ class User < ApplicationRecord
   has_many :message_thread_participants, dependent: :destroy
   has_many :message_threads, through: :message_thread_participants
   has_many :sent_messages, class_name: "Message", foreign_key: :sender_id, inverse_of: :sender, dependent: :destroy
+  has_many :guardian_links_as_guardian, class_name: "GuardianLink", foreign_key: :guardian_id, dependent: :destroy
+  has_many :guardian_links_as_student, class_name: "GuardianLink", foreign_key: :student_id, dependent: :destroy
+  has_many :wards, through: :guardian_links_as_guardian, source: :student
+  has_many :guardians, through: :guardian_links_as_student, source: :guardian
 
   validates :email, presence: true, uniqueness: { scope: :tenant_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
