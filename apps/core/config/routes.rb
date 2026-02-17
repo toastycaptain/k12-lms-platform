@@ -20,6 +20,8 @@ Rails.application.routes.draw do
       get "/me", to: "sessions#me"
       patch "/me", to: "sessions#update_me"
       get "/search", to: "search#index"
+      get "/calendar.ics", to: "calendar#ical"
+      get "/calendar", to: "calendar#index"
 
       resources :academic_years do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_academic_year"

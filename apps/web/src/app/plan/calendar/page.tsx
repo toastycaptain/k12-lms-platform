@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, buildApiUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
 
@@ -13,21 +13,21 @@ interface Course {
   name: string;
 }
 
-interface UnitPlan {
+type CalendarEventType = "unit_plan" | "assignment" | "quiz";
+
+interface CalendarEvent {
   id: number;
+  type: CalendarEventType;
   title: string;
   course_id: number;
-  start_date: string | null;
-  end_date: string | null;
-  created_at: string;
+  status: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  due_date?: string | null;
 }
 
-interface Assignment {
-  id: number;
-  title: string;
-  course_id: number;
-  due_at: string | null;
-  due_date?: string | null;
+interface CalendarResponse {
+  events: CalendarEvent[];
 }
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -86,87 +86,120 @@ function formatMonthTitle(date: Date): string {
   return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
+function formatDateParam(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function PlanningCalendarPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const [courses, setCourses] = useState<Course[]>([]);
-  const [units, setUnits] = useState<UnitPlan[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const visibleRange = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    return {
+      start: startOfWeek(monthStart),
+      end: endOfWeek(monthEnd),
+    };
+  }, [currentMonth]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    const query = selectedCourseId ? `?course_id=${selectedCourseId}` : "";
+    const params = new URLSearchParams({
+      start_date: formatDateParam(visibleRange.start),
+      end_date: formatDateParam(visibleRange.end),
+    });
+
+    if (selectedCourseId) {
+      params.set("course_id", selectedCourseId);
+    }
 
     try {
-      const [courseData, unitData, assignmentData] = await Promise.all([
+      const [courseData, calendarData] = await Promise.all([
         apiFetch<Course[]>("/api/v1/courses"),
-        apiFetch<UnitPlan[]>(`/api/v1/unit_plans${query}`),
-        apiFetch<Assignment[]>(`/api/v1/assignments${query}`),
+        apiFetch<CalendarResponse>(`/api/v1/calendar?${params.toString()}`),
       ]);
 
       setCourses(courseData);
-      setUnits(unitData);
-      setAssignments(assignmentData);
+      setEvents(calendarData.events ?? []);
     } catch {
       setError("Unable to load planning calendar data.");
     } finally {
       setLoading(false);
     }
-  }, [selectedCourseId]);
+  }, [selectedCourseId, visibleRange.end, visibleRange.start]);
 
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
 
-  const calendarDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const gridStart = startOfWeek(monthStart);
-    const gridEnd = endOfWeek(monthEnd);
+  const subscribeUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      start_date: formatDateParam(visibleRange.start),
+      end_date: formatDateParam(visibleRange.end),
+    });
 
+    if (selectedCourseId) {
+      params.set("course_id", selectedCourseId);
+    }
+
+    return `${buildApiUrl("/api/v1/calendar.ics")}?${params.toString()}`;
+  }, [selectedCourseId, visibleRange.end, visibleRange.start]);
+
+  const calendarDays = useMemo(() => {
     const days: Date[] = [];
-    let cursor = gridStart;
-    while (cursor <= gridEnd) {
+    let cursor = visibleRange.start;
+
+    while (cursor <= visibleRange.end) {
       days.push(cursor);
       cursor = addDays(cursor, 1);
     }
+
     return days;
-  }, [currentMonth]);
+  }, [visibleRange.end, visibleRange.start]);
 
   const unitsWithRanges = useMemo(() => {
-    return units.map((unit) => {
-      const fallback = toDateOnly(unit.created_at);
-      const startDate = unit.start_date ? toDateOnly(unit.start_date) : fallback;
-      const endDate = unit.end_date ? toDateOnly(unit.end_date) : startDate;
-
-      return {
-        ...unit,
-        startDate,
-        endDate: endDate < startDate ? startDate : endDate,
-        colorClass: UNIT_COLOR_CLASSES[unit.id % UNIT_COLOR_CLASSES.length],
-      };
-    });
-  }, [units]);
-
-  const assignmentDueDates = useMemo(() => {
-    return assignments
-      .map((assignment) => {
-        const dueSource = assignment.due_at || assignment.due_date;
-        if (!dueSource) return null;
+    return events
+      .filter((event) => event.type === "unit_plan")
+      .map((unit) => {
+        const startDate = unit.start_date ? toDateOnly(unit.start_date) : new Date();
+        const endDate = unit.end_date ? toDateOnly(unit.end_date) : startDate;
 
         return {
-          ...assignment,
-          dueDate: toDateOnly(dueSource),
+          ...unit,
+          startDate,
+          endDate: endDate < startDate ? startDate : endDate,
+          colorClass: UNIT_COLOR_CLASSES[unit.id % UNIT_COLOR_CLASSES.length],
+        };
+      });
+  }, [events]);
+
+  const dueEvents = useMemo(() => {
+    return events
+      .filter((event) => event.type === "assignment" || event.type === "quiz")
+      .map((event) => {
+        if (!event.due_date) return null;
+
+        return {
+          ...event,
+          dueDate: toDateOnly(event.due_date),
         };
       })
-      .filter((assignment): assignment is Assignment & { dueDate: Date } => Boolean(assignment));
-  }, [assignments]);
+      .filter((event): event is CalendarEvent & { type: "assignment" | "quiz"; dueDate: Date } =>
+        Boolean(event),
+      );
+  }, [events]);
 
   return (
     <ProtectedRoute requiredRoles={TEACHER_ROLES}>
@@ -178,7 +211,7 @@ export default function PlanningCalendarPage() {
               <p className="text-sm text-gray-500">
                 {user
                   ? `Timeline for ${user.first_name} ${user.last_name}`
-                  : "Timeline for your units and assignments"}
+                  : "Timeline for your units, assignments, and quizzes"}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -194,6 +227,14 @@ export default function PlanningCalendarPage() {
                   </option>
                 ))}
               </select>
+              <a
+                href={subscribeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Subscribe (.ics)
+              </a>
               <button
                 onClick={() => setCurrentMonth(startOfMonth(new Date()))}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -250,9 +291,7 @@ export default function PlanningCalendarPage() {
                     const dayUnits = unitsWithRanges.filter((unit) =>
                       dateInRange(day, unit.startDate, unit.endDate),
                     );
-                    const dayAssignments = assignmentDueDates.filter((assignment) =>
-                      isSameDay(assignment.dueDate, day),
-                    );
+                    const dayDueEvents = dueEvents.filter((event) => isSameDay(event.dueDate, day));
                     const inCurrentMonth = isSameMonth(day, currentMonth);
                     const isToday = isSameDay(day, new Date());
 
@@ -273,19 +312,25 @@ export default function PlanningCalendarPage() {
                           >
                             {day.getDate()}
                           </span>
-                          {dayAssignments.length > 0 && (
+                          {dayDueEvents.length > 0 && (
                             <div className="flex items-center gap-1">
-                              {dayAssignments.slice(0, 4).map((assignment) => (
+                              {dayDueEvents.slice(0, 4).map((event) => (
                                 <button
-                                  key={assignment.id}
+                                  key={`${event.type}-${event.id}`}
                                   type="button"
-                                  title={assignment.title}
+                                  title={`${event.type === "quiz" ? "Quiz" : "Assignment"}: ${event.title}`}
                                   onClick={() =>
                                     router.push(
-                                      `/teach/courses/${assignment.course_id}/assignments/${assignment.id}`,
+                                      event.type === "quiz"
+                                        ? `/teach/courses/${event.course_id}/quizzes/${event.id}`
+                                        : `/teach/courses/${event.course_id}/assignments/${event.id}`,
                                     )
                                   }
-                                  className="h-2.5 w-2.5 rounded-full bg-indigo-500 hover:bg-indigo-600"
+                                  className={`h-2.5 w-2.5 rounded-full ${
+                                    event.type === "quiz"
+                                      ? "bg-emerald-500 hover:bg-emerald-600"
+                                      : "bg-indigo-500 hover:bg-indigo-600"
+                                  }`}
                                 />
                               ))}
                             </div>
@@ -333,6 +378,9 @@ export default function PlanningCalendarPage() {
           <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
             <span className="inline-flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" /> Assignment due date
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Quiz due date
             </span>
             <span>Click a unit bar to open the unit planner.</span>
           </div>
