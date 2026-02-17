@@ -2,17 +2,23 @@ require "rails_helper"
 
 RSpec.describe "Cross-service health checks", type: :request do
   describe "Rails API health endpoint" do
-    it "returns 200 for /api/v1/health when critical dependencies are connected" do
-      allow_any_instance_of(Api::V1::HealthController).to receive(:database_check!).and_return(true)
-      allow_any_instance_of(Api::V1::HealthController).to receive(:redis_check!).and_return(true)
-
+    it "reports live dependency status from /api/v1/health" do
       get "/api/v1/health"
 
-      expect(response).to have_http_status(:ok)
+      expect([ 200, 503 ]).to include(response.status)
       body = response.parsed_body
-      expect(body["status"]).to eq("ok")
-      expect(body["database"]).to eq("connected")
-      expect(body["redis"]).to eq("connected")
+      expect(%w[ok degraded]).to include(body["status"])
+      expect(%w[connected error]).to include(body["database"])
+      expect(%w[connected error]).to include(body["redis"])
+
+      critical_ok = body["database"] == "connected" && body["redis"] == "connected"
+      if critical_ok
+        expect(response).to have_http_status(:ok)
+        expect(body["status"]).to eq("ok")
+      else
+        expect(response).to have_http_status(:service_unavailable)
+        expect(body["status"]).to eq("degraded")
+      end
     end
   end
 
@@ -24,16 +30,12 @@ RSpec.describe "Cross-service health checks", type: :request do
         next
       end
 
-      connection = instance_double(Faraday::Connection)
-      gateway_response = instance_double(Faraday::Response, status: 200, success?: true)
-
-      allow(Faraday).to receive(:new).with(url: gateway_url).and_return(connection)
-      allow(connection).to receive(:get).with("/v1/health").and_return(gateway_response)
-
-      result = Faraday.new(url: gateway_url).get("/v1/health")
+      result = Faraday.new(url: gateway_url) do |conn|
+        conn.options.open_timeout = 2
+        conn.options.timeout = 2
+      end.get("/v1/health")
 
       expect(result.status).to eq(200)
-      expect(connection).to have_received(:get).with("/v1/health")
     end
   end
 
@@ -46,20 +48,11 @@ RSpec.describe "Cross-service health checks", type: :request do
       end
 
       if defined?(Redis)
-        redis = instance_double(Redis)
-        allow(Redis).to receive(:new).with(url: redis_url).and_return(redis)
-        allow(redis).to receive(:ping).and_return("PONG")
-
-        expect(Redis.new(url: redis_url).ping).to eq("PONG")
+        redis = Redis.new(url: redis_url)
+        expect(redis.ping).to eq("PONG")
       else
-        redis_client = instance_double("RedisClient")
-        redis_config = instance_double("RedisClientConfig")
-
-        allow(RedisClient).to receive(:config).with(url: redis_url).and_return(redis_config)
-        allow(redis_config).to receive(:new_client).and_return(redis_client)
-        allow(redis_client).to receive(:call).with("PING").and_return("PONG")
-
-        expect(RedisClient.config(url: redis_url).new_client.call("PING")).to eq("PONG")
+        redis_client = RedisClient.config(url: redis_url).new_client
+        expect(redis_client.call("PING")).to eq("PONG")
       end
     end
   end

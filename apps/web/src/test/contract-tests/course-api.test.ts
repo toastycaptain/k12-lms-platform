@@ -47,7 +47,9 @@ describe("Course API Contract", () => {
       },
     ];
 
-    expect(Array.isArray(payload)).toBe(true);
+    if (!Array.isArray(payload)) {
+      throw new Error("Expected an array payload for GET /api/v1/courses");
+    }
     payload.forEach(expectCourseShape);
   });
 

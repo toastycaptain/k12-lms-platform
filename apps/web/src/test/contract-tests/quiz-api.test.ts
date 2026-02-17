@@ -91,7 +91,9 @@ describe("Quiz API Contract", () => {
       },
     ];
 
-    expect(Array.isArray(answersPayload)).toBe(true);
+    if (!Array.isArray(answersPayload)) {
+      throw new Error("Expected an array payload for quiz attempt answers");
+    }
     answersPayload.forEach(expectAttemptAnswerShape);
   });
 });
