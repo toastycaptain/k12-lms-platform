@@ -37,6 +37,35 @@ RSpec.describe CoursePolicy, type: :policy do
     end
   end
 
+  permissions :gradebook?, :gradebook_export? do
+    let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+
+    it "permits admin users" do
+      admin = create(:user, tenant: tenant)
+      admin.add_role(:admin)
+
+      expect(policy).to permit(admin, course)
+    end
+
+    it "permits enrolled teachers" do
+      teacher = create(:user, tenant: tenant)
+      teacher.add_role(:teacher)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+
+      expect(policy).to permit(teacher, course)
+    end
+
+    it "denies enrolled students" do
+      student = create(:user, tenant: tenant)
+      student.add_role(:student)
+      section = create(:section, tenant: tenant, course: course, term: term)
+      create(:enrollment, tenant: tenant, user: student, section: section, role: "student")
+
+      expect(policy).not_to permit(student, course)
+    end
+  end
+
   describe "Scope" do
     let!(:course_a) { create(:course, tenant: tenant, academic_year: academic_year) }
     let!(:course_b) { create(:course, tenant: tenant, academic_year: academic_year) }

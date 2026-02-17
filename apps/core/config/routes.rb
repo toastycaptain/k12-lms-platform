@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       resources :courses do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_course"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
+        get "gradebook/export", on: :member, controller: "gradebook", action: "export"
         get :quiz_performance, on: :member, controller: "quiz_analytics", action: "course_summary"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :course_modules, controller: "course_modules", only: [ :index ]

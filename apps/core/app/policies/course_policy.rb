@@ -9,6 +9,14 @@ class CoursePolicy < ApplicationPolicy
     privileged_user? || enrolled_course_ids.include?(record.id)
   end
 
+  def gradebook?
+    privileged_user? || teacher_course_ids.include?(record.id)
+  end
+
+  def gradebook_export?
+    gradebook?
+  end
+
   def create?
     user.has_role?(:admin) || user.has_role?(:curriculum_lead)
   end
@@ -34,6 +42,13 @@ class CoursePolicy < ApplicationPolicy
   def enrolled_course_ids
     @enrolled_course_ids ||= Enrollment.joins(:section)
       .where(user_id: user.id)
+      .distinct
+      .pluck("sections.course_id")
+  end
+
+  def teacher_course_ids
+    @teacher_course_ids ||= Enrollment.joins(:section)
+      .where(user_id: user.id, role: "teacher")
       .distinct
       .pluck("sections.course_id")
   end

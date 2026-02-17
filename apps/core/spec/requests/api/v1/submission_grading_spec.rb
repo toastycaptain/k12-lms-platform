@@ -121,9 +121,11 @@ RSpec.describe "Api::V1::SubmissionGrading", type: :request do
 
       get "/api/v1/courses/#{course.id}/gradebook"
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.length).to eq(1)
-      expect(response.parsed_body.first["user_id"]).to eq(student.id)
-      expect(response.parsed_body.first["grade"]).to eq("85.0")
+      body = response.parsed_body
+      expect(body.keys).to include("students", "assignments", "course_summary")
+      expect(body["students"].length).to eq(1)
+      expect(body["students"].first["id"]).to eq(student.id)
+      expect(body["students"].first["grades"].first["grade"]).to eq(85.0)
     end
   end
 end
