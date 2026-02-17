@@ -11,6 +11,7 @@ import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
 import { parseUnitOutput, type UnitPlanOutput } from "@/lib/ai-output-parser";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { FormField, TextArea, TextInput } from "@/components/forms";
 
 interface UnitPlan {
   id: number;
@@ -427,47 +428,54 @@ export default function UnitPlannerPage() {
             )}
 
             {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
+            <FormField label="Title" htmlFor="unit-title">
+              <TextInput
+                id="unit-title"
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(event) => setTitle(event.target.value)}
                 disabled={!isEditable}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                className="disabled:bg-gray-50"
               />
-            </div>
+            </FormField>
 
             {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
+            <FormField label="Description" htmlFor="unit-description">
+              <TextArea
+                id="unit-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(event) => setDescription(event.target.value)}
                 disabled={!isEditable}
                 rows={4}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                className="disabled:bg-gray-50"
               />
-            </div>
+            </FormField>
 
             {/* Essential Questions */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Essential Questions</label>
+              <p className="block text-sm font-medium text-gray-700">Essential Questions</p>
               <div className="mt-1 space-y-2">
                 {essentialQuestions.map((q, i) => (
                   <div key={i} className="flex gap-2">
-                    <input
+                    <TextInput
+                      id={`unit-essential-question-${i}`}
                       type="text"
                       value={q}
-                      onChange={(e) =>
-                        updateListItem(essentialQuestions, setEssentialQuestions, i, e.target.value)
+                      onChange={(event) =>
+                        updateListItem(
+                          essentialQuestions,
+                          setEssentialQuestions,
+                          i,
+                          event.target.value,
+                        )
                       }
                       disabled={!isEditable}
                       placeholder={`Question ${i + 1}`}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                      className="disabled:bg-gray-50"
                     />
                     {isEditable && essentialQuestions.length > 1 && (
                       <button
+                        type="button"
                         onClick={() => removeListItem(essentialQuestions, setEssentialQuestions, i)}
                         className="text-sm text-red-500 hover:text-red-700"
                       >
@@ -478,6 +486,7 @@ export default function UnitPlannerPage() {
                 ))}
                 {isEditable && (
                   <button
+                    type="button"
                     onClick={() => addListItem(essentialQuestions, setEssentialQuestions)}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
@@ -489,29 +498,29 @@ export default function UnitPlannerPage() {
 
             {/* Enduring Understandings */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Enduring Understandings
-              </label>
+              <p className="block text-sm font-medium text-gray-700">Enduring Understandings</p>
               <div className="mt-1 space-y-2">
                 {enduringUnderstandings.map((u, i) => (
                   <div key={i} className="flex gap-2">
-                    <input
+                    <TextInput
+                      id={`unit-enduring-understanding-${i}`}
                       type="text"
                       value={u}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         updateListItem(
                           enduringUnderstandings,
                           setEnduringUnderstandings,
                           i,
-                          e.target.value,
+                          event.target.value,
                         )
                       }
                       disabled={!isEditable}
                       placeholder={`Understanding ${i + 1}`}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                      className="disabled:bg-gray-50"
                     />
                     {isEditable && enduringUnderstandings.length > 1 && (
                       <button
+                        type="button"
                         onClick={() =>
                           removeListItem(enduringUnderstandings, setEnduringUnderstandings, i)
                         }
@@ -524,6 +533,7 @@ export default function UnitPlannerPage() {
                 ))}
                 {isEditable && (
                   <button
+                    type="button"
                     onClick={() => addListItem(enduringUnderstandings, setEnduringUnderstandings)}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
@@ -534,15 +544,16 @@ export default function UnitPlannerPage() {
             </div>
 
             {/* Standards Alignment */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Standards Alignment</label>
-              <input
-                type="text"
-                placeholder="Search standards by code or description..."
-                value={standardSearch}
-                onChange={(e) => setStandardSearch(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+            <div className="space-y-1.5">
+              <FormField label="Standards Alignment" htmlFor="standards-search">
+                <TextInput
+                  id="standards-search"
+                  type="text"
+                  placeholder="Search standards by code or description..."
+                  value={standardSearch}
+                  onChange={(event) => setStandardSearch(event.target.value)}
+                />
+              </FormField>
               {filteredStandards.length > 0 && (
                 <ul className="mt-2 max-h-40 overflow-auto rounded-md border border-gray-200 bg-white">
                   {filteredStandards.slice(0, 10).map((std) => (
@@ -583,6 +594,7 @@ export default function UnitPlannerPage() {
                     >
                       {std.code}
                       <button
+                        type="button"
                         onClick={async () => {
                           if (currentVersion) {
                             try {

@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
+import { FormActions, FormField, Select, TextInput } from "@/components/forms";
 
 interface UserRow {
   id: number;
@@ -53,6 +54,8 @@ export default function UsersAndRolesPage() {
     () => configs.some((row) => row.provider === "oneroster" && row.status === "active"),
     [configs],
   );
+  const userFormInvalid =
+    !form.email.trim() || !form.first_name.trim() || !form.last_name.trim() || !form.role.trim();
 
   useEffect(() => {
     async function fetchData() {
@@ -166,18 +169,22 @@ export default function UsersAndRolesPage() {
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-lg font-semibold text-gray-900">User Directory</h2>
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="rounded border border-gray-300 px-2 py-1.5 text-sm"
-                  >
-                    <option value="">All Roles</option>
-                    {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full sm:w-52">
+                    <FormField label="Filter by Role" htmlFor="role-filter">
+                      <Select
+                        id="role-filter"
+                        value={roleFilter}
+                        onChange={(event) => setRoleFilter(event.target.value)}
+                      >
+                        <option value="">All Roles</option>
+                        {ROLE_OPTIONS.map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  </div>
                 </div>
 
                 <div className="mt-3 space-y-2">
@@ -235,45 +242,74 @@ export default function UsersAndRolesPage() {
                   </button>
                 </div>
 
-                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  <input
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                    placeholder="Email"
-                    className="rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={form.first_name}
-                    onChange={(e) => setForm((prev) => ({ ...prev, first_name: e.target.value }))}
-                    placeholder="First name"
-                    className="rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={form.last_name}
-                    onChange={(e) => setForm((prev) => ({ ...prev, last_name: e.target.value }))}
-                    placeholder="Last name"
-                    className="rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
-                  <select
-                    value={form.role}
-                    onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}
-                    className="rounded border border-gray-300 px-3 py-2 text-sm"
-                  >
-                    {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  onClick={() => void saveUser()}
-                  disabled={!isAdmin}
-                  className="mt-3 rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void saveUser();
+                  }}
+                  className="mt-3 space-y-3"
                 >
-                  {form.id ? "Update User" : "Create User"}
-                </button>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <FormField label="Email" htmlFor="user-email" required>
+                      <TextInput
+                        id="user-email"
+                        type="email"
+                        value={form.email}
+                        onChange={(event) =>
+                          setForm((previous) => ({ ...previous, email: event.target.value }))
+                        }
+                        placeholder="Email"
+                        required
+                      />
+                    </FormField>
+
+                    <FormField label="First Name" htmlFor="user-first-name" required>
+                      <TextInput
+                        id="user-first-name"
+                        value={form.first_name}
+                        onChange={(event) =>
+                          setForm((previous) => ({ ...previous, first_name: event.target.value }))
+                        }
+                        placeholder="First name"
+                        required
+                      />
+                    </FormField>
+
+                    <FormField label="Last Name" htmlFor="user-last-name" required>
+                      <TextInput
+                        id="user-last-name"
+                        value={form.last_name}
+                        onChange={(event) =>
+                          setForm((previous) => ({ ...previous, last_name: event.target.value }))
+                        }
+                        placeholder="Last name"
+                        required
+                      />
+                    </FormField>
+
+                    <FormField label="Role" htmlFor="user-role" required>
+                      <Select
+                        id="user-role"
+                        value={form.role}
+                        onChange={(event) =>
+                          setForm((previous) => ({ ...previous, role: event.target.value }))
+                        }
+                        required
+                      >
+                        {ROLE_OPTIONS.map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  </div>
+
+                  <FormActions
+                    submitLabel={form.id ? "Update User" : "Create User"}
+                    submitDisabled={!isAdmin || userFormInvalid}
+                  />
+                </form>
               </section>
 
               <section className="rounded-lg border border-gray-200 bg-white p-5">

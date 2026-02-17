@@ -9,6 +9,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { announce } from "@/components/LiveRegion";
 import { useToast } from "@/components/Toast";
+import { FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
 
 interface UserSearchRow {
   id: number;
@@ -121,6 +122,15 @@ export default function ComposeMessagePage() {
     }
   }
 
+  const showValidationErrors = Boolean(validationError);
+  const subjectError = showValidationErrors && !subject.trim() ? "Subject is required." : undefined;
+  const recipientError =
+    showValidationErrors && selectedRecipients.length === 0
+      ? "At least one recipient is required."
+      : undefined;
+  const messageError =
+    showValidationErrors && !messageBody.trim() ? "Message is required." : undefined;
+
   return (
     <ProtectedRoute>
       <AppShell>
@@ -147,68 +157,45 @@ export default function ComposeMessagePage() {
             className="space-y-4 rounded-lg border border-gray-200 bg-white p-5"
           >
             <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="compose-subject"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Subject
-                </label>
-                <input
+              <FormField label="Subject" htmlFor="compose-subject" required error={subjectError}>
+                <TextInput
                   id="compose-subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
-                  required
-                  aria-required="true"
-                  aria-invalid={Boolean(validationError && !subject.trim())}
-                  aria-describedby={
-                    validationError && !subject.trim() ? "compose-form-error" : undefined
-                  }
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   placeholder="Enter subject"
+                  required
+                  error={Boolean(subjectError)}
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label
-                  htmlFor="compose-thread-type"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Thread Type
-                </label>
-                <select
+              <FormField label="Thread Type" htmlFor="compose-thread-type">
+                <Select
                   id="compose-thread-type"
                   value={threadType}
                   onChange={(event) => setThreadType(event.target.value)}
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 >
                   <option value="direct">direct</option>
                   <option value="course">course</option>
                   <option value="group">group</option>
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
 
-            <div>
-              <label
+            <div className="space-y-2">
+              <FormField
+                label="Recipients"
                 htmlFor="compose-recipients-search"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                required
+                error={recipientError}
               >
-                Recipients
-              </label>
-              <input
-                id="compose-recipients-search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                aria-invalid={Boolean(validationError && selectedRecipients.length === 0)}
-                aria-describedby={
-                  validationError && selectedRecipients.length === 0
-                    ? "compose-form-error"
-                    : undefined
-                }
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Search users by name"
-              />
+                <TextInput
+                  id="compose-recipients-search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search users by name"
+                  error={Boolean(recipientError)}
+                />
+              </FormField>
 
               {searchLoading && <p className="mt-1 text-xs text-gray-500">Searching...</p>}
 
@@ -246,38 +233,26 @@ export default function ComposeMessagePage() {
               )}
             </div>
 
-            <div>
-              <label
-                htmlFor="compose-message-body"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
-                Message
-              </label>
-              <textarea
+            <FormField label="Message" htmlFor="compose-message-body" required error={messageError}>
+              <TextArea
                 id="compose-message-body"
                 value={messageBody}
                 onChange={(event) => setMessageBody(event.target.value)}
                 rows={6}
                 required
-                aria-required="true"
-                aria-invalid={Boolean(validationError && !messageBody.trim())}
-                aria-describedby={
-                  validationError && !messageBody.trim() ? "compose-form-error" : undefined
-                }
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 placeholder="Write your message"
+                error={Boolean(messageError)}
               />
-            </div>
+            </FormField>
 
-            <button
-              type="submit"
-              disabled={
-                sending || !subject.trim() || !messageBody.trim() || selectedRecipients.length === 0
+            <FormActions
+              submitLabel="Send"
+              submittingLabel="Sending..."
+              submitting={sending}
+              submitDisabled={
+                !subject.trim() || !messageBody.trim() || selectedRecipients.length === 0
               }
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {sending ? "Sending..." : "Send"}
-            </button>
+            />
           </form>
         </div>
       </AppShell>

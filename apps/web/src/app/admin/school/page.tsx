@@ -7,6 +7,7 @@ import { useToast } from "@/components/Toast";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { Checkbox, FormActions, FormField, Select, TextInput } from "@/components/forms";
 
 interface SchoolRow {
   id: number;
@@ -299,37 +300,56 @@ export default function SchoolSetupPage() {
                     )}
                   </div>
 
-                  <div className="space-y-2 rounded border border-gray-200 p-3">
-                    <input
-                      value={schoolForm.name}
-                      onChange={(e) => setSchoolForm((prev) => ({ ...prev, name: e.target.value }))}
-                      placeholder="School name"
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void saveSchool();
+                    }}
+                    className="space-y-3 rounded border border-gray-200 p-3"
+                  >
+                    <FormField label="School Name" htmlFor="school-name" required>
+                      <TextInput
+                        id="school-name"
+                        value={schoolForm.name}
+                        onChange={(event) =>
+                          setSchoolForm((previous) => ({ ...previous, name: event.target.value }))
+                        }
+                        placeholder="School name"
+                        required
+                      />
+                    </FormField>
+                    <FormField label="Address" htmlFor="school-address">
+                      <TextInput
+                        id="school-address"
+                        value={schoolForm.address}
+                        onChange={(event) =>
+                          setSchoolForm((previous) => ({
+                            ...previous,
+                            address: event.target.value,
+                          }))
+                        }
+                        placeholder="Address"
+                      />
+                    </FormField>
+                    <FormField label="Timezone" htmlFor="school-timezone" required>
+                      <TextInput
+                        id="school-timezone"
+                        value={schoolForm.timezone}
+                        onChange={(event) =>
+                          setSchoolForm((previous) => ({
+                            ...previous,
+                            timezone: event.target.value,
+                          }))
+                        }
+                        placeholder="Timezone"
+                        required
+                      />
+                    </FormField>
+                    <FormActions
+                      submitLabel={schoolForm.id ? "Update School" : "Create School"}
+                      submitDisabled={!isAdmin || !schoolForm.name.trim()}
                     />
-                    <input
-                      value={schoolForm.address}
-                      onChange={(e) =>
-                        setSchoolForm((prev) => ({ ...prev, address: e.target.value }))
-                      }
-                      placeholder="Address"
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      value={schoolForm.timezone}
-                      onChange={(e) =>
-                        setSchoolForm((prev) => ({ ...prev, timezone: e.target.value }))
-                      }
-                      placeholder="Timezone"
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <button
-                      onClick={() => void saveSchool()}
-                      disabled={!isAdmin}
-                      className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {schoolForm.id ? "Update School" : "Create School"}
-                    </button>
-                  </div>
+                  </form>
                 </div>
               </section>
 
@@ -358,47 +378,67 @@ export default function SchoolSetupPage() {
                       </button>
                     ))}
                   </div>
-                  <div className="space-y-2 rounded border border-gray-200 p-3">
-                    <input
-                      value={yearForm.name}
-                      onChange={(e) => setYearForm((prev) => ({ ...prev, name: e.target.value }))}
-                      placeholder="Academic year name"
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      type="date"
-                      value={yearForm.start_date}
-                      onChange={(e) =>
-                        setYearForm((prev) => ({ ...prev, start_date: e.target.value }))
-                      }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      type="date"
-                      value={yearForm.end_date}
-                      onChange={(e) =>
-                        setYearForm((prev) => ({ ...prev, end_date: e.target.value }))
-                      }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={yearForm.current}
-                        onChange={(e) =>
-                          setYearForm((prev) => ({ ...prev, current: e.target.checked }))
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void saveAcademicYear();
+                    }}
+                    className="space-y-3 rounded border border-gray-200 p-3"
+                  >
+                    <FormField label="Academic Year Name" htmlFor="academic-year-name" required>
+                      <TextInput
+                        id="academic-year-name"
+                        value={yearForm.name}
+                        onChange={(event) =>
+                          setYearForm((previous) => ({ ...previous, name: event.target.value }))
                         }
+                        placeholder="Academic year name"
+                        required
                       />
-                      Current year
-                    </label>
-                    <button
-                      onClick={() => void saveAcademicYear()}
-                      disabled={!isAdmin}
-                      className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {yearForm.id ? "Update Academic Year" : "Create Academic Year"}
-                    </button>
-                  </div>
+                    </FormField>
+                    <FormField label="Start Date" htmlFor="academic-year-start-date" required>
+                      <TextInput
+                        id="academic-year-start-date"
+                        type="date"
+                        value={yearForm.start_date}
+                        onChange={(event) =>
+                          setYearForm((previous) => ({
+                            ...previous,
+                            start_date: event.target.value,
+                          }))
+                        }
+                        required
+                      />
+                    </FormField>
+                    <FormField label="End Date" htmlFor="academic-year-end-date" required>
+                      <TextInput
+                        id="academic-year-end-date"
+                        type="date"
+                        value={yearForm.end_date}
+                        onChange={(event) =>
+                          setYearForm((previous) => ({ ...previous, end_date: event.target.value }))
+                        }
+                        required
+                      />
+                    </FormField>
+                    <Checkbox
+                      id="academic-year-current"
+                      label="Current year"
+                      checked={yearForm.current}
+                      onChange={(event) =>
+                        setYearForm((previous) => ({ ...previous, current: event.target.checked }))
+                      }
+                    />
+                    <FormActions
+                      submitLabel={yearForm.id ? "Update Academic Year" : "Create Academic Year"}
+                      submitDisabled={
+                        !isAdmin ||
+                        !yearForm.name.trim() ||
+                        !yearForm.start_date ||
+                        !yearForm.end_date
+                      }
+                    />
+                  </form>
                 </div>
               </section>
 
@@ -428,51 +468,80 @@ export default function SchoolSetupPage() {
                     ))}
                   </div>
 
-                  <div className="space-y-2 rounded border border-gray-200 p-3">
-                    <select
-                      value={termForm.academic_year_id}
-                      onChange={(e) =>
-                        setTermForm((prev) => ({ ...prev, academic_year_id: e.target.value }))
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void saveTerm();
+                    }}
+                    className="space-y-3 rounded border border-gray-200 p-3"
+                  >
+                    <FormField label="Academic Year" htmlFor="term-academic-year" required>
+                      <Select
+                        id="term-academic-year"
+                        value={termForm.academic_year_id}
+                        onChange={(event) =>
+                          setTermForm((previous) => ({
+                            ...previous,
+                            academic_year_id: event.target.value,
+                          }))
+                        }
+                        required
+                      >
+                        <option value="">Select academic year</option>
+                        {academicYears.map((year) => (
+                          <option key={year.id} value={year.id}>
+                            {year.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                    <FormField label="Term Name" htmlFor="term-name" required>
+                      <TextInput
+                        id="term-name"
+                        value={termForm.name}
+                        onChange={(event) =>
+                          setTermForm((previous) => ({ ...previous, name: event.target.value }))
+                        }
+                        placeholder="Term name"
+                        required
+                      />
+                    </FormField>
+                    <FormField label="Start Date" htmlFor="term-start-date" required>
+                      <TextInput
+                        id="term-start-date"
+                        type="date"
+                        value={termForm.start_date}
+                        onChange={(event) =>
+                          setTermForm((previous) => ({
+                            ...previous,
+                            start_date: event.target.value,
+                          }))
+                        }
+                        required
+                      />
+                    </FormField>
+                    <FormField label="End Date" htmlFor="term-end-date" required>
+                      <TextInput
+                        id="term-end-date"
+                        type="date"
+                        value={termForm.end_date}
+                        onChange={(event) =>
+                          setTermForm((previous) => ({ ...previous, end_date: event.target.value }))
+                        }
+                        required
+                      />
+                    </FormField>
+                    <FormActions
+                      submitLabel={termForm.id ? "Update Term" : "Create Term"}
+                      submitDisabled={
+                        !isAdmin ||
+                        !termForm.academic_year_id ||
+                        !termForm.name.trim() ||
+                        !termForm.start_date ||
+                        !termForm.end_date
                       }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    >
-                      <option value="">Select academic year</option>
-                      {academicYears.map((year) => (
-                        <option key={year.id} value={year.id}>
-                          {year.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      value={termForm.name}
-                      onChange={(e) => setTermForm((prev) => ({ ...prev, name: e.target.value }))}
-                      placeholder="Term name"
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                     />
-                    <input
-                      type="date"
-                      value={termForm.start_date}
-                      onChange={(e) =>
-                        setTermForm((prev) => ({ ...prev, start_date: e.target.value }))
-                      }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <input
-                      type="date"
-                      value={termForm.end_date}
-                      onChange={(e) =>
-                        setTermForm((prev) => ({ ...prev, end_date: e.target.value }))
-                      }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                    />
-                    <button
-                      onClick={() => void saveTerm()}
-                      disabled={!isAdmin}
-                      className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {termForm.id ? "Update Term" : "Create Term"}
-                    </button>
-                  </div>
+                  </form>
                 </div>
               </section>
             </>

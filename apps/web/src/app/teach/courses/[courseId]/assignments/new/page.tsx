@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
 
 export default function NewAssignmentPage() {
   const params = useParams();
@@ -22,20 +23,17 @@ export default function NewAssignmentPage() {
   async function handleCreate() {
     setSaving(true);
     try {
-      const assignment = await apiFetch<{ id: number }>(
-        `/api/v1/courses/${courseId}/assignments`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            title,
-            description,
-            instructions,
-            assignment_type: assignmentType,
-            points_possible: pointsPossible ? Number(pointsPossible) : null,
-            due_at: dueAt || null,
-          }),
-        },
-      );
+      const assignment = await apiFetch<{ id: number }>(`/api/v1/courses/${courseId}/assignments`, {
+        method: "POST",
+        body: JSON.stringify({
+          title,
+          description,
+          instructions,
+          assignment_type: assignmentType,
+          points_possible: pointsPossible ? Number(pointsPossible) : null,
+          due_at: dueAt || null,
+        }),
+      });
       router.push(`/teach/courses/${courseId}/assignments/${assignment.id}`);
     } catch {
       // handle error
@@ -58,84 +56,82 @@ export default function NewAssignmentPage() {
             <h1 className="mt-1 text-2xl font-bold text-gray-900">New Assignment</h1>
           </div>
 
-          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreate();
+            }}
+            className="space-y-4 rounded-lg border border-gray-200 bg-white p-6"
+          >
+            <FormField label="Title" htmlFor="assignment-title" required>
+              <TextInput
+                id="assignment-title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                onChange={(event) => setTitle(event.target.value)}
+                required
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Type</label>
-              <select
+            </FormField>
+
+            <FormField label="Type" htmlFor="assignment-type" required>
+              <Select
+                id="assignment-type"
                 value={assignmentType}
-                onChange={(e) => setAssignmentType(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                onChange={(event) => setAssignmentType(event.target.value)}
+                required
               >
                 <option value="written">Written</option>
                 <option value="file_upload">File Upload</option>
                 <option value="url">URL</option>
                 <option value="discussion">Discussion</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
+              </Select>
+            </FormField>
+
+            <FormField label="Description" htmlFor="assignment-description">
+              <TextArea
+                id="assignment-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(event) => setDescription(event.target.value)}
                 rows={3}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Instructions</label>
-              <textarea
+            </FormField>
+
+            <FormField label="Instructions" htmlFor="assignment-instructions">
+              <TextArea
+                id="assignment-instructions"
                 value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
+                onChange={(event) => setInstructions(event.target.value)}
                 rows={3}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
-            </div>
+            </FormField>
+
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Points Possible</label>
-                <input
+              <FormField label="Points Possible" htmlFor="assignment-points">
+                <TextInput
+                  id="assignment-points"
                   type="number"
                   value={pointsPossible}
-                  onChange={(e) => setPointsPossible(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  onChange={(event) => setPointsPossible(event.target.value)}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Due Date</label>
-                <input
+              </FormField>
+
+              <FormField label="Due Date" htmlFor="assignment-due-at">
+                <TextInput
+                  id="assignment-due-at"
                   type="datetime-local"
                   value={dueAt}
-                  onChange={(e) => setDueAt(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  onChange={(event) => setDueAt(event.target.value)}
                 />
-              </div>
+              </FormField>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={handleCreate}
-                disabled={saving || !title}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {saving ? "Creating..." : "Create Assignment"}
-              </button>
-              <button
-                onClick={() => router.push(`/teach/courses/${courseId}`)}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+            <FormActions
+              submitLabel="Create Assignment"
+              submittingLabel="Creating..."
+              submitting={saving}
+              submitDisabled={!title.trim()}
+              onCancel={() => router.push(`/teach/courses/${courseId}`)}
+            />
+          </form>
         </div>
       </AppShell>
     </ProtectedRoute>

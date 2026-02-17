@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { Checkbox, FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
 
 interface IntegrationConfig {
   id: number;
@@ -297,214 +298,175 @@ export default function SamlIntegrationPage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
+          <section className="rounded-lg border border-gray-200 bg-white p-5">
             <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="issuer" className="mb-1 block text-sm font-medium text-gray-700">
-                  Issuer / Entity ID
-                </label>
-                <input
-                  id="issuer"
-                  type="text"
-                  value={form.issuer}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, issuer: event.target.value }))
-                  }
-                  placeholder="Issuer / Entity ID"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveConfig();
+              }}
+              noValidate
+              className="mt-4 space-y-4"
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <FormField label="Issuer / Entity ID" htmlFor="issuer">
+                    <TextInput
+                      id="issuer"
+                      type="text"
+                      value={form.issuer}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, issuer: event.target.value }))
+                      }
+                      placeholder="Issuer / Entity ID"
+                    />
+                  </FormField>
+                </div>
+                <div className="sm:col-span-2">
+                  <FormField label="IdP SSO URL" htmlFor="idp_sso_url" required>
+                    <TextInput
+                      id="idp_sso_url"
+                      type="text"
+                      value={form.idp_sso_url}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, idp_sso_url: event.target.value }))
+                      }
+                      placeholder="IdP SSO URL (required)"
+                      required
+                    />
+                  </FormField>
+                </div>
+                <div className="sm:col-span-2">
+                  <FormField label="IdP SLO URL" htmlFor="idp_slo_url">
+                    <TextInput
+                      id="idp_slo_url"
+                      type="text"
+                      value={form.idp_slo_url}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, idp_slo_url: event.target.value }))
+                      }
+                      placeholder="IdP SLO URL (optional)"
+                    />
+                  </FormField>
+                </div>
+                <div className="sm:col-span-2">
+                  <FormField label="IdP Certificate" htmlFor="idp_cert">
+                    <TextArea
+                      id="idp_cert"
+                      value={form.idp_cert}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, idp_cert: event.target.value }))
+                      }
+                      rows={4}
+                      placeholder="IdP Certificate (PEM)"
+                    />
+                  </FormField>
+                </div>
+                <div className="sm:col-span-2">
+                  <FormField label="Certificate Fingerprint" htmlFor="idp_cert_fingerprint">
+                    <TextInput
+                      id="idp_cert_fingerprint"
+                      type="text"
+                      value={form.idp_cert_fingerprint}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          idp_cert_fingerprint: event.target.value,
+                        }))
+                      }
+                      placeholder="Certificate Fingerprint"
+                    />
+                  </FormField>
+                </div>
+                <div className="sm:col-span-2">
+                  <FormField label="Name ID Format" htmlFor="name_id_format">
+                    <Select
+                      id="name_id_format"
+                      value={form.name_id_format}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, name_id_format: event.target.value }))
+                      }
+                    >
+                      {NAME_ID_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormField>
+                </div>
               </div>
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="idp_sso_url"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  IdP SSO URL
-                </label>
-                <input
-                  id="idp_sso_url"
-                  type="text"
-                  value={form.idp_sso_url}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, idp_sso_url: event.target.value }))
-                  }
-                  placeholder="IdP SSO URL (required)"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="idp_slo_url"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  IdP SLO URL
-                </label>
-                <input
-                  id="idp_slo_url"
-                  type="text"
-                  value={form.idp_slo_url}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, idp_slo_url: event.target.value }))
-                  }
-                  placeholder="IdP SLO URL (optional)"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="idp_cert" className="mb-1 block text-sm font-medium text-gray-700">
-                  IdP Certificate
-                </label>
-                <textarea
-                  id="idp_cert"
-                  value={form.idp_cert}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, idp_cert: event.target.value }))
-                  }
-                  rows={4}
-                  placeholder="IdP Certificate (PEM)"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="idp_cert_fingerprint"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Certificate Fingerprint
-                </label>
-                <input
-                  id="idp_cert_fingerprint"
-                  type="text"
-                  value={form.idp_cert_fingerprint}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, idp_cert_fingerprint: event.target.value }))
-                  }
-                  placeholder="Certificate Fingerprint"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="name_id_format"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Name ID Format
-                </label>
-                <select
-                  id="name_id_format"
-                  value={form.name_id_format}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, name_id_format: event.target.value }))
-                  }
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                >
-                  {NAME_ID_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            <div className="space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
-              <h3 className="text-sm font-semibold text-gray-900">Attribute Mapping</h3>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <label
-                    htmlFor="email_attr"
-                    className="mb-1 block text-sm font-medium text-gray-700"
-                  >
-                    Email Attribute
-                  </label>
-                  <input
-                    id="email_attr"
-                    type="text"
-                    value={form.email_attr}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, email_attr: event.target.value }))
-                    }
-                    placeholder="Email attribute"
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="first_name_attr"
-                    className="mb-1 block text-sm font-medium text-gray-700"
-                  >
-                    First Name Attribute
-                  </label>
-                  <input
-                    id="first_name_attr"
-                    type="text"
-                    value={form.first_name_attr}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, first_name_attr: event.target.value }))
-                    }
-                    placeholder="First name attribute"
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="last_name_attr"
-                    className="mb-1 block text-sm font-medium text-gray-700"
-                  >
-                    Last Name Attribute
-                  </label>
-                  <input
-                    id="last_name_attr"
-                    type="text"
-                    value={form.last_name_attr}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, last_name_attr: event.target.value }))
-                    }
-                    placeholder="Last name attribute"
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                  />
+              <div className="space-y-3 rounded border border-gray-200 bg-gray-50 p-3">
+                <h3 className="text-sm font-semibold text-gray-900">Attribute Mapping</h3>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <FormField label="Email Attribute" htmlFor="email_attr">
+                    <TextInput
+                      id="email_attr"
+                      type="text"
+                      value={form.email_attr}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, email_attr: event.target.value }))
+                      }
+                      placeholder="Email attribute"
+                    />
+                  </FormField>
+                  <FormField label="First Name Attribute" htmlFor="first_name_attr">
+                    <TextInput
+                      id="first_name_attr"
+                      type="text"
+                      value={form.first_name_attr}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, first_name_attr: event.target.value }))
+                      }
+                      placeholder="First name attribute"
+                    />
+                  </FormField>
+                  <FormField label="Last Name Attribute" htmlFor="last_name_attr">
+                    <TextInput
+                      id="last_name_attr"
+                      type="text"
+                      value={form.last_name_attr}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, last_name_attr: event.target.value }))
+                      }
+                      placeholder="Last name attribute"
+                    />
+                  </FormField>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
+              <div className="space-y-3 rounded border border-gray-200 bg-gray-50 p-3">
+                <Checkbox
+                  id="auto_provision"
+                  label="Auto-provision users"
                   checked={form.auto_provision}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, auto_provision: event.target.checked }))
                   }
                 />
-                Auto-provision users
-              </label>
 
-              <select
-                value={form.default_role}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    default_role: event.target.value as "student" | "teacher" | "admin",
-                  }))
-                }
-                className="rounded border border-gray-300 px-3 py-2 text-sm"
-              >
-                <option value="student">Default Role: student</option>
-                <option value="teacher">Default Role: teacher</option>
-                <option value="admin">Default Role: admin</option>
-              </select>
-            </div>
+                <FormField label="Default Role" htmlFor="default_role">
+                  <Select
+                    id="default_role"
+                    value={form.default_role}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        default_role: event.target.value as "student" | "teacher" | "admin",
+                      }))
+                    }
+                  >
+                    <option value="student">student</option>
+                    <option value="teacher">teacher</option>
+                    <option value="admin">admin</option>
+                  </Select>
+                </FormField>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => void saveConfig()}
-              disabled={saving}
-              className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
+              <FormActions submitLabel="Save" submitting={saving} />
+            </form>
           </section>
 
           <section className="rounded-lg border border-gray-200 bg-white p-5 space-y-3">
