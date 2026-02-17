@@ -41,6 +41,20 @@ RSpec.describe AiInvocationPolicy, type: :policy do
     end
   end
 
+  permissions :update? do
+    it "permits the owning user" do
+      expect(policy).to permit(teacher, record)
+    end
+
+    it "permits admin" do
+      expect(policy).to permit(admin, record)
+    end
+
+    it "denies other users" do
+      expect(policy).not_to permit(other_teacher, record)
+    end
+  end
+
   describe "Scope" do
     let!(:own_invocation) { create(:ai_invocation, tenant: tenant, user: teacher, ai_provider_config: provider, ai_task_policy: task_policy_record) }
     let!(:other_invocation) { create(:ai_invocation, tenant: tenant, user: other_teacher, ai_provider_config: provider, ai_task_policy: task_policy_record) }

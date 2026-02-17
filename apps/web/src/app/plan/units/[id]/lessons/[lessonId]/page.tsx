@@ -10,6 +10,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
+import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
+import { parseLessonOutput, type LessonPlanOutput } from "@/lib/ai-output-parser";
 
 interface LessonPlan {
   id: number;
@@ -54,6 +56,12 @@ export default function LessonEditorPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiTaskType, setAiTaskType] = useState("lesson_plan");
+  const [applyingAi, setApplyingAi] = useState(false);
+  const [aiApplyError, setAiApplyError] = useState<string | null>(null);
+  const [aiApplyMessage, setAiApplyMessage] = useState<string | null>(null);
+  const [pendingAiDraft, setPendingAiDraft] = useState<LessonPlanOutput | null>(null);
+  const [pendingAiChanges, setPendingAiChanges] = useState<AiApplyChange[]>([]);
+  const [showAiApplyModal, setShowAiApplyModal] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -165,13 +173,136 @@ export default function LessonEditorPage() {
     }
   };
 
-  const handleAiApply = (content: string) => {
-    if (aiTaskType === "lesson_plan" || aiTaskType === "assessment") {
-      setActivities((previous) => [previous, content].filter(Boolean).join("\n\n"));
+  const handleAiApply = (content: string, target = "all") => {
+    setAiApplyError(null);
+    setAiApplyMessage(null);
+
+    const parsed = parseLessonOutput(content);
+    const selected = target || "all";
+    const draft: LessonPlanOutput = {};
+
+    if ((selected === "all" || selected === "objectives") && parsed.objectives) {
+      draft.objectives = parsed.objectives;
+    }
+    if ((selected === "all" || selected === "activities") && parsed.activities) {
+      draft.activities = parsed.activities;
+    }
+    if ((selected === "all" || selected === "materials") && parsed.materials) {
+      draft.materials = parsed.materials;
+    }
+    if (
+      (selected === "all" || selected === "duration_minutes") &&
+      parsed.duration_minutes !== undefined
+    ) {
+      draft.duration_minutes = parsed.duration_minutes;
+    }
+
+    if (Object.keys(draft).length === 0) {
+      setAiApplyError("AI output did not include recognized lesson planning fields.");
       return;
     }
 
-    setObjectives((previous) => [previous, content].filter(Boolean).join("\n\n"));
+    const changes: AiApplyChange[] = [];
+
+    if (draft.objectives !== undefined && draft.objectives !== objectives) {
+      changes.push({
+        field: "Objectives",
+        previous: objectives,
+        next: draft.objectives,
+      });
+    }
+    if (draft.activities !== undefined && draft.activities !== activities) {
+      changes.push({
+        field: "Activities",
+        previous: activities,
+        next: draft.activities,
+      });
+    }
+    if (draft.materials !== undefined && draft.materials !== materials) {
+      changes.push({
+        field: "Materials",
+        previous: materials,
+        next: draft.materials,
+      });
+    }
+    if (
+      draft.duration_minutes !== undefined &&
+      String(draft.duration_minutes) !== (durationMinutes || "")
+    ) {
+      changes.push({
+        field: "Duration (minutes)",
+        previous: durationMinutes,
+        next: String(draft.duration_minutes),
+      });
+    }
+
+    if (changes.length === 0) {
+      setAiApplyMessage("AI output matches current lesson content. No changes to apply.");
+      return;
+    }
+
+    setPendingAiDraft(draft);
+    setPendingAiChanges(changes);
+    setShowAiApplyModal(true);
+  };
+
+  const confirmAiApply = async () => {
+    if (!pendingAiDraft) return;
+
+    setApplyingAi(true);
+    setAiApplyError(null);
+
+    const nextObjectives = pendingAiDraft.objectives ?? objectives;
+    const nextActivities = pendingAiDraft.activities ?? activities;
+    const nextMaterials = pendingAiDraft.materials ?? materials;
+    const nextDuration =
+      pendingAiDraft.duration_minutes !== undefined
+        ? pendingAiDraft.duration_minutes
+        : durationMinutes
+          ? Number.parseInt(durationMinutes, 10)
+          : null;
+
+    try {
+      await apiFetch(`/api/v1/unit_plans/${unitId}/lesson_plans/${lessonId}/create_version`, {
+        method: "POST",
+        body: JSON.stringify({
+          version: {
+            title,
+            objectives: nextObjectives,
+            activities: nextActivities,
+            materials: nextMaterials,
+            duration_minutes: nextDuration,
+          },
+        }),
+      });
+
+      try {
+        const invocations = await apiFetch<{ id: number }[]>(
+          `/api/v1/ai_invocations?task_type=${encodeURIComponent(aiTaskType)}&status=completed`,
+        );
+        if (invocations.length > 0) {
+          await apiFetch(`/api/v1/ai_invocations/${invocations[0].id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              applied_at: new Date().toISOString(),
+              applied_to: { type: "lesson_plan", id: Number(lessonId) },
+            }),
+          });
+        }
+      } catch {
+        // Best-effort invocation audit trail.
+      }
+
+      await fetchData();
+      setAiApplyMessage("AI draft applied and saved as a new lesson version.");
+      setShowAiApplyModal(false);
+      setPendingAiDraft(null);
+      setPendingAiChanges([]);
+    } catch {
+      setAiApplyError("Failed to apply AI draft to this lesson.");
+    } finally {
+      setApplyingAi(false);
+    }
   };
 
   const handleExportPdf = async () => {
@@ -273,6 +404,13 @@ export default function LessonEditorPage() {
               )}
             </div>
           </div>
+
+          {aiApplyError && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{aiApplyError}</div>
+          )}
+          {aiApplyMessage && (
+            <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700">{aiApplyMessage}</div>
+          )}
 
           {exportError && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{exportError}</div>
@@ -488,9 +626,31 @@ export default function LessonEditorPage() {
               lessonId={Number(lessonId)}
               onTaskTypeChange={setAiTaskType}
               onApply={handleAiApply}
+              applyTargets={[
+                { value: "all", label: "Apply All" },
+                { value: "objectives", label: "Apply Objectives Only" },
+                { value: "activities", label: "Apply Activities Only" },
+                { value: "materials", label: "Apply Materials Only" },
+                { value: "duration_minutes", label: "Apply Duration Only" },
+              ]}
             />
           )}
         </div>
+        <AiApplyModal
+          open={showAiApplyModal}
+          title="Apply AI Changes to Lesson"
+          changes={pendingAiChanges}
+          applying={applyingAi}
+          onCancel={() => {
+            if (applyingAi) return;
+            setShowAiApplyModal(false);
+            setPendingAiDraft(null);
+            setPendingAiChanges([]);
+          }}
+          onConfirm={() => {
+            void confirmAiApply();
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

@@ -25,11 +25,17 @@ interface InvocationResponse {
   status: string;
 }
 
+interface AiApplyTargetOption {
+  value: string;
+  label: string;
+}
+
 interface AiAssistantPanelProps {
   unitId?: number;
   lessonId?: number;
   context?: Record<string, string>;
-  onApply?: (content: string) => void;
+  onApply?: (content: string, target?: string) => void;
+  applyTargets?: AiApplyTargetOption[];
   onTaskTypeChange?: (taskType: string) => void;
 }
 
@@ -40,6 +46,7 @@ export default function AiAssistantPanel({
   lessonId,
   context = {},
   onApply,
+  applyTargets,
   onTaskTypeChange,
 }: AiAssistantPanelProps) {
   const { user } = useAuth();
@@ -52,6 +59,7 @@ export default function AiAssistantPanel({
   const [error, setError] = useState<string | null>(null);
   const [policyHint, setPolicyHint] = useState<string | null>(null);
   const [applyHint, setApplyHint] = useState<string | null>(null);
+  const [applyTarget, setApplyTarget] = useState("all");
   const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
   const [policiesLoaded, setPoliciesLoaded] = useState(false);
   const [enabledTasks, setEnabledTasks] = useState<Record<string, boolean>>(
@@ -151,6 +159,30 @@ export default function AiAssistantPanel({
       ...context,
     };
   }, [unitId, lessonId, context]);
+
+  const resolvedApplyTargets = useMemo<AiApplyTargetOption[]>(() => {
+    if (!onApply) return [];
+
+    if (!applyTargets || applyTargets.length === 0) {
+      return [{ value: "all", label: "Apply All" }];
+    }
+
+    const values = new Map<string, string>();
+    values.set("all", "Apply All");
+    applyTargets.forEach((target) => {
+      if (!target?.value || target.value === "all") return;
+      values.set(target.value, target.label || target.value);
+    });
+
+    return Array.from(values.entries()).map(([value, label]) => ({ value, label }));
+  }, [applyTargets, onApply]);
+
+  useEffect(() => {
+    if (resolvedApplyTargets.length === 0) return;
+    if (resolvedApplyTargets.some((target) => target.value === applyTarget)) return;
+
+    setApplyTarget(resolvedApplyTargets[0].value);
+  }, [applyTarget, resolvedApplyTargets]);
 
   async function runFallbackGeneration(trimmedPrompt: string) {
     const result = await apiFetch<InvocationResponse>("/api/v1/ai_invocations", {
@@ -259,8 +291,15 @@ export default function AiAssistantPanel({
 
   function applyContent() {
     if (!responseText || !onApply) return;
-    onApply(responseText);
-    setApplyHint("Applied to editor.");
+    if (applyTarget === "all") {
+      onApply(responseText);
+      setApplyHint("Applied to editor.");
+      return;
+    }
+
+    const label = resolvedApplyTargets.find((target) => target.value === applyTarget)?.label;
+    onApply(responseText, applyTarget);
+    setApplyHint(`Applied ${label ? label.toLowerCase() : "selected field"}.`);
   }
 
   const restrictedTaskCount = TASK_TYPES.filter((taskName) => !enabledTasks[taskName]).length;
@@ -348,6 +387,20 @@ export default function AiAssistantPanel({
           )}
         </div>
         <div className="mt-2 flex items-center gap-2">
+          {onApply && resolvedApplyTargets.length > 1 && (
+            <select
+              aria-label="Apply target"
+              value={applyTarget}
+              onChange={(event) => setApplyTarget(event.target.value)}
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700"
+            >
+              {resolvedApplyTargets.map((target) => (
+                <option key={target.value} value={target.value}>
+                  {target.label}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={applyContent}
             disabled={!responseText || !onApply}

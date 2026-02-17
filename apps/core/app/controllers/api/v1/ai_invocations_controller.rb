@@ -3,6 +3,8 @@ require "digest"
 module Api
   module V1
     class AiInvocationsController < ApplicationController
+      before_action :set_invocation, only: [ :show, :update ]
+
       def index
         invocations = policy_scope(AiInvocation).order(created_at: :desc)
         invocations = invocations.where(task_type: params[:task_type]) if params[:task_type].present?
@@ -12,9 +14,28 @@ module Api
       end
 
       def show
-        @invocation = AiInvocation.find(params[:id])
         authorize @invocation
         render json: @invocation
+      end
+
+      def update
+        authorize @invocation
+
+        context = (@invocation.context || {}).deep_dup
+        context["apply"] ||= {}
+
+        if apply_params[:applied_at].present?
+          context["apply"]["applied_at"] = normalized_time(apply_params[:applied_at]).iso8601
+        end
+
+        if apply_params[:applied_to].present?
+          context["apply"]["applied_to"] = normalize_applied_to(apply_params[:applied_to])
+        end
+
+        @invocation.update!(context: context)
+        render json: @invocation
+      rescue ActiveRecord::RecordInvalid
+        render json: { errors: @invocation.errors.full_messages }, status: :unprocessable_content
       end
 
       def create
@@ -107,6 +128,38 @@ module Api
       end
 
       private
+
+      def set_invocation
+        @invocation = AiInvocation.find(params[:id])
+      end
+
+      def apply_params
+        params.permit(:applied_at, applied_to: [ :type, :id ])
+      end
+
+      def normalized_time(raw_value)
+        Time.zone.parse(raw_value.to_s) || Time.current
+      rescue ArgumentError, TypeError
+        Time.current
+      end
+
+      def normalize_applied_to(raw_payload)
+        payload = raw_payload.respond_to?(:to_h) ? raw_payload.to_h : {}
+        raw_id = payload[:id] || payload["id"]
+        {
+          "type" => payload[:type] || payload["type"],
+          "id" => normalize_applied_to_id(raw_id)
+        }.compact
+      end
+
+      def normalize_applied_to_id(value)
+        return value unless value.respond_to?(:to_s)
+
+        string_value = value.to_s
+        return string_value.to_i if /\A\d+\z/.match?(string_value)
+
+        value
+      end
 
       def async_requested?
         ActiveModel::Type::Boolean.new.cast(params[:async])

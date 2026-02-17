@@ -11,6 +11,10 @@ class AiInvocationPolicy < ApplicationPolicy
     true
   end
 
+  def update?
+    admin_user? || record.user_id == user.id
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.has_role?(:admin)

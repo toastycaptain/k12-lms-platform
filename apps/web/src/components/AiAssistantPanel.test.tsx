@@ -291,4 +291,34 @@ describe("AiAssistantPanel", () => {
     expect(onApply).toHaveBeenCalledWith("Apply me");
     expect(screen.getByText("Applied to editor.")).toBeInTheDocument();
   });
+
+  it("applies generated response to selected field target", async () => {
+    mockedApiFetchStream.mockImplementation(async (_path, _body, _onToken, onDone) => {
+      onDone?.("Apply selected");
+    });
+
+    const onApply = vi.fn();
+    render(
+      <AiAssistantPanel
+        onApply={onApply}
+        applyTargets={[
+          { value: "all", label: "Apply All" },
+          { value: "activities", label: "Apply Activities Only" },
+        ]}
+      />,
+    );
+    await waitForPanelReady();
+
+    fireEvent.change(screen.getByPlaceholderText(/Describe what you'd like/i), {
+      target: { value: "Generate" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    fireEvent.change(await screen.findByLabelText("Apply target"), {
+      target: { value: "activities" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+    expect(onApply).toHaveBeenCalledWith("Apply selected", "activities");
+  });
 });

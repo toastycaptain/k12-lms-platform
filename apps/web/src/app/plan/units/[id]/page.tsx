@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
+import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
+import { parseUnitOutput, type UnitPlanOutput } from "@/lib/ai-output-parser";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -79,6 +81,12 @@ export default function UnitPlannerPage() {
   const [publishing, setPublishing] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiTaskType, setAiTaskType] = useState("lesson_plan");
+  const [applyingAi, setApplyingAi] = useState(false);
+  const [aiApplyError, setAiApplyError] = useState<string | null>(null);
+  const [aiApplyMessage, setAiApplyMessage] = useState<string | null>(null);
+  const [pendingAiDraft, setPendingAiDraft] = useState<UnitPlanOutput | null>(null);
+  const [pendingAiChanges, setPendingAiChanges] = useState<AiApplyChange[]>([]);
+  const [showAiApplyModal, setShowAiApplyModal] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -196,29 +204,136 @@ export default function UnitPlannerPage() {
     setList(list.filter((_, i) => i !== index));
   };
 
-  const appendAiListContent = (
-    setList: (updater: (previous: string[]) => string[]) => void,
-    content: string,
-  ) => {
-    const trimmedContent = content.trim();
-    if (!trimmedContent) return;
+  const handleAiApply = (content: string, target = "all") => {
+    setAiApplyError(null);
+    setAiApplyMessage(null);
 
-    setList((previous) => {
-      if (previous.length === 0 || (previous.length === 1 && previous[0].trim() === "")) {
-        return [trimmedContent];
-      }
+    const parsed = parseUnitOutput(content);
+    const selected = target || "all";
+    const draft: UnitPlanOutput = {};
 
-      return [...previous, trimmedContent];
-    });
-  };
+    if ((selected === "all" || selected === "description") && parsed.description) {
+      draft.description = parsed.description;
+    }
 
-  const handleAiApply = (content: string) => {
-    if (aiTaskType === "assessment" || aiTaskType === "differentiation") {
-      appendAiListContent(setEssentialQuestions, content);
+    if (
+      (selected === "all" || selected === "essential_questions") &&
+      parsed.essential_questions &&
+      parsed.essential_questions.length > 0
+    ) {
+      draft.essential_questions = parsed.essential_questions;
+    }
+
+    if (
+      (selected === "all" || selected === "enduring_understandings") &&
+      parsed.enduring_understandings &&
+      parsed.enduring_understandings.length > 0
+    ) {
+      draft.enduring_understandings = parsed.enduring_understandings;
+    }
+
+    if (Object.keys(draft).length === 0) {
+      setAiApplyError("AI output did not include recognized unit planning fields.");
       return;
     }
 
-    setDescription((previous) => [previous, content].filter(Boolean).join("\n\n"));
+    const changes: AiApplyChange[] = [];
+
+    if (draft.description !== undefined && draft.description !== description) {
+      changes.push({
+        field: "Description",
+        previous: description,
+        next: draft.description,
+      });
+    }
+
+    if (draft.essential_questions) {
+      const previous = essentialQuestions.filter((value) => value.trim()).join("\n");
+      const next = draft.essential_questions.join("\n");
+      if (previous !== next) {
+        changes.push({
+          field: "Essential Questions",
+          previous,
+          next,
+        });
+      }
+    }
+
+    if (draft.enduring_understandings) {
+      const previous = enduringUnderstandings.filter((value) => value.trim()).join("\n");
+      const next = draft.enduring_understandings.join("\n");
+      if (previous !== next) {
+        changes.push({
+          field: "Enduring Understandings",
+          previous,
+          next,
+        });
+      }
+    }
+
+    if (changes.length === 0) {
+      setAiApplyMessage("AI output matches current content. No changes to apply.");
+      return;
+    }
+
+    setPendingAiDraft(draft);
+    setPendingAiChanges(changes);
+    setShowAiApplyModal(true);
+  };
+
+  const confirmAiApply = async () => {
+    if (!pendingAiDraft) return;
+
+    setApplyingAi(true);
+    setAiApplyError(null);
+
+    const nextDescription = pendingAiDraft.description ?? description;
+    const nextEssentialQuestions =
+      pendingAiDraft.essential_questions ?? essentialQuestions.filter((value) => value.trim());
+    const nextEnduringUnderstandings =
+      pendingAiDraft.enduring_understandings ??
+      enduringUnderstandings.filter((value) => value.trim());
+
+    try {
+      await apiFetch(`/api/v1/unit_plans/${unitId}/create_version`, {
+        method: "POST",
+        body: JSON.stringify({
+          version: {
+            title,
+            description: nextDescription,
+            essential_questions: nextEssentialQuestions,
+            enduring_understandings: nextEnduringUnderstandings,
+          },
+        }),
+      });
+
+      try {
+        const invocations = await apiFetch<{ id: number }[]>(
+          `/api/v1/ai_invocations?task_type=${encodeURIComponent(aiTaskType)}&status=completed`,
+        );
+        if (invocations.length > 0) {
+          await apiFetch(`/api/v1/ai_invocations/${invocations[0].id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              applied_at: new Date().toISOString(),
+              applied_to: { type: "unit_plan", id: Number(unitId) },
+            }),
+          });
+        }
+      } catch {
+        // Best-effort invocation audit trail.
+      }
+
+      await fetchData();
+      setAiApplyMessage("AI draft applied and saved as a new unit version.");
+      setShowAiApplyModal(false);
+      setPendingAiDraft(null);
+      setPendingAiChanges([]);
+    } catch {
+      setAiApplyError("Failed to apply AI draft to this unit.");
+    } finally {
+      setApplyingAi(false);
+    }
   };
 
   const filteredStandards = allStandards.filter(
@@ -301,6 +416,15 @@ export default function UnitPlannerPage() {
                 )}
               </div>
             </div>
+
+            {aiApplyError && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{aiApplyError}</div>
+            )}
+            {aiApplyMessage && (
+              <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+                {aiApplyMessage}
+              </div>
+            )}
 
             {/* Title */}
             <div>
@@ -528,6 +652,12 @@ export default function UnitPlannerPage() {
                 unitId={Number(unitId)}
                 onTaskTypeChange={setAiTaskType}
                 onApply={handleAiApply}
+                applyTargets={[
+                  { value: "all", label: "Apply All" },
+                  { value: "description", label: "Apply Description Only" },
+                  { value: "essential_questions", label: "Apply Essential Questions Only" },
+                  { value: "enduring_understandings", label: "Apply Enduring Understandings Only" },
+                ]}
               />
             )}
           </div>
@@ -554,6 +684,21 @@ export default function UnitPlannerPage() {
             </div>
           </div>
         </div>
+        <AiApplyModal
+          open={showAiApplyModal}
+          title="Apply AI Changes to Unit"
+          changes={pendingAiChanges}
+          applying={applyingAi}
+          onCancel={() => {
+            if (applyingAi) return;
+            setShowAiApplyModal(false);
+            setPendingAiDraft(null);
+            setPendingAiChanges([]);
+          }}
+          onConfirm={() => {
+            void confirmAiApply();
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

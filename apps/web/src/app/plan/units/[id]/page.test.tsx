@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import UnitPlannerPage from "@/app/plan/units/[id]/page";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -47,7 +47,7 @@ vi.mock("@/components/AiAssistantPanel", () => ({
     onApply,
     onTaskTypeChange,
   }: {
-    onApply?: (content: string) => void;
+    onApply?: (content: string, target?: string) => void;
     onTaskTypeChange?: (taskType: string) => void;
   }) => (
     <div>
@@ -157,8 +157,16 @@ describe("Plan Unit Editor Page", () => {
     fireEvent.click(await screen.findByRole("button", { name: "AI Assistant" }));
     fireEvent.click(screen.getByRole("button", { name: "Set Assessment Task" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply AI Draft" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm Apply" }));
 
-    expect(await screen.findByDisplayValue("AI generated essential question")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith(
+        "/api/v1/unit_plans/1/create_version",
+        expect.objectContaining({
+          method: "POST",
+        }),
+      );
+    });
   });
 
   it("handles loading state", () => {

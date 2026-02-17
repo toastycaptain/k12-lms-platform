@@ -210,4 +210,47 @@ RSpec.describe "Api::V1::AiInvocations", type: :request do
       )
     end
   end
+
+  describe "PATCH /api/v1/ai_invocations/:id" do
+    it "records apply metadata for owner" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      provider = create(:ai_provider_config, tenant: tenant, created_by: admin)
+      task_policy_record = create(:ai_task_policy, tenant: tenant, created_by: admin, ai_provider_config: provider)
+      invocation = create(:ai_invocation, tenant: tenant, user: teacher, ai_provider_config: provider, ai_task_policy: task_policy_record)
+      Current.tenant = nil
+
+      patch "/api/v1/ai_invocations/#{invocation.id}", params: {
+        applied_at: "2026-02-16T12:30:00Z",
+        applied_to: { type: "lesson_plan", id: 123 }
+      }
+
+      expect(response).to have_http_status(:ok)
+      apply_data = response.parsed_body.dig("context", "apply")
+      expect(apply_data).to include(
+        "applied_at" => "2026-02-16T12:30:00Z",
+        "applied_to" => { "type" => "lesson_plan", "id" => 123 }
+      )
+    end
+
+    it "forbids updates from non-owners" do
+      other_teacher = nil
+      invocation = nil
+      Current.tenant = tenant
+      other_teacher = create(:user, tenant: tenant)
+      other_teacher.add_role(:teacher)
+      provider = create(:ai_provider_config, tenant: tenant, created_by: admin)
+      task_policy_record = create(:ai_task_policy, tenant: tenant, created_by: admin, ai_provider_config: provider)
+      invocation = create(:ai_invocation, tenant: tenant, user: teacher, ai_provider_config: provider, ai_task_policy: task_policy_record)
+      Current.tenant = nil
+
+      mock_session(other_teacher, tenant: tenant)
+
+      patch "/api/v1/ai_invocations/#{invocation.id}", params: {
+        applied_at: "2026-02-16T12:30:00Z"
+      }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end
