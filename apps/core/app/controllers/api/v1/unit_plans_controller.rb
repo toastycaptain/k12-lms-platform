@@ -5,7 +5,7 @@ module Api
                                           :export_pdf, :export_pdf_status, :submit_for_approval ]
 
       def index
-        @unit_plans = policy_scope(UnitPlan)
+        @unit_plans = policy_scope(UnitPlan).includes(:unit_versions, current_version: :standards)
         @unit_plans = @unit_plans.where(course_id: params[:course_id]) if params[:course_id]
         @unit_plans = paginate(@unit_plans)
         render json: @unit_plans
@@ -109,7 +109,7 @@ module Api
       private
 
       def set_unit_plan
-        @unit_plan = UnitPlan.find(params[:id])
+        @unit_plan = UnitPlan.includes(:unit_versions, current_version: :standards).find(params[:id])
         authorize @unit_plan unless %w[create_version versions publish archive export_pdf export_pdf_status submit_for_approval].include?(action_name)
       end
 

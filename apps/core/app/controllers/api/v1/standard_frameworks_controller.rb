@@ -2,9 +2,17 @@ module Api
   module V1
     class StandardFrameworksController < ApplicationController
       before_action :set_standard_framework, only: [ :show, :update, :destroy ]
+      CACHE_TTL = 1.hour
 
       def index
-        @standard_frameworks = policy_scope(StandardFramework)
+        scope = policy_scope(StandardFramework)
+        tenant_id = Current.tenant&.id
+
+        @standard_frameworks = if tenant_id.present?
+          Rails.cache.fetch("tenant:#{tenant_id}:standard_frameworks", expires_in: CACHE_TTL) { scope.to_a }
+        else
+          scope.to_a
+        end
         render json: @standard_frameworks
       end
 
@@ -39,7 +47,7 @@ module Api
       private
 
       def set_standard_framework
-        @standard_framework = StandardFramework.find(params[:id])
+        @standard_framework = StandardFramework.includes(:standards).find(params[:id])
         authorize @standard_framework
       end
 

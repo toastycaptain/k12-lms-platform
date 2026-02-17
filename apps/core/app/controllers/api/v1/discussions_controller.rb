@@ -5,7 +5,7 @@ module Api
       before_action :set_discussion, only: [ :show, :update, :destroy, :lock, :unlock ]
 
       def index
-        discussions = policy_scope(Discussion).where(course: @course)
+        discussions = policy_scope(Discussion).where(course: @course).includes(:discussion_posts)
         render json: discussions
       end
 
@@ -66,7 +66,7 @@ module Api
       end
 
       def set_discussion
-        @discussion = Discussion.find(params[:id])
+        @discussion = Discussion.includes(:discussion_posts).find(params[:id])
       end
 
       def discussion_params

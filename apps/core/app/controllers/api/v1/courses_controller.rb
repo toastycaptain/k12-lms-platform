@@ -4,7 +4,7 @@ module Api
       before_action :set_course, only: [ :show, :update, :destroy ]
 
       def index
-        @courses = paginate(policy_scope(Course).includes(:sections))
+        @courses = paginate(policy_scope(Course).includes(:sections, :enrollments))
         render json: @courses
       end
 
@@ -39,7 +39,7 @@ module Api
       private
 
       def set_course
-        @course = Course.includes(:sections).find(params[:id])
+        @course = Course.includes(:sections, :enrollments).find(params[:id])
         authorize @course
       end
 

@@ -4,8 +4,9 @@ module Api
       before_action :set_template, only: [ :show, :update, :destroy, :create_version, :versions, :publish, :archive, :create_unit ]
 
       def index
-        @templates = policy_scope(Template)
+        @templates = policy_scope(Template).includes(:template_versions)
         @templates = @templates.where(status: "published") unless current_user_can_manage_templates?
+        @templates = paginate(@templates)
         render json: @templates
       end
 
@@ -83,7 +84,7 @@ module Api
       private
 
       def set_template
-        @template = Template.find(params[:id])
+        @template = Template.includes(:template_versions).find(params[:id])
         authorize @template unless %w[create_version versions publish archive create_unit].include?(action_name)
       end
 

@@ -4,7 +4,7 @@ module Api
       before_action :set_academic_year, only: [ :show, :update, :destroy ]
 
       def index
-        @academic_years = policy_scope(AcademicYear)
+        @academic_years = policy_scope(AcademicYear).includes(:terms)
         render json: @academic_years
       end
 

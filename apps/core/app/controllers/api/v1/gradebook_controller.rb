@@ -23,7 +23,11 @@ module Api
       private
 
       def set_course
-        @course = Course.find(params[:id])
+        @course = Course.includes(
+          sections: { enrollments: :user },
+          assignments: %i[rubric resource_links],
+          quizzes: :quiz_attempts
+        ).find(params[:id])
       end
 
       def gradebook_payload
@@ -50,11 +54,11 @@ module Api
       end
 
       def assignments
-        @assignments ||= @course.assignments.order(:due_at, :id).to_a
+        @assignments ||= @course.assignments.to_a.sort_by { |assignment| [ assignment.due_at || Time.zone.at(0), assignment.id ] }
       end
 
       def quizzes
-        @quizzes ||= @course.quizzes.order(:title, :id).to_a
+        @quizzes ||= @course.quizzes.to_a.sort_by { |quiz| [ quiz.title.to_s, quiz.id ] }
       end
 
       def submissions

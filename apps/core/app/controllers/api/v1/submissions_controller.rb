@@ -5,7 +5,7 @@ module Api
       before_action :set_submission, only: [ :show, :update ]
 
       def index
-        submissions = policy_scope(Submission)
+        submissions = policy_scope(Submission).includes(:user, :assignment)
         submissions = submissions.where(assignment: @assignment) if @assignment.present?
         submissions = submissions.where(status: params[:status]) if params[:status].present?
         submissions = submissions.where(assignment_id: params[:assignment_id]) if params[:assignment_id].present?
@@ -134,7 +134,7 @@ module Api
       end
 
       def set_submission
-        @submission = Submission.find(params[:id])
+        @submission = Submission.includes(:user, :assignment).find(params[:id])
       end
 
       def submission_params

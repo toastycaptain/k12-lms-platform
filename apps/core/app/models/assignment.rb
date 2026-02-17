@@ -4,12 +4,13 @@ class Assignment < ApplicationRecord
   VALID_STATUSES = %w[draft published closed archived].freeze
   VALID_TYPES = %w[written file_upload url discussion].freeze
 
-  belongs_to :course
+  belongs_to :course, counter_cache: true
   belongs_to :created_by, class_name: "User"
   belongs_to :rubric, optional: true
   has_many :submissions, dependent: :destroy
   has_many :assignment_standards, dependent: :destroy
   has_many :standards, through: :assignment_standards
+  has_many :resource_links, as: :linkable, dependent: :destroy
 
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: VALID_STATUSES }

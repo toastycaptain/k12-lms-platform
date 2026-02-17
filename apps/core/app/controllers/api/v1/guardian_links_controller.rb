@@ -6,7 +6,7 @@ module Api
       def index
         authorize GuardianLink
 
-        guardian_links = policy_scope(GuardianLink)
+        guardian_links = policy_scope(GuardianLink).includes(:guardian, :student)
         guardian_links = guardian_links.where(student_id: params[:student_id]) if params[:student_id].present?
         guardian_links = paginate(guardian_links)
 

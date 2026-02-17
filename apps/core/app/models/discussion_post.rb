@@ -1,7 +1,7 @@
 class DiscussionPost < ApplicationRecord
   include TenantScoped
 
-  belongs_to :discussion
+  belongs_to :discussion, counter_cache: true
   belongs_to :created_by, class_name: "User"
   belongs_to :parent_post, class_name: "DiscussionPost", optional: true
   has_many :replies, class_name: "DiscussionPost", foreign_key: :parent_post_id, dependent: :destroy

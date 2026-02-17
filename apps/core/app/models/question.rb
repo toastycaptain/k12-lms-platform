@@ -5,7 +5,7 @@ class Question < ApplicationRecord
   VALID_STATUSES = %w[active archived].freeze
   AUTO_GRADABLE_TYPES = %w[multiple_choice true_false short_answer matching fill_in_blank].freeze
 
-  belongs_to :question_bank
+  belongs_to :question_bank, counter_cache: true
   belongs_to :created_by, class_name: "User"
   belongs_to :current_version, class_name: "QuestionVersion", optional: true
   has_many :question_versions, dependent: :destroy

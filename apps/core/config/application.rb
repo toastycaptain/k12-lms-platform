@@ -17,6 +17,7 @@ require "action_view/railtie"
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
+require_relative "../app/middleware/request_timing"
 
 module Core
   class Application < Rails::Application
@@ -44,5 +45,6 @@ module Core
     # Add session/cookie middleware back for OmniAuth
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore, key: "_k12_lms_session"
+    config.middleware.use RequestTiming
   end
 end

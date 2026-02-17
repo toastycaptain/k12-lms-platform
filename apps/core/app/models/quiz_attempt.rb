@@ -3,7 +3,7 @@ class QuizAttempt < ApplicationRecord
 
   VALID_STATUSES = %w[in_progress submitted graded].freeze
 
-  belongs_to :quiz
+  belongs_to :quiz, counter_cache: true
   belongs_to :user
   has_many :attempt_answers, dependent: :destroy
 

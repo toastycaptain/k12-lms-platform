@@ -2,10 +2,12 @@ module Api
   module V1
     class StandardsController < ApplicationController
       before_action :set_standard, only: [ :show, :update, :destroy ]
+      CACHE_TTL = 1.hour
 
       def index
-        @standards = policy_scope(Standard)
-        @standards = @standards.where(standard_framework_id: params[:standard_framework_id]) if params[:standard_framework_id]
+        standards_scope = policy_scope(Standard).includes(:standard_framework)
+        standards_scope = standards_scope.where(standard_framework_id: params[:standard_framework_id]) if params[:standard_framework_id].present?
+        @standards = cached_standards(standards_scope)
         render json: @standards
       end
 
@@ -48,12 +50,22 @@ module Api
       private
 
       def set_standard
-        @standard = Standard.find(params[:id])
+        @standard = Standard.includes(:standard_framework).find(params[:id])
         authorize @standard
       end
 
       def standard_params
         params.require(:standard).permit(:standard_framework_id, :parent_id, :code, :description, :grade_band)
+      end
+
+      def cached_standards(scope)
+        tenant_id = Current.tenant&.id
+        return scope.to_a if tenant_id.blank?
+
+        framework_key = params[:standard_framework_id].presence || "all"
+        Rails.cache.fetch("tenant:#{tenant_id}:standards:#{framework_key}", expires_in: CACHE_TTL) do
+          scope.to_a
+        end
       end
     end
   end

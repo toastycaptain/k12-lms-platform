@@ -1,7 +1,7 @@
 class Message < ApplicationRecord
   include TenantScoped
 
-  belongs_to :message_thread
+  belongs_to :message_thread, counter_cache: true
   belongs_to :sender, class_name: "User"
 
   validates :body, presence: true

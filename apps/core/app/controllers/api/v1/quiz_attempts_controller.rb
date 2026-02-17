@@ -5,7 +5,7 @@ module Api
       before_action :set_quiz_attempt, only: [ :show, :submit, :grade_all ]
 
       def index
-        attempts = policy_scope(QuizAttempt).where(quiz: @quiz)
+        attempts = policy_scope(QuizAttempt).where(quiz: @quiz).includes(:attempt_answers)
         attempts = paginate(attempts)
         render json: attempts
       end
@@ -70,7 +70,7 @@ module Api
       end
 
       def set_quiz_attempt
-        @quiz_attempt = QuizAttempt.find(params[:id])
+        @quiz_attempt = QuizAttempt.includes(:attempt_answers).find(params[:id])
       end
     end
   end

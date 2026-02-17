@@ -3,7 +3,7 @@ class Submission < ApplicationRecord
 
   VALID_STATUSES = %w[draft submitted graded returned].freeze
 
-  belongs_to :assignment
+  belongs_to :assignment, counter_cache: true
   belongs_to :user
   belongs_to :graded_by, class_name: "User", optional: true
   has_many :rubric_scores, dependent: :destroy

@@ -5,7 +5,7 @@ module Api
       before_action :set_module_item, only: [ :show, :update, :destroy ]
 
       def index
-        items = policy_scope(ModuleItem).where(course_module: @course_module).ordered
+        items = policy_scope(ModuleItem).where(course_module: @course_module).includes(:itemable).ordered
         render json: items
       end
 
@@ -47,7 +47,7 @@ module Api
       end
 
       def set_module_item
-        @module_item = ModuleItem.find(params[:id])
+        @module_item = ModuleItem.includes(:itemable).find(params[:id])
       end
 
       def module_item_params

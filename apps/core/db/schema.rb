@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -195,6 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.bigint "rubric_id"
     t.string "status", default: "draft", null: false
     t.text "submission_types", default: [], array: true
+    t.integer "submissions_count", default: 0, null: false
     t.bigint "tenant_id", null: false
     t.string "title", null: false
     t.datetime "unlock_at"
@@ -238,6 +239,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.string "user_agent"
     t.index ["actor_id"], name: "index_audit_logs_on_actor_id"
     t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable"
+    t.index ["created_at"], name: "idx_audit_logs_created_at"
     t.index ["created_at"], name: "index_audit_logs_on_created_at"
     t.index ["event_type"], name: "index_audit_logs_on_event_type"
     t.index ["request_id"], name: "index_audit_logs_on_request_id"
@@ -264,9 +266,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
 
   create_table "courses", force: :cascade do |t|
     t.bigint "academic_year_id", null: false
+    t.integer "assignments_count", default: 0, null: false
     t.string "code"
     t.datetime "created_at", null: false
     t.text "description"
+    t.integer "enrollments_count", default: 0, null: false
     t.string "name", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
@@ -308,6 +312,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.text "description"
+    t.integer "discussion_posts_count", default: 0, null: false
     t.boolean "pinned", default: false
     t.boolean "require_initial_post", default: false
     t.string "status", default: "open", null: false
@@ -328,6 +333,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.bigint "user_id", null: false
     t.index ["section_id"], name: "index_enrollments_on_section_id"
     t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
+    t.index ["user_id", "section_id"], name: "idx_enrollments_user_section"
     t.index ["user_id", "section_id"], name: "index_enrollments_on_user_id_and_section_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
@@ -443,6 +449,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
   create_table "message_threads", force: :cascade do |t|
     t.bigint "course_id"
     t.datetime "created_at", null: false
+    t.integer "messages_count", default: 0, null: false
     t.string "subject", null: false
     t.bigint "tenant_id", null: false
     t.string "thread_type", default: "direct", null: false
@@ -510,6 +517,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.index ["actor_id"], name: "index_notifications_on_actor_id"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable_type_and_notifiable_id"
     t.index ["tenant_id"], name: "index_notifications_on_tenant_id"
+    t.index ["user_id", "read_at"], name: "idx_notifications_user_read_at"
     t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
@@ -534,6 +542,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.string "grade_level"
     t.jsonb "import_errors", default: []
     t.string "import_status"
+    t.integer "questions_count", default: 0, null: false
     t.string "status", default: "active", null: false
     t.string "subject"
     t.bigint "tenant_id", null: false
@@ -617,6 +626,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.index ["quiz_id", "user_id", "attempt_number"], name: "idx_quiz_attempts_unique", unique: true
     t.index ["quiz_id"], name: "index_quiz_attempts_on_quiz_id"
     t.index ["tenant_id"], name: "index_quiz_attempts_on_tenant_id"
+    t.index ["user_id", "quiz_id"], name: "idx_quiz_attempts_user_quiz"
     t.index ["user_id"], name: "index_quiz_attempts_on_user_id"
   end
 
@@ -644,6 +654,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.text "instructions"
     t.datetime "lock_at"
     t.decimal "points_possible"
+    t.integer "quiz_attempts_count", default: 0, null: false
     t.string "quiz_type", default: "standard", null: false
     t.string "show_results", default: "after_submit", null: false
     t.boolean "shuffle_choices", default: false, null: false
@@ -808,6 +819,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000003) do
     t.index ["assignment_id"], name: "index_submissions_on_assignment_id"
     t.index ["graded_by_id"], name: "index_submissions_on_graded_by_id"
     t.index ["tenant_id"], name: "index_submissions_on_tenant_id"
+    t.index ["user_id", "assignment_id"], name: "idx_submissions_user_assignment"
     t.index ["user_id"], name: "index_submissions_on_user_id"
   end
 
