@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { Pagination } from "@/components/Pagination";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useCourses } from "@/hooks/useCourses";
+import { swrConfig, useAppSWR } from "@/lib/swr";
 
 interface Course {
   id: number;
@@ -58,35 +61,47 @@ function displayName(user: User | undefined): string {
 }
 
 export default function LearnCoursesPage() {
-  const [cards, setCards] = useState<CourseCard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
+  const {
+    data: courseData,
+    error: coursesError,
+    isLoading: coursesLoading,
+  } = useCourses({ page, per_page: perPage });
+  const {
+    data: userData,
+    error: usersError,
+    isLoading: usersLoading,
+  } = useAppSWR<User[]>("/api/v1/users");
+  const {
+    data: termData,
+    error: termsError,
+    isLoading: termsLoading,
+  } = useAppSWR<Term[]>("/api/v1/terms");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const courses = courseData ?? [];
+  const coursesKey = courses.map((course) => course.id).join(",");
+  const {
+    data: cardData,
+    error: cardsError,
+    isLoading: cardsLoading,
+  } = useSWR<CourseCard[]>(
+    courseData && userData && termData ? ["learn-courses-cards", coursesKey] : null,
+    async () => {
+      const availableUsers = userData ?? [];
+      const availableTerms = termData ?? [];
 
-    try {
-      const [courses, users, terms] = await Promise.all([
-        apiFetch<Course[]>(`/api/v1/courses?page=${page}&per_page=${perPage}`),
-        apiFetch<User[]>("/api/v1/users"),
-        apiFetch<Term[]>("/api/v1/terms"),
-      ]);
-
-      const usersById = users.reduce<Record<number, User>>((accumulator, user) => {
+      const usersById = availableUsers.reduce<Record<number, User>>((accumulator, user) => {
         accumulator[user.id] = user;
         return accumulator;
       }, {});
 
-      const termsById = terms.reduce<Record<number, Term>>((accumulator, term) => {
+      const termsById = availableTerms.reduce<Record<number, Term>>((accumulator, term) => {
         accumulator[term.id] = term;
         return accumulator;
       }, {});
 
-      const nextCards = await Promise.all(
+      return Promise.all(
         courses.map(async (course) => {
           const sections = course.sections || [];
           const enrollmentsPerSection = await Promise.all(
@@ -117,19 +132,19 @@ export default function LearnCoursesPage() {
           } satisfies CourseCard;
         }),
       );
+    },
+    swrConfig,
+  );
 
-      setCards(nextCards);
-      setTotalPages(courses.length < perPage ? page : page + 1);
-    } catch {
-      setError("Unable to load courses.");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, perPage]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const cards = cardData ?? [];
+  const loading =
+    (coursesLoading && !courseData) ||
+    (usersLoading && !userData) ||
+    (termsLoading && !termData) ||
+    (courses.length > 0 && cardsLoading && !cardData);
+  const error =
+    cardsError || coursesError || usersError || termsError ? "Unable to load courses." : null;
+  const totalPages = courses.length < perPage ? page : page + 1;
 
   return (
     <ProtectedRoute requiredRoles={LEARN_ROLES}>

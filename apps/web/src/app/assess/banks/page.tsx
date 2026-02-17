@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
@@ -8,6 +8,7 @@ import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
 import { Pagination } from "@/components/Pagination";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useAppSWR } from "@/lib/swr";
 
 interface QuestionBank {
   id: number;
@@ -19,30 +20,22 @@ interface QuestionBank {
 }
 
 export default function QuestionBankListPage() {
-  const [banks, setBanks] = useState<QuestionBank[]>([]);
-  const [loading, setLoading] = useState(true);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [exportingId, setExportingId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
+  const query = useMemo(() => {
+    const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+    if (subjectFilter) params.set("subject", subjectFilter);
+    return params.toString();
+  }, [page, perPage, subjectFilter]);
 
-  useEffect(() => {
-    async function fetchBanks() {
-      try {
-        const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
-        if (subjectFilter) params.set("subject", subjectFilter);
-        const data = await apiFetch<QuestionBank[]>(`/api/v1/question_banks?${params.toString()}`);
-        setBanks(data);
-        setTotalPages(data.length < perPage ? page : page + 1);
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBanks();
-  }, [subjectFilter, page, perPage]);
+  const { data: bankData, isLoading } = useAppSWR<QuestionBank[]>(
+    `/api/v1/question_banks?${query}`,
+  );
+  const banks = bankData ?? [];
+  const loading = isLoading && !bankData;
+  const totalPages = banks.length < perPage ? page : page + 1;
 
   const subjects = [...new Set(banks.map((b) => b.subject).filter(Boolean))];
 

@@ -1,95 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { EmptyState } from "@/components/EmptyState";
 import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
-import { apiFetch, buildApiUrl } from "@/lib/api";
-
-interface GradeCell {
-  assignment_id: number;
-  assignment_title: string;
-  assignment_type: string;
-  submission_id: number | null;
-  grade: number | null;
-  points_possible: number | null;
-  percentage: number | null;
-  status: string;
-  submitted: boolean;
-  late: boolean;
-  missing: boolean;
-  due_at: string | null;
-  submitted_at: string | null;
-}
-
-interface QuizGradeCell {
-  quiz_id: number;
-  title: string;
-  attempt_id: number | null;
-  score: number | null;
-  points_possible: number | null;
-  percentage: number | null;
-  status: string;
-  submitted_at: string | null;
-}
-
-interface MasterySummary {
-  threshold: number;
-  mastered_standards: number;
-  total_standards: number;
-  percentage: number | null;
-}
-
-interface StudentRow {
-  id: number;
-  name: string;
-  email: string;
-  grades: GradeCell[];
-  quiz_grades: QuizGradeCell[];
-  course_average: number | null;
-  missing_count: number;
-  late_count: number;
-  mastery: MasterySummary | null;
-}
-
-interface AssignmentSummary {
-  id: number;
-  title: string;
-  due_at: string | null;
-  points_possible: number | null;
-  submission_count: number;
-  graded_count: number;
-  average: number | null;
-  median: number | null;
-}
-
-interface QuizSummary {
-  id: number;
-  title: string;
-  points_possible: number | null;
-}
-
-interface CourseSummary {
-  student_count: number;
-  assignment_count: number;
-  quiz_count: number;
-  overall_average: number | null;
-  grade_distribution: Record<string, number>;
-  assignment_completion_rate: number;
-  students_with_missing_work: number;
-  category_averages: Record<string, number | null>;
-}
-
-interface GradebookResponse {
-  students: StudentRow[];
-  assignments: AssignmentSummary[];
-  quizzes: QuizSummary[];
-  course_summary: CourseSummary;
-  mastery_threshold: number;
-}
+import { buildApiUrl } from "@/lib/api";
+import { type AssignmentSummary, type GradeCell, useGradebook } from "@/hooks/useGradebook";
 
 const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
 
@@ -153,35 +72,13 @@ function statusLabel(cell: GradeCell): string {
 export default function GradebookPage() {
   const params = useParams();
   const courseId = String(params.courseId);
-
-  const [gradebook, setGradebook] = useState<GradebookResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: gradebook, error, isLoading } = useGradebook(courseId);
 
   const [sortBy, setSortBy] = useState<string>("name");
   const [minimumAverage, setMinimumAverage] = useState<string>("all");
   const [missingOnly, setMissingOnly] = useState(false);
   const [lateOnly, setLateOnly] = useState(false);
   const [showQuizGrades, setShowQuizGrades] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const payload = await apiFetch<GradebookResponse>(`/api/v1/courses/${courseId}/gradebook`);
-      setGradebook(payload);
-    } catch {
-      setError("Unable to load gradebook data.");
-      setGradebook(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [courseId]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
 
   const assignmentById = useMemo(() => {
     const map = new Map<number, AssignmentSummary>();
@@ -246,6 +143,9 @@ export default function GradebookPage() {
     window.open(buildApiUrl(exportPath), "_blank", "noopener,noreferrer");
   }, [courseId]);
 
+  const loading = isLoading;
+  const errorMessage = error ? error.message : null;
+
   return (
     <ProtectedRoute requiredRoles={TEACHER_ROLES}>
       <AppShell>
@@ -278,7 +178,7 @@ export default function GradebookPage() {
           ) : !gradebook ? (
             <EmptyState
               title="Unable to load gradebook"
-              description={error ?? "Try again from the course page."}
+              description={errorMessage ?? "Try again from the course page."}
             />
           ) : gradebook.students.length === 0 ? (
             <EmptyState

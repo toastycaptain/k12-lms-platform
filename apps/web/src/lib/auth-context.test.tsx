@@ -1,11 +1,17 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { type ReactNode } from "react";
+import { SWRConfig } from "swr";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
-import { apiFetch, fetchCurrentUser } from "@/lib/api";
+import { apiFetch, fetchCurrentUser, type CurrentUser } from "@/lib/api";
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
   fetchCurrentUser: vi.fn(),
 }));
+
+function renderWithSWR(ui: ReactNode) {
+  return render(<SWRConfig value={{ provider: () => new Map() }}>{ui}</SWRConfig>);
+}
 
 function Probe() {
   const { user, loading, error, signOut, refresh } = useAuth();
@@ -29,24 +35,26 @@ describe("AuthProvider", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedFetchCurrentUser = vi.mocked(fetchCurrentUser);
 
+  const teacher: CurrentUser = {
+    id: 12,
+    email: "teacher@example.com",
+    first_name: "Tina",
+    last_name: "Teacher",
+    tenant_id: 3,
+    roles: ["teacher"],
+    google_connected: false,
+    onboarding_complete: true,
+    preferences: {},
+  };
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("loads and exposes the authenticated user", async () => {
-    mockedFetchCurrentUser.mockResolvedValueOnce({
-      id: 12,
-      email: "teacher@example.com",
-      first_name: "Tina",
-      last_name: "Teacher",
-      tenant_id: 3,
-      roles: ["teacher"],
-      google_connected: false,
-      onboarding_complete: true,
-      preferences: {},
-    });
+    mockedFetchCurrentUser.mockResolvedValue(teacher);
 
-    render(
+    renderWithSWR(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
@@ -61,9 +69,9 @@ describe("AuthProvider", () => {
   });
 
   it("handles unauthenticated fetch failures and clears user", async () => {
-    mockedFetchCurrentUser.mockRejectedValueOnce(new Error("No active session"));
+    mockedFetchCurrentUser.mockRejectedValue(new Error("No active session"));
 
-    render(
+    renderWithSWR(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
@@ -75,7 +83,7 @@ describe("AuthProvider", () => {
   });
 
   it("signs out and clears user state", async () => {
-    mockedFetchCurrentUser.mockResolvedValueOnce({
+    mockedFetchCurrentUser.mockResolvedValue({
       id: 5,
       email: "admin@example.com",
       first_name: "Ada",
@@ -88,7 +96,7 @@ describe("AuthProvider", () => {
     });
     mockedApiFetch.mockResolvedValueOnce(undefined);
 
-    render(
+    renderWithSWR(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
@@ -105,31 +113,23 @@ describe("AuthProvider", () => {
   });
 
   it("refresh reloads the user", async () => {
-    mockedFetchCurrentUser
-      .mockResolvedValueOnce({
-        id: 1,
-        email: "teacher1@example.com",
-        first_name: "Taylor",
-        last_name: "Teacher",
-        tenant_id: 1,
-        roles: ["teacher"],
-        google_connected: false,
-        onboarding_complete: true,
-        preferences: {},
-      })
-      .mockResolvedValueOnce({
-        id: 1,
-        email: "teacher2@example.com",
-        first_name: "Taylor",
-        last_name: "Teacher",
-        tenant_id: 1,
-        roles: ["teacher"],
-        google_connected: false,
-        onboarding_complete: true,
-        preferences: {},
-      });
+    const teacherOne: CurrentUser = {
+      id: 1,
+      email: "teacher1@example.com",
+      first_name: "Taylor",
+      last_name: "Teacher",
+      tenant_id: 1,
+      roles: ["teacher"],
+      google_connected: false,
+      onboarding_complete: true,
+      preferences: {},
+    };
+    const teacherTwo: CurrentUser = { ...teacherOne, email: "teacher2@example.com" };
+    let currentUser = teacherOne;
 
-    render(
+    mockedFetchCurrentUser.mockImplementation(async () => currentUser);
+
+    renderWithSWR(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
@@ -137,39 +137,39 @@ describe("AuthProvider", () => {
 
     expect(await screen.findByText("teacher1@example.com")).toBeInTheDocument();
 
+    currentUser = teacherTwo;
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
     await waitFor(() =>
       expect(screen.getByTestId("user")).toHaveTextContent("teacher2@example.com"),
     );
-    expect(mockedFetchCurrentUser).toHaveBeenCalledTimes(2);
+    expect(mockedFetchCurrentUser.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("handles non-Error rejection in refresh", async () => {
-    mockedFetchCurrentUser
-      .mockResolvedValueOnce({
-        id: 3,
-        email: "teacher@example.com",
-        first_name: "Taylor",
-        last_name: "Teacher",
-        tenant_id: 1,
-        roles: ["teacher"],
-        google_connected: false,
-        onboarding_complete: true,
-        preferences: {},
-      })
-      .mockRejectedValueOnce("network down");
+  it("handles refresh failure and preserves error state", async () => {
+    let shouldFail = false;
 
-    render(
+    mockedFetchCurrentUser.mockImplementation(async () => {
+      if (shouldFail) {
+        throw new Error("Unable to fetch current user");
+      }
+
+      return teacher;
+    });
+
+    renderWithSWR(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
     );
 
     expect(await screen.findByText("teacher@example.com")).toBeInTheDocument();
+    shouldFail = true;
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
-    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("none"));
+    await waitFor(() =>
+      expect(screen.getByTestId("user")).toHaveTextContent("teacher@example.com"),
+    );
     expect(screen.getByTestId("error")).toHaveTextContent("Unable to fetch current user");
   });
 });

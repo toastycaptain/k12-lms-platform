@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { swrConfig } from "@/lib/swr";
 
 interface Assignment {
   id: number;
@@ -70,6 +72,13 @@ interface CourseCardData {
   total: number;
 }
 
+interface LearnDashboardData {
+  assignments: Assignment[];
+  recentGrades: Submission[];
+  courses: Course[];
+  courseCards: CourseCardData[];
+}
+
 const LEARN_ROLES = ["admin", "teacher", "student"];
 
 function countdownLabel(dateValue: string): string {
@@ -91,65 +100,19 @@ function displayName(user: User | undefined): string {
 
 export default function LearnDashboardPage() {
   const { user } = useAuth();
-
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [recentGrades, setRecentGrades] = useState<Submission[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [courseCards, setCourseCards] = useState<CourseCardData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const assignmentById = useMemo(
-    () =>
-      assignments.reduce<Record<number, Assignment>>((accumulator, assignment) => {
-        accumulator[assignment.id] = assignment;
-        return accumulator;
-      }, {}),
-    [assignments],
-  );
-
-  const courseById = useMemo(
-    () =>
-      courses.reduce<Record<number, Course>>((accumulator, course) => {
-        accumulator[course.id] = course;
-        return accumulator;
-      }, {}),
-    [courses],
-  );
-
-  const upcomingAssignments = useMemo(() => {
-    const now = new Date();
-    return assignments
-      .filter((assignment) => assignment.due_at && new Date(assignment.due_at) > now)
-      .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
-      .slice(0, 5);
-  }, [assignments]);
-
-  const latestGrades = useMemo(() => {
-    return [...recentGrades]
-      .sort((a, b) => {
-        const aDate = a.graded_at || a.updated_at;
-        const bDate = b.graded_at || b.updated_at;
-        return new Date(bDate).getTime() - new Date(aDate).getTime();
-      })
-      .slice(0, 5);
-  }, [recentGrades]);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+  const {
+    data,
+    error: loadError,
+    isLoading,
+  } = useSWR<LearnDashboardData>(
+    "learn-dashboard-data",
+    async () => {
       const [courseData, assignmentData, gradedSubmissions, users] = await Promise.all([
         apiFetch<Course[]>("/api/v1/courses"),
         apiFetch<Assignment[]>("/api/v1/assignments"),
         apiFetch<Submission[]>("/api/v1/submissions?status=graded"),
         apiFetch<User[]>("/api/v1/users"),
       ]);
-
-      setCourses(courseData);
-      setAssignments(assignmentData);
-      setRecentGrades(gradedSubmissions);
 
       const usersById = users.reduce<Record<number, User>>((accumulator, entry) => {
         accumulator[entry.id] = entry;
@@ -200,17 +163,58 @@ export default function LearnDashboardPage() {
         }),
       );
 
-      setCourseCards(cards);
-    } catch {
-      setError("Unable to load student dashboard.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return {
+        assignments: assignmentData,
+        recentGrades: gradedSubmissions,
+        courses: courseData,
+        courseCards: cards,
+      } satisfies LearnDashboardData;
+    },
+    swrConfig,
+  );
 
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const assignments = data?.assignments ?? [];
+  const recentGrades = data?.recentGrades ?? [];
+  const courses = data?.courses ?? [];
+  const courseCards = data?.courseCards ?? [];
+  const loading = isLoading && !data;
+  const error = loadError ? "Unable to load student dashboard." : null;
+
+  const assignmentById = useMemo(
+    () =>
+      assignments.reduce<Record<number, Assignment>>((accumulator, assignment) => {
+        accumulator[assignment.id] = assignment;
+        return accumulator;
+      }, {}),
+    [assignments],
+  );
+
+  const courseById = useMemo(
+    () =>
+      courses.reduce<Record<number, Course>>((accumulator, course) => {
+        accumulator[course.id] = course;
+        return accumulator;
+      }, {}),
+    [courses],
+  );
+
+  const upcomingAssignments = useMemo(() => {
+    const now = new Date();
+    return assignments
+      .filter((assignment) => assignment.due_at && new Date(assignment.due_at) > now)
+      .sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime())
+      .slice(0, 5);
+  }, [assignments]);
+
+  const latestGrades = useMemo(() => {
+    return [...recentGrades]
+      .sort((a, b) => {
+        const aDate = a.graded_at || a.updated_at;
+        const bDate = b.graded_at || b.updated_at;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      })
+      .slice(0, 5);
+  }, [recentGrades]);
 
   const todayLabel = new Date().toLocaleDateString(undefined, {
     weekday: "long",

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useParams } from "next/navigation";
+import { SWRConfig } from "swr";
 import GradebookPage from "@/app/teach/courses/[courseId]/gradebook/page";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -57,6 +58,14 @@ describe("Gradebook Page", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedUseAuth = vi.mocked(useAuth);
   const mockedUseParams = vi.mocked(useParams);
+
+  function renderPage() {
+    return render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <GradebookPage />
+      </SWRConfig>,
+    );
+  }
 
   const gradebookPayload = {
     students: [
@@ -229,7 +238,7 @@ describe("Gradebook Page", () => {
   });
 
   it("renders student grid data", async () => {
-    render(<GradebookPage />);
+    renderPage();
 
     expect(await screen.findByText("Sam Student")).toBeInTheDocument();
     expect(screen.getByText("Pat Learner")).toBeInTheDocument();
@@ -238,7 +247,7 @@ describe("Gradebook Page", () => {
   });
 
   it("sorts by course average", async () => {
-    render(<GradebookPage />);
+    renderPage();
 
     await screen.findByText("Sam Student");
 
@@ -254,7 +263,7 @@ describe("Gradebook Page", () => {
   });
 
   it("filters to students with missing work", async () => {
-    render(<GradebookPage />);
+    renderPage();
 
     await screen.findByText("Sam Student");
 
@@ -270,7 +279,7 @@ describe("Gradebook Page", () => {
   it("exports CSV on click", async () => {
     const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
 
-    render(<GradebookPage />);
+    renderPage();
 
     await screen.findByText("Sam Student");
     fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
@@ -283,7 +292,7 @@ describe("Gradebook Page", () => {
   });
 
   it("shows status indicators and color classes", async () => {
-    render(<GradebookPage />);
+    renderPage();
 
     const okCell = await screen.findByTitle("Unit Reflection | OK");
     const lateCell = screen.getByTitle("Unit Reflection | LATE");

@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { swrConfig } from "@/lib/swr";
 
 interface Course {
   id: number;
@@ -102,6 +104,18 @@ interface ActivityItem {
   text: string;
 }
 
+interface CourseHomeData {
+  course: Course | null;
+  modules: CourseModule[];
+  assignments: Assignment[];
+  termsById: Record<number, Term>;
+  studentCount: number;
+  moduleProgress: Record<number, ModuleProgress>;
+  recentActivity: ActivityItem[];
+  courseMapping: SyncMapping | null;
+  integrationConfig: IntegrationConfig | null;
+}
+
 const TEACHER_ROLES = ["admin", "curriculum_lead", "teacher"];
 
 function StatusBadge({ status }: { status: string }) {
@@ -142,27 +156,17 @@ export default function CourseHomePage() {
   const { addToast } = useToast();
   const courseId = String(params.courseId);
 
-  const [course, setCourse] = useState<Course | null>(null);
-  const [modules, setModules] = useState<CourseModule[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [termsById, setTermsById] = useState<Record<number, Term>>({});
-  const [studentCount, setStudentCount] = useState(0);
-  const [moduleProgress, setModuleProgress] = useState<Record<number, ModuleProgress>>({});
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-
-  const [courseMapping, setCourseMapping] = useState<SyncMapping | null>(null);
-  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
   const [syncingNow, setSyncingNow] = useState(false);
   const [pushingGrades, setPushingGrades] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+  const {
+    data,
+    error: loadError,
+    isLoading,
+    mutate,
+  } = useSWR<CourseHomeData>(
+    ["course-home", courseId],
+    async () => {
       const [courseData, moduleData, assignmentData, discussionData, termData, userData] =
         await Promise.all([
           apiFetch<Course>(`/api/v1/courses/${courseId}`),
@@ -173,16 +177,12 @@ export default function CourseHomePage() {
           apiFetch<User[]>("/api/v1/users"),
         ]);
 
-      setCourse(courseData);
-      setModules(moduleData.sort((a, b) => a.position - b.position));
-      setAssignments(assignmentData);
-      setTermsById(
-        termData.reduce<Record<number, Term>>((accumulator, term) => {
-          accumulator[term.id] = term;
-          return accumulator;
-        }, {}),
-      );
-      const usersMap = userData.reduce<Record<number, User>>((accumulator, user) => {
+      const sortedModules = [...moduleData].sort((a, b) => a.position - b.position);
+      const termsById = termData.reduce<Record<number, Term>>((accumulator, term) => {
+        accumulator[term.id] = term;
+        return accumulator;
+      }, {});
+      const usersById = userData.reduce<Record<number, User>>((accumulator, user) => {
         accumulator[user.id] = user;
         return accumulator;
       }, {});
@@ -200,10 +200,9 @@ export default function CourseHomePage() {
           uniqueStudents.add(enrollment.user_id);
         }
       });
-      setStudentCount(uniqueStudents.size);
 
       const moduleItems = await Promise.all(
-        moduleData.map((moduleEntry) =>
+        sortedModules.map((moduleEntry) =>
           apiFetch<ModuleItem[]>(`/api/v1/modules/${moduleEntry.id}/module_items`),
         ),
       );
@@ -216,8 +215,8 @@ export default function CourseHomePage() {
         {},
       );
 
-      const progress: Record<number, ModuleProgress> = {};
-      moduleData.forEach((moduleEntry, index) => {
+      const moduleProgress: Record<number, ModuleProgress> = {};
+      sortedModules.forEach((moduleEntry, index) => {
         const items = moduleItems[index] || [];
         const completed = items.filter((item) => {
           if (item.itemable_type === "Assignment" && item.itemable_id) {
@@ -226,13 +225,12 @@ export default function CourseHomePage() {
           return true;
         }).length;
 
-        progress[moduleEntry.id] = {
+        moduleProgress[moduleEntry.id] = {
           moduleId: moduleEntry.id,
           completed,
           total: items.length,
         };
       });
-      setModuleProgress(progress);
 
       const submissionsPerAssignment = await Promise.all(
         assignmentData.map((assignment) =>
@@ -252,7 +250,7 @@ export default function CourseHomePage() {
           activity.push({
             id: `submission-${submission.id}`,
             timestamp: submission.submitted_at,
-            text: `${personName(usersMap, submission.user_id)} submitted ${assignmentData[index].title}`,
+            text: `${personName(usersById, submission.user_id)} submitted ${assignmentData[index].title}`,
           });
         });
       });
@@ -262,49 +260,62 @@ export default function CourseHomePage() {
           activity.push({
             id: `post-${post.id}`,
             timestamp: post.created_at,
-            text: `${personName(usersMap, post.created_by_id)} posted in ${discussionData[index].title}`,
+            text: `${personName(usersById, post.created_by_id)} posted in ${discussionData[index].title}`,
           });
         });
       });
 
-      setRecentActivity(
-        activity
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-          .slice(0, 5),
-      );
+      const recentActivity = activity
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 5);
+
+      let integrationConfig: IntegrationConfig | null = null;
+      let courseMapping: SyncMapping | null = null;
 
       try {
         const configs = await apiFetch<IntegrationConfig[]>("/api/v1/integration_configs");
-        const classroomConfig = configs.find(
-          (config) => config.provider === "google_classroom" && config.status === "active",
-        );
+        integrationConfig =
+          configs.find(
+            (config) => config.provider === "google_classroom" && config.status === "active",
+          ) || null;
 
-        if (classroomConfig) {
-          setIntegrationConfig(classroomConfig);
-
+        if (integrationConfig) {
           const mappings = await apiFetch<SyncMapping[]>(
-            `/api/v1/sync_mappings?integration_config_id=${classroomConfig.id}&local_type=Course&local_id=${courseId}`,
+            `/api/v1/sync_mappings?integration_config_id=${integrationConfig.id}&local_type=Course&local_id=${courseId}`,
           );
-          const mapping = mappings.find((entry) => entry.local_type === "Course");
-          setCourseMapping(mapping ?? null);
-        } else {
-          setIntegrationConfig(null);
-          setCourseMapping(null);
+          courseMapping = mappings.find((entry) => entry.local_type === "Course") || null;
         }
       } catch {
-        setIntegrationConfig(null);
-        setCourseMapping(null);
+        integrationConfig = null;
+        courseMapping = null;
       }
-    } catch {
-      setError("Unable to load course home data.");
-    } finally {
-      setLoading(false);
-    }
-  }, [courseId]);
 
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+      return {
+        course: courseData,
+        modules: sortedModules,
+        assignments: assignmentData,
+        termsById,
+        studentCount: uniqueStudents.size,
+        moduleProgress,
+        recentActivity,
+        courseMapping,
+        integrationConfig,
+      } satisfies CourseHomeData;
+    },
+    swrConfig,
+  );
+
+  const course = data?.course ?? null;
+  const modules = data?.modules ?? [];
+  const assignments = data?.assignments ?? [];
+  const termsById = data?.termsById ?? {};
+  const studentCount = data?.studentCount ?? 0;
+  const moduleProgress = data?.moduleProgress ?? {};
+  const recentActivity = data?.recentActivity ?? [];
+  const courseMapping = data?.courseMapping ?? null;
+  const integrationConfig = data?.integrationConfig ?? null;
+  const loading = isLoading && !data;
+  const error = loadError ? "Unable to load course home data." : null;
 
   const sectionNames =
     (course?.sections || []).map((section) => section.name).join(", ") || "No sections";
@@ -339,6 +350,7 @@ export default function CourseHomePage() {
         });
       }
       addToast("success", "Sync triggered.");
+      await mutate();
     } catch {
       addToast("error", "Failed to trigger sync.");
     } finally {

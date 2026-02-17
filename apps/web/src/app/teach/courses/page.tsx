@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
+import { useCourses } from "@/hooks/useCourses";
+import { useAppSWR } from "@/lib/swr";
 
 interface Course {
   id: number;
   name: string;
   code: string;
-  description: string;
+  description?: string;
 }
 
 interface Section {
@@ -35,50 +36,47 @@ interface CourseWithDetails extends Course {
 }
 
 export default function CourseListPage() {
-  const [courses, setCourses] = useState<CourseWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
+  const { data: courseData, isLoading: coursesLoading } = useCourses({
+    page,
+    per_page: perPage,
+  });
+  const { data: sectionsData, isLoading: sectionsLoading } =
+    useAppSWR<Section[]>("/api/v1/sections");
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } =
+    useAppSWR<Enrollment[]>("/api/v1/enrollments");
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [coursesData, sectionsData, enrollmentsData] = await Promise.all([
-          apiFetch<Course[]>(`/api/v1/courses?page=${page}&per_page=${perPage}`),
-          apiFetch<Section[]>("/api/v1/sections"),
-          apiFetch<Enrollment[]>("/api/v1/enrollments"),
-        ]);
+  const courses = useMemo(() => {
+    if (!courseData || !sectionsData || !enrollmentsData) {
+      return [];
+    }
 
-        const sectionMap = new Map(sectionsData.map((s) => [s.id, s]));
-        const enrollmentByCourse = new Map<number, Enrollment>();
-        for (const enrollment of enrollmentsData) {
-          const section = sectionMap.get(enrollment.section_id);
-          if (section) {
-            enrollmentByCourse.set(section.course_id, enrollment);
-          }
-        }
-
-        const enriched = coursesData.map((course) => {
-          const enrollment = enrollmentByCourse.get(course.id);
-          const section = enrollment ? sectionMap.get(enrollment.section_id) : undefined;
-          return {
-            ...course,
-            sectionName: section?.name,
-            role: enrollment?.role,
-          };
-        });
-
-        setCourses(enriched);
-        setTotalPages(coursesData.length < perPage ? page : page + 1);
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
+    const sectionMap = new Map(sectionsData.map((section) => [section.id, section]));
+    const enrollmentByCourse = new Map<number, Enrollment>();
+    for (const enrollment of enrollmentsData) {
+      const section = sectionMap.get(enrollment.section_id);
+      if (section) {
+        enrollmentByCourse.set(section.course_id, enrollment);
       }
     }
-    fetchData();
-  }, [page, perPage]);
+
+    return courseData.map((course) => {
+      const enrollment = enrollmentByCourse.get(course.id);
+      const section = enrollment ? sectionMap.get(enrollment.section_id) : undefined;
+      return {
+        ...course,
+        sectionName: section?.name,
+        role: enrollment?.role,
+      } satisfies CourseWithDetails;
+    });
+  }, [courseData, enrollmentsData, sectionsData]);
+
+  const loading =
+    (coursesLoading && !courseData) ||
+    (sectionsLoading && !sectionsData) ||
+    (enrollmentsLoading && !enrollmentsData);
+  const totalPages = (courseData?.length ?? 0) < perPage ? page : page + 1;
 
   return (
     <ProtectedRoute>

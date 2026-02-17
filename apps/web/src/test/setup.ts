@@ -1,8 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import "vitest-axe/extend-expect";
 import { cleanup } from "@testing-library/react";
+import { mutate } from "swr";
 import { afterEach } from "vitest";
 
-afterEach(() => {
+afterEach(async () => {
+  await mutate(() => true, undefined, {
+    revalidate: false,
+  });
   cleanup();
 });

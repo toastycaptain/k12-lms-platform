@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { FocusTrap } from "@/components/FocusTrap";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -12,6 +12,7 @@ import { useToast } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useAppSWR } from "@/lib/swr";
 
 interface Course {
   id: number;
@@ -74,17 +75,8 @@ export default function CommunicatePage() {
   const { user } = useAuth();
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("announcements");
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [threads, setThreads] = useState<MessageThread[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-
-  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
-  const [loadingThreads, setLoadingThreads] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [threadsPage, setThreadsPage] = useState(1);
   const [threadsPerPage, setThreadsPerPage] = useState(25);
-  const [threadsTotalPages, setThreadsTotalPages] = useState(1);
 
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [announcementCourseId, setAnnouncementCourseId] = useState("");
@@ -100,53 +92,32 @@ export default function CommunicatePage() {
     [user?.roles],
   );
 
-  const loadAnnouncements = useCallback(async () => {
-    setLoadingAnnouncements(true);
-    try {
-      const rows = await apiFetch<Announcement[]>("/api/v1/announcements");
-      setAnnouncements(rows);
-    } catch (loadError) {
-      setError(loadError instanceof ApiError ? loadError.message : "Failed to load announcements.");
-    } finally {
-      setLoadingAnnouncements(false);
-    }
-  }, []);
+  const {
+    data: announcementData,
+    error: announcementsError,
+    isLoading: loadingAnnouncements,
+    mutate: mutateAnnouncements,
+  } = useAppSWR<Announcement[]>("/api/v1/announcements");
+  const {
+    data: threadData,
+    error: threadsError,
+    isLoading: loadingThreads,
+  } = useAppSWR<MessageThread[]>(
+    `/api/v1/message_threads?page=${threadsPage}&per_page=${threadsPerPage}`,
+  );
+  const { data: courseData, error: coursesError } = useAppSWR<Course[]>(
+    canCreateAnnouncement ? "/api/v1/courses" : null,
+  );
 
-  const loadThreads = useCallback(async () => {
-    setLoadingThreads(true);
-    try {
-      const rows = await apiFetch<MessageThread[]>(
-        `/api/v1/message_threads?page=${threadsPage}&per_page=${threadsPerPage}`,
-      );
-      setThreads(rows);
-      setThreadsTotalPages(rows.length < threadsPerPage ? threadsPage : threadsPage + 1);
-    } catch (loadError) {
-      setError(loadError instanceof ApiError ? loadError.message : "Failed to load messages.");
-    } finally {
-      setLoadingThreads(false);
-    }
-  }, [threadsPage, threadsPerPage]);
+  const announcements = announcementData ?? [];
+  const threads = threadData ?? [];
+  const courses = courseData ?? [];
+  const threadsTotalPages = threads.length < threadsPerPage ? threadsPage : threadsPage + 1;
 
   useEffect(() => {
-    void loadAnnouncements();
-    void loadThreads();
-  }, [loadAnnouncements, loadThreads]);
-
-  useEffect(() => {
-    if (!canCreateAnnouncement) return;
-
-    async function loadCourses() {
-      try {
-        const rows = await apiFetch<Course[]>("/api/v1/courses");
-        setCourses(rows);
-        setAnnouncementCourseId((current) => current || String(rows[0]?.id || ""));
-      } catch (loadError) {
-        setError(loadError instanceof ApiError ? loadError.message : "Failed to load courses.");
-      }
-    }
-
-    void loadCourses();
-  }, [canCreateAnnouncement]);
+    if (!canCreateAnnouncement || courses.length === 0) return;
+    setAnnouncementCourseId((current) => current || String(courses[0].id));
+  }, [canCreateAnnouncement, courses]);
 
   async function submitAnnouncement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -180,7 +151,7 @@ export default function CommunicatePage() {
       setShowAnnouncementForm(false);
       addToast("success", "Announcement posted.");
       announce("Announcement posted successfully");
-      await loadAnnouncements();
+      await mutateAnnouncements();
     } catch (submitError) {
       announce("Failed to post announcement");
       addToast(
@@ -191,6 +162,13 @@ export default function CommunicatePage() {
       setSubmittingAnnouncement(false);
     }
   }
+
+  const loadError = announcementsError || threadsError || coursesError;
+  const errorMessage = loadError
+    ? loadError instanceof Error
+      ? loadError.message
+      : String(loadError)
+    : null;
 
   function activateTab(nextTab: Tab) {
     setActiveTab(nextTab);
@@ -218,9 +196,9 @@ export default function CommunicatePage() {
             <p className="text-sm text-gray-600">Announcements and direct course messaging.</p>
           </div>
 
-          {error && (
+          {errorMessage && (
             <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-              {error}
+              {errorMessage}
             </div>
           )}
 

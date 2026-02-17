@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
+import { SWRConfig } from "swr";
 import CourseHomePage from "@/app/teach/courses/[courseId]/page";
 import { ToastProvider } from "@/components/Toast";
 import { apiFetch } from "@/lib/api";
@@ -58,6 +59,16 @@ describe("Teach Course Home Page", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedUseAuth = vi.mocked(useAuth);
   const mockedUseParams = vi.mocked(useParams);
+
+  function renderPage() {
+    return render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <ToastProvider>
+          <CourseHomePage />
+        </ToastProvider>
+      </SWRConfig>,
+    );
+  }
 
   function setupApi({
     modules = [buildModule({ id: 11, title: "Module 1", course_id: 1, position: 1 })],
@@ -132,11 +143,7 @@ describe("Teach Course Home Page", () => {
   });
 
   it("renders course name and code", async () => {
-    render(
-      <ToastProvider>
-        <CourseHomePage />
-      </ToastProvider>,
-    );
+    renderPage();
 
     expect(await screen.findByRole("heading", { name: "Biology 101" })).toBeInTheDocument();
     expect(screen.getByText("BIO-101")).toBeInTheDocument();
@@ -150,11 +157,7 @@ describe("Teach Course Home Page", () => {
       ],
     });
 
-    render(
-      <ToastProvider>
-        <CourseHomePage />
-      </ToastProvider>,
-    );
+    renderPage();
 
     expect(await screen.findByText("Foundations")).toBeInTheDocument();
     expect(screen.getByText("Cell Structure")).toBeInTheDocument();
@@ -167,11 +170,7 @@ describe("Teach Course Home Page", () => {
       ],
     });
 
-    render(
-      <ToastProvider>
-        <CourseHomePage />
-      </ToastProvider>,
-    );
+    renderPage();
 
     expect(
       await screen.findByRole("heading", { name: "Upcoming Assignments" }),
@@ -182,11 +181,7 @@ describe("Teach Course Home Page", () => {
   it("shows empty state when no modules", async () => {
     setupApi({ modules: [] });
 
-    render(
-      <ToastProvider>
-        <CourseHomePage />
-      </ToastProvider>,
-    );
+    renderPage();
 
     expect(await screen.findByText("No modules yet")).toBeInTheDocument();
   });

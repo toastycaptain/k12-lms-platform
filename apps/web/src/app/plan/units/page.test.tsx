@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { SWRConfig } from "swr";
 import UnitsPage from "@/app/plan/units/page";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -44,6 +45,14 @@ vi.mock("@/components/ProtectedRoute", () => ({
 describe("Plan Units Page", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedUseAuth = vi.mocked(useAuth);
+
+  function renderPage() {
+    return render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <UnitsPage />
+      </SWRConfig>,
+    );
+  }
 
   beforeEach(() => {
     mockedUseAuth.mockReturnValue({
@@ -110,7 +119,7 @@ describe("Plan Units Page", () => {
       },
     ]);
 
-    render(<UnitsPage />);
+    renderPage();
 
     expect(await screen.findByText("Cells")).toBeInTheDocument();
     expect(screen.getByText("Genetics")).toBeInTheDocument();
@@ -120,7 +129,7 @@ describe("Plan Units Page", () => {
   it("renders empty state when no units", async () => {
     mockUnits([]);
 
-    render(<UnitsPage />);
+    renderPage();
 
     expect(await screen.findByText(/No unit plans yet/i)).toBeInTheDocument();
   });
@@ -145,7 +154,7 @@ describe("Plan Units Page", () => {
       },
     ]);
 
-    render(<UnitsPage />);
+    renderPage();
 
     expect(await screen.findByText("Cells")).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText("Search by title..."), {
@@ -159,7 +168,7 @@ describe("Plan Units Page", () => {
   it("shows create button linking to /plan/units/new", async () => {
     mockUnits([]);
 
-    render(<UnitsPage />);
+    renderPage();
 
     const link = await screen.findByRole("link", { name: "New Unit Plan" });
     expect(link).toHaveAttribute("href", "/plan/units/new");
@@ -185,7 +194,7 @@ describe("Plan Units Page", () => {
       },
     ]);
 
-    render(<UnitsPage />);
+    renderPage();
 
     expect(await screen.findByText("draft")).toBeInTheDocument();
     expect(screen.getByText("published")).toBeInTheDocument();

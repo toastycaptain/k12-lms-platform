@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
@@ -9,11 +10,8 @@ import { apiFetch } from "@/lib/api";
 import { Pagination } from "@/components/Pagination";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
-
-interface Course {
-  id: number;
-  name: string;
-}
+import { type Course, useCourses } from "@/hooks/useCourses";
+import { swrConfig } from "@/lib/swr";
 
 interface Quiz {
   id: number;
@@ -51,53 +49,49 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function QuizLibraryPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [rows, setRows] = useState<QuizRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
 
   const [courseFilter, setCourseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: courseData, isLoading: coursesLoading } = useCourses({
+    page,
+    per_page: perPage,
+  });
+  const courses: Course[] = courseData ?? [];
+  const totalPages = courses.length < perPage ? page : page + 1;
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const courseList = await apiFetch<Course[]>(
-          `/api/v1/courses?page=${page}&per_page=${perPage}`,
-        );
-        setCourses(courseList);
+  const courseKey = courses.map((course) => course.id).join(",");
+  const { data: rowData, isLoading: rowsLoading } = useSWR<QuizRow[]>(
+    courses.length > 0 ? ["quiz-library-rows", courseKey] : null,
+    async () => {
+      const byCourse = await Promise.all(
+        courses.map(async (course) => {
+          try {
+            const quizzes = await apiFetch<Quiz[]>(`/api/v1/courses/${course.id}/quizzes`);
+            return quizzes.map((quiz) => ({
+              id: quiz.id,
+              title: quiz.title,
+              status: quiz.status,
+              dueAt: quiz.due_at,
+              pointsPossible: quiz.points_possible,
+              courseId: course.id,
+              courseName: course.name,
+            }));
+          } catch {
+            return [];
+          }
+        }),
+      );
 
-        const byCourse = await Promise.all(
-          courseList.map(async (course) => {
-            try {
-              const quizzes = await apiFetch<Quiz[]>(`/api/v1/courses/${course.id}/quizzes`);
-              return quizzes.map((quiz) => ({
-                id: quiz.id,
-                title: quiz.title,
-                status: quiz.status,
-                dueAt: quiz.due_at,
-                pointsPossible: quiz.points_possible,
-                courseId: course.id,
-                courseName: course.name,
-              }));
-            } catch {
-              return [];
-            }
-          }),
-        );
-
-        setRows(byCourse.flat());
-        setTotalPages(courseList.length < perPage ? page : page + 1);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [page, perPage]);
+      return byCourse.flat();
+    },
+    swrConfig,
+  );
+  const rows = rowData ?? [];
+  const loading =
+    (coursesLoading && !courseData) || (courses.length > 0 && rowsLoading && !rowData);
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {

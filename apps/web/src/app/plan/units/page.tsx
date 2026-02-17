@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
@@ -8,6 +9,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
+import { useCourses } from "@/hooks/useCourses";
+import { useUnitPlans } from "@/hooks/useUnitPlans";
+import { swrConfig } from "@/lib/swr";
 
 interface UnitPlan {
   id: number;
@@ -45,51 +49,46 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function UnitLibraryPage() {
-  const [unitPlans, setUnitPlans] = useState<UnitPlan[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [versionCounts, setVersionCounts] = useState<Record<number, number>>({});
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCourse, setFilterCourse] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
+  const { data: unitPlanData, isLoading: unitsLoading } = useUnitPlans({
+    page,
+    per_page: perPage,
+  });
+  const { data: courseData, isLoading: coursesLoading } = useCourses();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [units, allCourses] = await Promise.all([
-          apiFetch<UnitPlan[]>(`/api/v1/unit_plans?page=${page}&per_page=${perPage}`),
-          apiFetch<Course[]>("/api/v1/courses"),
-        ]);
-        setUnitPlans(units);
-        setCourses(allCourses);
-        setTotalPages(units.length < perPage ? page : page + 1);
-
-        // Fetch version counts for each unit
-        const counts: Record<number, number> = {};
-        await Promise.all(
-          units.map(async (unit) => {
-            try {
-              const versions = await apiFetch<UnitVersion[]>(
-                `/api/v1/unit_plans/${unit.id}/versions`,
-              );
-              counts[unit.id] = versions.length;
-            } catch {
-              counts[unit.id] = 0;
-            }
-          }),
-        );
-        setVersionCounts(counts);
-      } catch {
-        // API may not be available
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [page, perPage]);
+  const unitPlans = unitPlanData ?? [];
+  const courses: Course[] = courseData ?? [];
+  const unitVersionKey = unitPlans.map((unit) => unit.id).join(",");
+  const { data: versionCountData, isLoading: versionsLoading } = useSWR<Record<number, number>>(
+    unitPlans.length > 0 ? ["unit-version-counts", unitVersionKey] : null,
+    async () => {
+      const counts: Record<number, number> = {};
+      await Promise.all(
+        unitPlans.map(async (unit) => {
+          try {
+            const versions = await apiFetch<UnitVersion[]>(
+              `/api/v1/unit_plans/${unit.id}/versions`,
+            );
+            counts[unit.id] = versions.length;
+          } catch {
+            counts[unit.id] = 0;
+          }
+        }),
+      );
+      return counts;
+    },
+    swrConfig,
+  );
+  const versionCounts = versionCountData ?? {};
+  const loading =
+    (unitsLoading && !unitPlanData) ||
+    (coursesLoading && !courseData) ||
+    (unitPlans.length > 0 && versionsLoading && !versionCountData);
+  const totalPages = unitPlans.length < perPage ? page : page + 1;
 
   const courseMap = useMemo(() => {
     const map: Record<number, Course> = {};

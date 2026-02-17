@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { apiFetch, fetchCurrentUser, type CurrentUser } from "@/lib/api";
+import { createContext, useCallback, useContext } from "react";
+import { apiFetch, type CurrentUser } from "@/lib/api";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface AuthContextValue {
   user: CurrentUser | null;
@@ -20,35 +21,23 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: swrUser, error: swrError, isLoading, mutate: mutateCurrentUser } = useCurrentUser();
 
   const refresh = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const currentUser = await fetchCurrentUser();
-      setUser(currentUser);
-    } catch (err) {
-      setUser(null);
-      setError(err instanceof Error ? err.message : "Unable to fetch current user");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await mutateCurrentUser();
+  }, [mutateCurrentUser]);
 
   const signOut = useCallback(async () => {
     try {
       await apiFetch("/api/v1/session", { method: "DELETE" });
     } finally {
-      setUser(null);
+      await mutateCurrentUser(undefined, false);
     }
-  }, []);
+  }, [mutateCurrentUser]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const user = swrUser ?? null;
+  const loading = isLoading;
+  const error = swrError?.message || null;
 
   return (
     <AuthContext.Provider value={{ user, loading, error, signOut, refresh }}>

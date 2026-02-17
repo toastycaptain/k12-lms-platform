@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { apiFetch } from "@/lib/api";
+import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useStandardFrameworks, useStandardTree } from "@/hooks/useStandards";
 
 interface StandardFramework {
   id: number;
@@ -120,52 +120,20 @@ function hasSearchMatch(children: StandardTree[], query: string): boolean {
 }
 
 export default function StandardsBrowserPage() {
-  const [frameworks, setFrameworks] = useState<StandardFramework[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<number | null>(null);
-  const [tree, setTree] = useState<StandardTree[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [treeLoading, setTreeLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    async function fetchFrameworks() {
-      try {
-        const data = await apiFetch<StandardFramework[]>("/api/v1/standard_frameworks");
-        setFrameworks(data);
-        if (data.length > 0) {
-          setSelectedFramework(data[0].id);
-        }
-      } catch {
-        // API may not be available
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchFrameworks();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedFramework) return;
-    async function fetchTree() {
-      setTreeLoading(true);
-      try {
-        const data = await apiFetch<StandardTree[]>(
-          `/api/v1/standard_frameworks/${selectedFramework}/tree`,
-        );
-        setTree(data);
-      } catch {
-        setTree([]);
-      } finally {
-        setTreeLoading(false);
-      }
-    }
-    fetchTree();
-  }, [selectedFramework]);
+  const { data: frameworkData, isLoading: loadingFrameworks } = useStandardFrameworks();
+  const frameworks = frameworkData ?? [];
+  const selectedFrameworkId = selectedFramework ?? frameworks[0]?.id ?? null;
+  const { data: treeData, isLoading: treeLoading } = useStandardTree(selectedFrameworkId);
+  const tree = treeData ?? [];
 
   const selectedFw = useMemo(
-    () => frameworks.find((f) => f.id === selectedFramework),
-    [frameworks, selectedFramework],
+    () => frameworks.find((f) => f.id === selectedFrameworkId),
+    [frameworks, selectedFrameworkId],
   );
+
+  const loading = loadingFrameworks && frameworks.length === 0;
 
   return (
     <ProtectedRoute>
@@ -187,8 +155,8 @@ export default function StandardsBrowserPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Framework</label>
                   <select
-                    value={selectedFramework || ""}
-                    onChange={(e) => setSelectedFramework(parseInt(e.target.value))}
+                    value={selectedFrameworkId || ""}
+                    onChange={(event) => setSelectedFramework(Number(event.target.value))}
                     className="mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {frameworks.map((fw) => (
