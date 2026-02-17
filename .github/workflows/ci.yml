@@ -123,3 +123,59 @@ jobs:
       - name: Brakeman
         run: bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error
         working-directory: apps/core
+
+  e2e:
+    name: E2E (Playwright)
+    needs: [web, core]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: k12_lms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    env:
+      BUNDLE_GEMFILE: apps/core/Gemfile
+      RAILS_ENV: test
+      ENABLE_E2E_TEST_HELPERS: "true"
+      FRONTEND_URL: http://localhost:3000
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/k12_lms_test
+      REDIS_URL: redis://localhost:6379/0
+      E2E_API_BASE_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install web dependencies
+        run: cd apps/web && npm ci
+      - name: Install Playwright browsers
+        run: cd apps/web && npx playwright install --with-deps chromium
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+          bundler-cache: true
+          working-directory: apps/core
+      - name: Run Playwright
+        run: cd apps/web && npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/

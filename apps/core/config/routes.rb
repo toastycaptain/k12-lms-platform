@@ -300,6 +300,13 @@ Rails.application.routes.draw do
         post :attach
         get :me
       end
+
+      if Rails.env.test? || ENV["ENABLE_E2E_TEST_HELPERS"] == "true"
+        namespace :testing do
+          post :session, to: "sessions#create"
+          delete :session, to: "sessions#destroy"
+        end
+      end
     end
   end
 
