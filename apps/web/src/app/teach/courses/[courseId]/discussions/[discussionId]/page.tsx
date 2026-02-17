@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Discussion {

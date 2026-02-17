@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import TextInput from "@/components/forms/TextInput";
+import TextInput from "../forms/TextInput";
 
 describe("TextInput", () => {
   it("renders input attributes", () => {

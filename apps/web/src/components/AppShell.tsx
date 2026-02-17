@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import GlobalSearch from "@/components/GlobalSearch";
-import { LiveRegion } from "@/components/LiveRegion";
+import { LiveRegion } from "@k12/ui";
 import NotificationBell from "@/components/NotificationBell";
 import SchoolSelector from "@/components/SchoolSelector";
 

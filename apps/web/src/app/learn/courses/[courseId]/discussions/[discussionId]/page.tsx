@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface Discussion {
   id: number;

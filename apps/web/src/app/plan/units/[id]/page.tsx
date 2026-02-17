@@ -10,8 +10,8 @@ import AiAssistantPanel from "@/components/AiAssistantPanel";
 import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
 import { parseUnitOutput, type UnitPlanOutput } from "@/lib/ai-output-parser";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
-import { EmptyState } from "@/components/EmptyState";
-import { FormField, TextArea, TextInput } from "@/components/forms";
+import { EmptyState } from "@k12/ui";
+import { FormField, TextArea, TextInput } from "@k12/ui/forms";
 
 interface UnitPlan {
   id: number;

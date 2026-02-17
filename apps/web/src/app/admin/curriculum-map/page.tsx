@@ -5,7 +5,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { ResponsiveTable } from "@k12/ui";
 import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
 
 interface AcademicYear {

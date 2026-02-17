@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface QuestionBank {
   id: number;

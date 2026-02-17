@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { addonApiFetch, openAddonSignInPopup, resolveAddonToken } from "@/lib/addon-api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 
 type WorkspaceTab = "units" | "standards" | "ai";
 

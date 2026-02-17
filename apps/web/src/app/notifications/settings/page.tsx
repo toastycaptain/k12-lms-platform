@@ -5,7 +5,7 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError } from "@/lib/api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 
 type EmailFrequency = "immediate" | "daily" | "weekly" | "never";
 

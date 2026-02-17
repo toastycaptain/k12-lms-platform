@@ -7,8 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { announce } from "@/components/LiveRegion";
-import { useToast } from "@/components/Toast";
+import { announce } from "@k12/ui";
+import { useToast } from "@k12/ui";
 
 const SUBJECT_OPTIONS = ["Math", "Science", "ELA", "Social Studies", "Arts", "PE"];
 const GRADE_OPTIONS = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];

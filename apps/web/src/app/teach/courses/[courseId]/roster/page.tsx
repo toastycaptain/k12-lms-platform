@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { ResponsiveTable } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface Course {
   id: number;

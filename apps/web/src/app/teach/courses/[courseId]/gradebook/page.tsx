@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
 import { buildApiUrl } from "@/lib/api";
 import { type AssignmentSummary, type GradeCell, useGradebook } from "@/hooks/useGradebook";

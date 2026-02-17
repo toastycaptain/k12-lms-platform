@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface Course {
   id: number;

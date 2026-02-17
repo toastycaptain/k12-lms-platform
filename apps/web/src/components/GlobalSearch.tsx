@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { announce } from "@/components/LiveRegion";
+import { announce } from "@k12/ui";
 
 interface SearchResult {
   type: string;

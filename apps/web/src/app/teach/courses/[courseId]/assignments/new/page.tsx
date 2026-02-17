@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
-import { FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
+import { FormActions, FormField, Select, TextArea, TextInput } from "@k12/ui/forms";
 
 export default function NewAssignmentPage() {
   const params = useParams();

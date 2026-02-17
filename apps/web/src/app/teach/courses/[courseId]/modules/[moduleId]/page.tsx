@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
-import { announce } from "@/components/LiveRegion";
+import { announce } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface CourseModule {

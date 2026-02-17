@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { swrConfig } from "@/lib/swr";
 
 interface Assignment {

@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { Checkbox, FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
+import { Checkbox, FormActions, FormField, Select, TextArea, TextInput } from "@k12/ui/forms";
 
 interface IntegrationConfig {
   id: number;

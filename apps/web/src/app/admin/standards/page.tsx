@@ -5,7 +5,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError } from "@/lib/api";
 import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface StandardFramework {
   id: number;

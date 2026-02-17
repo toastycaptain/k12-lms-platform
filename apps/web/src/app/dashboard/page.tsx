@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface UnitPlan {
   id: number;

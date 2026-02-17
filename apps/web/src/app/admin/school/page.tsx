@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { Checkbox, FormActions, FormField, Select, TextInput } from "@/components/forms";
+import { Checkbox, FormActions, FormField, Select, TextInput } from "@k12/ui/forms";
 
 interface SchoolRow {
   id: number;

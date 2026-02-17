@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { announce } from "@/components/LiveRegion";
+import { announce } from "@k12/ui";
 
 interface Notification {
   id: number;

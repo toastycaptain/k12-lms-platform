@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CourseAssignmentGradingPage from "@/app/teach/courses/[courseId]/assignments/[assignmentId]/grade/[submissionId]/page";
 import { apiFetch } from "@/lib/api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: vi.fn() })),
@@ -28,9 +28,13 @@ vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
 
-vi.mock("@/components/Toast", () => ({
-  useToast: vi.fn(),
-}));
+vi.mock("@k12/ui", async () => {
+  const actual = await vi.importActual<typeof import("@k12/ui")>("@k12/ui");
+  return {
+    ...actual,
+    useToast: vi.fn(),
+  };
+});
 
 describe("Assignment Grading Flow", () => {
   const mockedApiFetch = vi.mocked(apiFetch);

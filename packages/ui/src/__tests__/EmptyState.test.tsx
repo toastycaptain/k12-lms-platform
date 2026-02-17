@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "../EmptyState";
 
 describe("EmptyState", () => {
   it("renders title", () => {

@@ -7,9 +7,9 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { announce } from "@/components/LiveRegion";
-import { useToast } from "@/components/Toast";
-import { FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
+import { announce } from "@k12/ui";
+import { useToast } from "@k12/ui";
+import { FormActions, FormField, Select, TextArea, TextInput } from "@k12/ui/forms";
 
 interface UserSearchRow {
   id: number;

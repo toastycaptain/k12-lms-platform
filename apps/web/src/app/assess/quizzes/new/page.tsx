@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { FormActions, FormField, Select, TextArea, TextInput } from "@/components/forms";
+import { FormActions, FormField, Select, TextArea, TextInput } from "@k12/ui/forms";
 
 interface Course {
   id: number;

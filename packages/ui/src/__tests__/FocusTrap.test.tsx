@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { FocusTrap } from "@/components/FocusTrap";
+import { FocusTrap } from "../FocusTrap";
 
 describe("FocusTrap", () => {
   afterEach(() => {

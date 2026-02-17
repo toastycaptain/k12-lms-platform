@@ -1,7 +1,7 @@
 "use client";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorBoundary } from "@k12/ui";
 
 export default function LearnLayout({ children }: { children: React.ReactNode }) {
   return (

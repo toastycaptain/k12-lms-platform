@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/Skeleton";
+import { Skeleton } from "@k12/ui";
 
 interface ListSkeletonProps {
   count?: number;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import SwrProvider from "@/components/SwrProvider";
 import { AuthProvider } from "@/lib/auth-context";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import "./globals.css";
 
 export const metadata: Metadata = {

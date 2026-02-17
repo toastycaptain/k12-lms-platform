@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Select from "@/components/forms/Select";
+import Select from "../forms/Select";
 
 describe("Select", () => {
   it("renders options and selected value", () => {

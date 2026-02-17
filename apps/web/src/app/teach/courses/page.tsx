@@ -5,8 +5,8 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
-import { Pagination } from "@/components/Pagination";
+import { EmptyState } from "@k12/ui";
+import { Pagination } from "@k12/ui";
 import { useCourses } from "@/hooks/useCourses";
 import { useAppSWR } from "@/lib/swr";
 

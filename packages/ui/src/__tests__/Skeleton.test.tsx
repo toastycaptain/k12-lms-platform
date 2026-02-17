@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Skeleton } from "@/components/Skeleton";
+import { Skeleton } from "../Skeleton";
 
 describe("Skeleton", () => {
   it("renders with default line variant", () => {

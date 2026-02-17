@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { ResponsiveTable } from "@/components/ResponsiveTable";
+import { ResponsiveTable } from "../ResponsiveTable";
 
 interface TestRow {
   id: number;

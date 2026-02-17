@@ -7,9 +7,9 @@ import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { swrConfig } from "@/lib/swr";
 
 interface Course {

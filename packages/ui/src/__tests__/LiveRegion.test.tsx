@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { LiveRegion, announce } from "@/components/LiveRegion";
+import { LiveRegion, announce } from "../LiveRegion";
 
 describe("LiveRegion", () => {
   beforeEach(() => {

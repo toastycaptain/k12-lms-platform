@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import FormField from "@/components/forms/FormField";
-import TextInput from "@/components/forms/TextInput";
+import FormField from "../forms/FormField";
+import TextInput from "../forms/TextInput";
 
 describe("FormField", () => {
   it("renders label, description, and links aria-describedby to error and description", () => {

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import UsersAndRolesPage from "@/app/admin/users/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { StandardsSkeleton } from "@/components/skeletons/StandardsSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { useStandardFrameworks, useStandardTree } from "@/hooks/useStandards";
 
 interface StandardFramework {

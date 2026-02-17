@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import AdminStandardsPage from "@/app/admin/standards/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 
 vi.mock("next/navigation", () => ({

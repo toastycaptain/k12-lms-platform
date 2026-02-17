@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import QuizBuilderPage from "@/app/assess/quizzes/[quizId]/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildQuiz } from "@/test/factories";

@@ -45,9 +45,13 @@ vi.mock("@/components/GlobalSearch", () => ({
   default: () => <div>GlobalSearchStub</div>,
 }));
 
-vi.mock("@/components/LiveRegion", () => ({
-  LiveRegion: () => <div>LiveRegionStub</div>,
-}));
+vi.mock("@k12/ui", async () => {
+  const actual = await vi.importActual<typeof import("@k12/ui")>("@k12/ui");
+  return {
+    ...actual,
+    LiveRegion: () => <div>LiveRegionStub</div>,
+  };
+});
 
 describe("AppShell", () => {
   const mockedUsePathname = vi.mocked(usePathname);

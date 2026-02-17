@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import SamlIntegrationPage from "@/app/admin/integrations/saml/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";

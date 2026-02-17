@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { FocusTrap } from "@/components/FocusTrap";
+import { FocusTrap } from "@k12/ui";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { announce } from "@/components/LiveRegion";
+import { announce } from "@k12/ui";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useToast } from "@/components/Toast";
-import { Pagination } from "@/components/Pagination";
+import { useToast } from "@k12/ui";
+import { Pagination } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { useAppSWR } from "@/lib/swr";
 
 interface Course {

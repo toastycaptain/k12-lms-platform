@@ -5,9 +5,9 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
-import { Pagination } from "@/components/Pagination";
+import { Pagination } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 import { useAppSWR } from "@/lib/swr";
 
 interface QuestionBank {

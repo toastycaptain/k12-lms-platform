@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { GradebookSkeleton } from "@/components/skeletons/GradebookSkeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@k12/ui";
 
 interface Course {
   id: number;

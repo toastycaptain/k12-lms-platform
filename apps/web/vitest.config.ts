@@ -7,6 +7,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@k12/ui/forms": path.resolve(__dirname, "../../packages/ui/src/forms/index.ts"),
+      "@k12/ui/tokens": path.resolve(__dirname, "../../packages/ui/src/tokens.ts"),
+      "@k12/ui": path.resolve(__dirname, "../../packages/ui/src/index.ts"),
+      react: path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
+      "react/jsx-runtime": path.resolve(__dirname, "./node_modules/react/jsx-runtime.js"),
+      "react/jsx-dev-runtime": path.resolve(__dirname, "./node_modules/react/jsx-dev-runtime.js"),
     },
   },
   test: {

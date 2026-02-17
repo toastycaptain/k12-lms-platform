@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { ToastProvider, useToast } from "@/components/Toast";
+import { ToastProvider, useToast } from "../Toast";
 
 function ToastTrigger({ type = "success" as const, message = "Test message" }) {
   const { addToast } = useToast();

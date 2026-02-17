@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AppShell from "@/components/AppShell";
 import GlobalSearch from "@/components/GlobalSearch";
 import NotificationBell from "@/components/NotificationBell";
-import { FocusTrap } from "@/components/FocusTrap";
+import { FocusTrap } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";
@@ -123,7 +123,8 @@ describe("Keyboard Navigation", () => {
     fireEvent.change(input, { target: { value: "cell" } });
 
     await screen.findByRole("listbox");
-    await screen.findByRole("option", { name: /Cell Unit/i });
+    const [firstOption] = await screen.findAllByRole("option");
+    expect(firstOption).toHaveTextContent(/Cell\s+Unit/i);
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
 

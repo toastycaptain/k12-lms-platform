@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { SWRConfig } from "swr";
 import CommunicatePage from "@/app/communicate/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { createMockUser } from "@/test/utils";
@@ -45,10 +45,14 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
-vi.mock("@/components/LiveRegion", () => ({
-  announce: vi.fn(),
-  LiveRegion: () => null,
-}));
+vi.mock("@k12/ui", async () => {
+  const actual = await vi.importActual<typeof import("@k12/ui")>("@k12/ui");
+  return {
+    ...actual,
+    announce: vi.fn(),
+    LiveRegion: () => null,
+  };
+});
 
 vi.mock("@/components/AppShell", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

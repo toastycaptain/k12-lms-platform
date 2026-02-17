@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@k12/ui";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
-import { EmptyState } from "@/components/EmptyState";
-import { Pagination } from "@/components/Pagination";
-import { FormActions, FormField, Select, TextInput } from "@/components/forms";
+import { EmptyState } from "@k12/ui";
+import { Pagination } from "@k12/ui";
+import { FormActions, FormField, Select, TextInput } from "@k12/ui/forms";
 
 interface UserRow {
   id: number;

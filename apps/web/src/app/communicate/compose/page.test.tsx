@@ -3,8 +3,8 @@ import ComposeMessagePage from "@/app/communicate/compose/page";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/Toast";
-import { announce } from "@/components/LiveRegion";
+import { useToast } from "@k12/ui";
+import { announce } from "@k12/ui";
 
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
@@ -43,13 +43,14 @@ vi.mock("@/components/ProtectedRoute", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/components/Toast", () => ({
-  useToast: vi.fn(),
-}));
-
-vi.mock("@/components/LiveRegion", () => ({
-  announce: vi.fn(),
-}));
+vi.mock("@k12/ui", async () => {
+  const actual = await vi.importActual<typeof import("@k12/ui")>("@k12/ui");
+  return {
+    ...actual,
+    useToast: vi.fn(),
+    announce: vi.fn(),
+  };
+});
 
 describe("Messaging Compose Flow", () => {
   const mockedApiFetch = vi.mocked(apiFetch);

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import GlobalSearch from "@/components/GlobalSearch";
-import { announce } from "@/components/LiveRegion";
+import { announce } from "@k12/ui";
 
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
@@ -14,10 +14,14 @@ vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
 
-vi.mock("@/components/LiveRegion", () => ({
-  announce: vi.fn(),
-  LiveRegion: () => null,
-}));
+vi.mock("@k12/ui", async () => {
+  const actual = await vi.importActual<typeof import("@k12/ui")>("@k12/ui");
+  return {
+    ...actual,
+    announce: vi.fn(),
+    LiveRegion: () => null,
+  };
+});
 
 describe("GlobalSearch", () => {
   const mockedApiFetch = vi.mocked(apiFetch);

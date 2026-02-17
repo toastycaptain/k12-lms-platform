@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import { SWRConfig } from "swr";
 import CourseHomePage from "@/app/teach/courses/[courseId]/page";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buildAssignment, buildCourse, buildModule } from "@/test/factories";
