@@ -449,6 +449,62 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         '404':
           "$ref": "#/components/responses/NotFound"
+    patch:
+      summary: Update ai invocation apply metadata
+      operationId: patch_api_v1_ai_invocations_id
+      tags:
+      - AI
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AiInvocationApplyInput"
+      responses:
+        '200':
+          description: Resource updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AiInvocation"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    put:
+      summary: Replace ai invocation apply metadata
+      operationId: put_api_v1_ai_invocations_id
+      tags:
+      - AI
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AiInvocationApplyInput"
+      responses:
+        '200':
+          description: Resource updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AiInvocation"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
     parameters:
     - in: path
       name: id
@@ -7806,6 +7862,922 @@ paths:
           "$ref": "#/components/responses/NotFound"
         '422':
           "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/assignments/{assignment_id}/submissions":
+    parameters:
+    - in: path
+      name: assignment_id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List submissions for an assignment
+      operationId: get_api_v1_assignments_assignment_id_submissions
+      tags:
+      - Submissions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Submission list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Submission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    post:
+      summary: Create assignment submission
+      operationId: post_api_v1_assignments_assignment_id_submissions
+      tags:
+      - Submissions
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SubmissionCreateInput"
+      responses:
+        '201':
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Submission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/calendar":
+    get:
+      summary: List calendar events
+      operationId: get_api_v1_calendar
+      tags:
+      - Calendar
+      security:
+      - cookieAuth: []
+      parameters:
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: course_id
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Calendar event list
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CalendarEventsResponse"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+  "/api/v1/calendar.ics":
+    get:
+      summary: Export calendar in iCal format
+      operationId: get_api_v1_calendar_ics
+      tags:
+      - Calendar
+      security:
+      - cookieAuth: []
+      parameters:
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: course_id
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: iCalendar payload
+          content:
+            text/calendar:
+              schema:
+                type: string
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+  "/api/v1/courses/{id}/gradebook/export":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Export gradebook CSV
+      operationId: get_api_v1_courses_id_gradebook_export
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: CSV export
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/district/schools":
+    get:
+      summary: List schools for district admin
+      operationId: get_api_v1_district_schools
+      tags:
+      - District
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: District schools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/School"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/district/standards_coverage":
+    get:
+      summary: Compare standards coverage across district schools
+      operationId: get_api_v1_district_standards_coverage
+      tags:
+      - District
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: District standards coverage summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/DistrictStandardsCoverageRow"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/district/user_summary":
+    get:
+      summary: Summarize user counts per school in district
+      operationId: get_api_v1_district_user_summary
+      tags:
+      - District
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: District user summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/DistrictUserSummaryRow"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/district/push_template":
+    post:
+      summary: Push template to district schools
+      operationId: post_api_v1_district_push_template
+      tags:
+      - District
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DistrictTemplatePushInput"
+      responses:
+        '201':
+          description: Template pushed to selected schools
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DistrictTemplatePushResponse"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/drive/folder":
+    get:
+      summary: List files in a Drive folder
+      operationId: get_api_v1_drive_folder
+      tags:
+      - Drive
+      security:
+      - cookieAuth: []
+      parameters:
+      - in: query
+        name: folder_id
+        schema:
+          type: string
+      - in: query
+        name: query
+        schema:
+          type: string
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Drive folder listing
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DriveFolderListing"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    post:
+      summary: Create Drive folder
+      operationId: post_api_v1_drive_folder
+      tags:
+      - Drive
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DriveFolderCreateInput"
+      responses:
+        '201':
+          description: Drive folder created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DriveFile"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/drive/copy":
+    post:
+      summary: Copy Drive file
+      operationId: post_api_v1_drive_copy
+      tags:
+      - Drive
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DriveCopyInput"
+      responses:
+        '201':
+          description: Drive file copied
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DriveFile"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/drive/share":
+    post:
+      summary: Share Drive file with users
+      operationId: post_api_v1_drive_share
+      tags:
+      - Drive
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DriveShareInput"
+      responses:
+        '200':
+          description: Share action completed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/drive/preview/{file_id}":
+    parameters:
+    - in: path
+      name: file_id
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Generate Drive preview URL
+      operationId: get_api_v1_drive_preview_file_id
+      tags:
+      - Drive
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Preview URL
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DrivePreviewResponse"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/guardian_links":
+    get:
+      summary: List guardian links
+      operationId: get_api_v1_guardian_links
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      parameters:
+      - in: query
+        name: student_id
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Guardian link list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GuardianLink"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+    post:
+      summary: Create guardian link
+      operationId: post_api_v1_guardian_links
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GuardianLinkInput"
+      responses:
+        '201':
+          description: Guardian link created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GuardianLink"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/guardian_links/{id}":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Delete guardian link
+      operationId: delete_api_v1_guardian_links_id
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: Guardian link deleted
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/notification_preferences":
+    get:
+      summary: List notification preferences
+      operationId: get_api_v1_notification_preferences
+      tags:
+      - Notifications
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/NotificationPreference"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+  "/api/v1/notification_preferences/{event_type}":
+    parameters:
+    - in: path
+      name: event_type
+      required: true
+      schema:
+        type: string
+    patch:
+      summary: Update notification preference
+      operationId: patch_api_v1_notification_preferences_event_type
+      tags:
+      - Notifications
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/NotificationPreferenceInput"
+      responses:
+        '200':
+          description: Notification preference updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/NotificationPreference"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    put:
+      summary: Replace notification preference
+      operationId: put_api_v1_notification_preferences_event_type
+      tags:
+      - Notifications
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/NotificationPreferenceInput"
+      responses:
+        '200':
+          description: Notification preference updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/NotificationPreference"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/permissions":
+    get:
+      summary: List role permissions
+      operationId: get_api_v1_permissions
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      parameters:
+      - in: query
+        name: role_id
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Permission list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Permission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+    post:
+      summary: Create permission
+      operationId: post_api_v1_permissions
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PermissionInput"
+      responses:
+        '201':
+          description: Permission created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Permission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/permissions/{id}":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update permission
+      operationId: patch_api_v1_permissions_id
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PermissionInput"
+      responses:
+        '200':
+          description: Permission updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Permission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    put:
+      summary: Replace permission
+      operationId: put_api_v1_permissions_id
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PermissionInput"
+      responses:
+        '200':
+          description: Permission updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Permission"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    delete:
+      summary: Delete permission
+      operationId: delete_api_v1_permissions_id
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: Permission deleted
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/questions/{id}/create_version":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Create a new question version from current question
+      operationId: post_api_v1_questions_id_create_version
+      tags:
+      - Assessment
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          description: Question version created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QuestionVersion"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/questions/{question_id}/question_versions":
+    parameters:
+    - in: path
+      name: question_id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List versions for a question
+      operationId: get_api_v1_questions_question_id_question_versions
+      tags:
+      - Assessment
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Question version list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/QuestionVersion"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    post:
+      summary: Create a question version
+      operationId: post_api_v1_questions_question_id_question_versions
+      tags:
+      - Assessment
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/QuestionVersionInput"
+      responses:
+        '201':
+          description: Question version created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QuestionVersion"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/questions/{question_id}/question_versions/{id}":
+    parameters:
+    - in: path
+      name: question_id
+      required: true
+      schema:
+        type: integer
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show question version
+      operationId: get_api_v1_questions_question_id_question_versions_id
+      tags:
+      - Assessment
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Question version
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QuestionVersion"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/students/{student_id}/progress":
+    parameters:
+    - in: path
+      name: student_id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show student progress summary
+      operationId: get_api_v1_students_student_id_progress
+      tags:
+      - Reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student progress summary
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/StudentProgressSummary"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/students/{student_id}/progress/course/{course_id}":
+    parameters:
+    - in: path
+      name: student_id
+      required: true
+      schema:
+        type: integer
+    - in: path
+      name: course_id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show student progress details for a single course
+      operationId: get_api_v1_students_student_id_progress_course_course_id
+      tags:
+      - Reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student course progress detail
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/StudentCourseProgressDetail"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/unit_plans/{unit_plan_id}/lesson_plans/{id}/export_pdf":
+    parameters:
+    - in: path
+      name: unit_plan_id
+      required: true
+      schema:
+        type: integer
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Queue lesson plan PDF export
+      operationId: post_api_v1_unit_plans_unit_plan_id_lesson_plans_id_export_pdf
+      tags:
+      - Lessons
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          description: Lesson PDF export queued
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/unit_plans/{unit_plan_id}/lesson_plans/{id}/export_pdf_status":
+    parameters:
+    - in: path
+      name: unit_plan_id
+      required: true
+      schema:
+        type: integer
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Poll lesson plan PDF export status
+      operationId: get_api_v1_unit_plans_unit_plan_id_lesson_plans_id_export_pdf_status
+      tags:
+      - Lessons
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Lesson PDF export status
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
 components:
   securitySchemes:
     cookieAuth:
@@ -10502,6 +11474,403 @@ components:
           type: array
           items:
             type: string
+    AiInvocationApplyInput:
+      type: object
+      properties:
+        applied_at:
+          type: string
+          format: date-time
+        applied_to:
+          type: object
+          properties:
+            type:
+              type: string
+            id:
+              oneOf:
+              - type: integer
+              - type: string
+    CalendarEvent:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: integer
+        title:
+          type: string
+        start_date:
+          type: string
+          nullable: true
+        end_date:
+          type: string
+          nullable: true
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        course_id:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          nullable: true
+    CalendarEventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CalendarEvent"
+    DistrictStandardsCoverageRow:
+      type: object
+      additionalProperties: true
+      properties:
+        tenant_id:
+          type: integer
+        school:
+          type: string
+        frameworks_count:
+          type: integer
+        standards_count:
+          type: integer
+        covered_standards:
+          type: integer
+        coverage_pct:
+          type: number
+        frameworks:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    DistrictTemplatePushInput:
+      type: object
+      required:
+      - template_id
+      - target_tenant_ids
+      properties:
+        template_id:
+          type: integer
+        target_tenant_ids:
+          type: array
+          items:
+            type: integer
+    DistrictTemplatePushResponse:
+      type: object
+      properties:
+        pushed:
+          type: array
+          items:
+            type: object
+            properties:
+              tenant_id:
+                type: integer
+              school:
+                type: string
+              template_id:
+                type: integer
+              template_name:
+                type: string
+    DistrictUserSummaryRow:
+      type: object
+      properties:
+        tenant_id:
+          type: integer
+        school:
+          type: string
+        teachers:
+          type: integer
+        students:
+          type: integer
+        admins:
+          type: integer
+        district_admins:
+          type: integer
+    DriveCopyInput:
+      type: object
+      required:
+      - file_id
+      - new_name
+      properties:
+        file_id:
+          type: string
+        new_name:
+          type: string
+        folder_id:
+          type: string
+          nullable: true
+    DriveFolderCreateInput:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+        course_id:
+          type: integer
+          nullable: true
+    DriveFolderListing:
+      type: object
+      additionalProperties: true
+    DrivePreviewResponse:
+      type: object
+      required:
+      - preview_url
+      properties:
+        preview_url:
+          type: string
+    DriveShareInput:
+      type: object
+      required:
+      - file_id
+      properties:
+        file_id:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+        role:
+          type: string
+          nullable: true
+    GuardianLink:
+      type: object
+      required:
+      - id
+      - guardian_id
+      - student_id
+      - relationship
+      - status
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+        guardian_id:
+          type: integer
+        student_id:
+          type: integer
+        relationship:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    GuardianLinkInput:
+      type: object
+      required:
+      - guardian_id
+      - student_id
+      properties:
+        guardian_id:
+          type: integer
+        student_id:
+          type: integer
+        relationship:
+          type: string
+        status:
+          type: string
+    NotificationPreference:
+      type: object
+      required:
+      - event_type
+      - event_name
+      - in_app
+      - email
+      - email_frequency
+      properties:
+        event_type:
+          type: string
+        event_name:
+          type: string
+        in_app:
+          type: boolean
+        email:
+          type: boolean
+        email_frequency:
+          type: string
+    NotificationPreferenceInput:
+      type: object
+      properties:
+        in_app:
+          type: boolean
+        email:
+          type: boolean
+        email_frequency:
+          type: string
+    Permission:
+      type: object
+      required:
+      - id
+      - role_id
+      - resource
+      - action
+      - granted
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+        role_id:
+          type: integer
+        resource:
+          type: string
+        action:
+          type: string
+        granted:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PermissionInput:
+      type: object
+      properties:
+        role_id:
+          type: integer
+        resource:
+          type: string
+        action:
+          type: string
+        granted:
+          type: boolean
+    QuestionVersion:
+      type: object
+      required:
+      - id
+      - question_id
+      - version_number
+      - question_type
+      - content
+      - points
+      - status
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+        question_id:
+          type: integer
+        version_number:
+          type: integer
+        question_type:
+          type: string
+        content:
+          type: object
+          additionalProperties: true
+        explanation:
+          type: string
+          nullable: true
+        points:
+          type: number
+        status:
+          type: string
+        choices:
+          type: object
+          additionalProperties: true
+          nullable: true
+        correct_answer:
+          type: object
+          additionalProperties: true
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    QuestionVersionInput:
+      type: object
+      properties:
+        version_number:
+          type: integer
+        question_type:
+          type: string
+        content:
+          type: object
+          additionalProperties: true
+        explanation:
+          type: string
+        points:
+          type: number
+        status:
+          type: string
+        choices:
+          type: object
+          additionalProperties: true
+        correct_answer:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+    StudentProgressSummary:
+      type: object
+      additionalProperties: true
+      properties:
+        student:
+          type: object
+          additionalProperties: true
+        courses:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        standards_mastery:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        overall:
+          type: object
+          additionalProperties: true
+    StudentCourseProgressDetail:
+      type: object
+      additionalProperties: true
+      properties:
+        course:
+          type: object
+          additionalProperties: true
+        assignments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        quizzes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        module_completion:
+          type: object
+          additionalProperties: true
+        standards:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        grade_trend:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
     ValidationErrorsResponse:
       type: object
       properties:

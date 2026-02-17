@@ -114,6 +114,11 @@ jobs:
       - name: Setup database
         run: bundle exec rails db:schema:load
         working-directory: apps/core
+      - name: Validate OpenAPI YAML
+        run: ruby -e "require 'yaml'; YAML.safe_load(File.read('packages/contracts/core-v1.openapi.yaml'), permitted_classes: [Date, Time])"
+      - name: Contract drift check
+        run: bundle exec rspec spec/contracts/openapi_spec.rb spec/contracts/openapi_validation_spec.rb
+        working-directory: apps/core
       - name: Run RSpec
         run: bundle exec rspec --format progress
         working-directory: apps/core
