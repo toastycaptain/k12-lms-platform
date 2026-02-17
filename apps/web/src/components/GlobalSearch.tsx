@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { announce } from "@/components/LiveRegion";
@@ -10,6 +10,7 @@ interface SearchResult {
   id: number;
   title: string;
   url: string;
+  rank?: number;
 }
 
 interface SearchResponse {
@@ -22,6 +23,7 @@ const TYPE_ICONS: Record<string, string> = {
   course: "📚",
   standard: "📏",
   assignment: "📎",
+  question_bank: "🧠",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -30,7 +32,47 @@ const TYPE_LABELS: Record<string, string> = {
   course: "Courses",
   standard: "Standards",
   assignment: "Assignments",
+  question_bank: "Question Banks",
 };
+
+const TYPE_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "unit_plan", label: "Units" },
+  { value: "lesson_plan", label: "Lessons" },
+  { value: "course", label: "Courses" },
+  { value: "standard", label: "Standards" },
+  { value: "assignment", label: "Assignments" },
+  { value: "question_bank", label: "Banks" },
+] as const;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightTitle(title: string, query: string): ReactNode {
+  const tokens = query
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2)
+    .map((token) => escapeRegExp(token));
+
+  if (tokens.length === 0) return title;
+
+  const splitRegex = new RegExp(`(${tokens.join("|")})`, "ig");
+  const exactRegex = new RegExp(`^(${tokens.join("|")})$`, "i");
+  const parts = title.split(splitRegex);
+
+  return parts.map((part, index) =>
+    exactRegex.test(part) ? (
+      <mark key={`${part}-${index}`} className="rounded bg-yellow-100 px-0.5 text-gray-900">
+        {part}
+      </mark>
+    ) : (
+      <span key={`${part}-${index}`}>{part}</span>
+    ),
+  );
+}
 
 export default function GlobalSearch() {
   const router = useRouter();
@@ -43,6 +85,7 @@ export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [selectedType, setSelectedType] = useState<(typeof TYPE_FILTERS)[number]["value"]>("all");
 
   const trimmedQuery = query.trim();
 
@@ -69,9 +112,12 @@ export default function GlobalSearch() {
 
     setLoading(true);
     try {
-      const response = await apiFetch<SearchResponse>(
-        `/api/v1/search?q=${encodeURIComponent(trimmedQuery)}`,
-      );
+      const params = new URLSearchParams({ q: trimmedQuery });
+      if (selectedType !== "all") {
+        params.set("types", selectedType);
+      }
+
+      const response = await apiFetch<SearchResponse>(`/api/v1/search?${params.toString()}`);
       const nextResults = response.results || [];
       setResults(nextResults);
       setActiveIndex(-1);
@@ -86,7 +132,7 @@ export default function GlobalSearch() {
     } finally {
       setLoading(false);
     }
-  }, [trimmedQuery]);
+  }, [selectedType, trimmedQuery]);
 
   useEffect(() => {
     if (trimmedQuery.length < 2) {
@@ -102,7 +148,7 @@ export default function GlobalSearch() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [fetchResults, trimmedQuery]);
+  }, [fetchResults, selectedType, trimmedQuery]);
 
   useEffect(() => {
     return () => {
@@ -170,7 +216,7 @@ export default function GlobalSearch() {
             inputRef.current?.focus();
           }
         }}
-        placeholder="Search units, lessons, courses, standards, assignments..."
+        placeholder="Search units, lessons, courses, standards, assignments, banks..."
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
 
@@ -181,6 +227,27 @@ export default function GlobalSearch() {
           aria-label="Search results"
           className="absolute left-0 right-0 top-full z-50 mt-1 max-h-96 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg"
         >
+          <div className="flex flex-wrap gap-1 border-b border-gray-100 px-2 py-2">
+            {TYPE_FILTERS.map((filter) => {
+              const selected = selectedType === filter.value;
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    selected
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => setSelectedType(filter.value)}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+
           {loading ? (
             <p className="px-3 py-3 text-sm text-gray-500">Searching...</p>
           ) : results.length === 0 ? (
@@ -214,7 +281,9 @@ export default function GlobalSearch() {
                           }`}
                         >
                           <span>{TYPE_ICONS[result.type] || "•"}</span>
-                          <span className="truncate">{result.title}</span>
+                          <span className="truncate">
+                            {highlightTitle(result.title, trimmedQuery)}
+                          </span>
                         </button>
                       </li>
                     );

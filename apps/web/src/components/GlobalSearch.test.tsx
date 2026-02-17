@@ -78,7 +78,7 @@ describe("GlobalSearch", () => {
     await performSearch("cell");
 
     expect(await screen.findByText("Unit Plans")).toBeInTheDocument();
-    expect(screen.getByText("Courses")).toBeInTheDocument();
+    expect(screen.getAllByText("Courses").length).toBeGreaterThan(0);
     expect(screen.getByText("Unit A")).toBeInTheDocument();
     expect(screen.getByText("Course B")).toBeInTheDocument();
   });
@@ -100,7 +100,8 @@ describe("GlobalSearch", () => {
     render(<GlobalSearch />);
     await performSearch("unit");
 
-    fireEvent.click(await screen.findByRole("option", { name: /Unit A/i }));
+    const options = await screen.findAllByRole("option");
+    fireEvent.click(options[0]);
 
     expect(pushMock).toHaveBeenCalledWith("/plan/units/1");
   });
@@ -175,6 +176,33 @@ describe("GlobalSearch", () => {
     await performSearch("unit");
 
     expect(mockedAnnounce).toHaveBeenCalledWith("2 search results loaded");
+  });
+
+  it("supports server-side type filtering via filter chips", async () => {
+    mockedApiFetch.mockResolvedValue({
+      results: [{ type: "course", id: 2, title: "Course B", url: "/teach/courses/2" }],
+    } as never);
+
+    render(<GlobalSearch />);
+    await performSearch("cell");
+
+    mockedApiFetch.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "Courses" }));
+
+    await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/search?q=cell&types=course");
+    });
+  });
+
+  it("highlights matching terms in result titles", async () => {
+    mockedApiFetch.mockResolvedValue({
+      results: [{ type: "assignment", id: 3, title: "Biology Lab Report", url: "/x" }],
+    } as never);
+
+    render(<GlobalSearch />);
+    await performSearch("bio");
+
+    expect(await screen.findByText("Bio", { selector: "mark" })).toBeInTheDocument();
   });
 
   it("has combobox ARIA attributes", () => {

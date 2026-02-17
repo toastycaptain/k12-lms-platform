@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.datetime "lock_at"
     t.decimal "points_possible"
     t.bigint "rubric_id"
+    t.tsvector "search_vector"
     t.string "status", default: "draft", null: false
     t.text "submission_types", default: [], array: true
     t.integer "submissions_count", default: 0, null: false
@@ -204,6 +205,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.index ["course_id"], name: "index_assignments_on_course_id"
     t.index ["created_by_id"], name: "index_assignments_on_created_by_id"
     t.index ["rubric_id"], name: "index_assignments_on_rubric_id"
+    t.index ["search_vector"], name: "index_assignments_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_assignments_on_tenant_id"
   end
 
@@ -272,10 +274,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.text "description"
     t.integer "enrollments_count", default: 0, null: false
     t.string "name", null: false
+    t.tsvector "search_vector"
     t.jsonb "settings", default: {}, null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
+    t.index ["search_vector"], name: "index_courses_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
   end
 
@@ -380,6 +384,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.bigint "created_by_id", null: false
     t.bigint "current_version_id"
     t.integer "position", default: 0, null: false
+    t.tsvector "search_vector"
     t.string "status", default: "draft", null: false
     t.bigint "tenant_id", null: false
     t.string "title", null: false
@@ -387,6 +392,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_lesson_plans_on_created_by_id"
     t.index ["current_version_id"], name: "idx_lesson_plans_current_version"
+    t.index ["search_vector"], name: "index_lesson_plans_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_lesson_plans_on_tenant_id"
     t.index ["unit_plan_id", "position"], name: "idx_lesson_plans_unit_position"
     t.index ["unit_plan_id"], name: "index_lesson_plans_on_unit_plan_id"
@@ -568,12 +574,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.jsonb "import_errors", default: []
     t.string "import_status"
     t.integer "questions_count", default: 0, null: false
+    t.tsvector "search_vector"
     t.string "status", default: "active", null: false
     t.string "subject"
     t.bigint "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_question_banks_on_created_by_id"
+    t.index ["search_vector"], name: "index_question_banks_on_search_vector", using: :gin
     t.index ["tenant_id", "subject"], name: "idx_question_banks_tenant_subject"
     t.index ["tenant_id"], name: "index_question_banks_on_tenant_id"
   end
@@ -816,10 +824,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.text "description"
     t.string "grade_band"
     t.bigint "parent_id"
+    t.tsvector "search_vector"
     t.bigint "standard_framework_id", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["parent_id"], name: "index_standards_on_parent_id"
+    t.index ["search_vector"], name: "index_standards_on_search_vector", using: :gin
     t.index ["standard_framework_id", "code"], name: "idx_standards_framework_code", unique: true
     t.index ["standard_framework_id", "parent_id"], name: "idx_standards_framework_parent"
     t.index ["standard_framework_id"], name: "index_standards_on_standard_framework_id"
@@ -979,6 +989,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.bigint "created_by_id", null: false
     t.bigint "current_version_id"
     t.date "end_date"
+    t.tsvector "search_vector"
     t.date "start_date"
     t.string "status", default: "draft", null: false
     t.bigint "tenant_id", null: false
@@ -987,6 +998,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000010) do
     t.index ["course_id"], name: "index_unit_plans_on_course_id"
     t.index ["created_by_id"], name: "index_unit_plans_on_created_by_id"
     t.index ["current_version_id"], name: "index_unit_plans_on_current_version_id"
+    t.index ["search_vector"], name: "index_unit_plans_on_search_vector", using: :gin
     t.index ["tenant_id", "status"], name: "idx_unit_plans_tenant_status"
     t.index ["tenant_id"], name: "index_unit_plans_on_tenant_id"
   end
