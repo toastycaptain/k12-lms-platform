@@ -18,10 +18,14 @@ module Api
         approvable.publish! if approvable.respond_to?(:publish!)
         NotificationService.notify(
           user: @approval.requested_by,
-          type: "approval_status_changed",
+          event_type: "approval_resolved",
           title: "Your #{approvable.class.name.underscore.humanize.downcase} '#{approvable.respond_to?(:title) ? approvable.title : approvable.id}' was approved",
           actor: Current.user,
-          notifiable: @approval
+          notifiable: @approval,
+          metadata: {
+            status: "approved",
+            title: approvable.respond_to?(:title) ? approvable.title : approvable.id.to_s
+          }
         )
         audit_event(
           "approval.approved",
@@ -53,10 +57,14 @@ module Api
         approvable.update!(status: "draft") if approvable.respond_to?(:status)
         NotificationService.notify(
           user: @approval.requested_by,
-          type: "approval_status_changed",
+          event_type: "approval_resolved",
           title: "Your #{approvable.class.name.underscore.humanize.downcase} '#{approvable.respond_to?(:title) ? approvable.title : approvable.id}' was rejected",
           actor: Current.user,
-          notifiable: @approval
+          notifiable: @approval,
+          metadata: {
+            status: "rejected",
+            title: approvable.respond_to?(:title) ? approvable.title : approvable.id.to_s
+          }
         )
         audit_event(
           "approval.rejected",

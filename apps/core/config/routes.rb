@@ -255,6 +255,7 @@ Rails.application.routes.draw do
           patch :read
         end
       end
+      resources :notification_preferences, param: :event_type, only: [ :index, :update ]
       resources :permissions, only: [ :index, :create, :update, :destroy ]
       resources :guardian_links, only: [ :index, :create, :destroy ]
       resources :schools

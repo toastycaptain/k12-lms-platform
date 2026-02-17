@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe NotificationService do
+  include ActiveJob::TestHelper
+
   let(:tenant) { create(:tenant) }
   let(:actor) { create(:user, tenant: tenant) }
   let(:recipient) { create(:user, tenant: tenant) }
@@ -13,35 +15,74 @@ RSpec.describe NotificationService do
   end
 
   describe ".notify" do
-    it "creates a notification when tenant is present" do
-      result = described_class.notify(
-        user: recipient,
-        type: "assignment_published",
-        title: "Assignment published",
-        message: "New assignment is available",
-        url: "/assignments/1",
-        actor: actor
-      )
+    before { clear_enqueued_jobs }
 
-      expect(result).to be_a(Notification)
-      expect(result.notification_type).to eq("assignment_published")
-      expect(result.user_id).to eq(recipient.id)
-      expect(result.actor_id).to eq(actor.id)
-      expect(result.url).to eq("/assignments/1")
+    it "creates in-app notifications by default and enqueues immediate email" do
+      expect {
+        described_class.notify(
+          user: recipient,
+          event_type: "assignment_created",
+          title: "Assignment published",
+          message: "New assignment is available",
+          url: "/assignments/1",
+          actor: actor
+        )
+      }.to change(Notification, :count).by(1)
+        .and have_enqueued_mail(NotificationMailer, :notification_email)
+
+      notification = Notification.order(:id).last
+      expect(notification.notification_type).to eq("assignment_created")
+      expect(notification.user_id).to eq(recipient.id)
+      expect(notification.actor_id).to eq(actor.id)
+      expect(notification.url).to eq("/assignments/1")
     end
 
-    it "returns nil and does not create a notification when tenant is missing" do
-      Current.tenant = nil
+    it "respects in_app preference when disabled but still sends immediate email" do
+      create(
+        :notification_preference,
+        tenant: tenant,
+        user: recipient,
+        event_type: "assignment_created",
+        in_app: false,
+        email: true,
+        email_frequency: "immediate"
+      )
 
       expect {
-        described_class.notify(user: recipient, type: "assignment_published", title: "Assignment")
+        described_class.notify(
+          user: recipient,
+          event_type: "assignment_created",
+          title: "Assignment published"
+        )
       }.not_to change(Notification, :count)
+      expect(enqueued_jobs.size).to eq(1)
+    end
+
+    it "does not enqueue immediate email for digest frequencies" do
+      create(
+        :notification_preference,
+        tenant: tenant,
+        user: recipient,
+        event_type: "assignment_created",
+        in_app: true,
+        email: true,
+        email_frequency: "daily"
+      )
+
+      described_class.notify(
+        user: recipient,
+        event_type: "assignment_created",
+        title: "Assignment published"
+      )
+
+      expect(enqueued_jobs).to be_empty
     end
 
     it "swallows errors and returns nil" do
       allow(Rails.logger).to receive(:warn)
+      allow(Notification).to receive(:create!).and_raise(StandardError.new("boom"))
 
-      result = described_class.notify(user: nil, type: "assignment_published", title: "Assignment")
+      result = described_class.notify(user: recipient, event_type: "assignment_created", title: "Assignment")
 
       expect(result).to be_nil
       expect(Rails.logger).to have_received(:warn).with(/notification\.notify_failed/)
@@ -69,7 +110,7 @@ RSpec.describe NotificationService do
       expect {
         described_class.notify_enrolled_students(
           course: course,
-          type: "announcement_posted",
+          event_type: "announcement_posted",
           title: "New announcement",
           message: "Check updates"
         )
@@ -83,7 +124,7 @@ RSpec.describe NotificationService do
       allow(Enrollment).to receive(:where).and_raise(StandardError.new("boom"))
       allow(Rails.logger).to receive(:warn)
 
-      result = described_class.notify_enrolled_students(course: course, type: "announcement_posted", title: "New")
+      result = described_class.notify_enrolled_students(course: course, event_type: "announcement_posted", title: "New")
 
       expect(result).to be_nil
       expect(Rails.logger).to have_received(:warn).with(/notification\.notify_enrolled_students_failed/)

@@ -1,0 +1,21 @@
+<h1 style="margin-top: 0;"><%= @title %></h1>
+
+<p>
+  Hi <%= @user.first_name.presence || @user.email %>,
+</p>
+
+<% if @message.present? %>
+  <p><%= @message %></p>
+<% else %>
+  <p>You have a new notification in K-12 LMS.</p>
+<% end %>
+
+<% if @url.present? %>
+  <p>
+    <a class="button" href="<%= @url %>">Open Notification</a>
+  </p>
+<% end %>
+
+<p class="muted">
+  Event type: <%= @event_type.humanize %>
+</p>

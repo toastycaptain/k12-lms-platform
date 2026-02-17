@@ -225,17 +225,30 @@ export default function NotificationBell() {
           )}
 
           <div className="border-t border-gray-100 px-3 py-2">
-            <Link
-              href="/notifications"
-              onClick={() => {
-                setOpen(false);
-                bellButtonRef.current?.focus();
-              }}
-              role="menuitem"
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              View all
-            </Link>
+            <div className="flex items-center justify-between">
+              <Link
+                href="/notifications"
+                onClick={() => {
+                  setOpen(false);
+                  bellButtonRef.current?.focus();
+                }}
+                role="menuitem"
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                View all
+              </Link>
+              <Link
+                href="/notifications/settings"
+                onClick={() => {
+                  setOpen(false);
+                  bellButtonRef.current?.focus();
+                }}
+                role="menuitem"
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Notification Settings
+              </Link>
+            </div>
           </div>
         </aside>
       )}

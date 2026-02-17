@@ -41,6 +41,7 @@ module Api
       def submit
         authorize @quiz_attempt
         @quiz_attempt.submit!
+        notify_quiz_graded!(@quiz_attempt)
         render json: @quiz_attempt
       end
 
@@ -60,6 +61,7 @@ module Api
         end
 
         @quiz_attempt.calculate_score!
+        notify_quiz_graded!(@quiz_attempt)
         render json: @quiz_attempt
       end
 
@@ -70,7 +72,30 @@ module Api
       end
 
       def set_quiz_attempt
-        @quiz_attempt = QuizAttempt.includes(:attempt_answers).find(params[:id])
+        @quiz_attempt = QuizAttempt.includes(:attempt_answers, :quiz, :user).find(params[:id])
+      end
+
+      def notify_quiz_graded!(quiz_attempt)
+        return unless quiz_attempt.status == "graded"
+        return if Notification.exists?(
+          user_id: quiz_attempt.user_id,
+          notification_type: "quiz_graded",
+          notifiable_type: "QuizAttempt",
+          notifiable_id: quiz_attempt.id
+        )
+
+        NotificationService.notify(
+          user: quiz_attempt.user,
+          event_type: "quiz_graded",
+          title: "Quiz graded: #{quiz_attempt.quiz.title}",
+          message: "Your quiz attempt has been graded.",
+          url: "/learn/courses/#{quiz_attempt.quiz.course_id}/quizzes/#{quiz_attempt.quiz_id}",
+          notifiable: quiz_attempt,
+          metadata: {
+            quiz_id: quiz_attempt.quiz_id,
+            quiz_title: quiz_attempt.quiz.title
+          }
+        )
       end
     end
   end

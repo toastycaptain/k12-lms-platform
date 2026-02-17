@@ -91,11 +91,15 @@ module Api
         if previous_status != @submission.status && %w[graded returned].include?(@submission.status)
           NotificationService.notify(
             user: @submission.user,
-            type: "submission_graded",
-            title: "#{@submission.assignment.title} has been graded",
+            event_type: "assignment_graded",
+            title: "Grade posted: #{@submission.assignment.title}",
             url: "/learn/courses/#{@submission.assignment.course_id}/assignments/#{@submission.assignment_id}",
             actor: Current.user,
-            notifiable: @submission
+            notifiable: @submission,
+            metadata: {
+              assignment_id: @submission.assignment_id,
+              assignment_title: @submission.assignment.title
+            }
           )
         end
 
@@ -121,6 +125,7 @@ module Api
         @submission.submitted_at = Time.current
         authorize @submission
         if @submission.save
+          notify_submission_received!(@submission)
           render json: @submission, status: :created
         else
           render json: { errors: @submission.errors.full_messages }, status: :unprocessable_content
@@ -148,6 +153,30 @@ module Api
           :status,
           rubric_scores: [ :criterion_id, :rating_id, :score, :comments, :rubric_criterion_id, :rubric_rating_id, :points_awarded ]
         )
+      end
+
+      def notify_submission_received!(submission)
+        teacher_ids = Enrollment.joins(:section)
+                                .where(role: "teacher", sections: { course_id: submission.assignment.course_id })
+                                .distinct
+                                .pluck(:user_id)
+
+        User.where(id: teacher_ids).find_each do |teacher|
+          NotificationService.notify(
+            user: teacher,
+            event_type: "submission_received",
+            title: "New submission received",
+            message: "#{submission.user.first_name} #{submission.user.last_name} submitted #{submission.assignment.title}",
+            url: "/learn/courses/#{submission.assignment.course_id}/assignments/#{submission.assignment_id}",
+            actor: submission.user,
+            notifiable: submission,
+            metadata: {
+              assignment_id: submission.assignment_id,
+              assignment_title: submission.assignment.title,
+              student_name: "#{submission.user.first_name} #{submission.user.last_name}".strip
+            }
+          )
+        end
       end
     end
   end

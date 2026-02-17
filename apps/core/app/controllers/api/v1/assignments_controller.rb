@@ -23,6 +23,20 @@ module Api
         @assignment.created_by = Current.user
         authorize @assignment
         if @assignment.save
+          NotificationService.notify_enrolled_students(
+            course: @assignment.course,
+            event_type: "assignment_created",
+            title: "New assignment: #{@assignment.title}",
+            message: @assignment.description.presence,
+            url: "/learn/courses/#{@assignment.course_id}/assignments/#{@assignment.id}",
+            actor: Current.user,
+            notifiable: @assignment,
+            metadata: {
+              assignment_id: @assignment.id,
+              assignment_title: @assignment.title,
+              due_at: @assignment.due_at&.iso8601
+            }
+          )
           render json: @assignment, status: :created
         else
           render json: { errors: @assignment.errors.full_messages }, status: :unprocessable_content
@@ -49,11 +63,17 @@ module Api
         @assignment.publish!
         NotificationService.notify_enrolled_students(
           course: @assignment.course,
-          type: "assignment_published",
+          event_type: "assignment_created",
           title: "New assignment: #{@assignment.title}",
+          message: @assignment.description.presence,
           url: "/learn/courses/#{@assignment.course_id}/assignments/#{@assignment.id}",
           actor: Current.user,
-          notifiable: @assignment
+          notifiable: @assignment,
+          metadata: {
+            assignment_id: @assignment.id,
+            assignment_title: @assignment.title,
+            due_at: @assignment.due_at&.iso8601
+          }
         )
         render json: @assignment
       rescue ActiveRecord::RecordInvalid

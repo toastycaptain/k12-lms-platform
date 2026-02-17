@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -501,10 +501,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000005) do
     t.index ["tenant_id"], name: "index_module_items_on_tenant_id"
   end
 
+  create_table "notification_preferences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "email", default: true, null: false
+    t.string "email_frequency", default: "immediate", null: false
+    t.string "event_type", null: false
+    t.boolean "in_app", default: true, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["tenant_id"], name: "index_notification_preferences_on_tenant_id"
+    t.index ["user_id", "event_type"], name: "idx_notification_prefs_user_event", unique: true
+    t.index ["user_id"], name: "index_notification_preferences_on_user_id"
+  end
+
   create_table "notifications", force: :cascade do |t|
     t.bigint "actor_id"
     t.datetime "created_at", null: false
     t.text "message"
+    t.jsonb "metadata", default: {}, null: false
     t.bigint "notifiable_id"
     t.string "notifiable_type"
     t.string "notification_type", null: false
@@ -1095,6 +1110,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000005) do
   add_foreign_key "module_item_completions", "users"
   add_foreign_key "module_items", "course_modules"
   add_foreign_key "module_items", "tenants"
+  add_foreign_key "notification_preferences", "tenants"
+  add_foreign_key "notification_preferences", "users"
   add_foreign_key "notifications", "tenants"
   add_foreign_key "notifications", "users"
   add_foreign_key "notifications", "users", column: "actor_id"

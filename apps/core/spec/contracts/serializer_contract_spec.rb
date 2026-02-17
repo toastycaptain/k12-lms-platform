@@ -118,7 +118,7 @@ RSpec.describe "Serializer contracts", type: :model do
     payload = serialize(notification)
 
     expect(payload.keys).to include(
-      "id", "user_id", "actor_id", "notification_type", "title", "message", "url", "read_at", "created_at", "updated_at"
+      "id", "user_id", "actor_id", "notification_type", "title", "message", "url", "metadata", "read_at", "created_at", "updated_at"
     )
     expect(payload["read_at"]).to be_nil
     forbidden_keys.each { |key| expect(payload).not_to have_key(key) }

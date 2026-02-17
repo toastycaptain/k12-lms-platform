@@ -1,0 +1,26 @@
+<h1 style="margin-top: 0;">
+  <%= @frequency == "weekly" ? "Weekly Summary" : "Daily Summary" %>
+</h1>
+
+<p>
+  Hi <%= @user.first_name.presence || @user.email %>,
+</p>
+
+<p>
+  Here are your unread notifications from the last <%= @frequency == "weekly" ? "7 days" : "24 hours" %>:
+</p>
+
+<ul>
+  <% @notifications.each do |notification| %>
+    <li style="margin-bottom: 12px;">
+      <strong><%= notification.title %></strong>
+      <% if notification.message.present? %>
+        <div><%= notification.message %></div>
+      <% end %>
+      <div class="muted"><%= notification.created_at.strftime("%b %-d, %Y %-I:%M %p") %></div>
+      <% if notification.url.present? %>
+        <div><a href="<%= notification.url %>">Open</a></div>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

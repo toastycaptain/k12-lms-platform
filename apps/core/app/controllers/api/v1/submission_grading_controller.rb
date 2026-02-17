@@ -22,6 +22,19 @@ module Api
           graded_at: Time.current,
           graded_by: Current.user
         )
+        NotificationService.notify(
+          user: @submission.user,
+          event_type: "assignment_graded",
+          title: "Grade posted: #{@submission.assignment.title}",
+          message: "Your submission was graded.",
+          url: "/learn/courses/#{@submission.assignment.course_id}/assignments/#{@submission.assignment_id}",
+          actor: Current.user,
+          notifiable: @submission,
+          metadata: {
+            assignment_id: @submission.assignment_id,
+            assignment_title: @submission.assignment.title
+          }
+        )
         audit_event(
           "submission.graded",
           auditable: @submission,

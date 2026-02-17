@@ -22,6 +22,19 @@ module Api
         @announcement.created_by = Current.user
         authorize @announcement
         if @announcement.save
+          NotificationService.notify_enrolled_students(
+            course: @course,
+            event_type: "announcement_posted",
+            title: @announcement.title,
+            message: @announcement.message.to_s.truncate(140),
+            url: "/learn/courses/#{@course.id}/announcements",
+            actor: Current.user,
+            notifiable: @announcement,
+            metadata: {
+              title: @announcement.title,
+              announcement_id: @announcement.id
+            }
+          )
           render json: @announcement, status: :created
         else
           render json: { errors: @announcement.errors.full_messages }, status: :unprocessable_content

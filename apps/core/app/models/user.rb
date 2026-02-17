@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :enrollments, dependent: :destroy
   has_many :module_item_completions, dependent: :destroy
   has_many :notifications, dependent: :destroy
+  has_many :notification_preferences, dependent: :destroy
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
   has_many :message_thread_participants, dependent: :destroy
   has_many :message_threads, through: :message_thread_participants

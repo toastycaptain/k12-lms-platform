@@ -21,12 +21,17 @@ class Message < ApplicationRecord
     message_thread.participants.where.not(id: sender_id).find_each do |participant|
       NotificationService.notify(
         user: participant,
-        type: "message.received",
+        event_type: "message_received",
         title: "New message in #{message_thread.subject}",
         message: body.to_s.truncate(140),
         url: "/communicate/threads/#{message_thread_id}",
         actor: sender,
-        notifiable: self
+        notifiable: self,
+        metadata: {
+          thread_id: message_thread_id,
+          thread_subject: message_thread.subject,
+          sender_name: sender.first_name.presence || sender.email
+        }
       )
     end
   rescue StandardError => e

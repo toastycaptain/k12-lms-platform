@@ -9190,6 +9190,9 @@ components:
         notifiable_id:
           type: integer
           nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
         read_at:
           type: string
           format: date-time

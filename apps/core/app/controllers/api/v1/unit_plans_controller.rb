@@ -73,6 +73,7 @@ module Api
                         status: :unprocessable_content
         end
         @unit_plan.submit_for_approval!(user: Current.user)
+        notify_approvers_for_approval_request!(@unit_plan)
         render json: @unit_plan
       rescue ActiveRecord::RecordInvalid
         render json: { errors: [ "Cannot submit: unit must be in draft status with a current version" ] },
@@ -123,6 +124,27 @@ module Api
 
       def approval_required?
         Current.tenant&.settings&.dig("approval_required") == true
+      end
+
+      def notify_approvers_for_approval_request!(unit_plan)
+        approver_ids = User.joins(:roles).where(roles: { name: %w[admin curriculum_lead] }).distinct.pluck(:id)
+        User.where(id: approver_ids).find_each do |approver|
+          next if approver.id == Current.user.id
+
+          NotificationService.notify(
+            user: approver,
+            event_type: "approval_requested",
+            title: "Approval requested: #{unit_plan.title}",
+            message: "#{Current.user.first_name} #{Current.user.last_name} submitted a unit for review.",
+            url: "/plan/approvals",
+            actor: Current.user,
+            notifiable: unit_plan,
+            metadata: {
+              title: unit_plan.title,
+              unit_plan_id: unit_plan.id
+            }
+          )
+        end
       end
     end
   end

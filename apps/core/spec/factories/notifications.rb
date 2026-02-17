@@ -7,5 +7,6 @@ FactoryBot.define do
     title { "New assignment posted" }
     message { "Check the latest assignment." }
     url { "/learn/dashboard" }
+    metadata { {} }
   end
 end

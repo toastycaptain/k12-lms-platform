@@ -55,6 +55,10 @@ Rails.application.configure do
 
   # Default URL options for url_for helpers
   Rails.application.routes.default_url_options[:host] = "localhost:3000"
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("WEB_HOST", "localhost:3000"),
+    protocol: ENV.fetch("WEB_PROTOCOL", "http")
+  }
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
