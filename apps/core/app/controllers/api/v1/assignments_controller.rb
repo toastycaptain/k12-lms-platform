@@ -5,10 +5,10 @@ module Api
       before_action :set_assignment, only: [ :show, :update, :destroy, :publish, :close, :push_to_classroom, :sync_grades ]
 
       def index
-        assignments = policy_scope(Assignment).includes(:submissions, :resource_links, :rubric)
+        assignments = policy_scope(Assignment).includes(:created_by, :rubric, :standards, :submissions, :resource_links)
         assignments = assignments.where(course_id: params[:course_id]) if params[:course_id].present?
         assignments = assignments.where(status: params[:status]) if params[:status].present?
-        assignments = paginate(assignments)
+        assignments = paginate(assignments.order(:due_at))
         render json: assignments
       end
 
@@ -121,7 +121,7 @@ module Api
       end
 
       def set_assignment
-        @assignment = Assignment.includes(:submissions, :resource_links, :rubric).find(params[:id])
+        @assignment = Assignment.includes(:created_by, :rubric, :standards, :submissions, :resource_links).find(params[:id])
       end
 
       def assignment_params

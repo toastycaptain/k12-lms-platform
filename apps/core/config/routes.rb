@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "/health", to: "health#show"
       get "/csrf", to: "csrf#show"
+      get "/openapi.json", to: "openapi#show"
       get "saml/metadata", to: "saml#metadata"
 
       delete "/session", to: "sessions#destroy"
@@ -306,6 +307,43 @@ Rails.application.routes.draw do
         post :ai_generate
         post :attach
         get :me
+      end
+
+      namespace :admin do
+        resource :operations, only: [] do
+          get :health
+        end
+
+        resources :alert_configurations
+
+        resources :backups, only: [ :index, :show, :create ] do
+          collection do
+            get :status
+          end
+        end
+
+        resource :safety, controller: :safety, only: [] do
+          get :events
+          get :stats
+          get :config, action: :show_config
+          put :config, action: :update_config
+        end
+
+        resource :deploy, controller: :deploy, only: [] do
+          get :window
+        end
+
+        resources :feature_flags, param: :key, only: [ :index, :update, :destroy ]
+
+        namespace :provisioning do
+          post :create_school
+          post :bulk_create
+          get "checklist/:tenant_id", action: :checklist
+          get :tenants
+          post "import/:tenant_id", action: :import
+        end
+
+        resource :branding, controller: :branding, only: [ :show, :update ]
       end
 
       if Rails.env.test? || ENV["ENABLE_E2E_TEST_HELPERS"] == "true"

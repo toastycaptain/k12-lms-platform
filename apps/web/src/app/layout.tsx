@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import SwrProvider from "@/components/SwrProvider";
+import WebVitalsReporter from "@/components/WebVitalsReporter";
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@k12/ui";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "K-12 Planning + LMS",
@@ -16,10 +25,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`${inter.variable} antialiased [font-family:var(--font-inter)]`}>
         <SwrProvider>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <WebVitalsReporter />
+              {children}
+            </ToastProvider>
           </AuthProvider>
         </SwrProvider>
       </body>

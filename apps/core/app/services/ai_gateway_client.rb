@@ -179,10 +179,17 @@ class AiGatewayClient
   private_class_method :normalize_messages
 
   def self.normalize_context(context)
-    return nil if context.blank?
-    return context.to_h if context.respond_to?(:to_h)
+    base_context = if context.respond_to?(:to_h)
+      context.to_h
+    else
+      {}
+    end
 
-    nil
+    tenant = defined?(Current) ? Current.tenant : nil
+    tenant_settings = tenant&.settings || {}
+    base_context["tenant_id"] ||= tenant&.id
+    base_context["safety_level"] ||= tenant_settings.dig("ai_safety_level") || "strict"
+    base_context.presence
   end
   private_class_method :normalize_context
 

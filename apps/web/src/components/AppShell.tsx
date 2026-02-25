@@ -289,7 +289,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         <main id="main-content" role="main" className="flex-1 overflow-auto bg-gray-50 p-6">
           <LiveRegion />
-          {children}
+          <div className="flex min-h-full flex-col">
+            <div className="flex-1">{children}</div>
+            <footer className="mt-6 border-t border-gray-200 pt-3 text-xs text-gray-500">
+              <Link
+                href="/docs/api"
+                className="font-medium text-blue-700 hover:text-blue-800 hover:underline"
+              >
+                API Docs
+              </Link>
+            </footer>
+          </div>
         </main>
       </div>
     </div>

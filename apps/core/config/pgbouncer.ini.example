@@ -1,0 +1,16 @@
+[databases]
+k12_production = host=<DB_HOST> port=5432 dbname=k12_production
+
+[pgbouncer]
+listen_addr = 127.0.0.1
+listen_port = 6432
+auth_type = md5
+auth_file = /etc/pgbouncer/userlist.txt
+pool_mode = transaction
+max_client_conn = 200
+default_pool_size = 20
+min_pool_size = 5
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+server_lifetime = 3600
+server_idle_timeout = 600

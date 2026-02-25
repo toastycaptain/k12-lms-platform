@@ -1,5 +1,7 @@
 import re
 
+from .pipeline import SafetyCategory, SafetyResult
+
 
 class SafetyFilter:
     BLOCKED_PATTERNS = [
@@ -54,3 +56,27 @@ class SafetyFilter:
             if pattern.search(content):
                 return False, "Output contains potentially unsafe content"
         return True, None
+
+    def check(self, text: str, direction: str = "input") -> SafetyResult:
+        if direction == "output":
+            is_safe, reason = self.check_output(text)
+            if not is_safe:
+                return SafetyResult(
+                    passed=False,
+                    category=SafetyCategory.XSS,
+                    confidence=0.8,
+                    detail=reason or "Output contains potentially unsafe content",
+                    action="blocked",
+                )
+            return SafetyResult(passed=True, action="allowed")
+
+        is_safe, reason = self.check_input(text)
+        if not is_safe:
+            return SafetyResult(
+                passed=False,
+                category=SafetyCategory.INJECTION,
+                confidence=0.8,
+                detail=reason or "Input rejected: potentially unsafe content detected",
+                action="blocked",
+            )
+        return SafetyResult(passed=True, action="allowed")

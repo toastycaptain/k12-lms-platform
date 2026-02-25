@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = [
   "/login",
+  "/docs",
   "/auth/callback",
   "/unauthorized",
   "/not-authorized",

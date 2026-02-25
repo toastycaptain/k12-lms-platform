@@ -5,11 +5,11 @@ module Api
       before_action :set_submission, only: [ :show, :update ]
 
       def index
-        submissions = policy_scope(Submission).includes(:user, :assignment)
+        submissions = policy_scope(Submission).includes(:user, :graded_by, :assignment)
         submissions = submissions.where(assignment: @assignment) if @assignment.present?
         submissions = submissions.where(status: params[:status]) if params[:status].present?
         submissions = submissions.where(assignment_id: params[:assignment_id]) if params[:assignment_id].present?
-        submissions = paginate(submissions)
+        submissions = paginate(submissions.order(:submitted_at))
         render json: submissions
       end
 
@@ -145,7 +145,7 @@ module Api
       end
 
       def set_submission
-        @submission = Submission.includes(:user, :assignment).find(params[:id])
+        @submission = Submission.includes(:user, :graded_by, :assignment).find(params[:id])
       end
 
       def submission_params

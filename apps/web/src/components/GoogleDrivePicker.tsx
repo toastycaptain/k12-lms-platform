@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Image from "next/image";
 import { apiFetch } from "@/lib/api";
 
 interface DriveFile {
@@ -306,10 +307,13 @@ export default function GoogleDrivePicker({
                   <p className="truncate text-xs text-gray-500">{meta || file.mimeType}</p>
                 </div>
                 {file.thumbnailUrl ? (
-                  <img
+                  <Image
                     src={file.thumbnailUrl}
                     alt={`${file.name} thumbnail`}
+                    width={64}
+                    height={40}
                     className="h-10 w-16 rounded border border-gray-200 object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <a

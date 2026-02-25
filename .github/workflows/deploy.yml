@@ -15,6 +15,15 @@
 name: Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
   workflow_run:
     workflows: ["Monorepo CI"]
     types: [completed]
@@ -33,6 +42,8 @@ jobs:
   deploy_production:
     if: >-
       ${{
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.environment == 'production') ||
         github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.head_branch == 'main'
@@ -43,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Install Railway CLI
@@ -161,6 +172,8 @@ jobs:
   deploy_staging:
     if: >-
       ${{
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.environment == 'staging') ||
         (github.event_name == 'workflow_run' &&
          github.event.workflow_run.conclusion == 'success' &&
          github.event.workflow_run.head_branch == 'staging') ||

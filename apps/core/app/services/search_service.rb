@@ -81,16 +81,33 @@ class SearchService
   def search_type(type, prefix_query, plain_query, user, limit)
     config = SEARCHABLE.fetch(type)
     scope = Pundit.policy_scope!(user, config[:model])
-    prefix_sql = tsquery_sql(prefix_query)
-    plain_sql = plainto_tsquery_sql(plain_query)
-    vector_sql = "COALESCE(#{config[:table]}.search_vector, #{config[:vector_sql]})"
+    table = config[:model].arel_table
+    prefix_tsquery = Arel::Nodes::NamedFunction.new(
+      "to_tsquery",
+      [ Arel::Nodes.build_quoted("english"), Arel::Nodes.build_quoted(prefix_query) ]
+    )
+    plain_tsquery = Arel::Nodes::NamedFunction.new(
+      "plainto_tsquery",
+      [ Arel::Nodes.build_quoted("english"), Arel::Nodes.build_quoted(plain_query) ]
+    )
+    search_vector = Arel::Nodes::NamedFunction.new(
+      "COALESCE",
+      [ table[:search_vector], Arel.sql(config[:vector_sql]) ]
+    )
+    prefix_match = Arel::Nodes::InfixOperation.new("@@", search_vector, prefix_tsquery)
+    plain_match = Arel::Nodes::InfixOperation.new("@@", search_vector, plain_tsquery)
+    rank_sql = Arel::Nodes::NamedFunction.new(
+      "GREATEST",
+      [
+        Arel::Nodes::NamedFunction.new("ts_rank", [ search_vector, prefix_tsquery ]),
+        Arel::Nodes::NamedFunction.new("ts_rank", [ search_vector, plain_tsquery ])
+      ]
+    )
 
     scope
-      .where("(#{vector_sql} @@ #{prefix_sql}) OR (#{vector_sql} @@ #{plain_sql})")
-      .select(
-        "#{config[:table]}.*, GREATEST(ts_rank(#{vector_sql}, #{prefix_sql}), ts_rank(#{vector_sql}, #{plain_sql})) AS search_rank"
-      )
-      .order(Arel.sql("search_rank DESC, #{config[:table]}.id ASC"))
+      .where(prefix_match.or(plain_match))
+      .select(table[Arel.star], rank_sql.as("search_rank"))
+      .order(Arel.sql("search_rank DESC"), table[:id].asc)
       .limit(limit)
       .map { |record| format_result(record, type, user) }
   rescue ActiveRecord::StatementInvalid
@@ -176,14 +193,6 @@ class SearchService
 
   def build_tsquery(tokens)
     tokens.map { |token| "#{token}:*" }.join(" & ")
-  end
-
-  def tsquery_sql(tsquery)
-    "to_tsquery('english', #{ActiveRecord::Base.connection.quote(tsquery)})"
-  end
-
-  def plainto_tsquery_sql(query)
-    "plainto_tsquery('english', #{ActiveRecord::Base.connection.quote(query)})"
   end
 
   def normalize_limit(limit)

@@ -321,7 +321,15 @@ export default function IntegrationsPage() {
     <ProtectedRoute>
       <AppShell>
         <div className="mx-auto max-w-4xl space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+            <Link
+              href="/docs/api"
+              className="rounded border border-gray-300 bg-white px-3 py-2 text-sm text-blue-700 hover:bg-gray-50"
+            >
+              API Docs
+            </Link>
+          </div>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           {success && (

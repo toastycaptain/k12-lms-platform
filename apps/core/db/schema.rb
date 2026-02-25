@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_stat_statements"
 
   create_table "academic_years", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -135,6 +136,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
     t.index ["tenant_id"], name: "index_ai_templates_on_tenant_id"
   end
 
+  create_table "alert_configurations", force: :cascade do |t|
+    t.string "comparison", null: false
+    t.integer "cooldown_minutes", default: 30, null: false
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "last_triggered_at"
+    t.string "metric", null: false
+    t.string "name", null: false
+    t.string "notification_channel", default: "slack", null: false
+    t.string "notification_target"
+    t.string "severity", default: "warning", null: false
+    t.bigint "tenant_id"
+    t.float "threshold", null: false
+    t.integer "trigger_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["enabled", "metric"], name: "index_alert_configurations_on_enabled_and_metric"
+    t.index ["metric"], name: "index_alert_configurations_on_metric"
+    t.index ["tenant_id"], name: "index_alert_configurations_on_tenant_id"
+  end
+
   create_table "announcements", force: :cascade do |t|
     t.bigint "course_id", null: false
     t.datetime "created_at", null: false
@@ -253,6 +274,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
     t.index ["tenant_id"], name: "index_audit_logs_on_tenant_id"
   end
 
+  create_table "backup_records", force: :cascade do |t|
+    t.string "backup_type", default: "full", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds"
+    t.string "error_message"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "s3_bucket", null: false
+    t.string "s3_key", null: false
+    t.bigint "size_bytes"
+    t.string "status", default: "in_progress", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "verification_result", default: {}, null: false
+    t.datetime "verified_at"
+    t.index ["backup_type", "status"], name: "index_backup_records_on_backup_type_and_status"
+    t.index ["created_at"], name: "index_backup_records_on_created_at"
+    t.index ["status"], name: "index_backup_records_on_status"
+  end
+
   create_table "course_modules", force: :cascade do |t|
     t.bigint "course_id", null: false
     t.datetime "created_at", null: false
@@ -352,6 +391,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
     t.index ["user_id", "section_id"], name: "idx_enrollments_user_section"
     t.index ["user_id", "section_id"], name: "index_enrollments_on_user_id_and_section_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
+  end
+
+  create_table "feature_flags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.boolean "enabled", default: false, null: false
+    t.string "key", null: false
+    t.bigint "tenant_id"
+    t.datetime "updated_at", null: false
+    t.index ["key", "tenant_id"], name: "index_feature_flags_on_key_and_tenant_id", unique: true
+    t.index ["key"], name: "index_feature_flags_on_key"
+    t.index ["tenant_id"], name: "index_feature_flags_on_tenant_id"
   end
 
   create_table "grade_categories", force: :cascade do |t|
@@ -1088,6 +1139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
   add_foreign_key "ai_task_policies", "users", column: "created_by_id"
   add_foreign_key "ai_templates", "tenants"
   add_foreign_key "ai_templates", "users", column: "created_by_id"
+  add_foreign_key "alert_configurations", "tenants"
   add_foreign_key "announcements", "courses"
   add_foreign_key "announcements", "tenants"
   add_foreign_key "announcements", "users", column: "created_by_id"
@@ -1124,6 +1176,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
   add_foreign_key "enrollments", "sections"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
+  add_foreign_key "feature_flags", "tenants"
   add_foreign_key "grade_categories", "courses"
   add_foreign_key "grade_categories", "tenants"
   add_foreign_key "guardian_links", "tenants"

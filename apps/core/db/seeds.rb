@@ -265,5 +265,12 @@ end
 
 puts "  Created #{UnitPlan.count} unit plans with #{LessonPlan.count} lessons and #{ResourceLink.count} resource links"
 
+begin
+  load Rails.root.join("db/seeds/alert_defaults.rb")
+  puts "  Seeded alert defaults"
+rescue NameError, ActiveRecord::StatementInvalid => e
+  puts "  Skipping alert defaults: #{e.class} #{e.message}"
+end
+
 Current.tenant = nil
 puts "Seeding complete!"

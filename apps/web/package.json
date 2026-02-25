@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern coverage",
     "clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\"",
@@ -24,11 +25,12 @@
     "next": "16.1.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "swagger-ui-react": "^5.30.3",
     "swr": "^2.4.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
     "@axe-core/react": "^4.11.1",
+    "@next/bundle-analyzer": "^16.1.6",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -36,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/swagger-ui-react": "^5.18.0",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",
     "axe-core": "^4.11.1",

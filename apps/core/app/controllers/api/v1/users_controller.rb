@@ -7,7 +7,9 @@ module Api
         if params[:q].present?
           authorize User, :search?
           query = params[:q].to_s.strip
-          users = policy_scope(User, policy_scope_class: UserPolicy::SearchScope).order(:last_name, :first_name)
+          users = policy_scope(User, policy_scope_class: UserPolicy::SearchScope)
+            .includes(:roles)
+            .order(:last_name, :first_name)
           if query.blank?
             render json: []
             return
@@ -20,7 +22,7 @@ module Api
         end
 
         authorize User
-        users = policy_scope(User).order(:last_name, :first_name)
+        users = policy_scope(User).includes(:roles).order(:last_name, :first_name)
         users = users.joins(:roles).where(roles: { name: params[:role] }) if params[:role].present?
         render json: users
       end

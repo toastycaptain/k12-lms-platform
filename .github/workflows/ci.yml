@@ -136,6 +136,11 @@ jobs:
       - name: Brakeman
         run: bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error
         working-directory: apps/core
+      - name: Bundle Audit
+        run: |
+          gem install bundler-audit
+          bundle audit check --update
+        working-directory: apps/core
 
   e2e:
     name: E2E (Playwright)

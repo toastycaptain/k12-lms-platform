@@ -145,6 +145,11 @@ function LoginContent() {
             </>
           )}
         </div>
+        <p className="mt-6 text-center text-xs text-gray-500">
+          <a href="/docs/api" className="font-medium text-blue-700 hover:underline">
+            API Docs
+          </a>
+        </p>
       </div>
     </div>
   );

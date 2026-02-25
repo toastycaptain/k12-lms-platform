@@ -68,7 +68,9 @@ def test_generate_blocks_unsafe_output(client):
     response = client.post("/v1/generate", json=payload)
 
     assert response.status_code == 422
-    assert "unsafe" in response.json()["detail"].lower()
+    detail = response.json()["detail"]
+    assert detail["error"] == "content_safety"
+    assert detail["category"] == "xss"
 
 
 def test_generate_success(client):
@@ -85,6 +87,39 @@ def test_generate_success(client):
     body = response.json()
     assert body["provider"] == "fake"
     assert body["content"] == '{"title":"Fractions"}'
+
+
+def test_generate_redacts_pii_output(client):
+    payload = {
+        "provider": "fake",
+        "model": "fake-model",
+        "prompt": "Draft parent update",
+    }
+    registry.register(
+        "fake",
+        FakeProvider(content="Contact me at teacher@example.org or 555-123-4567"),
+    )
+
+    response = client.post("/v1/generate", json=payload)
+
+    assert response.status_code == 200
+    assert "[REDACTED EMAIL]" in response.json()["content"]
+    assert "[REDACTED PHONE]" in response.json()["content"]
+
+
+def test_generate_uses_context_safety_level(client):
+    payload = {
+        "provider": "fake",
+        "model": "fake-model",
+        "prompt": "Write classroom reflection",
+        "context": {"safety_level": "standard"},
+    }
+    content = "The worksheet mentions a weapon in history context."
+    registry.register("fake", FakeProvider(content=content))
+
+    response = client.post("/v1/generate", json=payload)
+
+    assert response.status_code == 200
 
 
 def test_generate_requires_service_token_when_configured(client):

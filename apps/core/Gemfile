@@ -3,6 +3,7 @@ source "https://rubygems.org"
 gem "rails", "~> 8.1.2"
 gem "pg", "~> 1.1"
 gem "puma", "~> 7.2"
+gem "csv", "~> 3.3"
 
 # Authentication
 gem "devise", "~> 5.0"
@@ -16,6 +17,7 @@ gem "pundit", "~> 2.5"
 
 # Background jobs
 gem "sidekiq", "~> 8.1"
+gem "sidekiq-cron", "~> 2.0"
 
 # API serialization
 gem "active_model_serializers", "~> 0.10"
@@ -43,6 +45,7 @@ gem "rack-attack", "~> 6.8"
 # Error tracking
 gem "sentry-ruby", "~> 6.3"
 gem "sentry-rails", "~> 6.3"
+gem "aws-sdk-s3", "~> 1.178"
 
 # Windows timezone data
 gem "tzinfo-data", "~> 1.0", platforms: %i[windows jruby]
@@ -69,4 +72,5 @@ group :test do
   gem "simplecov", "~> 0.22", require: false
   gem "shoulda-matchers", "~> 7.0"
   gem "database_cleaner-active_record", "~> 2.2"
+  gem "webmock", "~> 3.25"
 end
