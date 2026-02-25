@@ -1,28 +1,113 @@
-# CODEX_TASK_02 — Database Scaling (Backend Only)
+# CODEX_TASK_02 — Database Scaling
 
 **Priority:** P0
-**Effort:** 6–8 hours
+**Effort:** 4–5 hours remaining (partial implementation exists)
 **Depends On:** None
 **Branch:** `batch7/02-database-scaling`
 
 ---
 
-## Objective
+## Already Implemented — DO NOT REDO
 
-Optimize the PostgreSQL database for multi-school concurrent load. Fix N+1 queries, add counter caches, create materialized views for analytics, add missing indexes, and configure connection pooling.
+The following were built in a prior session. Verify they exist before starting:
+
+| File | Status |
+|------|--------|
+| `apps/core/db/migrate/20260217000004_add_counter_caches.rb` | ✅ Exists — counter cache columns on 7 tables |
+| `apps/core/db/migrate/20260217000005_add_performance_indexes_v2.rb` | ✅ Exists — composite indexes |
+
+Quick verification:
+```bash
+ls apps/core/db/migrate/20260217000004_add_counter_caches.rb
+ls apps/core/db/migrate/20260217000005_add_performance_indexes_v2.rb
+```
+
+**Important:** The migration added the counter cache columns, but the model `belongs_to` associations may not yet have `counter_cache: true`. Check each model file listed in Task 1 below and add if missing.
 
 ---
 
-## Tasks
+## Remaining Tasks
 
-### 1. N+1 Query Audit and Eager Loading
+### 1. Verify and Complete Counter Cache Model Associations
 
-Install and configure Bullet gem for development:
+The migration (20260217000004) added `*_count` columns. Now verify that the corresponding `belongs_to` declarations in each model have `counter_cache: true`. If missing, add them.
 
-Add to `apps/core/Gemfile` (development group):
+Check each file — **only add `counter_cache: true` if not already present**:
+
+```bash
+# Check current state before modifying
+grep -n "counter_cache" apps/core/app/models/assignment.rb
+grep -n "counter_cache" apps/core/app/models/submission.rb
+grep -n "counter_cache" apps/core/app/models/discussion.rb
+grep -n "counter_cache" apps/core/app/models/discussion_post.rb
+grep -n "counter_cache" apps/core/app/models/quiz.rb
+grep -n "counter_cache" apps/core/app/models/enrollment.rb
+grep -n "counter_cache" apps/core/app/models/question.rb
+grep -n "counter_cache" apps/core/app/models/user.rb
+grep -n "counter_cache" apps/core/app/models/course.rb
+grep -n "counter_cache" apps/core/app/models/school.rb
+```
+
+For each model where `counter_cache: true` is NOT already on the `belongs_to`, add it:
+
+`apps/core/app/models/assignment.rb`:
+```ruby
+belongs_to :course, counter_cache: true
+```
+
+`apps/core/app/models/submission.rb`:
+```ruby
+belongs_to :assignment, counter_cache: true
+```
+
+`apps/core/app/models/discussion.rb`:
+```ruby
+belongs_to :course, counter_cache: true
+```
+
+`apps/core/app/models/discussion_post.rb`:
+```ruby
+belongs_to :discussion, counter_cache: true
+```
+
+`apps/core/app/models/quiz.rb`:
+```ruby
+belongs_to :course, counter_cache: true
+```
+
+`apps/core/app/models/enrollment.rb`:
+```ruby
+belongs_to :section, counter_cache: true
+```
+
+`apps/core/app/models/question.rb`:
+```ruby
+belongs_to :question_bank, counter_cache: true
+```
+
+`apps/core/app/models/user.rb`:
+```ruby
+belongs_to :tenant, counter_cache: true
+```
+
+`apps/core/app/models/course.rb`:
+```ruby
+belongs_to :tenant, counter_cache: true
+```
+
+`apps/core/app/models/school.rb`:
+```ruby
+belongs_to :tenant, counter_cache: true
+```
+
+### 2. Install Bullet Gem for N+1 Detection
+
+Add to `apps/core/Gemfile`:
 
 ```ruby
-gem "bullet", "~> 8.0"
+group :development, :test do
+  gem "bullet", "~> 8.0"
+end
 ```
 
 Add to `apps/core/config/environments/development.rb`:
@@ -31,7 +116,7 @@ Add to `apps/core/config/environments/development.rb`:
 config.after_initialize do
   Bullet.enable = true
   Bullet.rails_logger = true
-  Bullet.raise = false  # Log only, don't crash
+  Bullet.raise = false
 end
 ```
 
@@ -44,239 +129,67 @@ config.after_initialize do
 end
 ```
 
-**Audit these high-traffic controllers and add eager loading:**
+Run `bundle install` after adding the gem.
 
-`apps/core/app/controllers/api/v1/courses_controller.rb` — index action:
+### 3. Fix N+1 Queries in High-Traffic Controllers
+
+With Bullet enabled in test mode, run the test suite and fix every N+1 it reports. As a starting point, audit these controllers and add eager loading if not already present:
+
+`apps/core/app/controllers/api/v1/courses_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize Course
-  courses = policy_scope(Course)
-    .includes(:sections, :academic_year, :course_modules)
-    .order(:name)
-  render json: courses
-end
+courses = policy_scope(Course)
+  .includes(:sections, :academic_year, :course_modules)
+  .order(:name)
 ```
 
-`apps/core/app/controllers/api/v1/assignments_controller.rb` — index action:
+`apps/core/app/controllers/api/v1/assignments_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize Assignment
-  assignments = policy_scope(Assignment)
-    .where(course_id: params[:course_id])
-    .includes(:created_by, :rubric, :standards, :submissions)
-    .order(:due_at)
-  render json: assignments
-end
+assignments = policy_scope(Assignment)
+  .where(course_id: params[:course_id])
+  .includes(:created_by, :rubric, :standards)
+  .order(:due_at)
 ```
 
-`apps/core/app/controllers/api/v1/submissions_controller.rb` — index action:
+`apps/core/app/controllers/api/v1/submissions_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize Submission
-  submissions = policy_scope(Submission)
-    .where(assignment_id: params[:assignment_id])
-    .includes(:student, :graded_by)
-    .order(:submitted_at)
-  render json: submissions
-end
+submissions = policy_scope(Submission)
+  .where(assignment_id: params[:assignment_id])
+  .includes(:student, :graded_by)
+  .order(:submitted_at)
 ```
 
-`apps/core/app/controllers/api/v1/enrollments_controller.rb` — index action:
+`apps/core/app/controllers/api/v1/users_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize Enrollment
-  enrollments = policy_scope(Enrollment)
-    .where(section_id: params[:section_id])
-    .includes(:user, :section)
-    .order(created_at: :desc)
-  render json: enrollments
-end
+users = policy_scope(User)
+  .includes(:roles)
+  .order(:last_name, :first_name)
 ```
 
-`apps/core/app/controllers/api/v1/users_controller.rb` — index action:
+`apps/core/app/controllers/api/v1/quizzes_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize User
-  users = policy_scope(User)
-    .includes(:roles)
-    .order(:last_name, :first_name)
-  # ... existing filters ...
-  render json: users
-end
+quizzes = policy_scope(Quiz)
+  .where(course_id: params[:course_id])
+  .includes(:quiz_items)
+  .order(:created_at)
 ```
 
-`apps/core/app/controllers/api/v1/quizzes_controller.rb` — index action:
+`apps/core/app/controllers/api/v1/discussions_controller.rb` — `index` action:
 ```ruby
-def index
-  authorize Quiz
-  quizzes = policy_scope(Quiz)
-    .where(course_id: params[:course_id])
-    .includes(:quiz_items, :quiz_attempts)
-    .order(:created_at)
-  render json: quizzes
-end
+discussions = policy_scope(Discussion)
+  .where(course_id: params[:course_id])
+  .includes(:created_by)
+  .order(:created_at)
 ```
 
-`apps/core/app/controllers/api/v1/discussions_controller.rb` — index action:
-```ruby
-def index
-  authorize Discussion
-  discussions = policy_scope(Discussion)
-    .where(course_id: params[:course_id])
-    .includes(:created_by, :discussion_posts)
-    .order(:created_at)
-  render json: discussions
-end
-```
+After adding eager loading, run `bundle exec rspec` — if Bullet raises on any remaining N+1, fix those too.
 
-**Review every controller `index` action.** For each, verify the query includes associations that are serialized. If the serializer references `object.association`, add `.includes(:association)` to the query.
+### 4. Create Materialized Views for Analytics
 
-### 2. Counter Caches
-
-Create a migration adding counter cache columns to avoid COUNT(*) queries on list pages:
-
-```ruby
-class AddCounterCaches < ActiveRecord::Migration[8.0]
-  def change
-    # Tenant summary stats
-    add_column :tenants, :users_count, :integer, default: 0, null: false
-    add_column :tenants, :courses_count, :integer, default: 0, null: false
-    add_column :tenants, :schools_count, :integer, default: 0, null: false
-
-    # Course stats
-    add_column :courses, :enrollments_count, :integer, default: 0, null: false
-    add_column :courses, :assignments_count, :integer, default: 0, null: false
-    add_column :courses, :discussions_count, :integer, default: 0, null: false
-    add_column :courses, :quizzes_count, :integer, default: 0, null: false
-
-    # Assignment stats
-    add_column :assignments, :submissions_count, :integer, default: 0, null: false
-
-    # Discussion stats
-    add_column :discussions, :discussion_posts_count, :integer, default: 0, null: false
-
-    # Question bank stats
-    add_column :question_banks, :questions_count, :integer, default: 0, null: false
-
-    # Section stats
-    add_column :sections, :enrollments_count, :integer, default: 0, null: false
-  end
-end
-```
-
-Create a data migration to backfill existing counts:
-
-```ruby
-class BackfillCounterCaches < ActiveRecord::Migration[8.0]
-  def up
-    # Backfill tenant counts
-    execute <<~SQL
-      UPDATE tenants SET users_count = (SELECT COUNT(*) FROM users WHERE users.tenant_id = tenants.id);
-      UPDATE tenants SET courses_count = (SELECT COUNT(*) FROM courses WHERE courses.tenant_id = tenants.id);
-      UPDATE tenants SET schools_count = (SELECT COUNT(*) FROM schools WHERE schools.tenant_id = tenants.id);
-    SQL
-
-    # Backfill course counts
-    execute <<~SQL
-      UPDATE courses SET enrollments_count = (
-        SELECT COUNT(*) FROM enrollments
-        JOIN sections ON sections.id = enrollments.section_id
-        WHERE sections.course_id = courses.id
-      );
-      UPDATE courses SET assignments_count = (SELECT COUNT(*) FROM assignments WHERE assignments.course_id = courses.id);
-      UPDATE courses SET discussions_count = (SELECT COUNT(*) FROM discussions WHERE discussions.course_id = courses.id);
-      UPDATE courses SET quizzes_count = (SELECT COUNT(*) FROM quizzes WHERE quizzes.course_id = courses.id);
-    SQL
-
-    # Backfill assignment counts
-    execute <<~SQL
-      UPDATE assignments SET submissions_count = (SELECT COUNT(*) FROM submissions WHERE submissions.assignment_id = assignments.id);
-    SQL
-
-    # Backfill discussion counts
-    execute <<~SQL
-      UPDATE discussions SET discussion_posts_count = (SELECT COUNT(*) FROM discussion_posts WHERE discussion_posts.discussion_id = discussions.id);
-    SQL
-
-    # Backfill question bank counts
-    execute <<~SQL
-      UPDATE question_banks SET questions_count = (SELECT COUNT(*) FROM questions WHERE questions.question_bank_id = question_banks.id);
-    SQL
-
-    # Backfill section counts
-    execute <<~SQL
-      UPDATE sections SET enrollments_count = (SELECT COUNT(*) FROM enrollments WHERE enrollments.section_id = sections.id);
-    SQL
-  end
-
-  def down
-    # Counter caches will be stale but that's acceptable for rollback
-  end
-end
-```
-
-**Update models to use counter caches:**
-
-In `apps/core/app/models/user.rb`:
-```ruby
-belongs_to :tenant, counter_cache: true
-```
-
-In `apps/core/app/models/course.rb`:
-```ruby
-belongs_to :tenant, counter_cache: true
-```
-
-In `apps/core/app/models/school.rb`:
-```ruby
-belongs_to :tenant, counter_cache: true
-```
-
-In `apps/core/app/models/assignment.rb`:
-```ruby
-belongs_to :course, counter_cache: true
-```
-
-In `apps/core/app/models/submission.rb`:
-```ruby
-belongs_to :assignment, counter_cache: true
-```
-
-In `apps/core/app/models/discussion.rb`:
-```ruby
-belongs_to :course, counter_cache: true
-```
-
-In `apps/core/app/models/discussion_post.rb`:
-```ruby
-belongs_to :discussion, counter_cache: true
-```
-
-In `apps/core/app/models/quiz.rb`:
-```ruby
-belongs_to :course, counter_cache: true
-```
-
-In `apps/core/app/models/question.rb` (if it belongs_to :question_bank):
-```ruby
-belongs_to :question_bank, counter_cache: true
-```
-
-In `apps/core/app/models/enrollment.rb`:
-```ruby
-belongs_to :section, counter_cache: true
-```
-
-**Note:** Check each model file before modifying — if `counter_cache: true` already exists on the `belongs_to`, skip it. Some may have been added in earlier batches.
-
-### 3. Materialized Views for Analytics
-
-Create materialized views to precompute the heavy analytics queries from Batch 6:
+Create migration `apps/core/db/migrate/[timestamp]_create_analytics_materialized_views.rb`:
 
 ```ruby
 class CreateAnalyticsMaterializedViews < ActiveRecord::Migration[8.0]
   def up
-    # Daily tenant activity summary
     execute <<~SQL
       CREATE MATERIALIZED VIEW tenant_daily_stats AS
       SELECT
@@ -292,11 +205,12 @@ class CreateAnalyticsMaterializedViews < ActiveRecord::Migration[8.0]
       GROUP BY tenants.id, DATE(submissions.submitted_at)
       WITH DATA;
 
-      CREATE UNIQUE INDEX idx_tenant_daily_stats_unique ON tenant_daily_stats (tenant_id, stat_date);
-      CREATE INDEX idx_tenant_daily_stats_date ON tenant_daily_stats (stat_date);
+      CREATE UNIQUE INDEX idx_tenant_daily_stats_unique
+        ON tenant_daily_stats (tenant_id, stat_date);
+      CREATE INDEX idx_tenant_daily_stats_date
+        ON tenant_daily_stats (stat_date);
     SQL
 
-    # Course engagement summary
     execute <<~SQL
       CREATE MATERIALIZED VIEW course_engagement_stats AS
       SELECT
@@ -316,8 +230,10 @@ class CreateAnalyticsMaterializedViews < ActiveRecord::Migration[8.0]
       GROUP BY courses.id, courses.tenant_id
       WITH DATA;
 
-      CREATE UNIQUE INDEX idx_course_engagement_unique ON course_engagement_stats (course_id);
-      CREATE INDEX idx_course_engagement_tenant ON course_engagement_stats (tenant_id);
+      CREATE UNIQUE INDEX idx_course_engagement_unique
+        ON course_engagement_stats (course_id);
+      CREATE INDEX idx_course_engagement_tenant
+        ON course_engagement_stats (tenant_id);
     SQL
   end
 
@@ -328,9 +244,7 @@ class CreateAnalyticsMaterializedViews < ActiveRecord::Migration[8.0]
 end
 ```
 
-Create a Sidekiq job to refresh the materialized views:
-
-**File: `apps/core/app/jobs/refresh_analytics_views_job.rb`**
+Create `apps/core/app/jobs/refresh_analytics_views_job.rb`:
 
 ```ruby
 class RefreshAnalyticsViewsJob < ApplicationJob
@@ -349,93 +263,28 @@ class RefreshAnalyticsViewsJob < ApplicationJob
 end
 ```
 
-Schedule it via Sidekiq cron (add to `config/initializers/sidekiq.rb` or `config/sidekiq_cron.yml`):
+Schedule the job. Check `apps/core/config/initializers/` for an existing Sidekiq cron config. If `sidekiq_cron.rb` exists, append to it. If not, create it:
 
 ```ruby
-# config/initializers/sidekiq_cron.rb (or wherever cron jobs are configured)
-Sidekiq::Cron::Job.create(
-  name: "Refresh analytics views - every hour",
-  cron: "0 * * * *",
-  class: "RefreshAnalyticsViewsJob"
-) if defined?(Sidekiq::Cron)
-```
-
-If Sidekiq::Cron is not installed, add a recurring job using whatever scheduling pattern the project already uses (check `config/initializers/` for existing patterns). If none exists, document the cron job requirement and add the `sidekiq-cron` gem:
-
-```ruby
-# Gemfile
-gem "sidekiq-cron", "~> 2.0"
-```
-
-### 4. Composite Index Audit
-
-Create a migration adding indexes for the most common query patterns:
-
-```ruby
-class AddPerformanceIndexes < ActiveRecord::Migration[8.0]
-  def change
-    # Submission lookups (grading view, inbox)
-    add_index :submissions, [:assignment_id, :student_id], unique: true,
-      name: "idx_submissions_assignment_student",
-      if_not_exists: true
-    add_index :submissions, [:assignment_id, :status],
-      name: "idx_submissions_assignment_status",
-      if_not_exists: true
-
-    # Enrollment lookups (roster, grade passback)
-    add_index :enrollments, [:section_id, :user_id], unique: true,
-      name: "idx_enrollments_section_user",
-      if_not_exists: true
-
-    # Quiz attempts (analytics, grading)
-    add_index :quiz_attempts, [:quiz_id, :user_id],
-      name: "idx_quiz_attempts_quiz_user",
-      if_not_exists: true
-    add_index :quiz_attempts, [:quiz_id, :status],
-      name: "idx_quiz_attempts_quiz_status",
-      if_not_exists: true
-
-    # Discussion posts (thread rendering)
-    add_index :discussion_posts, [:discussion_id, :created_at],
-      name: "idx_discussion_posts_thread_order",
-      if_not_exists: true
-
-    # Standards alignment (coverage reports)
-    add_index :assignment_standards, [:standard_id, :assignment_id],
-      name: "idx_assignment_standards_lookup",
-      if_not_exists: true
-
-    # Audit logs (admin viewing)
-    add_index :audit_logs, [:tenant_id, :created_at],
-      name: "idx_audit_logs_tenant_time",
-      if_not_exists: true
-    add_index :audit_logs, [:tenant_id, :action, :created_at],
-      name: "idx_audit_logs_tenant_action_time",
-      if_not_exists: true
-
-    # Notifications (user inbox)
-    add_index :notifications, [:user_id, :read, :created_at],
-      name: "idx_notifications_user_unread",
-      if_not_exists: true
-
-    # Module items (course content ordering)
-    add_index :module_items, [:course_module_id, :position],
-      name: "idx_module_items_module_position",
-      if_not_exists: true
-
-    # AI invocations (safety dashboard, audit)
-    add_index :ai_invocations, [:tenant_id, :created_at],
-      name: "idx_ai_invocations_tenant_time",
-      if_not_exists: true
-  end
+# apps/core/config/initializers/sidekiq_cron.rb
+if defined?(Sidekiq::Cron)
+  Sidekiq::Cron::Job.create(
+    name: "Refresh analytics views - every hour",
+    cron: "0 * * * *",
+    class: "RefreshAnalyticsViewsJob"
+  )
 end
 ```
 
-**Important:** Before adding each index, check if it already exists. Use `if_not_exists: true` on every `add_index` call. Some of these may have been added in Batch 5 performance work.
+If `sidekiq-cron` is not in the Gemfile, add it:
 
-### 5. pg_stat_statements Setup
+```ruby
+gem "sidekiq-cron", "~> 2.0"
+```
 
-Create a migration to enable the extension:
+### 5. Enable pg_stat_statements
+
+Create migration `[timestamp]_enable_pg_stat_statements.rb`:
 
 ```ruby
 class EnablePgStatStatements < ActiveRecord::Migration[8.0]
@@ -449,9 +298,7 @@ class EnablePgStatStatements < ActiveRecord::Migration[8.0]
 end
 ```
 
-Create a service to expose slow query data:
-
-**File: `apps/core/app/services/slow_query_service.rb`**
+Create `apps/core/app/services/slow_query_service.rb`:
 
 ```ruby
 class SlowQueryService
@@ -472,7 +319,6 @@ class SlowQueryService
       ORDER BY mean_exec_time DESC
       LIMIT #{limit.to_i}
     SQL
-
     result.to_a
   rescue ActiveRecord::StatementInvalid => e
     Rails.logger.warn("[SlowQueryService] pg_stat_statements not available: #{e.message}")
@@ -482,14 +328,14 @@ class SlowQueryService
   def self.reset!
     ActiveRecord::Base.connection.execute("SELECT pg_stat_statements_reset()")
   rescue ActiveRecord::StatementInvalid
-    # Extension not available
+    nil
   end
 end
 ```
 
-### 6. Connection Pooling Configuration
+### 6. Optimize database.yml Connection Pool
 
-Update `apps/core/config/database.yml` to optimize pool settings:
+Update `apps/core/config/database.yml`. Find the production or default section and add pool configuration:
 
 ```yaml
 default: &default
@@ -497,8 +343,6 @@ default: &default
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
-  prepared_statements: true
-  advisory_locks: true
 
 production:
   <<: *default
@@ -508,9 +352,7 @@ production:
   checkout_timeout: 5
 ```
 
-Document PgBouncer configuration for production:
-
-**File: `apps/core/config/pgbouncer.ini.example`**
+Create `apps/core/config/pgbouncer.ini.example` for documentation:
 
 ```ini
 [databases]
@@ -529,12 +371,43 @@ reserve_pool_size = 5
 reserve_pool_timeout = 3
 server_lifetime = 3600
 server_idle_timeout = 600
-log_connections = 0
-log_disconnections = 0
-stats_period = 60
 ```
 
 ### 7. Write Tests
+
+**File: `apps/core/spec/models/counter_cache_spec.rb`**
+
+```ruby
+require "rails_helper"
+
+RSpec.describe "Counter caches", type: :model do
+  let!(:tenant) { create(:tenant) }
+  before { Current.tenant = tenant }
+  after  { Current.tenant = nil }
+
+  it "increments courses_count on tenant when course is created" do
+    expect {
+      create(:course, tenant: tenant)
+    }.to change { tenant.reload.courses_count }.by(1)
+  end
+
+  it "increments assignments_count on course when assignment is created" do
+    course = create(:course, tenant: tenant)
+    expect {
+      create(:assignment, course: course, tenant: tenant)
+    }.to change { course.reload.assignments_count }.by(1)
+  end
+
+  it "increments submissions_count on assignment when submission is created" do
+    course = create(:course, tenant: tenant)
+    assignment = create(:assignment, course: course, tenant: tenant)
+    student = create(:user, tenant: tenant)
+    expect {
+      create(:submission, assignment: assignment, student: student, tenant: tenant)
+    }.to change { assignment.reload.submissions_count }.by(1)
+  end
+end
+```
 
 **File: `apps/core/spec/jobs/refresh_analytics_views_job_spec.rb`**
 
@@ -542,12 +415,12 @@ stats_period = 60
 require "rails_helper"
 
 RSpec.describe RefreshAnalyticsViewsJob, type: :job do
-  it "refreshes all materialized views without error" do
-    expect { described_class.perform_now }.not_to raise_error
-  end
-
   it "is enqueued in the low queue" do
     expect(described_class.new.queue_name).to eq("low")
+  end
+
+  it "runs without error" do
+    expect { described_class.perform_now }.not_to raise_error
   end
 end
 ```
@@ -559,14 +432,8 @@ require "rails_helper"
 
 RSpec.describe SlowQueryService do
   describe ".top_queries" do
-    it "returns an array of query stats" do
-      result = described_class.top_queries(limit: 5)
-      expect(result).to be_an(Array)
-    end
-
-    it "respects the limit parameter" do
-      result = described_class.top_queries(limit: 3)
-      expect(result.length).to be <= 3
+    it "returns an array" do
+      expect(described_class.top_queries(limit: 5)).to be_an(Array)
     end
 
     it "returns empty array if extension not available" do
@@ -574,45 +441,6 @@ RSpec.describe SlowQueryService do
         .and_raise(ActiveRecord::StatementInvalid.new("extension not found"))
       expect(described_class.top_queries).to eq([])
     end
-  end
-end
-```
-
-**File: `apps/core/spec/models/counter_cache_spec.rb`**
-
-```ruby
-require "rails_helper"
-
-RSpec.describe "Counter caches", type: :model do
-  let!(:tenant) { create(:tenant) }
-
-  before { Current.tenant = tenant }
-  after { Current.tenant = nil }
-
-  it "increments courses_count on tenant when course is created" do
-    expect {
-      create(:course, tenant: tenant)
-    }.to change { tenant.reload.courses_count }.by(1)
-  end
-
-  it "increments submissions_count on assignment when submission is created" do
-    course = create(:course, tenant: tenant)
-    assignment = create(:assignment, course: course, tenant: tenant)
-    student = create(:user, tenant: tenant)
-
-    expect {
-      create(:submission, assignment: assignment, student: student, tenant: tenant)
-    }.to change { assignment.reload.submissions_count }.by(1)
-  end
-
-  it "increments enrollments_count on section when enrollment is created" do
-    course = create(:course, tenant: tenant)
-    section = create(:section, course: course, tenant: tenant)
-    student = create(:user, tenant: tenant)
-
-    expect {
-      create(:enrollment, section: section, user: student, tenant: tenant)
-    }.to change { section.reload.enrollments_count }.by(1)
   end
 end
 ```
@@ -626,48 +454,46 @@ end
 | `apps/core/app/jobs/refresh_analytics_views_job.rb` | Hourly materialized view refresh |
 | `apps/core/app/services/slow_query_service.rb` | pg_stat_statements query interface |
 | `apps/core/config/pgbouncer.ini.example` | PgBouncer configuration template |
-| `db/migrate/YYYYMMDDHHMMSS_add_counter_caches.rb` | Counter cache columns |
-| `db/migrate/YYYYMMDDHHMMSS_backfill_counter_caches.rb` | Backfill existing counts |
-| `db/migrate/YYYYMMDDHHMMSS_create_analytics_materialized_views.rb` | Analytics MVs |
-| `db/migrate/YYYYMMDDHHMMSS_add_performance_indexes_v3.rb` | Composite indexes |
-| `db/migrate/YYYYMMDDHHMMSS_enable_pg_stat_statements.rb` | pg_stat_statements extension |
+| `apps/core/db/migrate/[ts]_create_analytics_materialized_views.rb` | Analytics views |
+| `apps/core/db/migrate/[ts]_enable_pg_stat_statements.rb` | pg_stat_statements extension |
+| `apps/core/spec/models/counter_cache_spec.rb` | Counter cache verification |
 | `apps/core/spec/jobs/refresh_analytics_views_job_spec.rb` | MV refresh tests |
 | `apps/core/spec/services/slow_query_service_spec.rb` | Slow query service tests |
-| `apps/core/spec/models/counter_cache_spec.rb` | Counter cache verification |
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `apps/core/Gemfile` | Add `bullet` (dev/test), `sidekiq-cron` |
+| `apps/core/Gemfile` | Add `bullet` (dev/test), `sidekiq-cron` if not present |
 | `apps/core/config/environments/development.rb` | Bullet config |
-| `apps/core/config/environments/test.rb` | Bullet config |
-| `apps/core/config/database.yml` | Pool size, checkout timeout, reaping |
-| `apps/core/app/models/user.rb` | `counter_cache: true` on `belongs_to :tenant` |
-| `apps/core/app/models/course.rb` | `counter_cache: true` on `belongs_to :tenant` |
-| `apps/core/app/models/school.rb` | `counter_cache: true` on `belongs_to :tenant` |
-| `apps/core/app/models/assignment.rb` | `counter_cache: true` on `belongs_to :course` |
-| `apps/core/app/models/submission.rb` | `counter_cache: true` on `belongs_to :assignment` |
-| `apps/core/app/models/discussion.rb` | `counter_cache: true` on `belongs_to :course` |
-| `apps/core/app/models/discussion_post.rb` | `counter_cache: true` on `belongs_to :discussion` |
-| `apps/core/app/models/quiz.rb` | `counter_cache: true` on `belongs_to :course` |
-| `apps/core/app/models/enrollment.rb` | `counter_cache: true` on `belongs_to :section` |
-| Multiple controllers | Add `.includes()` for eager loading |
+| `apps/core/config/environments/test.rb` | Bullet config (raise: true) |
+| `apps/core/config/database.yml` | Pool size, checkout_timeout, reaping_frequency |
+| `apps/core/app/models/assignment.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/submission.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/discussion.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/discussion_post.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/quiz.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/enrollment.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/question.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/user.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/course.rb` | `counter_cache: true` (if missing) |
+| `apps/core/app/models/school.rb` | `counter_cache: true` (if missing) |
+| `apps/core/config/initializers/sidekiq_cron.rb` | Schedule RefreshAnalyticsViewsJob |
+| Multiple controllers | Add `.includes()` for eager loading where missing |
 
 ---
 
 ## Definition of Done
 
-- [ ] Bullet gem installed and configured in dev/test
-- [ ] All controller index actions reviewed; eager loading added where needed
-- [ ] Counter caches added on 11 columns across 7 tables
-- [ ] Counter caches backfilled for existing data
-- [ ] Materialized views created for tenant_daily_stats and course_engagement_stats
-- [ ] RefreshAnalyticsViewsJob runs hourly via Sidekiq cron
-- [ ] Composite indexes added for common query patterns (with if_not_exists guards)
-- [ ] pg_stat_statements enabled; SlowQueryService exposes top queries
-- [ ] database.yml optimized with pool size, checkout timeout, reaping
-- [ ] PgBouncer configuration documented
-- [ ] All new tests pass
+- [ ] All model `belongs_to` associations with counter cache columns have `counter_cache: true`
+- [ ] Bullet gem installed; `bundle exec rspec` raises zero N+1 warnings
+- [ ] Materialized views `tenant_daily_stats` and `course_engagement_stats` exist in schema
+- [ ] `RefreshAnalyticsViewsJob` runs hourly via Sidekiq cron without error
+- [ ] `pg_stat_statements` extension enabled; `SlowQueryService.top_queries` returns array
+- [ ] `database.yml` has pool size, checkout_timeout, reaping_frequency
+- [ ] `pgbouncer.ini.example` documents connection pooling configuration
+- [ ] `counter_cache_spec.rb` passes
+- [ ] `refresh_analytics_views_job_spec.rb` passes
+- [ ] `slow_query_service_spec.rb` passes
 - [ ] `bundle exec rspec` passes (full suite)
 - [ ] `bundle exec rubocop` passes
