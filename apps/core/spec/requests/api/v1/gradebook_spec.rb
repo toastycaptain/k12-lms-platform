@@ -212,4 +212,49 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
       expect(response.body).to include("Class Average")
     end
   end
+
+  describe "GET /api/v1/courses/:id/gradebook/export_csv" do
+    it "supports export_csv alias route" do
+      mock_session(teacher, tenant: tenant)
+
+      get "/api/v1/courses/#{course.id}/gradebook/export_csv"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Type"]).to include("text/csv")
+      expect(response.body).to include("Student Name,Email")
+    end
+  end
+
+  describe "POST /api/v1/courses/:id/gradebook/bulk_grade" do
+    it "grades multiple submissions in one request" do
+      mock_session(teacher, tenant: tenant)
+      first_submission = Submission.find_by!(assignment: assignment_one, user: student_one)
+      second_submission = Submission.find_by!(assignment: assignment_one, user: student_two)
+
+      post "/api/v1/courses/#{course.id}/gradebook/bulk_grade", params: {
+        grades: [
+          { submission_id: first_submission.id, grade: 96, feedback: "Great work" },
+          { submission_id: second_submission.id, grade: 82, feedback: "Strong revision" }
+        ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["updated_count"]).to eq(2)
+      expect(first_submission.reload.grade.to_f).to eq(96.0)
+      expect(first_submission.feedback).to eq("Great work")
+      expect(first_submission.status).to eq("graded")
+      expect(second_submission.reload.grade.to_f).to eq(82.0)
+    end
+
+    it "forbids non-teacher users" do
+      mock_session(student_one, tenant: tenant)
+      target_submission = Submission.find_by!(assignment: assignment_one, user: student_one)
+
+      post "/api/v1/courses/#{course.id}/gradebook/bulk_grade", params: {
+        grades: [ { submission_id: target_submission.id, grade: 77 } ]
+      }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end

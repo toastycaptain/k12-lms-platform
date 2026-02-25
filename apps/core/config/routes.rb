@@ -31,10 +31,13 @@ Rails.application.routes.draw do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_course"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
         get "gradebook/export", on: :member, controller: "gradebook", action: "export"
+        get "gradebook/export_csv", on: :member, controller: "gradebook", action: "export_csv"
+        post "gradebook/bulk_grade", on: :member, controller: "gradebook", action: "bulk_grade"
         get :quiz_performance, on: :member, controller: "quiz_analytics", action: "course_summary"
         resources :modules, controller: "course_modules", only: [ :index, :create ]
         resources :course_modules, controller: "course_modules", only: [ :index ]
         resources :assignments, only: [ :index, :create ]
+        resources :grade_categories, only: [ :index, :create, :update, :destroy ]
         resources :discussions, only: [ :index, :create ]
         resources :announcements, only: [ :index, :create ]
         resources :quizzes, only: [ :index, :create ]
@@ -262,6 +265,10 @@ Rails.application.routes.draw do
       resources :notification_preferences, param: :event_type, only: [ :index, :update ]
       resources :permissions, only: [ :index, :create, :update, :destroy ]
       resources :guardian_links, only: [ :index, :create, :destroy ]
+      get "guardian/students", to: "guardian#students"
+      get "guardian/students/:id/grades", to: "guardian#grades"
+      get "guardian/students/:id/assignments", to: "guardian#assignments"
+      get "guardian/students/:id/announcements", to: "guardian#announcements"
       get "students/:student_id/progress", to: "student_progress#show"
       get "students/:student_id/progress/course/:course_id", to: "student_progress#course_detail"
       resources :schools

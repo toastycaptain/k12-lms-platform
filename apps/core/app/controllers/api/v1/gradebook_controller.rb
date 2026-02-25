@@ -20,14 +20,83 @@ module Api
                   type: "text/csv"
       end
 
+      # GET /api/v1/courses/:id/gradebook/export_csv
+      def export_csv
+        export
+      end
+
+      # POST /api/v1/courses/:id/gradebook/bulk_grade
+      def bulk_grade
+        authorize @course, :gradebook?
+
+        updates = bulk_grade_params
+        if updates.empty?
+          render json: { error: "grades payload is required" }, status: :unprocessable_content
+          return
+        end
+
+        updated_submissions = []
+
+        ActiveRecord::Base.transaction do
+          updates.each do |entry|
+            submission = Submission.joins(:assignment).find_by!(
+              id: entry.fetch(:submission_id),
+              assignments: { course_id: @course.id }
+            )
+
+            attributes = {
+              grade: entry.fetch(:grade),
+              feedback: entry[:feedback],
+              status: "graded",
+              graded_at: Time.current,
+              graded_by: Current.user
+            }
+
+            submission.update!(attributes)
+            updated_submissions << submission
+          end
+        end
+
+        render json: {
+          updated_count: updated_submissions.length,
+          submissions: updated_submissions.map { |submission|
+            {
+              id: submission.id,
+              assignment_id: submission.assignment_id,
+              user_id: submission.user_id,
+              grade: submission.grade&.to_f,
+              feedback: submission.feedback,
+              status: submission.status
+            }
+          }
+        }
+      rescue KeyError, TypeError
+        render json: { error: "Invalid bulk grade payload" }, status: :unprocessable_content
+      rescue ActiveRecord::RecordInvalid => error
+        render json: { error: error.record.errors.full_messages.join(", ") }, status: :unprocessable_content
+      end
+
       private
 
       def set_course
         @course = Course.includes(
-          sections: { enrollments: :user },
-          assignments: %i[rubric resource_links],
-          quizzes: :quiz_attempts
+          {
+            sections: { enrollments: :user },
+            assignments: %i[rubric resource_links grade_category],
+            quizzes: :quiz_attempts
+          },
+          :grade_categories
         ).find(params[:id])
+      end
+
+      def bulk_grade_params
+        Array(params.permit(grades: [ :submission_id, :grade, :feedback ])[:grades]).map do |entry|
+          {
+            submission_id: entry[:submission_id],
+            grade: entry[:grade],
+            feedback: entry[:feedback]
+          }
+        end
       end
 
       def gradebook_payload
@@ -40,7 +109,14 @@ module Api
             assignments: assignment_rows,
             quizzes: quizzes.map { |quiz| serialize_quiz(quiz) },
             course_summary: build_course_summary(student_rows, assignment_rows),
-            mastery_threshold: mastery_threshold
+            mastery_threshold: mastery_threshold,
+            grade_categories: grade_categories.map { |category|
+              {
+                id: category.id,
+                name: category.name,
+                weight_percentage: category.weight_percentage.to_f
+              }
+            }
           }
         end
       end
@@ -59,6 +135,10 @@ module Api
 
       def quizzes
         @quizzes ||= @course.quizzes.to_a.sort_by { |quiz| [ quiz.title.to_s, quiz.id ] }
+      end
+
+      def grade_categories
+        @grade_categories ||= @course.grade_categories.to_a.sort_by(&:name)
       end
 
       def submissions
@@ -135,6 +215,8 @@ module Api
           assignment_id: assignment.id,
           assignment_title: assignment.title,
           assignment_type: assignment.assignment_type,
+          grade_category_id: assignment.grade_category_id,
+          grade_category_name: assignment.grade_category&.name,
           submission_id: submission&.id,
           grade: grade_value,
           points_possible: points_possible.positive? ? points_possible : nil,
@@ -201,7 +283,9 @@ module Api
         assignment_values = student_rows.flat_map { |row| row[:grades] }
         quiz_values = student_rows.flat_map { |row| row[:quiz_grades] }
 
-        by_category = assignment_values.group_by { |cell| cell[:assignment_type] }
+        by_category = assignment_values.group_by do |cell|
+          cell[:grade_category_name].presence || cell[:assignment_type]
+        end
         averages = by_category.transform_values do |cells|
           percentages = cells.map { |cell| cell[:percentage] }.compact
           percentages.any? ? average(percentages) : nil

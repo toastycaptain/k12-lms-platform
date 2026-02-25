@@ -118,9 +118,15 @@ module Api
           return
         end
 
-        @submission = @assignment.submissions.build(submission_params)
-        @submission.tenant = Current.tenant
-        @submission.user = Current.user
+        @submission = @assignment.submissions.find_or_initialize_by(user: Current.user)
+        if @submission.persisted? && @submission.status != "missing"
+          authorize @submission
+          render json: { errors: [ "User already has a submission for this assignment" ] }, status: :unprocessable_content
+          return
+        end
+
+        @submission.assign_attributes(submission_params)
+        @submission.tenant ||= Current.tenant
         @submission.status = "submitted"
         @submission.submitted_at = Time.current
         authorize @submission

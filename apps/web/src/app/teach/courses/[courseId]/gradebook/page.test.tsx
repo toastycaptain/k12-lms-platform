@@ -78,6 +78,8 @@ describe("Gradebook Page", () => {
             assignment_id: 11,
             assignment_title: "Unit Reflection",
             assignment_type: "written",
+            grade_category_id: 1,
+            grade_category_name: "Homework",
             submission_id: 901,
             grade: 92,
             points_possible: 100,
@@ -93,6 +95,8 @@ describe("Gradebook Page", () => {
             assignment_id: 12,
             assignment_title: "Cell Quiz",
             assignment_type: "discussion",
+            grade_category_id: 2,
+            grade_category_name: "Quizzes",
             submission_id: null,
             grade: null,
             points_possible: 100,
@@ -136,6 +140,8 @@ describe("Gradebook Page", () => {
             assignment_id: 11,
             assignment_title: "Unit Reflection",
             assignment_type: "written",
+            grade_category_id: 1,
+            grade_category_name: "Homework",
             submission_id: 902,
             grade: 72,
             points_possible: 100,
@@ -151,6 +157,8 @@ describe("Gradebook Page", () => {
             assignment_id: 12,
             assignment_title: "Cell Quiz",
             assignment_type: "discussion",
+            grade_category_id: 2,
+            grade_category_name: "Quizzes",
             submission_id: 903,
             grade: 80,
             points_possible: 100,
@@ -219,6 +227,10 @@ describe("Gradebook Page", () => {
       },
     },
     mastery_threshold: 80,
+    grade_categories: [
+      { id: 1, name: "Homework", weight_percentage: 60 },
+      { id: 2, name: "Quizzes", weight_percentage: 40 },
+    ],
   };
 
   beforeEach(() => {

@@ -8,6 +8,8 @@ import AppShell from "@/components/AppShell";
 import { ResponsiveTable } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { mutateWithOfflineQueue } from "@/lib/swr-mutations";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface Assignment {
   id: number;
@@ -49,6 +51,7 @@ function StatusBadge({ status }: { status: string }) {
     submitted: "bg-blue-100 text-blue-800",
     graded: "bg-purple-100 text-purple-800",
     returned: "bg-green-100 text-green-800",
+    queued: "bg-indigo-100 text-indigo-800",
   };
   return (
     <span
@@ -69,9 +72,12 @@ export default function StudentSubmissionPage() {
   const [rubric, setRubric] = useState<Rubric | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [networkNotice, setNetworkNotice] = useState<string | null>(null);
 
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
+
+  const { wasOffline } = useNetworkStatus();
 
   const fetchData = useCallback(async () => {
     try {
@@ -83,42 +89,74 @@ export default function StudentSubmissionPage() {
         setRubric(rubricData);
       }
 
-      // Check for existing submission
       try {
         const submissions = await apiFetch<Submission[]>(
           `/api/v1/assignments/${assignmentId}/submissions`,
         );
         if (submissions.length > 0) {
           setSubmission(submissions[0]);
+          setNetworkNotice(null);
         }
       } catch {
-        // No submissions yet
+        // No submissions yet.
       }
     } catch {
-      // handle error
+      // Keep the existing UI fallback for missing assignment.
     } finally {
       setLoading(false);
     }
   }, [assignmentId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!wasOffline || submission?.status !== "queued") {
+      return;
+    }
+
+    void fetchData();
+  }, [fetchData, submission?.status, wasOffline]);
 
   async function handleSubmit() {
     setSubmitting(true);
     try {
-      const sub = await apiFetch<Submission>(`/api/v1/assignments/${assignmentId}/submissions`, {
-        method: "POST",
-        body: JSON.stringify({
-          submission_type: url ? "url" : "text",
+      const payload = {
+        submission_type: url ? "url" : "text",
+        body: body || null,
+        url: url || null,
+      };
+
+      const result = await mutateWithOfflineQueue<Submission>(
+        `/api/v1/assignments/${assignmentId}/submissions`,
+        "POST",
+        payload,
+        {
+          revalidate: `/api/v1/assignments/${assignmentId}/submissions`,
+          queueIfOffline: true,
+        },
+      );
+
+      if (result.queued) {
+        setNetworkNotice(
+          "You are offline. Your submission is queued and will sync when reconnected.",
+        );
+        setSubmission({
+          id: -1,
+          status: "queued",
+          submitted_at: new Date().toISOString(),
+          grade: null,
+          feedback: null,
           body: body || null,
           url: url || null,
-        }),
-      });
-      setSubmission(sub);
+        });
+      } else if (result.data) {
+        setNetworkNotice(null);
+        setSubmission(result.data);
+      }
     } catch {
-      // handle error
+      setNetworkNotice("Unable to submit right now. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -153,6 +191,15 @@ export default function StudentSubmissionPage() {
     <ProtectedRoute>
       <AppShell>
         <div className="mx-auto max-w-3xl space-y-6">
+          {networkNotice && (
+            <div
+              role="status"
+              className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+            >
+              {networkNotice}
+            </div>
+          )}
+
           <div>
             <Link
               href={`/teach/courses/${courseId}`}
@@ -169,8 +216,7 @@ export default function StudentSubmissionPage() {
             </div>
           </div>
 
-          {/* Assignment Details */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
             {assignment.description && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700">Description</h3>
@@ -185,7 +231,6 @@ export default function StudentSubmissionPage() {
             )}
           </div>
 
-          {/* Rubric Preview */}
           {rubric && (
             <div className="rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="text-sm font-semibold text-gray-900">Rubric: {rubric.title}</h3>
@@ -220,9 +265,8 @@ export default function StudentSubmissionPage() {
             </div>
           )}
 
-          {/* Submission Area or Status */}
           {submission ? (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Your Submission</h3>
                 <StatusBadge status={submission.status} />
@@ -261,7 +305,7 @@ export default function StudentSubmissionPage() {
               )}
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="text-lg font-semibold text-gray-900">Submit Your Work</h3>
 
               {isPastDue && !isLocked && (
@@ -280,7 +324,7 @@ export default function StudentSubmissionPage() {
                     <label className="block text-sm font-medium text-gray-700">Text Response</label>
                     <textarea
                       value={body}
-                      onChange={(e) => setBody(e.target.value)}
+                      onChange={(event) => setBody(event.target.value)}
                       rows={6}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="Enter your response..."
@@ -293,7 +337,7 @@ export default function StudentSubmissionPage() {
                     <input
                       type="url"
                       value={url}
-                      onChange={(e) => setUrl(e.target.value)}
+                      onChange={(event) => setUrl(event.target.value)}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="https://..."
                     />

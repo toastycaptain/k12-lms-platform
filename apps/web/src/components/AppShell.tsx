@@ -8,6 +8,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import { LiveRegion } from "@k12/ui";
 import NotificationBell from "@/components/NotificationBell";
 import SchoolSelector from "@/components/SchoolSelector";
+import { ConnectionBanner } from "@/components/ConnectionBanner";
 
 interface NavItem {
   id: string;
@@ -18,6 +19,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  {
+    id: "guardian",
+    label: "My Students",
+    href: "/guardian",
+    roles: ["guardian"],
+    children: [{ label: "Dashboard", href: "/guardian/dashboard" }],
+  },
   {
     id: "learn",
     label: "Learn",
@@ -117,16 +125,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const roles = user?.roles ?? [];
   const isStudentOnly = roles.length > 0 && roles.every((role) => role === "student");
+  const isGuardianOnly = roles.length > 0 && roles.every((role) => role === "guardian");
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (roles.length === 0 || !item.roles || item.roles.length === 0) return true;
     return item.roles.some((role) => roles.includes(role));
   }).filter((item) => {
-    if (!isStudentOnly) return true;
-    return !["plan", "teach", "admin", "district"].includes(item.id);
+    if (isGuardianOnly) {
+      return item.id === "guardian";
+    }
+
+    if (!isStudentOnly) return item.id !== "guardian";
+    return !["plan", "teach", "admin", "district", "guardian"].includes(item.id);
   });
 
-  const homeHref = isStudentOnly ? "/learn/dashboard" : "/dashboard";
+  const homeHref = isGuardianOnly
+    ? "/guardian/dashboard"
+    : isStudentOnly
+      ? "/learn/dashboard"
+      : "/dashboard";
 
   return (
     <div className="flex h-screen">
@@ -252,12 +269,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {user && (
               <>
                 <SchoolSelector />
-                <GlobalSearch />
+                {!isGuardianOnly && <GlobalSearch />}
               </>
             )}
           </div>
           <div className="flex items-center gap-3">
-            {user && <NotificationBell />}
+            {user && !isGuardianOnly && <NotificationBell />}
             {user && (
               <button
                 onClick={signOut}
@@ -268,6 +285,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </header>
+        <ConnectionBanner />
 
         <main id="main-content" role="main" className="flex-1 overflow-auto bg-gray-50 p-6">
           <LiveRegion />

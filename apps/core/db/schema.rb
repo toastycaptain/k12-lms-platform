@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -189,6 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
     t.bigint "created_by_id", null: false
     t.text "description"
     t.datetime "due_at"
+    t.bigint "grade_category_id"
     t.text "instructions"
     t.datetime "lock_at"
     t.decimal "points_possible"
@@ -204,6 +205,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
     t.index ["course_id", "status"], name: "idx_assignments_course_status"
     t.index ["course_id"], name: "index_assignments_on_course_id"
     t.index ["created_by_id"], name: "index_assignments_on_created_by_id"
+    t.index ["grade_category_id"], name: "index_assignments_on_grade_category_id"
     t.index ["rubric_id"], name: "index_assignments_on_rubric_id"
     t.index ["search_vector"], name: "index_assignments_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_assignments_on_tenant_id"
@@ -350,6 +352,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
     t.index ["user_id", "section_id"], name: "idx_enrollments_user_section"
     t.index ["user_id", "section_id"], name: "index_enrollments_on_user_id_and_section_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
+  end
+
+  create_table "grade_categories", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "weight_percentage", precision: 5, scale: 2, default: "0.0", null: false
+    t.index ["course_id"], name: "index_grade_categories_on_course_id"
+    t.index ["tenant_id", "course_id", "name"], name: "index_grade_categories_on_tenant_id_and_course_id_and_name", unique: true
+    t.index ["tenant_id"], name: "index_grade_categories_on_tenant_id"
   end
 
   create_table "guardian_links", force: :cascade do |t|
@@ -1084,6 +1098,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
   add_foreign_key "assignment_standards", "standards"
   add_foreign_key "assignment_standards", "tenants"
   add_foreign_key "assignments", "courses"
+  add_foreign_key "assignments", "grade_categories"
   add_foreign_key "assignments", "rubrics"
   add_foreign_key "assignments", "tenants"
   add_foreign_key "assignments", "users", column: "created_by_id"
@@ -1109,6 +1124,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_000012) do
   add_foreign_key "enrollments", "sections"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
+  add_foreign_key "grade_categories", "courses"
+  add_foreign_key "grade_categories", "tenants"
   add_foreign_key "guardian_links", "tenants"
   add_foreign_key "guardian_links", "users", column: "guardian_id"
   add_foreign_key "guardian_links", "users", column: "student_id"

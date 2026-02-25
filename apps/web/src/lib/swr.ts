@@ -3,11 +3,38 @@ import { apiFetch } from "@/lib/api";
 
 export type QueryValue = string | number | boolean | null | undefined;
 
+function statusCode(error: unknown): number | null {
+  if (error && typeof error === "object" && "status" in error) {
+    const status = (error as { status?: unknown }).status;
+    if (typeof status === "number") {
+      return status;
+    }
+  }
+
+  return null;
+}
+
 export const swrConfig: SWRConfiguration = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   dedupingInterval: 2000,
   errorRetryCount: 3,
+  errorRetryInterval: 1000,
+  onErrorRetry: (error, _key, _config, revalidate, context) => {
+    const status = statusCode(error);
+    if (status !== null && status >= 400 && status < 500) {
+      return;
+    }
+
+    if (context.retryCount >= 3) {
+      return;
+    }
+
+    const delay = Math.min(1000 * 2 ** context.retryCount, 30_000);
+    setTimeout(() => {
+      void revalidate({ retryCount: context.retryCount + 1 });
+    }, delay);
+  },
 };
 
 export function buildQueryString(params: object = {}): string {

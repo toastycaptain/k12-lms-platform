@@ -37,7 +37,10 @@ test("admin can manage users, standards, and AI provider settings", async ({ pag
   await page.locator("#user-role").selectOption("student");
   await page.getByRole("button", { name: "Create User" }).click();
   await expect(page.getByText("User created.")).toBeVisible();
-  await expect(page.getByText(userEmail)).toBeVisible();
+  const userDirectory = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "User Directory" }) });
+  await expect(userDirectory.getByText(userEmail)).toBeVisible();
 
   await page.goto("/admin/standards");
   await page.getByRole("button", { name: "Add Framework" }).click();

@@ -5,6 +5,8 @@ export interface GradeCell {
   assignment_id: number;
   assignment_title: string;
   assignment_type: string;
+  grade_category_id: number | null;
+  grade_category_name: string | null;
   submission_id: number | null;
   grade: number | null;
   points_possible: number | null;
@@ -81,6 +83,11 @@ export interface GradebookResponse {
   quizzes: QuizSummary[];
   course_summary: CourseSummary;
   mastery_threshold: number;
+  grade_categories: Array<{
+    id: number;
+    name: string;
+    weight_percentage: number;
+  }>;
 }
 
 export function useGradebook(

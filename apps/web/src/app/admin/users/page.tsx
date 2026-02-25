@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@k12/ui";
@@ -25,6 +25,16 @@ interface IntegrationConfig {
   status: string;
 }
 
+interface GuardianLinkRow {
+  id: number;
+  guardian_id: number;
+  student_id: number;
+  relationship: string;
+  status: string;
+  guardian?: { id: number; first_name: string; last_name: string; email: string };
+  student?: { id: number; first_name: string; last_name: string; email: string };
+}
+
 const ROLE_OPTIONS = ["admin", "curriculum_lead", "teacher", "student", "guardian"];
 
 export default function UsersAndRolesPage() {
@@ -32,6 +42,7 @@ export default function UsersAndRolesPage() {
   const { addToast } = useToast();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [configs, setConfigs] = useState<IntegrationConfig[]>([]);
+  const [guardianLinks, setGuardianLinks] = useState<GuardianLinkRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
@@ -46,6 +57,10 @@ export default function UsersAndRolesPage() {
     last_name: "",
     role: "teacher",
   });
+  const [linkForm, setLinkForm] = useState({
+    guardian_id: "",
+    student_id: "",
+  });
 
   const isAdmin = user?.roles?.includes("admin") || false;
   const canAccess = isAdmin || user?.roles?.includes("curriculum_lead");
@@ -56,6 +71,14 @@ export default function UsersAndRolesPage() {
   );
   const userFormInvalid =
     !form.email.trim() || !form.first_name.trim() || !form.last_name.trim() || !form.role.trim();
+  const guardianUsers = useMemo(
+    () => users.filter((candidate) => candidate.roles.includes("guardian")),
+    [users],
+  );
+  const studentUsers = useMemo(
+    () => users.filter((candidate) => candidate.roles.includes("student")),
+    [users],
+  );
 
   useEffect(() => {
     async function fetchData() {
@@ -77,6 +100,21 @@ export default function UsersAndRolesPage() {
 
     void fetchData();
   }, [page, perPage]);
+
+  const fetchGuardianLinks = useCallback(async () => {
+    if (!isAdmin) return;
+
+    try {
+      const rows = await apiFetch<GuardianLinkRow[]>("/api/v1/guardian_links?per_page=200");
+      setGuardianLinks(rows);
+    } catch {
+      setError("Failed to load guardian links.");
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    void fetchGuardianLinks();
+  }, [fetchGuardianLinks]);
 
   useEffect(() => {
     async function refetchUsers() {
@@ -136,6 +174,39 @@ export default function UsersAndRolesPage() {
       }
     } catch (e) {
       addToast("error", e instanceof ApiError ? e.message : "Failed to save user.");
+    }
+  }
+
+  async function createGuardianLink() {
+    if (!linkForm.guardian_id || !linkForm.student_id) {
+      return;
+    }
+
+    try {
+      await apiFetch("/api/v1/guardian_links", {
+        method: "POST",
+        body: JSON.stringify({
+          guardian_id: Number(linkForm.guardian_id),
+          student_id: Number(linkForm.student_id),
+          relationship: "guardian",
+          status: "active",
+        }),
+      });
+      await fetchGuardianLinks();
+      setLinkForm({ guardian_id: "", student_id: "" });
+      addToast("success", "Guardian linked.");
+    } catch (e) {
+      addToast("error", e instanceof ApiError ? e.message : "Unable to link guardian.");
+    }
+  }
+
+  async function removeGuardianLink(id: number) {
+    try {
+      await apiFetch(`/api/v1/guardian_links/${id}`, { method: "DELETE" });
+      await fetchGuardianLinks();
+      addToast("success", "Guardian link removed.");
+    } catch (e) {
+      addToast("error", e instanceof ApiError ? e.message : "Unable to remove guardian link.");
     }
   }
 
@@ -311,6 +382,91 @@ export default function UsersAndRolesPage() {
                   />
                 </form>
               </section>
+
+              {isAdmin && (
+                <section className="rounded-lg border border-gray-200 bg-white p-5">
+                  <h2 className="text-lg font-semibold text-gray-900">Guardian Links</h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Link guardian accounts to student records for read-only portal access.
+                  </p>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <FormField label="Guardian" htmlFor="guardian-link-guardian" required>
+                      <Select
+                        id="guardian-link-guardian"
+                        value={linkForm.guardian_id}
+                        onChange={(event) =>
+                          setLinkForm((previous) => ({
+                            ...previous,
+                            guardian_id: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select guardian</option>
+                        {guardianUsers.map((row) => (
+                          <option key={row.id} value={row.id}>
+                            {row.first_name} {row.last_name} ({row.email})
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+
+                    <FormField label="Student" htmlFor="guardian-link-student" required>
+                      <Select
+                        id="guardian-link-student"
+                        value={linkForm.student_id}
+                        onChange={(event) =>
+                          setLinkForm((previous) => ({
+                            ...previous,
+                            student_id: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select student</option>
+                        {studentUsers.map((row) => (
+                          <option key={row.id} value={row.id}>
+                            {row.first_name} {row.last_name} ({row.email})
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => void createGuardianLink()}
+                    disabled={!linkForm.guardian_id || !linkForm.student_id}
+                    className="mt-3 rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-60"
+                  >
+                    Link Guardian
+                  </button>
+
+                  <div className="mt-4 space-y-2">
+                    {guardianLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="flex items-center justify-between rounded border border-gray-200 px-3 py-2 text-sm"
+                      >
+                        <div className="text-gray-700">
+                          {link.guardian?.first_name || "Guardian"} {link.guardian?.last_name || ""}
+                          {" → "}
+                          {link.student?.first_name || "Student"} {link.student?.last_name || ""}
+                        </div>
+                        <button
+                          type="button"
+                          className="text-xs text-red-700 hover:text-red-800"
+                          onClick={() => void removeGuardianLink(link.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {guardianLinks.length === 0 && (
+                      <p className="text-sm text-gray-500">No guardian links created yet.</p>
+                    )}
+                  </div>
+                </section>
+              )}
 
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h2 className="text-lg font-semibold text-gray-900">Bulk Import</h2>

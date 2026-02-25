@@ -2,7 +2,7 @@ class Submission < ApplicationRecord
   include TenantScoped
   include AttachmentValidatable
 
-  VALID_STATUSES = %w[draft submitted graded returned].freeze
+  VALID_STATUSES = %w[draft submitted graded returned missing].freeze
 
   belongs_to :assignment, counter_cache: true
   belongs_to :user
@@ -17,8 +17,10 @@ class Submission < ApplicationRecord
   validates :user_id, uniqueness: { scope: :assignment_id, message: "already has a submission for this assignment" }
   validate :grade_within_points_possible, if: -> { grade.present? }
 
+  scope :missing, -> { where(status: "missing") }
+
   def submit!
-    raise ActiveRecord::RecordInvalid, self unless status == "draft"
+    raise ActiveRecord::RecordInvalid, self unless %w[draft missing].include?(status)
     raise ActiveRecord::RecordInvalid, self unless assignment.status == "published"
     raise ActiveRecord::RecordInvalid, self if assignment.lock_at.present? && Time.current > assignment.lock_at
 

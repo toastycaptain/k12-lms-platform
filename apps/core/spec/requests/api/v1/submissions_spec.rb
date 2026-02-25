@@ -88,6 +88,23 @@ RSpec.describe "Api::V1::Submissions", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "allows replacing missing placeholder submissions" do
+      mock_session(student, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: student, role: "student")
+      placeholder = create(:submission, tenant: tenant, assignment: assignment, user: student, status: "missing", submitted_at: nil)
+      Current.tenant = nil
+
+      post "/api/v1/assignments/#{assignment.id}/submissions", params: {
+        submission_type: "text",
+        body: "Actual submission"
+      }
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["id"]).to eq(placeholder.id)
+      expect(response.parsed_body["status"]).to eq("submitted")
+      expect(response.parsed_body["body"]).to eq("Actual submission")
+    end
   end
 
   describe "GET /api/v1/assignments/:assignment_id/submissions" do

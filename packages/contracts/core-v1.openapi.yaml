@@ -8014,6 +8014,215 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         '404':
           "$ref": "#/components/responses/NotFound"
+  "/api/v1/courses/{id}/gradebook/export_csv":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Export gradebook CSV alias
+      operationId: get_api_v1_courses_id_gradebook_export_csv
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: CSV export
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/courses/{id}/gradebook/bulk_grade":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Bulk grade submissions for a course
+      operationId: post_api_v1_courses_id_gradebook_bulk_grade
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                grades:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - submission_id
+                    - grade
+                    properties:
+                      submission_id:
+                        type: integer
+                      grade:
+                        type: number
+                      feedback:
+                        type: string
+      responses:
+        '200':
+          description: Bulk grade result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                  submissions:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/courses/{course_id}/grade_categories":
+    parameters:
+    - in: path
+      name: course_id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List course grade categories
+      operationId: get_api_v1_courses_course_id_grade_categories
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Grade category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+    post:
+      summary: Create course grade category
+      operationId: post_api_v1_courses_course_id_grade_categories
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                weight_percentage:
+                  type: number
+      responses:
+        '201':
+          description: Grade category created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/courses/{course_id}/grade_categories/{id}":
+    parameters:
+    - in: path
+      name: course_id
+      required: true
+      schema:
+        type: integer
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update course grade category
+      operationId: patch_api_v1_courses_course_id_grade_categories_id
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                weight_percentage:
+                  type: number
+      responses:
+        '200':
+          description: Grade category updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+    delete:
+      summary: Delete course grade category
+      operationId: delete_api_v1_courses_course_id_grade_categories_id
+      tags:
+      - Gradebook
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: Grade category deleted
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
   "/api/v1/district/schools":
     get:
       summary: List schools for district admin
@@ -8251,6 +8460,114 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         '422':
           "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/guardian/students":
+    get:
+      summary: List linked students for guardian
+      operationId: get_api_v1_guardian_students
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Guardian student list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+  "/api/v1/guardian/students/{id}/grades":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List guardian-visible grades for a student
+      operationId: get_api_v1_guardian_students_id_grades
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/guardian/students/{id}/assignments":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List guardian-visible assignments for a student
+      operationId: get_api_v1_guardian_students_id_assignments
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/guardian/students/{id}/announcements":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List guardian-visible announcements for a student
+      operationId: get_api_v1_guardian_students_id_announcements
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Announcement"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
   "/api/v1/guardian_links":
     get:
       summary: List guardian links
