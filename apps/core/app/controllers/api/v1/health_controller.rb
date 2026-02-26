@@ -91,7 +91,7 @@ class Api::V1::HealthController < ActionController::API
   end
 
   def check_migrations
-    ActiveRecord::Migration.check_pending!
+    ActiveRecord::Migration.check_all_pending!
     { status: "ok" }
   rescue ActiveRecord::PendingMigrationError => e
     { status: "error", message: e.message }
