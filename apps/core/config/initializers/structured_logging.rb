@@ -33,6 +33,7 @@ if Rails.env.production?
       environment: Rails.env
     ) + "\n"
   end
+  formatter.extend(ActiveSupport::TaggedLogging::Formatter)
 
   Rails.application.configure do
     config.log_formatter = formatter
