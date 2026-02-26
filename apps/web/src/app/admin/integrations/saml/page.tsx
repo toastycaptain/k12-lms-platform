@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
@@ -316,7 +316,7 @@ export default function SamlIntegrationPage() {
                       id="issuer"
                       type="text"
                       value={form.issuer}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, issuer: event.target.value }))
                       }
                       placeholder="Issuer / Entity ID"
@@ -329,7 +329,7 @@ export default function SamlIntegrationPage() {
                       id="idp_sso_url"
                       type="text"
                       value={form.idp_sso_url}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, idp_sso_url: event.target.value }))
                       }
                       placeholder="IdP SSO URL (required)"
@@ -343,7 +343,7 @@ export default function SamlIntegrationPage() {
                       id="idp_slo_url"
                       type="text"
                       value={form.idp_slo_url}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, idp_slo_url: event.target.value }))
                       }
                       placeholder="IdP SLO URL (optional)"
@@ -355,7 +355,7 @@ export default function SamlIntegrationPage() {
                     <TextArea
                       id="idp_cert"
                       value={form.idp_cert}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
                         setForm((current) => ({ ...current, idp_cert: event.target.value }))
                       }
                       rows={4}
@@ -369,7 +369,7 @@ export default function SamlIntegrationPage() {
                       id="idp_cert_fingerprint"
                       type="text"
                       value={form.idp_cert_fingerprint}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({
                           ...current,
                           idp_cert_fingerprint: event.target.value,
@@ -384,7 +384,7 @@ export default function SamlIntegrationPage() {
                     <Select
                       id="name_id_format"
                       value={form.name_id_format}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                         setForm((current) => ({ ...current, name_id_format: event.target.value }))
                       }
                     >
@@ -406,7 +406,7 @@ export default function SamlIntegrationPage() {
                       id="email_attr"
                       type="text"
                       value={form.email_attr}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, email_attr: event.target.value }))
                       }
                       placeholder="Email attribute"
@@ -417,7 +417,7 @@ export default function SamlIntegrationPage() {
                       id="first_name_attr"
                       type="text"
                       value={form.first_name_attr}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, first_name_attr: event.target.value }))
                       }
                       placeholder="First name attribute"
@@ -428,7 +428,7 @@ export default function SamlIntegrationPage() {
                       id="last_name_attr"
                       type="text"
                       value={form.last_name_attr}
-                      onChange={(event) =>
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                         setForm((current) => ({ ...current, last_name_attr: event.target.value }))
                       }
                       placeholder="Last name attribute"
@@ -442,7 +442,7 @@ export default function SamlIntegrationPage() {
                   id="auto_provision"
                   label="Auto-provision users"
                   checked={form.auto_provision}
-                  onChange={(event) =>
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                     setForm((current) => ({ ...current, auto_provision: event.target.checked }))
                   }
                 />
@@ -451,7 +451,7 @@ export default function SamlIntegrationPage() {
                   <Select
                     id="default_role"
                     value={form.default_role}
-                    onChange={(event) =>
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                       setForm((current) => ({
                         ...current,
                         default_role: event.target.value as "student" | "teacher" | "admin",
