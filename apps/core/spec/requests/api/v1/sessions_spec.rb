@@ -110,6 +110,28 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body.dig("user", "email")).to eq("teacher@example.com")
       end
+
+      it "supports explicit tenant selection via callback query param" do
+        OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+          provider: "google_oauth2",
+          uid: "single-tenant-user",
+          info: {
+            email: "owner@unmatched-domain.org",
+            first_name: "Owner",
+            last_name: "User"
+          }
+        )
+
+        expect {
+          get "/auth/google_oauth2/callback", params: { tenant: tenant.slug }
+        }.to change(User.unscoped, :count).by(1)
+
+        created_user = User.unscoped.find_by(email: "owner@unmatched-domain.org")
+        expect(created_user).to be_present
+        expect(created_user.tenant_id).to eq(tenant.id)
+        expect(response).to have_http_status(:redirect)
+        expect(response.headers["Location"]).to end_with("/auth/callback")
+      end
     end
 
     context "with failed OmniAuth response" do

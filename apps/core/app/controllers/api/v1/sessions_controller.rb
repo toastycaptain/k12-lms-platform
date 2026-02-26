@@ -197,13 +197,91 @@ module Api
       end
 
       def resolve_tenant_from_auth(auth)
-        email = auth.info&.email.to_s
+        email_domain = extract_email_domain(auth)
+
+        find_tenant_by_slug(params[:tenant]) ||
+          find_tenant_from_domain(email_domain) ||
+          fallback_tenant_for_auth(auth, email_domain)
+      end
+
+      def extract_email_domain(auth)
+        email = auth.info&.email.to_s.downcase
         return nil if email.blank?
 
-        email_domain = email.split("@").last
+        email.split("@").last.to_s.downcase.presence
+      end
+
+      def find_tenant_from_domain(email_domain)
         return nil if email_domain.blank?
 
-        Tenant.unscoped.find_by(slug: email_domain.split(".").first)
+        slug_candidates = [
+          email_domain,
+          email_domain.split(".").first,
+          email_domain.tr(".", "-")
+        ].compact.uniq
+
+        slug_candidates.each do |candidate|
+          tenant = find_tenant_by_slug(candidate)
+          return tenant if tenant
+        end
+
+        nil
+      end
+
+      def find_tenant_by_slug(raw_slug)
+        slug = normalize_tenant_slug(raw_slug)
+        return nil if slug.blank?
+
+        Tenant.unscoped.find_by(slug: slug)
+      end
+
+      def fallback_tenant_for_auth(auth, email_domain)
+        tenant_count = Tenant.unscoped.count
+
+        if tenant_count == 1
+          return Tenant.unscoped.first
+        end
+
+        if tenant_count.zero?
+          return provision_first_tenant(auth, email_domain)
+        end
+
+        nil
+      end
+
+      def provision_first_tenant(auth, email_domain)
+        email = auth.info&.email.to_s.downcase
+        return nil if email.blank?
+
+        slug_source = email_domain.to_s.split(".").first.presence || email.split("@").first
+        subdomain = normalize_tenant_slug(slug_source)
+        return nil if subdomain.blank?
+
+        school_name = [ slug_source.to_s.tr("-", " ").split.map(&:capitalize).join(" "), "School" ]
+          .join(" ")
+          .strip
+
+        TenantProvisioningService.new(
+          school_name: school_name,
+          subdomain: subdomain,
+          admin_email: email,
+          admin_first_name: auth.info&.first_name,
+          admin_last_name: auth.info&.last_name,
+          ai_enabled: true,
+          google_enabled: true
+        ).call[:tenant]
+      rescue TenantProvisioningService::ProvisioningError => e
+        Rails.logger.warn("[SessionsController] Auto tenant provisioning failed: #{e.message}")
+        nil
+      end
+
+      def normalize_tenant_slug(raw_slug)
+        raw_slug.to_s
+          .downcase
+          .gsub(/[^a-z0-9-]/, "-")
+          .gsub(/-+/, "-")
+          .gsub(/\A-|-+\z/, "")
+          .presence
       end
 
       def find_or_create_user(auth, tenant)
