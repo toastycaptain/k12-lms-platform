@@ -10,5 +10,5 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     }
 end
 
-OmniAuth.config.allowed_request_methods = Rails.env.production? ? [ :post ] : [ :post, :get ]
-OmniAuth.config.silence_get_warning = !Rails.env.production?
+OmniAuth.config.allowed_request_methods = [ :post, :get ]
+OmniAuth.config.silence_get_warning = true
