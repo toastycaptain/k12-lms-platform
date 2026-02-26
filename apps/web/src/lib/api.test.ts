@@ -225,6 +225,37 @@ describe("apiFetch", () => {
     __resetApiClientStateForTests();
   });
 
+  it("strips placeholder brackets from NEXT_PUBLIC_API_URL", async () => {
+    const previousUrl = process.env.NEXT_PUBLIC_API_URL;
+    process.env.NEXT_PUBLIC_API_URL = "https://<k12-core-production.up.railway.app>/api/v1";
+    vi.resetModules();
+
+    const scopedFetchMock = vi.fn();
+    vi.stubGlobal("fetch", scopedFetchMock);
+    const { apiFetch: scopedApiFetch, __resetApiClientStateForTests: resetScoped } =
+      await import("@/lib/api");
+    resetScoped();
+
+    scopedFetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await scopedApiFetch("/api/v1/me");
+
+    expect(scopedFetchMock).toHaveBeenCalledWith(
+      "https://k12-core-production.up.railway.app/api/v1/me",
+      expect.anything(),
+    );
+
+    process.env.NEXT_PUBLIC_API_URL = previousUrl;
+    vi.resetModules();
+    vi.stubGlobal("fetch", fetchMock);
+    __resetApiClientStateForTests();
+  });
+
   it("getAuthUrl returns correct URL", () => {
     expect(getAuthUrl()).toBe("http://localhost:3001/auth/google_oauth2");
   });

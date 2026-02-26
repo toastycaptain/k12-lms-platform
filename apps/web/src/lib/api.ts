@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const DEFAULT_API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_URL).replace(/[<>]/g, "");
 const API_V1_PREFIX = "/api/v1";
 const CSRF_PATH = `${API_V1_PREFIX}/csrf`;
 
