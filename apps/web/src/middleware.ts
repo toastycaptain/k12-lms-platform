@@ -31,6 +31,18 @@ function isBypassedAssetPath(pathname: string): boolean {
   return pathname.startsWith("/_next") || pathname.startsWith("/api") || pathname.includes(".");
 }
 
+function shouldEnforceSessionCookie(request: NextRequest): boolean {
+  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!configuredApiUrl) return true;
+
+  try {
+    const apiUrl = new URL(configuredApiUrl, request.url);
+    return apiUrl.hostname === request.nextUrl.hostname;
+  } catch {
+    return true;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -48,7 +60,7 @@ export function middleware(request: NextRequest) {
 
   const hasSession = Boolean(request.cookies.get("_k12_lms_session")?.value);
 
-  if (!hasSession) {
+  if (!hasSession && shouldEnforceSessionCookie(request)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search || ""}`);
     return withSecurityHeaders(NextResponse.redirect(loginUrl));

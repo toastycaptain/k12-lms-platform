@@ -6,6 +6,7 @@ function buildRequest(path: string, sessionCookie?: string): NextRequest {
 
   return {
     nextUrl: {
+      hostname: url.hostname,
       pathname: url.pathname,
       search: url.search,
     },
@@ -23,7 +24,18 @@ function buildRequest(path: string, sessionCookie?: string): NextRequest {
 }
 
 describe("middleware", () => {
+  const previousApiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
+  });
+
+  afterAll(() => {
+    process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
+  });
+
   it("redirects unauthenticated dashboard requests to login with redirect param", () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://k12.example.com/api/v1";
     const response = middleware(buildRequest("/dashboard"));
 
     expect(response.status).toBe(307);
@@ -77,9 +89,19 @@ describe("middleware", () => {
   });
 
   it("applies coarse admin route protection", () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://k12.example.com/api/v1";
     const response = middleware(buildRequest("/admin/users"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login?redirect=%2Fadmin%2Fusers");
+  });
+
+  it("does not enforce web cookie redirects when API host is cross-origin", () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://k12-core.example.com/api/v1";
+
+    const response = middleware(buildRequest("/dashboard"));
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
   });
 });
