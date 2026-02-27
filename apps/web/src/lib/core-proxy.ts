@@ -51,6 +51,26 @@ function copyRequestHeaders(request: NextRequest): Headers {
   return headers;
 }
 
+function sanitizeResponseHeaders(headers: Headers): Headers {
+  const nextHeaders = new Headers(headers);
+  const hopByHopHeaders = [
+    "connection",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+  ];
+
+  for (const header of hopByHopHeaders) {
+    nextHeaders.delete(header);
+  }
+
+  return nextHeaders;
+}
+
 export async function proxyToCore(request: NextRequest): Promise<Response> {
   const coreOrigin = resolveCoreOrigin();
   if (!coreOrigin) {
@@ -87,10 +107,15 @@ export async function proxyToCore(request: NextRequest): Promise<Response> {
       cache: "no-store",
     });
 
-    return new Response(upstreamResponse.body, {
+    const responseHeaders = sanitizeResponseHeaders(new Headers(upstreamResponse.headers));
+    const bodyAllowed =
+      method !== "HEAD" && upstreamResponse.status !== 204 && upstreamResponse.status !== 304;
+    const responseBody = bodyAllowed ? await upstreamResponse.arrayBuffer() : null;
+
+    return new Response(responseBody, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
-      headers: new Headers(upstreamResponse.headers),
+      headers: responseHeaders,
     });
   } catch (error) {
     console.error(`Failed to proxy ${upstreamUrl}`, error);
