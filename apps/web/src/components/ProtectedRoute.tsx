@@ -15,6 +15,10 @@ export default function ProtectedRoute({
   requiredRoles,
   unauthorizedRedirect = "/unauthorized",
 }: ProtectedRouteProps) {
+  const disableWelcomeTour = Boolean(
+    process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR &&
+    ["1", "true", "yes", "on"].includes(process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR.toLowerCase()),
+  );
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -49,15 +53,20 @@ export default function ProtectedRoute({
       (path) => pathname === path || pathname.startsWith(`${path}/`),
     );
 
-    if (isOnboardingIncomplete && !isExempt) {
+    if (isOnboardingIncomplete && !isExempt && !disableWelcomeTour) {
       router.replace("/setup");
+      return;
+    }
+
+    if (disableWelcomeTour && pathname === "/setup") {
+      router.replace("/dashboard");
       return;
     }
 
     if (user.onboarding_complete && pathname === "/setup") {
       router.replace("/dashboard");
     }
-  }, [hasRequiredRole, loading, pathname, router, unauthorizedRedirect, user]);
+  }, [disableWelcomeTour, hasRequiredRole, loading, pathname, router, unauthorizedRedirect, user]);
 
   if (loading) {
     return (

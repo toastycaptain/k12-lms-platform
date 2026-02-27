@@ -26,15 +26,18 @@ function buildRequest(path: string, sessionCookie?: string): NextRequest {
 describe("middleware", () => {
   const previousApiUrl = process.env.NEXT_PUBLIC_API_URL;
   const previousAuthBypassMode = process.env.AUTH_BYPASS_MODE;
+  const previousDisableWelcomeTour = process.env.DISABLE_WELCOME_TOUR;
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
     process.env.AUTH_BYPASS_MODE = previousAuthBypassMode;
+    process.env.DISABLE_WELCOME_TOUR = previousDisableWelcomeTour;
   });
 
   afterAll(() => {
     process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
     process.env.AUTH_BYPASS_MODE = previousAuthBypassMode;
+    process.env.DISABLE_WELCOME_TOUR = previousDisableWelcomeTour;
   });
 
   it("redirects unauthenticated dashboard requests to login with redirect param", () => {
@@ -141,5 +144,14 @@ describe("middleware", () => {
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+  });
+
+  it("redirects setup route to dashboard when welcome tour is disabled", () => {
+    process.env.DISABLE_WELCOME_TOUR = "true";
+
+    const response = middleware(buildRequest("/setup"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/dashboard");
   });
 });

@@ -14,9 +14,15 @@ const PUBLIC_ROUTES = [
 
 const ADDON_ROUTES = ["/addon"];
 const ADMIN_ROUTES = ["/admin"];
+const SETUP_ROUTES = ["/setup"];
 
 function authBypassEnabled(): boolean {
   const raw = process.env.AUTH_BYPASS_MODE;
+  return Boolean(raw && ["1", "true", "yes", "on"].includes(raw.toLowerCase()));
+}
+
+function welcomeTourDisabled(): boolean {
+  const raw = process.env.DISABLE_WELCOME_TOUR;
   return Boolean(raw && ["1", "true", "yes", "on"].includes(raw.toLowerCase()));
 }
 
@@ -52,9 +58,14 @@ function shouldEnforceSessionCookie(request: NextRequest): boolean {
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const bypassAuth = authBypassEnabled();
+  const disableWelcomeTour = welcomeTourDisabled();
 
   if (isBypassedAssetPath(pathname)) {
     return withSecurityHeaders(NextResponse.next());
+  }
+
+  if (disableWelcomeTour && routeMatches(pathname, SETUP_ROUTES)) {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
   }
 
   if (bypassAuth && pathname === "/") {

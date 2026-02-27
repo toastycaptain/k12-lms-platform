@@ -17,14 +17,20 @@ describe("ProtectedRoute", () => {
   const mockedUseRouter = vi.mocked(useRouter);
   const mockedUsePathname = vi.mocked(usePathname);
   const mockedUseAuth = vi.mocked(useAuth);
+  const previousDisableWelcomeTour = process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR;
 
   beforeEach(() => {
     mockedUseRouter.mockReturnValue({ replace: replaceMock } as never);
     mockedUsePathname.mockReturnValue("/dashboard");
+    process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR = previousDisableWelcomeTour;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterAll(() => {
+    process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR = previousDisableWelcomeTour;
   });
 
   it("renders loading UI while auth state is resolving", () => {
@@ -237,5 +243,36 @@ describe("ProtectedRoute", () => {
     );
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/forbidden"));
+  });
+
+  it("skips onboarding setup redirect when welcome tour is disabled", async () => {
+    process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR = "true";
+    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 33,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 4,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: false,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute>
+        <div>Private content</div>
+      </ProtectedRoute>,
+    );
+
+    expect(screen.getByText("Private content")).toBeInTheDocument();
+    await waitFor(() => expect(replaceMock).not.toHaveBeenCalledWith("/setup"));
   });
 });
