@@ -25,13 +25,16 @@ function buildRequest(path: string, sessionCookie?: string): NextRequest {
 
 describe("middleware", () => {
   const previousApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const previousAuthBypassMode = process.env.AUTH_BYPASS_MODE;
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
+    process.env.AUTH_BYPASS_MODE = previousAuthBypassMode;
   });
 
   afterAll(() => {
     process.env.NEXT_PUBLIC_API_URL = previousApiUrl;
+    process.env.AUTH_BYPASS_MODE = previousAuthBypassMode;
   });
 
   it("redirects unauthenticated dashboard requests to login with redirect param", () => {
@@ -107,6 +110,34 @@ describe("middleware", () => {
     process.env.NEXT_PUBLIC_API_URL = "https://k12-core.example.com/api/v1";
 
     const response = middleware(buildRequest("/dashboard"));
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+  });
+
+  it("redirects root to dashboard when auth bypass mode is enabled", () => {
+    process.env.AUTH_BYPASS_MODE = "true";
+
+    const response = middleware(buildRequest("/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/dashboard");
+  });
+
+  it("redirects login to dashboard when auth bypass mode is enabled", () => {
+    process.env.AUTH_BYPASS_MODE = "true";
+
+    const response = middleware(buildRequest("/login"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/dashboard");
+  });
+
+  it("does not force unauthenticated users to login when auth bypass mode is enabled", () => {
+    process.env.AUTH_BYPASS_MODE = "true";
+    process.env.NEXT_PUBLIC_API_URL = "https://k12.example.com/api/v1";
+
+    const response = middleware(buildRequest("/teach/courses"));
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("X-Frame-Options")).toBe("DENY");

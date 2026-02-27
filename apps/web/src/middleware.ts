@@ -15,6 +15,11 @@ const PUBLIC_ROUTES = [
 const ADDON_ROUTES = ["/addon"];
 const ADMIN_ROUTES = ["/admin"];
 
+function authBypassEnabled(): boolean {
+  const raw = process.env.AUTH_BYPASS_MODE;
+  return Boolean(raw && ["1", "true", "yes", "on"].includes(raw.toLowerCase()));
+}
+
 function routeMatches(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
@@ -46,9 +51,18 @@ function shouldEnforceSessionCookie(request: NextRequest): boolean {
 
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+  const bypassAuth = authBypassEnabled();
 
   if (isBypassedAssetPath(pathname)) {
     return withSecurityHeaders(NextResponse.next());
+  }
+
+  if (bypassAuth && pathname === "/") {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+  }
+
+  if (bypassAuth && (pathname === "/login" || pathname === "/auth/callback")) {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
   }
 
   if (routeMatches(pathname, ADDON_ROUTES)) {
@@ -61,7 +75,7 @@ export function middleware(request: NextRequest) {
 
   const hasSession = Boolean(request.cookies.get("_k12_lms_session")?.value);
 
-  if (!hasSession && shouldEnforceSessionCookie(request)) {
+  if (!hasSession && shouldEnforceSessionCookie(request) && !bypassAuth) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search || ""}`);
     return withSecurityHeaders(NextResponse.redirect(loginUrl));
