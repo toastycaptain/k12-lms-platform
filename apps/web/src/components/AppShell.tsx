@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import GlobalSearch from "@/components/GlobalSearch";
 import { LiveRegion } from "@k12/ui";
 import NotificationBell from "@/components/NotificationBell";
 import SchoolSelector from "@/components/SchoolSelector";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
+import TopRightQuickActions from "@/components/TopRightQuickActions";
 
 interface NavItem {
   id: string;
@@ -122,7 +122,7 @@ const NAV_ITEMS: NavItem[] = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const roles = user?.roles ?? [];
   const isStudentOnly = roles.length > 0 && roles.every((role) => role === "student");
   const isGuardianOnly = roles.length > 0 && roles.every((role) => role === "guardian");
@@ -269,20 +269,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {user && (
               <>
                 <SchoolSelector />
-                {!isGuardianOnly && <GlobalSearch />}
               </>
             )}
           </div>
           <div className="flex items-center gap-3">
             {user && !isGuardianOnly && <NotificationBell />}
-            {user && (
-              <button
-                onClick={signOut}
-                className="text-sm text-gray-500 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-              >
-                Sign out
-              </button>
-            )}
+            {user && <TopRightQuickActions />}
           </div>
         </header>
         <ConnectionBanner />

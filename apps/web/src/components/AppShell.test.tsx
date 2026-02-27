@@ -41,8 +41,8 @@ vi.mock("@/components/SchoolSelector", () => ({
   default: () => <div>SchoolSelectorStub</div>,
 }));
 
-vi.mock("@/components/GlobalSearch", () => ({
-  default: () => <div>GlobalSearchStub</div>,
+vi.mock("@/components/TopRightQuickActions", () => ({
+  default: () => <div>TopRightQuickActionsStub</div>,
 }));
 
 vi.mock("@k12/ui", async () => {
@@ -212,17 +212,17 @@ describe("AppShell", () => {
     expect(screen.queryByRole("button", { name: "Close navigation menu" })).toBeInTheDocument();
   });
 
-  it("renders sign out button when user is present", () => {
+  it("renders top-right quick actions when user is present", () => {
     render(
       <AppShell>
         <div>content</div>
       </AppShell>,
     );
 
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(screen.getByText("TopRightQuickActionsStub")).toBeInTheDocument();
   });
 
-  it("does not render search, notifications, sign out when no user", () => {
+  it("does not render authenticated header controls when no user", () => {
     mockedUseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -237,9 +237,9 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(screen.queryByText("GlobalSearchStub")).not.toBeInTheDocument();
+    expect(screen.queryByText("SchoolSelectorStub")).not.toBeInTheDocument();
     expect(screen.queryByText("NotificationBellStub")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
+    expect(screen.queryByText("TopRightQuickActionsStub")).not.toBeInTheDocument();
   });
 
   it("displays skip navigation link", () => {
