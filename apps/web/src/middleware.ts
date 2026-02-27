@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = [
+  "/auth",
   "/login",
   "/docs",
   "/auth/callback",

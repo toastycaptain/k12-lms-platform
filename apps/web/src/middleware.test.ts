@@ -56,6 +56,13 @@ describe("middleware", () => {
     expect(response.headers.get("X-Frame-Options")).toBe("DENY");
   });
 
+  it("allows unauthenticated access to auth routes", () => {
+    const response = middleware(buildRequest("/auth/google_oauth2"));
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+  });
+
   it("allows authenticated requests through", () => {
     const response = middleware(buildRequest("/dashboard", "session-123"));
 
