@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { LiveRegion } from "@k12/ui";
-import NotificationBell from "@/components/NotificationBell";
 import SchoolSelector from "@/components/SchoolSelector";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
 import TopRightQuickActions from "@/components/TopRightQuickActions";
@@ -273,8 +272,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
           <div className="flex items-center gap-3">
-            {user && !isGuardianOnly && <NotificationBell />}
-            {user && <TopRightQuickActions />}
+            {user && <TopRightQuickActions showNotifications={!isGuardianOnly} />}
           </div>
         </header>
         <ConnectionBanner />

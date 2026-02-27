@@ -33,6 +33,14 @@ vi.mock("@/components/GlobalSearch", () => ({
   default: () => <div>GlobalSearchStub</div>,
 }));
 
+vi.mock("@/components/NotificationBell", () => ({
+  default: () => (
+    <button type="button" aria-label="Notifications">
+      NotificationBellStub
+    </button>
+  ),
+}));
+
 describe("TopRightQuickActions", () => {
   const mockedUseAuth = vi.mocked(useAuth);
   const mockedApiFetch = vi.mocked(apiFetch);
@@ -58,13 +66,40 @@ describe("TopRightQuickActions", () => {
     vi.clearAllMocks();
   });
 
-  it("renders schedule, help, search, and profile controls", () => {
+  it("renders controls in order: search, schedule, notifications, help, profile", () => {
     render(<TopRightQuickActions />);
 
-    expect(screen.getByRole("button", { name: "Today's schedule" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Help center" })).toBeInTheDocument();
+    const searchButton = screen.getByRole("button", { name: "Search your account" });
+    const scheduleButton = screen.getByRole("button", { name: "Today's schedule" });
+    const notificationsButton = screen.getByRole("button", { name: "Notifications" });
+    const helpButton = screen.getByRole("button", { name: "Help center" });
+    const profileButton = screen.getByRole("button", { name: /Casey Creator/i });
+
+    expect(
+      searchButton.compareDocumentPosition(scheduleButton) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      scheduleButton.compareDocumentPosition(notificationsButton) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      notificationsButton.compareDocumentPosition(helpButton) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      helpButton.compareDocumentPosition(profileButton) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
     expect(screen.getByRole("button", { name: "Search your account" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today's schedule" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Help center" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Casey Creator/i })).toBeInTheDocument();
+  });
+
+  it("omits notifications when disabled", () => {
+    render(<TopRightQuickActions showNotifications={false} />);
+
+    expect(screen.queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
   });
 
   it("loads and displays today's schedule in a top-right dropdown", async () => {

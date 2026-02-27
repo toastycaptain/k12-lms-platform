@@ -5,8 +5,13 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import GlobalSearch from "@/components/GlobalSearch";
+import NotificationBell from "@/components/NotificationBell";
 
 type MenuKey = "schedule" | "help" | "profile" | "search";
+
+interface TopRightQuickActionsProps {
+  showNotifications?: boolean;
+}
 
 interface CalendarEvent {
   id: number;
@@ -55,7 +60,9 @@ function eventTimeLabel(event: CalendarEvent): string {
   return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-export default function TopRightQuickActions() {
+export default function TopRightQuickActions({
+  showNotifications = true,
+}: TopRightQuickActionsProps) {
   const { user, signOut } = useAuth();
   const [openMenu, setOpenMenu] = useState<MenuKey | null>(null);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -127,6 +134,28 @@ export default function TopRightQuickActions() {
       <div className="flex items-center gap-2">
         <button
           type="button"
+          onClick={() => setOpenMenu((previous) => (previous === "search" ? null : "search"))}
+          aria-expanded={openMenu === "search"}
+          aria-haspopup="dialog"
+          className="rounded-md border border-gray-200 px-2 py-1.5 text-gray-600 hover:bg-gray-50"
+          title="Search your account"
+        >
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="m20 20-3.5-3.5" />
+          </svg>
+          <span className="sr-only">Search your account</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setOpenMenu((previous) => (previous === "schedule" ? null : "schedule"))}
           aria-expanded={openMenu === "schedule"}
           aria-haspopup="dialog"
@@ -146,6 +175,8 @@ export default function TopRightQuickActions() {
           </svg>
           <span className="sr-only">Today&apos;s schedule</span>
         </button>
+
+        {showNotifications && <NotificationBell />}
 
         <button
           type="button"
@@ -172,28 +203,6 @@ export default function TopRightQuickActions() {
             <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
           </svg>
           <span className="sr-only">Help center</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setOpenMenu((previous) => (previous === "search" ? null : "search"))}
-          aria-expanded={openMenu === "search"}
-          aria-haspopup="dialog"
-          className="rounded-md border border-gray-200 px-2 py-1.5 text-gray-600 hover:bg-gray-50"
-          title="Search your account"
-        >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="m20 20-3.5-3.5" />
-          </svg>
-          <span className="sr-only">Search your account</span>
         </button>
 
         <button
