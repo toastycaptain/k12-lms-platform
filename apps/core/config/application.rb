@@ -48,7 +48,7 @@ module Core
       key: "_k12_lms_session",
       httponly: true,
       secure: Rails.env.production?,
-      same_site: :lax,
+      same_site: Rails.env.production? ? :none : :lax,
       expire_after: 12.hours
     config.middleware.use RequestTiming
   end
