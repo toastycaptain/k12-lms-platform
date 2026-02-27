@@ -43,11 +43,13 @@ module Core
     config.api_only = true
 
     # Add session/cookie middleware back for OmniAuth
+    session_cookie_domain = ENV["SESSION_COOKIE_DOMAIN"].presence
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore,
       key: "_k12_lms_session",
       httponly: true,
       secure: Rails.env.production?,
+      domain: session_cookie_domain,
       same_site: Rails.env.production? ? :none : :lax,
       expire_after: 12.hours
     config.middleware.use RequestTiming
