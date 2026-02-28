@@ -17,6 +17,8 @@ interface NavItem {
   children?: { label: string; href: string }[];
 }
 
+const FLYOUT_NAV_IDS = new Set(["plan", "teach", "assess", "admin", "report", "communicate"]);
+
 const NAV_ITEMS: NavItem[] = [
   {
     id: "guardian",
@@ -33,6 +35,10 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "Dashboard", href: "/learn/dashboard" },
       { label: "My Courses", href: "/learn/courses" },
+      { label: "To-dos", href: "/learn/todos" },
+      { label: "Goals", href: "/learn/goals" },
+      { label: "Calendar", href: "/learn/calendar" },
+      { label: "Portfolio", href: "/learn/portfolio" },
       { label: "Grades", href: "/learn/grades" },
       { label: "Progress", href: "/learn/progress" },
     ],
@@ -201,19 +207,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <nav aria-label="Main navigation" className="mt-2 flex flex-col gap-1 px-2">
           {visibleNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
+            const shouldUseFlyout = Boolean(item.children && FLYOUT_NAV_IDS.has(item.id));
             return (
-              <div key={item.href}>
+              <div key={item.href} className="group relative">
                 <Link
                   href={item.children ? item.children[0].href : item.href}
                   onClick={() => setSidebarOpen(false)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`rounded-md px-3 py-2 text-sm font-medium block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                  className={`block rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                     isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   {item.label}
                 </Link>
-                {item.children && isActive && (
+                {item.children && shouldUseFlyout && isActive && (
+                  <div className="ml-4 mt-1 flex flex-col gap-0.5 md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:min-w-[12rem] md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
+                    {item.children.map((child) => {
+                      const childActive = pathname.startsWith(child.href);
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setSidebarOpen(false)}
+                          aria-current={childActive ? "page" : undefined}
+                          className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                            childActive
+                              ? "text-blue-700 bg-blue-50"
+                              : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+                {item.children && !shouldUseFlyout && isActive && (
                   <div className="ml-4 mt-1 flex flex-col gap-0.5">
                     {item.children.map((child) => {
                       const childActive = pathname.startsWith(child.href);

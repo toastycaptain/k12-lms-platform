@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -405,6 +405,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
     t.index ["tenant_id"], name: "index_feature_flags_on_tenant_id"
   end
 
+  create_table "goals", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "progress_percent", default: 0, null: false
+    t.string "status", default: "active", null: false
+    t.bigint "student_id", null: false
+    t.date "target_date"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["student_id"], name: "index_goals_on_student_id"
+    t.index ["tenant_id", "student_id", "status"], name: "index_goals_on_tenant_id_and_student_id_and_status"
+    t.index ["tenant_id"], name: "index_goals_on_tenant_id"
+    t.check_constraint "progress_percent >= 0 AND progress_percent <= 100", name: "goals_progress_percent_range"
+  end
+
   create_table "grade_categories", force: :cascade do |t|
     t.bigint "course_id", null: false
     t.datetime "created_at", null: false
@@ -551,6 +567,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
     t.index ["message_thread_id"], name: "index_messages_on_message_thread_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
     t.index ["tenant_id"], name: "index_messages_on_tenant_id"
+  end
+
+  create_table "mobile_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "ip_address"
+    t.datetime "last_used_at"
+    t.string "refresh_token_digest", null: false
+    t.datetime "revoked_at"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id", null: false
+    t.index ["expires_at"], name: "index_mobile_sessions_on_expires_at"
+    t.index ["refresh_token_digest"], name: "index_mobile_sessions_on_refresh_token_digest", unique: true
+    t.index ["tenant_id", "user_id"], name: "index_mobile_sessions_on_tenant_id_and_user_id"
+    t.index ["tenant_id"], name: "index_mobile_sessions_on_tenant_id"
+    t.index ["user_id"], name: "index_mobile_sessions_on_user_id"
   end
 
   create_table "module_item_completions", force: :cascade do |t|
@@ -858,6 +892,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
     t.string "timezone"
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_schools_on_tenant_id"
+  end
+
+  create_table "section_meetings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.time "end_time", null: false
+    t.string "location"
+    t.bigint "section_id", null: false
+    t.time "start_time", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekday", null: false
+    t.index ["section_id", "weekday", "start_time"], name: "idx_section_meetings_schedule"
+    t.index ["section_id"], name: "index_section_meetings_on_section_id"
+    t.index ["tenant_id"], name: "index_section_meetings_on_tenant_id"
+    t.check_constraint "weekday >= 0 AND weekday <= 6", name: "section_meetings_weekday_range"
   end
 
   create_table "sections", force: :cascade do |t|
@@ -1177,6 +1226,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
   add_foreign_key "feature_flags", "tenants"
+  add_foreign_key "goals", "tenants"
+  add_foreign_key "goals", "users", column: "student_id"
   add_foreign_key "grade_categories", "courses"
   add_foreign_key "grade_categories", "tenants"
   add_foreign_key "guardian_links", "tenants"
@@ -1203,6 +1254,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
   add_foreign_key "messages", "message_threads"
   add_foreign_key "messages", "tenants"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "mobile_sessions", "tenants"
+  add_foreign_key "mobile_sessions", "users"
   add_foreign_key "module_item_completions", "module_items"
   add_foreign_key "module_item_completions", "tenants"
   add_foreign_key "module_item_completions", "users"
@@ -1249,6 +1302,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_133400) do
   add_foreign_key "rubrics", "tenants"
   add_foreign_key "rubrics", "users", column: "created_by_id"
   add_foreign_key "schools", "tenants"
+  add_foreign_key "section_meetings", "sections"
+  add_foreign_key "section_meetings", "tenants"
   add_foreign_key "sections", "courses"
   add_foreign_key "sections", "tenants"
   add_foreign_key "sections", "terms"

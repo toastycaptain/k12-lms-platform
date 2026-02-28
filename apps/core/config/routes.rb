@@ -23,6 +23,13 @@ Rails.application.routes.draw do
       get "/search", to: "search#index"
       get "/calendar.ics", to: "calendar#ical"
       get "/calendar", to: "calendar#index"
+      resources :goals
+
+      namespace :mobile do
+        post "sessions", to: "sessions#create"
+        post "refresh", to: "sessions#refresh"
+        delete "session", to: "sessions#destroy"
+      end
 
       resources :academic_years do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_academic_year"
@@ -270,6 +277,8 @@ Rails.application.routes.draw do
       get "guardian/students/:id/grades", to: "guardian#grades"
       get "guardian/students/:id/assignments", to: "guardian#assignments"
       get "guardian/students/:id/announcements", to: "guardian#announcements"
+      get "students/:student_id/todos", to: "student_todos#index"
+      get "students/:student_id/classes_today", to: "student_classes#index"
       get "students/:student_id/progress", to: "student_progress#show"
       get "students/:student_id/progress/course/:course_id", to: "student_progress#course_detail"
       resources :schools

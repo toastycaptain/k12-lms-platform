@@ -17,6 +17,8 @@ class User < ApplicationRecord
   has_many :guardian_links_as_student, class_name: "GuardianLink", foreign_key: :student_id, dependent: :destroy
   has_many :wards, through: :guardian_links_as_guardian, source: :student
   has_many :guardians, through: :guardian_links_as_student, source: :guardian
+  has_many :goals, foreign_key: :student_id, inverse_of: :student, dependent: :destroy
+  has_many :mobile_sessions, dependent: :destroy
 
   validates :email, presence: true, uniqueness: { scope: :tenant_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }

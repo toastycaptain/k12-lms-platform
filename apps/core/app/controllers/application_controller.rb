@@ -60,6 +60,10 @@ class ApplicationController < ActionController::API
   end
 
   def resolve_user
+    if (token = bearer_token)
+      return resolve_user_from_mobile_access_token(token)
+    end
+
     return unless Current.tenant && session[:user_id]
 
     if session_stale?
@@ -163,6 +167,21 @@ class ApplicationController < ActionController::API
 
   def csrf_protection_enabled?
     !Rails.env.test? || ActionController::Base.allow_forgery_protection
+  end
+
+  def bearer_token
+    header = request.authorization.to_s
+    return nil unless header.start_with?("Bearer ")
+
+    header.delete_prefix("Bearer ").strip.presence
+  end
+
+  def resolve_user_from_mobile_access_token(token)
+    auth = MobileSessionTokenService.authenticate_access_token(token)
+    return unless auth
+
+    Current.tenant = auth[:tenant]
+    Current.user = auth[:user]
   end
 
   def set_security_headers

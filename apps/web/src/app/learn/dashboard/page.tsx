@@ -77,6 +77,19 @@ interface LearnDashboardData {
   recentGrades: Submission[];
   courses: Course[];
   courseCards: CourseCardData[];
+  classesToday: ClassToday[];
+}
+
+interface ClassToday {
+  section_id: number;
+  section_name: string;
+  course_id: number;
+  course_name: string;
+  weekday: number;
+  start_at: string;
+  end_at: string;
+  location: string | null;
+  teachers: { id: number; name: string }[];
 }
 
 const LEARN_ROLES = ["admin", "teacher", "student"];
@@ -98,6 +111,13 @@ function displayName(user: User | undefined): string {
   return name || "Teacher";
 }
 
+const QUICK_LINKS = [
+  { label: "To-dos", href: "/learn/todos", description: "Assignments, quizzes, and active goals" },
+  { label: "Goals", href: "/learn/goals", description: "Create and track personal goals" },
+  { label: "Calendar", href: "/learn/calendar", description: "View your calendar events" },
+  { label: "Portfolio", href: "/learn/portfolio", description: "Coming soon placeholder" },
+];
+
 export default function LearnDashboardPage() {
   const { user } = useAuth();
   const {
@@ -105,14 +125,26 @@ export default function LearnDashboardPage() {
     error: loadError,
     isLoading,
   } = useSWR<LearnDashboardData>(
-    "learn-dashboard-data",
+    user ? `learn-dashboard-data-${user.id}` : null,
     async () => {
-      const [courseData, assignmentData, gradedSubmissions, users] = await Promise.all([
-        apiFetch<Course[]>("/api/v1/courses"),
-        apiFetch<Assignment[]>("/api/v1/assignments"),
-        apiFetch<Submission[]>("/api/v1/submissions?status=graded"),
-        apiFetch<User[]>("/api/v1/users"),
-      ]);
+      if (!user) {
+        return {
+          assignments: [],
+          recentGrades: [],
+          courses: [],
+          courseCards: [],
+          classesToday: [],
+        } satisfies LearnDashboardData;
+      }
+
+      const [courseData, assignmentData, gradedSubmissions, users, classesToday] =
+        await Promise.all([
+          apiFetch<Course[]>("/api/v1/courses"),
+          apiFetch<Assignment[]>("/api/v1/assignments"),
+          apiFetch<Submission[]>("/api/v1/submissions?status=graded"),
+          apiFetch<User[]>("/api/v1/users"),
+          apiFetch<ClassToday[]>(`/api/v1/students/${user.id}/classes_today`),
+        ]);
 
       const usersById = users.reduce<Record<number, User>>((accumulator, entry) => {
         accumulator[entry.id] = entry;
@@ -168,6 +200,7 @@ export default function LearnDashboardPage() {
         recentGrades: gradedSubmissions,
         courses: courseData,
         courseCards: cards,
+        classesToday,
       } satisfies LearnDashboardData;
     },
     swrConfig,
@@ -177,6 +210,7 @@ export default function LearnDashboardPage() {
   const recentGrades = data?.recentGrades ?? [];
   const courses = data?.courses ?? [];
   const courseCards = data?.courseCards ?? [];
+  const classesToday = data?.classesToday ?? [];
   const loading = isLoading && !data;
   const error = loadError ? "Unable to load student dashboard." : null;
 
@@ -235,6 +269,64 @@ export default function LearnDashboardPage() {
           </header>
 
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold text-gray-900">Quick Access</h2>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {QUICK_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm"
+                >
+                  <p className="text-sm font-semibold text-gray-900">{link.label}</p>
+                  <p className="mt-1 text-xs text-gray-500">{link.description}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold text-gray-900">Today&apos;s Classes</h2>
+            {loading ? (
+              <DashboardSkeleton />
+            ) : classesToday.length === 0 ? (
+              <EmptyState
+                title="No classes scheduled today"
+                description="Enjoy your open study time."
+              />
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {classesToday.map((entry) => (
+                  <Link
+                    key={`${entry.section_id}-${entry.start_at}`}
+                    href={`/learn/courses/${entry.course_id}`}
+                    className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm"
+                  >
+                    <p className="text-sm font-semibold text-gray-900">{entry.course_name}</p>
+                    <p className="mt-1 text-xs text-gray-500">{entry.section_name}</p>
+                    <p className="mt-2 text-xs text-gray-600">
+                      {new Date(entry.start_at).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}{" "}
+                      -{" "}
+                      {new Date(entry.end_at).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Teacher: {entry.teachers.map((teacher) => teacher.name).join(", ") || "TBD"}
+                    </p>
+                    {entry.location ? (
+                      <p className="mt-1 text-xs text-gray-500">Location: {entry.location}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
 
           <section className="space-y-3">
             <div className="flex items-center justify-between">
