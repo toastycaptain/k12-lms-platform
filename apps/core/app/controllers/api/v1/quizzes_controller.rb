@@ -5,7 +5,8 @@ module Api
       before_action :set_quiz, only: [ :show, :update, :destroy, :publish, :close, :results ]
 
       def index
-        quizzes = policy_scope(Quiz).where(course: @course).includes(:quiz_items).order(:created_at)
+        quizzes = policy_scope(Quiz).includes(:quiz_items).order(:created_at)
+        quizzes = quizzes.where(course: @course) if @course
         quizzes = quizzes.where(status: params[:status]) if params[:status].present?
         render json: quizzes
       end
@@ -79,6 +80,8 @@ module Api
       private
 
       def set_course
+        return unless params[:course_id].present?
+
         @course = Course.find(params[:course_id])
       end
 

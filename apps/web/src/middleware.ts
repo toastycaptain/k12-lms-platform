@@ -16,14 +16,16 @@ const ADDON_ROUTES = ["/addon"];
 const ADMIN_ROUTES = ["/admin"];
 const SETUP_ROUTES = ["/setup"];
 
+function isTruthy(value: string | undefined | null): boolean {
+  return Boolean(value && ["1", "true", "yes", "on"].includes(value.toLowerCase()));
+}
+
 function authBypassEnabled(): boolean {
-  const raw = process.env.AUTH_BYPASS_MODE;
-  return Boolean(raw && ["1", "true", "yes", "on"].includes(raw.toLowerCase()));
+  return isTruthy(process.env.AUTH_BYPASS_MODE);
 }
 
 function welcomeTourDisabled(): boolean {
-  const raw = process.env.DISABLE_WELCOME_TOUR;
-  return Boolean(raw && ["1", "true", "yes", "on"].includes(raw.toLowerCase()));
+  return isTruthy(process.env.DISABLE_WELCOME_TOUR);
 }
 
 function routeMatches(pathname: string, routes: string[]): boolean {
@@ -59,29 +61,44 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const bypassAuth = authBypassEnabled();
   const disableWelcomeTour = welcomeTourDisabled();
+  const buildNext = (allowIframe = false) => {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-k12-disable-welcome-tour", disableWelcomeTour ? "1" : "0");
+    requestHeaders.set("x-k12-auth-bypass", bypassAuth ? "1" : "0");
+
+    return withSecurityHeaders(
+      NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      }),
+      allowIframe,
+    );
+  };
+  const buildRedirect = (url: URL) => withSecurityHeaders(NextResponse.redirect(url));
 
   if (isBypassedAssetPath(pathname)) {
     return withSecurityHeaders(NextResponse.next());
   }
 
   if (disableWelcomeTour && routeMatches(pathname, SETUP_ROUTES)) {
-    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+    return buildRedirect(new URL("/dashboard", request.url));
   }
 
   if (bypassAuth && pathname === "/") {
-    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+    return buildRedirect(new URL("/dashboard", request.url));
   }
 
   if (bypassAuth && (pathname === "/login" || pathname === "/auth/callback")) {
-    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+    return buildRedirect(new URL("/dashboard", request.url));
   }
 
   if (routeMatches(pathname, ADDON_ROUTES)) {
-    return withSecurityHeaders(NextResponse.next(), true);
+    return buildNext(true);
   }
 
   if (routeMatches(pathname, PUBLIC_ROUTES)) {
-    return withSecurityHeaders(NextResponse.next());
+    return buildNext();
   }
 
   const hasSession = Boolean(request.cookies.get("_k12_lms_session")?.value);
@@ -89,15 +106,15 @@ export function middleware(request: NextRequest) {
   if (!hasSession && shouldEnforceSessionCookie(request) && !bypassAuth) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search || ""}`);
-    return withSecurityHeaders(NextResponse.redirect(loginUrl));
+    return buildRedirect(loginUrl);
   }
 
   // Coarse path guard for admin routes. Fine-grained checks stay in ProtectedRoute.
   if (routeMatches(pathname, ADMIN_ROUTES)) {
-    return withSecurityHeaders(NextResponse.next());
+    return buildNext();
   }
 
-  return withSecurityHeaders(NextResponse.next());
+  return buildNext();
 }
 
 export const config = {

@@ -10,15 +10,28 @@ interface ProtectedRouteProps {
   unauthorizedRedirect?: string;
 }
 
+function isTruthy(value: string | undefined): boolean {
+  return Boolean(value && ["1", "true", "yes", "on"].includes(value.toLowerCase()));
+}
+
+function readRuntimeFlag(name: "disableWelcomeTour" | "authBypass"): boolean {
+  if (typeof document === "undefined") return false;
+  const raw =
+    name === "disableWelcomeTour"
+      ? document.documentElement.dataset.disableWelcomeTour
+      : document.documentElement.dataset.authBypass;
+  return raw === "1" || raw === "true";
+}
+
 export default function ProtectedRoute({
   children,
   requiredRoles,
   unauthorizedRedirect = "/unauthorized",
 }: ProtectedRouteProps) {
-  const disableWelcomeTour = Boolean(
-    process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR &&
-    ["1", "true", "yes", "on"].includes(process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR.toLowerCase()),
-  );
+  const disableWelcomeTour =
+    isTruthy(process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR) || readRuntimeFlag("disableWelcomeTour");
+  const bypassAuthMode =
+    isTruthy(process.env.NEXT_PUBLIC_AUTH_BYPASS_MODE) || readRuntimeFlag("authBypass");
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,12 +66,12 @@ export default function ProtectedRoute({
       (path) => pathname === path || pathname.startsWith(`${path}/`),
     );
 
-    if (isOnboardingIncomplete && !isExempt && !disableWelcomeTour) {
+    if (isOnboardingIncomplete && !isExempt && !disableWelcomeTour && !bypassAuthMode) {
       router.replace("/setup");
       return;
     }
 
-    if (disableWelcomeTour && pathname === "/setup") {
+    if ((disableWelcomeTour || bypassAuthMode) && pathname === "/setup") {
       router.replace("/dashboard");
       return;
     }
@@ -66,7 +79,16 @@ export default function ProtectedRoute({
     if (user.onboarding_complete && pathname === "/setup") {
       router.replace("/dashboard");
     }
-  }, [disableWelcomeTour, hasRequiredRole, loading, pathname, router, unauthorizedRedirect, user]);
+  }, [
+    bypassAuthMode,
+    disableWelcomeTour,
+    hasRequiredRole,
+    loading,
+    pathname,
+    router,
+    unauthorizedRedirect,
+    user,
+  ]);
 
   if (loading) {
     return (

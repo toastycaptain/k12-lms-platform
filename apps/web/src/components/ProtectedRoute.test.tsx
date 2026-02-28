@@ -23,6 +23,8 @@ describe("ProtectedRoute", () => {
     mockedUseRouter.mockReturnValue({ replace: replaceMock } as never);
     mockedUsePathname.mockReturnValue("/dashboard");
     process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR = previousDisableWelcomeTour;
+    document.documentElement.dataset.disableWelcomeTour = "0";
+    document.documentElement.dataset.authBypass = "0";
   });
 
   afterEach(() => {
@@ -247,6 +249,37 @@ describe("ProtectedRoute", () => {
 
   it("skips onboarding setup redirect when welcome tour is disabled", async () => {
     process.env.NEXT_PUBLIC_DISABLE_WELCOME_TOUR = "true";
+    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 33,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 4,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: false,
+        preferences: {},
+      },
+      loading: false,
+      error: null,
+      signOut: async () => {},
+      refresh: async () => {},
+    });
+
+    render(
+      <ProtectedRoute>
+        <div>Private content</div>
+      </ProtectedRoute>,
+    );
+
+    expect(screen.getByText("Private content")).toBeInTheDocument();
+    await waitFor(() => expect(replaceMock).not.toHaveBeenCalledWith("/setup"));
+  });
+
+  it("skips onboarding setup redirect when runtime flag disables welcome tour", async () => {
+    document.documentElement.dataset.disableWelcomeTour = "1";
     mockedUsePathname.mockReturnValue("/dashboard");
     mockedUseAuth.mockReturnValue({
       user: {

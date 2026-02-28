@@ -195,6 +195,22 @@ describe("AppShell", () => {
     expect(screen.queryByRole("link", { name: "Units" })).not.toBeInTheDocument();
   });
 
+  it("shows flyout child nav on hover for sidebar sections", () => {
+    mockedUsePathname.mockReturnValue("/dashboard");
+
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    const planLink = screen.getByRole("link", { name: "Plan" });
+    fireEvent.mouseEnter(planLink.closest("div") as HTMLElement);
+
+    expect(screen.getByRole("link", { name: "Units" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Calendar" })).toBeInTheDocument();
+  });
+
   it("toggles mobile sidebar", () => {
     render(
       <AppShell>

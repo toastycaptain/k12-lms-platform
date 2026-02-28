@@ -121,11 +121,16 @@ const NAV_ITEMS: NavItem[] = [
     label: "Communicate",
     href: "/communicate",
     roles: ["admin", "curriculum_lead", "teacher", "student"],
+    children: [
+      { label: "Overview", href: "/communicate" },
+      { label: "Compose", href: "/communicate/compose" },
+    ],
   },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openFlyoutId, setOpenFlyoutId] = useState<string | null>(null);
   const pathname = usePathname();
   const { user } = useAuth();
   const roles = user?.roles ?? [];
@@ -208,8 +213,45 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {visibleNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const shouldUseFlyout = Boolean(item.children && FLYOUT_NAV_IDS.has(item.id));
+            const flyoutOpen = Boolean(
+              item.children && shouldUseFlyout && (isActive || openFlyoutId === item.id),
+            );
             return (
-              <div key={item.href} className="group relative">
+              <div
+                key={item.href}
+                className="group relative"
+                onMouseEnter={
+                  shouldUseFlyout
+                    ? () => {
+                        setOpenFlyoutId(item.id);
+                      }
+                    : undefined
+                }
+                onMouseLeave={
+                  shouldUseFlyout
+                    ? () => {
+                        setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
+                      }
+                    : undefined
+                }
+                onFocusCapture={
+                  shouldUseFlyout
+                    ? () => {
+                        setOpenFlyoutId(item.id);
+                      }
+                    : undefined
+                }
+                onBlurCapture={
+                  shouldUseFlyout
+                    ? (event) => {
+                        const nextTarget = event.relatedTarget as Node | null;
+                        if (!event.currentTarget.contains(nextTarget)) {
+                          setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
+                        }
+                      }
+                    : undefined
+                }
+              >
                 <Link
                   href={item.children ? item.children[0].href : item.href}
                   onClick={() => setSidebarOpen(false)}
@@ -220,7 +262,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   {item.label}
                 </Link>
-                {item.children && shouldUseFlyout && isActive && (
+                {item.children && shouldUseFlyout && flyoutOpen && (
                   <div className="ml-4 mt-1 flex flex-col gap-0.5 md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:min-w-[12rem] md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
                     {item.children.map((child) => {
                       const childActive = pathname.startsWith(child.href);

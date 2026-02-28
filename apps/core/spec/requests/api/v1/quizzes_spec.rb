@@ -103,6 +103,24 @@ RSpec.describe "Api::V1::Quizzes" do
     end
   end
 
+  describe "GET /api/v1/quizzes" do
+    it "lists quizzes visible to the current teacher across enrolled courses" do
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+      visible_quiz = create(:quiz, tenant: tenant, course: course, created_by: teacher)
+      create(:quiz, tenant: tenant, course: other_course, created_by: other_teacher)
+      Current.tenant = nil
+
+      get "/api/v1/quizzes"
+
+      expect(response).to have_http_status(:ok)
+      ids = response.parsed_body.map { |quiz| quiz["id"] }
+      expect(ids).to include(visible_quiz.id)
+      expect(ids.length).to eq(1)
+    end
+  end
+
   describe "POST /api/v1/courses/:course_id/quizzes" do
     it "creates a quiz as teacher" do
       mock_session(teacher, tenant: tenant)

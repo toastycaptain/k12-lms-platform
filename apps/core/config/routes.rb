@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       get "/me", to: "sessions#me"
       patch "/me", to: "sessions#update_me"
       get "/search", to: "search#index"
+      post "/analytics/web_vitals", to: "analytics#web_vitals"
       get "/calendar.ics", to: "calendar#ical"
       get "/calendar", to: "calendar#index"
       resources :goals
@@ -175,7 +176,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :quizzes, only: [ :show, :update, :destroy ] do
+      resources :quizzes, only: [ :index, :show, :update, :destroy ] do
         member do
           post :publish
           post :close
