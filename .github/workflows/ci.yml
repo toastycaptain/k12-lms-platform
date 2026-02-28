@@ -39,7 +39,7 @@ jobs:
       - name: Test coverage
         run: npm run test:coverage
       - name: Upload web coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-coverage
           path: apps/web/coverage
@@ -71,7 +71,7 @@ jobs:
       - name: Run tests
         run: pytest
       - name: Upload AI Gateway coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ai-gateway-coverage
           path: apps/ai-gateway/.coverage
@@ -193,7 +193,7 @@ jobs:
           working-directory: apps/core
       - name: Run Playwright
         run: cd apps/web && npm run e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-report
