@@ -1,8 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import GuardianStudentDetailPage from "@/app/guardian/students/[studentId]/page";
 import {
+  useGuardianAttendance,
   useGuardianAnnouncements,
   useGuardianAssignments,
+  useGuardianCalendar,
+  useGuardianClassesToday,
   useGuardianGrades,
 } from "@/hooks/useGuardian";
 
@@ -11,15 +14,21 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/hooks/useGuardian", () => ({
+  useGuardianAttendance: vi.fn(),
   useGuardianGrades: vi.fn(),
   useGuardianAssignments: vi.fn(),
   useGuardianAnnouncements: vi.fn(),
+  useGuardianClassesToday: vi.fn(),
+  useGuardianCalendar: vi.fn(),
 }));
 
 describe("GuardianStudentDetailPage", () => {
+  const mockedUseGuardianAttendance = vi.mocked(useGuardianAttendance);
   const mockedUseGuardianGrades = vi.mocked(useGuardianGrades);
   const mockedUseGuardianAssignments = vi.mocked(useGuardianAssignments);
   const mockedUseGuardianAnnouncements = vi.mocked(useGuardianAnnouncements);
+  const mockedUseGuardianClassesToday = vi.mocked(useGuardianClassesToday);
+  const mockedUseGuardianCalendar = vi.mocked(useGuardianCalendar);
 
   it("renders student overview content", () => {
     mockedUseGuardianGrades.mockReturnValue({
@@ -70,6 +79,29 @@ describe("GuardianStudentDetailPage", () => {
           course_id: 3,
         },
       ],
+      isLoading: false,
+      error: undefined,
+    } as never);
+
+    mockedUseGuardianAttendance.mockReturnValue({
+      data: {
+        summary: { total: 4, present: 3, absent: 1, tardy: 0, excused: 0 },
+        records: [],
+      },
+      isLoading: false,
+      error: undefined,
+    } as never);
+
+    mockedUseGuardianClassesToday.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: undefined,
+    } as never);
+
+    mockedUseGuardianCalendar.mockReturnValue({
+      data: {
+        events: [],
+      },
       isLoading: false,
       error: undefined,
     } as never);

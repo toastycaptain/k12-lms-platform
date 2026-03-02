@@ -5,8 +5,11 @@ import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { EmptyState } from "@k12/ui";
 import {
+  useGuardianAttendance,
   useGuardianAnnouncements,
   useGuardianAssignments,
+  useGuardianCalendar,
+  useGuardianClassesToday,
   useGuardianGrades,
 } from "@/hooks/useGuardian";
 
@@ -21,11 +24,20 @@ function formatPercent(value: number | null): string {
 export default function GuardianStudentDetailPage() {
   const params = useParams();
   const studentId = String(params.studentId);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
 
   const { data: grades, isLoading: gradesLoading } = useGuardianGrades(studentId);
   const { data: assignments, isLoading: assignmentsLoading } = useGuardianAssignments(studentId);
   const { data: announcements, isLoading: announcementsLoading } =
     useGuardianAnnouncements(studentId);
+  const { data: attendance, isLoading: attendanceLoading } = useGuardianAttendance(studentId);
+  const { data: classesToday, isLoading: classesTodayLoading } = useGuardianClassesToday(studentId);
+  const { data: calendar, isLoading: calendarLoading } = useGuardianCalendar(studentId, {
+    startDate: monthStart,
+    endDate: monthEnd,
+  });
 
   const overallAverage = useMemo(() => {
     const values = (grades || [])
@@ -44,11 +56,25 @@ export default function GuardianStudentDetailPage() {
       .slice(0, 5);
   }, [assignments]);
 
-  if (gradesLoading || assignmentsLoading || announcementsLoading) {
+  const attendanceRate = useMemo(() => {
+    const summary = attendance?.summary;
+    if (!summary || summary.total === 0) return null;
+
+    return (summary.present / summary.total) * 100;
+  }, [attendance]);
+
+  if (
+    gradesLoading ||
+    assignmentsLoading ||
+    announcementsLoading ||
+    attendanceLoading ||
+    classesTodayLoading ||
+    calendarLoading
+  ) {
     return <p className="text-sm text-slate-600">Loading student details...</p>;
   }
 
-  if (!grades && !assignments) {
+  if (!grades && !assignments && !attendance && !classesToday && !calendar) {
     return (
       <EmptyState
         title="Student not found"
@@ -71,7 +97,7 @@ export default function GuardianStudentDetailPage() {
         </Link>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <article className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">Overall Average</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">
@@ -88,6 +114,69 @@ export default function GuardianStudentDetailPage() {
             {(announcements || []).length}
           </p>
         </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Attendance Rate</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {formatPercent(attendanceRate)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Classes Today</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {(classesToday || []).length}
+          </p>
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Calendar This Month</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {(calendar?.events || []).length}
+          </p>
+        </article>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-semibold text-slate-900">Family Features</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Open attendance, calendar, timetable, and existing student views.
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href={`/guardian/students/${studentId}/attendance`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Attendance
+          </Link>
+          <Link
+            href={`/guardian/students/${studentId}/calendar`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Calendar
+          </Link>
+          <Link
+            href={`/guardian/students/${studentId}/classes-today`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Classes Today
+          </Link>
+          <Link
+            href={`/guardian/students/${studentId}/assignments`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Assignments
+          </Link>
+          <Link
+            href={`/guardian/students/${studentId}/grades`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Grades
+          </Link>
+          <Link
+            href={`/guardian/progress/${studentId}`}
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Progress
+          </Link>
+        </div>
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">

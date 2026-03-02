@@ -138,7 +138,7 @@ module Api
           drive_file_id: drive_result[:id],
           mime_type: drive_result[:mime_type],
           link_type: params[:link_type].presence || "reference",
-          metadata: resource_link_metadata
+          metadata: resource_link_metadata(linkable)
         )
       end
 
@@ -157,10 +157,40 @@ module Api
         course.update!(settings: settings)
       end
 
-      def resource_link_metadata
-        return {} if params[:metadata].blank?
+      def resource_link_metadata(linkable)
+        base_metadata = params.permit(metadata: [ :file_id, :file_name, :mime_type, :icon_url, :thumbnail_url, :web_view_link ]).to_h[:metadata] || {}
+        base_metadata.merge(curriculum_metadata_for_linkable(linkable))
+      end
 
-        params.permit(metadata: [ :file_id, :file_name, :mime_type, :icon_url, :thumbnail_url, :web_view_link ]).to_h[:metadata] || {}
+      def curriculum_metadata_for_linkable(linkable)
+        context = curriculum_context_for_linkable(linkable)
+        return {} if context.blank?
+
+        {
+          "effective_curriculum_profile_key" => context[:profile_key],
+          "effective_curriculum_source" => context[:source],
+          "integration_context_tag" => context.dig(:integration_hints, "google_addon_context")
+        }
+      end
+
+      def curriculum_context_for_linkable(linkable)
+        course = course_for_linkable(linkable)
+        return nil unless course
+
+        CurriculumProfileResolver.resolve(tenant: Current.tenant, school: course.school, course: course)
+      end
+
+      def course_for_linkable(linkable)
+        case linkable
+        when Assignment, CourseModule
+          linkable.course
+        when LessonVersion
+          linkable.lesson_plan&.unit_plan&.course
+        when UnitVersion
+          linkable.unit_plan&.course
+        else
+          nil
+        end
       end
     end
   end

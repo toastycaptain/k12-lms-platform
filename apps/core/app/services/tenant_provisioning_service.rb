@@ -78,13 +78,22 @@ class TenantProvisioningService
     if User.unscoped.exists?(email: @params[:admin_email])
       raise ProvisioningError, "Email '#{@params[:admin_email]}' is already registered"
     end
+
+    return if @params[:curriculum_default_profile_key].blank?
+    return if CurriculumProfileRegistry.keys.include?(@params[:curriculum_default_profile_key])
+
+    raise ProvisioningError, "Unknown curriculum_default_profile_key '#{@params[:curriculum_default_profile_key]}'"
   end
 
   def create_tenant
+    curriculum_default_profile_key = @params[:curriculum_default_profile_key].presence ||
+      CurriculumProfileRegistry.default_profile_key
+
     Tenant.create!(
       name: @params[:school_name],
       slug: @params[:subdomain],
       settings: {
+        "curriculum_default_profile_key" => curriculum_default_profile_key,
         "branding" => {
           "logo_url" => @params[:logo_url],
           "primary_color" => @params[:primary_color] || "#1e40af",

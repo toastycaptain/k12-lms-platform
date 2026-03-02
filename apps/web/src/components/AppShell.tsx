@@ -14,7 +14,7 @@ interface NavItem {
   label: string;
   href: string;
   roles?: string[];
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; roles?: string[] }[];
 }
 
 const FLYOUT_NAV_IDS = new Set(["plan", "teach", "assess", "admin", "report", "communicate"]);
@@ -25,7 +25,11 @@ const NAV_ITEMS: NavItem[] = [
     label: "My Students",
     href: "/guardian",
     roles: ["guardian"],
-    children: [{ label: "Dashboard", href: "/guardian/dashboard" }],
+    children: [
+      { label: "Dashboard", href: "/guardian/dashboard" },
+      { label: "Messages", href: "/communicate" },
+      { label: "Compose", href: "/communicate/compose" },
+    ],
   },
   {
     id: "learn",
@@ -86,6 +90,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Users & Roles", href: "/admin/users" },
       { label: "Integrations", href: "/admin/integrations" },
       { label: "AI Settings", href: "/admin/ai" },
+      { label: "Curriculum Profiles", href: "/admin/curriculum-profiles", roles: ["admin"] },
       { label: "LTI", href: "/admin/lti" },
       { label: "Data Retention", href: "/admin/retention" },
       { label: "Curriculum Map", href: "/admin/curriculum-map" },
@@ -120,7 +125,7 @@ const NAV_ITEMS: NavItem[] = [
     id: "communicate",
     label: "Communicate",
     href: "/communicate",
-    roles: ["admin", "curriculum_lead", "teacher", "student"],
+    roles: ["admin", "curriculum_lead", "teacher", "student", "guardian"],
     children: [
       { label: "Overview", href: "/communicate" },
       { label: "Compose", href: "/communicate/compose" },
@@ -142,7 +147,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return item.roles.some((role) => roles.includes(role));
   }).filter((item) => {
     if (isGuardianOnly) {
-      return item.id === "guardian";
+      return item.id === "guardian" || item.id === "communicate";
     }
 
     if (!isStudentOnly) return item.id !== "guardian";
@@ -209,106 +214,138 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
         </div>
-        <nav aria-label="Main navigation" className="mt-2 flex flex-col gap-1 px-2">
-          {visibleNavItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            const shouldUseFlyout = Boolean(item.children && FLYOUT_NAV_IDS.has(item.id));
-            const flyoutOpen = Boolean(
-              item.children && shouldUseFlyout && (isActive || openFlyoutId === item.id),
-            );
-            return (
-              <div
-                key={item.href}
-                className="group relative"
-                onMouseEnter={
-                  shouldUseFlyout
-                    ? () => {
-                        setOpenFlyoutId(item.id);
-                      }
-                    : undefined
-                }
-                onMouseLeave={
-                  shouldUseFlyout
-                    ? () => {
-                        setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
-                      }
-                    : undefined
-                }
-                onFocusCapture={
-                  shouldUseFlyout
-                    ? () => {
-                        setOpenFlyoutId(item.id);
-                      }
-                    : undefined
-                }
-                onBlurCapture={
-                  shouldUseFlyout
-                    ? (event) => {
-                        const nextTarget = event.relatedTarget as Node | null;
-                        if (!event.currentTarget.contains(nextTarget)) {
+        <nav aria-label="Main navigation" className="mt-2 px-2">
+          <ul className="flex flex-col gap-1">
+            {visibleNavItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              const visibleChildren = (item.children || []).filter((child) => {
+                if (!child.roles || child.roles.length === 0) return true;
+                return child.roles.some((role) => roles.includes(role));
+              });
+              const hasVisibleChildren = visibleChildren.length > 0;
+              const shouldUseFlyout = Boolean(hasVisibleChildren && FLYOUT_NAV_IDS.has(item.id));
+              const flyoutOpen = Boolean(
+                hasVisibleChildren && shouldUseFlyout && openFlyoutId === item.id,
+              );
+              const mobileFlyoutOpen = Boolean(hasVisibleChildren && shouldUseFlyout && isActive);
+              return (
+                // Hover/focus state is managed at the container level to keep flyout open while navigating children.
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+                <li
+                  key={item.href}
+                  className="group relative"
+                  onMouseEnter={
+                    shouldUseFlyout
+                      ? () => {
+                          setOpenFlyoutId(item.id);
+                        }
+                      : undefined
+                  }
+                  onMouseLeave={
+                    shouldUseFlyout
+                      ? () => {
                           setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
                         }
-                      }
-                    : undefined
-                }
-              >
-                <Link
-                  href={item.children ? item.children[0].href : item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`block rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                    isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                      : undefined
+                  }
+                  onFocusCapture={
+                    shouldUseFlyout
+                      ? () => {
+                          setOpenFlyoutId(item.id);
+                        }
+                      : undefined
+                  }
+                  onBlurCapture={
+                    shouldUseFlyout
+                      ? (event) => {
+                          const nextTarget = event.relatedTarget as Node | null;
+                          if (!event.currentTarget.contains(nextTarget)) {
+                            setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
+                          }
+                        }
+                      : undefined
+                  }
                 >
-                  {item.label}
-                </Link>
-                {item.children && shouldUseFlyout && flyoutOpen && (
-                  <div className="ml-4 mt-1 flex flex-col gap-0.5 md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:min-w-[12rem] md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
-                    {item.children.map((child) => {
-                      const childActive = pathname.startsWith(child.href);
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setSidebarOpen(false)}
-                          aria-current={childActive ? "page" : undefined}
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                            childActive
-                              ? "text-blue-700 bg-blue-50"
-                              : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-                {item.children && !shouldUseFlyout && isActive && (
-                  <div className="ml-4 mt-1 flex flex-col gap-0.5">
-                    {item.children.map((child) => {
-                      const childActive = pathname.startsWith(child.href);
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setSidebarOpen(false)}
-                          aria-current={childActive ? "page" : undefined}
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                            childActive
-                              ? "text-blue-700 bg-blue-50"
-                              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  <Link
+                    href={hasVisibleChildren ? visibleChildren[0].href : item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`block rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                      isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                  {hasVisibleChildren && shouldUseFlyout && mobileFlyoutOpen && (
+                    <div className="ml-4 mt-1 flex flex-col gap-0.5 md:hidden">
+                      {visibleChildren.map((child) => {
+                        const childActive = pathname.startsWith(child.href);
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setSidebarOpen(false)}
+                            aria-current={childActive ? "page" : undefined}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                              childActive
+                                ? "text-blue-700 bg-blue-50"
+                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {hasVisibleChildren && shouldUseFlyout && flyoutOpen && (
+                    <div className="hidden md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:flex md:min-w-[12rem] md:flex-col md:gap-0.5 md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
+                      {visibleChildren.map((child) => {
+                        const childActive = pathname.startsWith(child.href);
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setSidebarOpen(false)}
+                            aria-current={childActive ? "page" : undefined}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                              childActive
+                                ? "text-blue-700 bg-blue-50"
+                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {hasVisibleChildren && !shouldUseFlyout && isActive && (
+                    <div className="ml-4 mt-1 flex flex-col gap-0.5">
+                      {visibleChildren.map((child) => {
+                        const childActive = pathname.startsWith(child.href);
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setSidebarOpen(false)}
+                            aria-current={childActive ? "page" : undefined}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                              childActive
+                                ? "text-blue-700 bg-blue-50"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </nav>
       </aside>
 

@@ -1,0 +1,53 @@
+{
+  "key": "ib_continuum_v1",
+  "label": "IB Continuum",
+  "version": "2026.1",
+  "description": "Planner-first defaults for IB PYP, MYP, and DP environments.",
+  "jurisdiction": "International Baccalaureate",
+  "planner_taxonomy": {
+    "subject_label": "Subject Group",
+    "grade_label": "Programme Year",
+    "unit_label": "Unit of Inquiry"
+  },
+  "subject_options": [
+    "Language and Literature",
+    "Language Acquisition",
+    "Individuals and Societies",
+    "Sciences",
+    "Mathematics",
+    "Arts"
+  ],
+  "grade_or_stage_options": [
+    "PYP Year 1",
+    "PYP Year 2",
+    "PYP Year 3",
+    "PYP Year 4",
+    "PYP Year 5",
+    "MYP Year 1",
+    "MYP Year 2",
+    "MYP Year 3",
+    "MYP Year 4",
+    "MYP Year 5",
+    "DP Year 1",
+    "DP Year 2"
+  ],
+  "framework_defaults": [
+    "IB PYP",
+    "IB MYP",
+    "IB DP"
+  ],
+  "template_defaults": {
+    "default_status": "draft",
+    "suggested_sections": [
+      "Statement of Inquiry",
+      "ATL Skills",
+      "Summative Assessment"
+    ]
+  },
+  "integration_hints": {
+    "google_addon_context": "ib_programme",
+    "lti_context_tag": "ib",
+    "oneroster_context_tag": "ib_programme"
+  },
+  "status": "active"
+}

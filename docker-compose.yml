@@ -1,0 +1,99 @@
+# Local development only. Do not use in production.
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-k12_development}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  core:
+    build:
+      context: ./apps/core
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@db:5432/k12_development}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai_gateway:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+    command: >
+      bash -lc "bundle exec rails db:prepare &&
+      bundle exec puma -C config/puma.rb"
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  sidekiq:
+    build:
+      context: ./apps/core
+      dockerfile: Dockerfile.sidekiq
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@db:5432/k12_development}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai_gateway:8000}
+    command: bundle exec sidekiq
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000/api/v1}
+      NODE_ENV: development
+    ports:
+      - "3001:3000"
+    depends_on:
+      core:
+        condition: service_healthy
+
+  ai_gateway:
+    build:
+      context: ./apps/ai-gateway
+    env_file: .env
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
+  redis_data:

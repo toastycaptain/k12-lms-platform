@@ -2,7 +2,18 @@ import SwiftUI
 
 @main
 struct StudentApp: App {
-    @StateObject private var bootstrapper = SessionBootstrapper(apiClient: APIClient(environment: .current))
+    private let environment = AppEnvironment.current
+    @StateObject private var bootstrapper: SessionBootstrapper
+
+    init() {
+        let environment = AppEnvironment.current
+        _bootstrapper = StateObject(
+            wrappedValue: SessionBootstrapper(
+                apiClient: APIClient(environment: environment),
+                environment: environment
+            )
+        )
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -10,7 +21,7 @@ struct StudentApp: App {
                 if bootstrapper.isLoading {
                     ProgressView("Loading session...")
                 } else if bootstrapper.currentUser != nil {
-                    DashboardView(environment: .current)
+                    DashboardView(environment: environment)
                 } else {
                     PlaceholderFeatureView(
                         title: "Sign-In Required",

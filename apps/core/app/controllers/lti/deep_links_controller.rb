@@ -28,6 +28,7 @@ module Lti
         title = permitted["title"] || permitted[:title]
         url = permitted["url"] || permitted[:url]
         custom_params = permitted["custom_params"] || permitted[:custom_params] || {}
+        custom_params = with_curriculum_context(custom_params)
 
         next if title.blank? || url.blank?
 
@@ -38,6 +39,26 @@ module Lti
           custom: custom_params
         }
       end
+    end
+
+    def with_curriculum_context(custom_params)
+      params_hash = custom_params.to_h
+      course_id = params_hash["course_id"] || params_hash[:course_id]
+      return params_hash if course_id.blank?
+
+      course = Course.find_by(id: course_id, tenant_id: Current.tenant.id)
+      return params_hash unless course
+
+      resolved = CurriculumProfileResolver.resolve(
+        tenant: Current.tenant,
+        school: course.school,
+        course: course
+      )
+
+      params_hash["effective_curriculum_profile_key"] ||= resolved[:profile_key]
+      params_hash["effective_curriculum_source"] ||= resolved[:source]
+      params_hash["lti_context_tag"] ||= resolved.dig(:integration_hints, "lti_context_tag")
+      params_hash
     end
 
     def build_deep_linking_jwt(registration, items, data)

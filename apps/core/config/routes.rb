@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       delete "/session", to: "sessions#destroy"
       get "/me", to: "sessions#me"
       patch "/me", to: "sessions#update_me"
+      get "/curriculum_profiles", to: "curriculum_profiles#index"
       get "/search", to: "search#index"
       post "/analytics/web_vitals", to: "analytics#web_vitals"
       get "/calendar.ics", to: "calendar#ical"
@@ -278,6 +279,9 @@ Rails.application.routes.draw do
       get "guardian/students/:id/grades", to: "guardian#grades"
       get "guardian/students/:id/assignments", to: "guardian#assignments"
       get "guardian/students/:id/announcements", to: "guardian#announcements"
+      get "guardian/students/:id/attendance", to: "guardian#attendance"
+      get "guardian/students/:id/classes_today", to: "guardian#classes_today"
+      get "guardian/students/:id/calendar", to: "guardian#calendar"
       get "students/:student_id/todos", to: "student_todos#index"
       get "students/:student_id/classes_today", to: "student_classes#index"
       get "students/:student_id/progress", to: "student_progress#show"
@@ -354,6 +358,9 @@ Rails.application.routes.draw do
         end
 
         resource :branding, controller: :branding, only: [ :show, :update ]
+        resource :curriculum_settings, controller: :curriculum_settings, only: [ :show, :update ] do
+          post :import
+        end
       end
 
       if Rails.env.test? || ENV["ENABLE_E2E_TEST_HELPERS"] == "true"

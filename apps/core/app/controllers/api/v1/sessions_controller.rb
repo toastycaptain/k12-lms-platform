@@ -59,7 +59,8 @@ module Api
           tenant: {
             id: Current.tenant.id,
             name: Current.tenant.name,
-            slug: Current.tenant.slug
+            slug: Current.tenant.slug,
+            curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
           }
         }
       end
@@ -81,7 +82,8 @@ module Api
             tenant: {
               id: Current.tenant.id,
               name: Current.tenant.name,
-              slug: Current.tenant.slug
+              slug: Current.tenant.slug,
+              curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
             }
           }
         else

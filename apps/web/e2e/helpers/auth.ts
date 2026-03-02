@@ -3,7 +3,7 @@ import { E2E_FIXTURES } from "./seed";
 
 const apiBaseUrl = process.env.E2E_API_BASE_URL || "http://localhost:4000";
 
-type UserRole = "admin" | "teacher" | "student";
+type UserRole = "admin" | "teacher" | "student" | "guardian";
 
 async function loginAsRole(page: Page, role: UserRole, email: string): Promise<void> {
   await page.context().clearCookies();
@@ -33,6 +33,10 @@ export async function loginAsStudent(page: Page): Promise<void> {
 
 export async function loginAsAdmin(page: Page): Promise<void> {
   await loginAsRole(page, "admin", E2E_FIXTURES.adminEmail);
+}
+
+export async function loginAsGuardian(page: Page): Promise<void> {
+  await loginAsRole(page, "guardian", E2E_FIXTURES.guardianEmail);
 }
 
 export async function signOutTestSession(page: Page): Promise<void> {

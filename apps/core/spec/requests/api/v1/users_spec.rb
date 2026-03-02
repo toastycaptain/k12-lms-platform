@@ -96,5 +96,30 @@ RSpec.describe "Api::V1::Users", type: :request do
       expect(emails).to include("alice@example.com")
       expect(emails).not_to include("bob@example.com")
     end
+
+    it "restricts guardian search results to linked-student communication graph" do
+      guardian = create(:user, tenant: tenant, first_name: "Paula", last_name: "Parent")
+      linked_student = create(:user, tenant: tenant, first_name: "Lina", last_name: "Student")
+      linked_teacher = create(:user, tenant: tenant, first_name: "Taylor", last_name: "Teacher")
+      unrelated_user = create(:user, tenant: tenant, first_name: "Una", last_name: "Unrelated")
+      academic_year = create(:academic_year, tenant: tenant)
+      section = create(:section, tenant: tenant, course: create(:course, tenant: tenant, academic_year: academic_year))
+
+      Current.tenant = tenant
+      guardian.add_role(:guardian)
+      create(:guardian_link, tenant: tenant, guardian: guardian, student: linked_student, status: "active")
+      create(:enrollment, tenant: tenant, section: section, user: linked_student, role: "student")
+      create(:enrollment, tenant: tenant, section: section, user: linked_teacher, role: "teacher")
+      Current.tenant = nil
+
+      mock_session(guardian, tenant: tenant)
+
+      get "/api/v1/users", params: { q: "a" }
+
+      expect(response).to have_http_status(:ok)
+      ids = response.parsed_body.map { |row| row["id"] }
+      expect(ids).to include(guardian.id, linked_student.id, linked_teacher.id)
+      expect(ids).not_to include(unrelated_user.id)
+    end
   end
 end

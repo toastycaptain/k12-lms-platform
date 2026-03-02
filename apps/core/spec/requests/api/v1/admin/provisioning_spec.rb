@@ -39,6 +39,25 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
       expect(response.parsed_body["setup_token"]).to be_present
     end
 
+    it "accepts an initial tenant curriculum default profile for admin users" do
+      mock_session(admin, tenant: tenant)
+
+      post "/api/v1/admin/provisioning/create_school", params: {
+        school: {
+          school_name: "Curriculum Academy",
+          subdomain: "curriculum-academy",
+          admin_email: "admin@curriculumacademy.edu",
+          admin_first_name: "Alex",
+          admin_last_name: "Admin",
+          curriculum_default_profile_key: "ib_continuum_v1"
+        }
+      }
+
+      expect(response).to have_http_status(:created)
+      created_tenant = Tenant.unscoped.find(response.parsed_body["tenant_id"])
+      expect(created_tenant.settings["curriculum_default_profile_key"]).to eq("ib_continuum_v1")
+    end
+
     it "returns forbidden for non-admin users" do
       mock_session(teacher, tenant: tenant)
 

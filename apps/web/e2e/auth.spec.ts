@@ -33,6 +33,7 @@ test("sign out clears session and returns to login", async ({ page }) => {
   await loginAsTeacher(page);
   await page.goto("/dashboard");
 
+  await page.getByRole("button", { name: /E2E Teacher/i }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
 });

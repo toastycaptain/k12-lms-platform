@@ -45,7 +45,7 @@ struct DashboardView: View {
                 id: "chat",
                 title: "Chat",
                 subtitle: "Message teachers",
-                destination: AnyView(PlaceholderFeatureView(title: "Chat", subtitle: "Connected to /api/v1/message_threads"))
+                destination: AnyView(MessagingView())
             ),
             DashboardTile(
                 id: "portfolio",

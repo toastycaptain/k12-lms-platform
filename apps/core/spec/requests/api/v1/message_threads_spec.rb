@@ -7,6 +7,7 @@ RSpec.describe "Api::V1::MessageThreads", type: :request do
   let(:third_user) { create(:user, tenant: tenant) }
   let(:academic_year) { create(:academic_year, tenant: tenant) }
   let(:course) { create(:course, tenant: tenant, academic_year: academic_year) }
+  let(:section) { create(:section, tenant: tenant, course: course) }
 
   after do
     Current.tenant = nil
@@ -83,6 +84,10 @@ RSpec.describe "Api::V1::MessageThreads", type: :request do
   describe "POST /api/v1/message_threads" do
     it "creates thread and includes creator as participant" do
       mock_session(user, tenant: tenant)
+      Current.tenant = tenant
+      create(:enrollment, tenant: tenant, section: section, user: user, role: "student")
+      create(:enrollment, tenant: tenant, section: section, user: other_user, role: "teacher")
+      Current.tenant = nil
 
       post "/api/v1/message_threads", params: {
         subject: "Parent follow-up",
@@ -99,6 +104,76 @@ RSpec.describe "Api::V1::MessageThreads", type: :request do
       Current.tenant = nil
 
       expect(participant_ids).to include(user.id, other_user.id)
+    end
+
+    it "returns forbidden when course_id is not visible to current user" do
+      mock_session(user, tenant: tenant)
+
+      post "/api/v1/message_threads", params: {
+        subject: "Out of scope course",
+        thread_type: "direct",
+        participant_ids: [ other_user.id ],
+        course_id: course.id
+      }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "guardian restrictions on create" do
+    let(:guardian) { create(:user, tenant: tenant) }
+    let(:linked_student) { create(:user, tenant: tenant) }
+    let(:teacher) { create(:user, tenant: tenant) }
+    let(:unrelated_user) { create(:user, tenant: tenant) }
+    let(:other_course) { create(:course, tenant: tenant, academic_year: academic_year) }
+    let(:other_section) { create(:section, tenant: tenant, course: other_course) }
+
+    before do
+      Current.tenant = tenant
+      guardian.add_role(:guardian)
+      create(:guardian_link, tenant: tenant, guardian: guardian, student: linked_student, status: "active")
+      create(:enrollment, tenant: tenant, section: section, user: linked_student, role: "student")
+      create(:enrollment, tenant: tenant, section: section, user: teacher, role: "teacher")
+      create(:enrollment, tenant: tenant, section: other_section, user: unrelated_user, role: "teacher")
+      Current.tenant = nil
+    end
+
+    it "allows guardian to message linked-student teachers" do
+      mock_session(guardian, tenant: tenant)
+
+      post "/api/v1/message_threads", params: {
+        subject: "Family check-in",
+        thread_type: "direct",
+        participant_ids: [ teacher.id ],
+        course_id: course.id
+      }
+
+      expect(response).to have_http_status(:created)
+    end
+
+    it "forbids guardian from messaging arbitrary tenant users" do
+      mock_session(guardian, tenant: tenant)
+
+      post "/api/v1/message_threads", params: {
+        subject: "Off graph",
+        thread_type: "direct",
+        participant_ids: [ unrelated_user.id ]
+      }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "forbids guardian from attaching unrelated courses" do
+      mock_session(guardian, tenant: tenant)
+
+      post "/api/v1/message_threads", params: {
+        subject: "Wrong course",
+        thread_type: "direct",
+        participant_ids: [ teacher.id ],
+        course_id: other_course.id
+      }
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

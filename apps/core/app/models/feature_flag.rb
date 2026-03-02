@@ -6,6 +6,7 @@ class FeatureFlag < ApplicationRecord
     "guardian_portal_enabled" => true,
     "ai_enabled" => true,
     "google_integration" => true,
+    "curriculum_profiles_v1" => true,
     "new_gradebook" => false,
     "beta_reports" => false
   }.freeze

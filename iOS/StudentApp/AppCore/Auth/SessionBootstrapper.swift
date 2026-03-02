@@ -27,14 +27,23 @@ final class SessionBootstrapper: ObservableObject {
     @Published var errorMessage: String?
 
     private let apiClient: APIClient
+    private let environment: AppEnvironment
 
-    init(apiClient: APIClient) {
+    init(apiClient: APIClient, environment: AppEnvironment) {
         self.apiClient = apiClient
+        self.environment = environment
     }
 
     func bootstrapSession() async {
         isLoading = true
         errorMessage = nil
+
+        if environment.authBypassEnabled {
+            currentUser = environment.testStudent
+            tenant = environment.testTenant
+            isLoading = false
+            return
+        }
 
         do {
             let payload = try await apiClient.get("/api/v1/me", as: CurrentUserEnvelope.self)

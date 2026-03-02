@@ -54,7 +54,11 @@ RSpec.describe AiGatewayClient do
         task_type: "lesson_plan",
         max_tokens: 1024,
         temperature: 0.2,
-        context: { "grade_level" => "5" }
+        context: {
+          "grade_level" => "5",
+          "tenant_id" => tenant.id,
+          "safety_level" => "strict"
+        }
       )
     end
 
@@ -85,7 +89,11 @@ RSpec.describe AiGatewayClient do
         model: "claude-3-7-sonnet",
         prompt: "Hello",
         max_tokens: 4096,
-        temperature: 0.7
+        temperature: 0.7,
+        context: {
+          "tenant_id" => tenant.id,
+          "safety_level" => "strict"
+        }
       )
       expect(request.body).not_to have_key(:task_type)
     end

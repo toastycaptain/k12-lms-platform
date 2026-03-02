@@ -11,6 +11,7 @@ export const E2E_FIXTURES = {
   adminEmail: "admin@e2e.local",
   teacherEmail: "teacher@e2e.local",
   studentEmail: "student@e2e.local",
+  guardianEmail: "guardian@e2e.local",
 };
 
 async function runRailsTask(taskName: string): Promise<void> {

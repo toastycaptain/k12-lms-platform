@@ -1,0 +1,54 @@
+{
+  "key": "american_common_core_v1",
+  "label": "American (Common Core + NGSS)",
+  "version": "2026.1",
+  "description": "US-focused planner defaults for Common Core and NGSS aligned schools.",
+  "jurisdiction": "US",
+  "planner_taxonomy": {
+    "subject_label": "Subject",
+    "grade_label": "Grade Level",
+    "unit_label": "Unit"
+  },
+  "subject_options": [
+    "Math",
+    "Science",
+    "ELA",
+    "Social Studies",
+    "Arts",
+    "PE"
+  ],
+  "grade_or_stage_options": [
+    "K",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12"
+  ],
+  "framework_defaults": [
+    "Common Core",
+    "NGSS",
+    "C3 Framework"
+  ],
+  "template_defaults": {
+    "default_status": "draft",
+    "suggested_sections": [
+      "Essential Questions",
+      "Standards Alignment",
+      "Assessment Plan"
+    ]
+  },
+  "integration_hints": {
+    "google_addon_context": "us_standard",
+    "lti_context_tag": "us_ccss",
+    "oneroster_context_tag": "us_default"
+  },
+  "status": "active"
+}

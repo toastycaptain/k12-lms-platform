@@ -18,6 +18,13 @@ RSpec.describe "Api::V1::Courses", type: :request do
     Current.tenant = nil
     u
   end
+  let(:curriculum_lead) do
+    Current.tenant = tenant
+    u = create(:user, tenant: tenant)
+    u.add_role(:curriculum_lead)
+    Current.tenant = nil
+    u
+  end
 
   after do
     clear_enqueued_jobs
@@ -92,15 +99,26 @@ RSpec.describe "Api::V1::Courses", type: :request do
       mock_session(admin, tenant: tenant)
       Current.tenant = tenant
       ay = create(:academic_year, tenant: tenant)
+      school = create(:school, tenant: tenant)
       Current.tenant = nil
 
       expect {
         post "/api/v1/courses", params: {
-          course: { academic_year_id: ay.id, name: "Math 101", code: "MATH101", description: "Intro to Math" }
+          course: {
+            academic_year_id: ay.id,
+            name: "Math 101",
+            code: "MATH101",
+            description: "Intro to Math",
+            school_id: school.id
+          }
         }
       }.to change(Course.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:created)
+      expect(response.parsed_body["school_id"]).to eq(school.id)
+      expect(response.parsed_body["effective_curriculum_profile_key"]).to be_present
+      expect(response.parsed_body["effective_curriculum_source"]).to be_present
+      expect(response.parsed_body["curriculum_context"]).to be_a(Hash)
     end
 
     it "enqueues a course folder job when requested and the creator is google-connected" do
@@ -122,6 +140,28 @@ RSpec.describe "Api::V1::Courses", type: :request do
       }.to have_enqueued_job(CreateCourseFolderJob).with(kind_of(Integer), admin.id)
 
       expect(response).to have_http_status(:created)
+    end
+
+    it "ignores curriculum-affecting params for non-admin users" do
+      mock_session(curriculum_lead, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      school = create(:school, tenant: tenant)
+      Current.tenant = nil
+
+      post "/api/v1/courses", params: {
+        course: {
+          academic_year_id: ay.id,
+          name: "Humanities 8",
+          school_id: school.id,
+          settings: { curriculum_profile_key: "ib_continuum_v1" }
+        }
+      }
+
+      expect(response).to have_http_status(:created)
+      created_course = Course.unscoped.order(:id).last
+      expect(created_course.school_id).to be_nil
+      expect(created_course.settings["curriculum_profile_key"]).to be_nil
     end
   end
 

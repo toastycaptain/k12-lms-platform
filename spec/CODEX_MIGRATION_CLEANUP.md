@@ -1,84 +1,139 @@
-# CODEX_MIGRATION_CLEANUP — Remove Duplicate Migrations & Verify Schema Parity
+# CODEX_MIGRATION_CLEANUP — Duplicate Migration Cleanup
 
 **Priority:** P0
-**Effort:** Small (1–2 hours)
+**Effort:** Complete — verification only (~30 min)
 **Spec Refs:** TECH-2.4
 **Depends on:** None
+**Branch:** `batch8/1-migration-cleanup`
+**Status:** ✅ All implementation complete — run verification only
 
 ---
 
-## Problem
+## Already Implemented — DO NOT REDO
 
-Seven migration files from `20260216*` duplicate tables already created by `20260215*` migrations. All have `return if table_exists?` guards, so they are functionally harmless, but they:
-1. Clutter `db:migrate:status` output
-2. Create confusion about which migration is authoritative
-3. May cause issues if future migrations reference them
+All cleanup work was completed in a prior session. Verify these exist before doing anything:
 
-### Duplicate Pairs
+### 1. No-Op Migrations (all 7 confirmed)
 
-| Original (20260215) | Duplicate (20260216) | Table |
-|---------------------|---------------------|-------|
-| 20260215000001_create_ai_provider_configs.rb | 20260216000001_create_ai_provider_configs_migration.rb | ai_provider_configs |
-| 20260215000002_create_ai_task_policies.rb | 20260216000002_create_ai_task_policies_migration.rb | ai_task_policies |
-| 20260215000003_create_ai_templates.rb | 20260216000003_create_ai_templates_migration.rb | ai_templates |
-| 20260215000004_create_ai_invocations.rb | 20260216000004_create_ai_invocations_migration.rb | ai_invocations |
-| 20260215100001_create_lti_registrations.rb | 20260216000005_create_lti_registrations_migration.rb | lti_registrations |
-| 20260215100002_create_lti_resource_links.rb | 20260216000006_create_lti_resource_links_migration.rb | lti_resource_links |
-| 20260215100003_create_data_retention_policies.rb | 20260216000007_create_data_retention_policies_migration.rb | data_retention_policies |
+Each 20260216 duplicate has already been squashed to a no-op body. Do NOT modify these files.
 
----
+| File | Current State |
+|------|--------------|
+| `apps/core/db/migrate/20260216000001_create_ai_provider_configs_migration.rb` | ✅ No-op — comment points to 20260215000001 |
+| `apps/core/db/migrate/20260216000002_create_ai_task_policies_migration.rb` | ✅ No-op — comment points to 20260215000002 |
+| `apps/core/db/migrate/20260216000003_create_ai_templates_migration.rb` | ✅ No-op — comment points to 20260215000003 |
+| `apps/core/db/migrate/20260216000004_create_ai_invocations_migration.rb` | ✅ No-op — comment points to 20260215000004 |
+| `apps/core/db/migrate/20260216000005_create_lti_registrations_migration.rb` | ✅ No-op — comment points to 20260215100001 |
+| `apps/core/db/migrate/20260216000006_create_lti_resource_links_migration.rb` | ✅ No-op — comment points to 20260215100002 |
+| `apps/core/db/migrate/20260216000007_create_data_retention_policies_migration.rb` | ✅ No-op — comment points to 20260215100003 |
 
-## Tasks
+Each no-op looks like this (example):
 
-### 1. Squash Duplicate Migrations
-- Replace each 20260216 migration body with an empty `def change; end` (do NOT delete the file — the migration version is recorded in `schema_migrations` in dev/test/prod databases)
-- Add a comment: `# No-op: table created by <original migration filename>`
-- This ensures `db:migrate` doesn't fail on environments that already ran these
-
-### 2. Verify Schema Parity
-- Run `RAILS_ENV=test bundle exec rails db:schema:dump`
-- Run `RAILS_ENV=development bundle exec rails db:schema:dump`
-- Diff the two `db/schema.rb` outputs — they must be identical except for the `ActiveRecord::Schema[x.x].define(version:)` line
-- Ensure all 60+ tables have `tenant_id` (except `tenants`, `schema_migrations`, `ar_internal_metadata`, `active_storage_*`)
-
-### 3. Add CI Guard for Migration Drift
-- In `apps/core/spec/contracts/` or `spec/integration/`, add a spec:
-  ```ruby
-  describe "schema consistency" do
-    it "has no pending migrations" do
-      output = `RAILS_ENV=test bundle exec rails db:migrate:status 2>&1`
-      expect(output).not_to include("down")
-    end
+```ruby
+class CreateAiProviderConfigsMigration < ActiveRecord::Migration[8.0]
+  def change
+    # No-op: table created by 20260215000001_create_ai_provider_configs.rb
   end
-  ```
+end
+```
 
-### 4. Update Documentation
-- Remove Blocker #5 from `docs/BLOCKERS.md` (mark as Resolved if not already)
-- Update `docs/TRACEABILITY.md` TECH-2.4 status if changed
+### 2. CI Guard Spec (confirmed)
+
+`apps/core/spec/contracts/schema_consistency_spec.rb` — **already exists**. Do NOT recreate it.
+
+```ruby
+RSpec.describe "Schema consistency" do
+  it "has no pending migrations" do
+    expect(ActiveRecord::Base.connection_pool.migration_context).not_to be_needs_migration
+  end
+
+  it "has unique migration timestamps" do
+    migration_files = Dir[Rails.root.join("db/migrate/*.rb")]
+    timestamps = migration_files.map { |file| File.basename(file).split("_").first }
+    duplicates = timestamps.tally.select { |_timestamp, count| count > 1 }.keys
+    expect(duplicates).to be_empty, "Duplicate migration timestamps: #{duplicates.join(', ')}"
+  end
+end
+```
+
+### 3. BLOCKERS.md (confirmed resolved)
+
+`docs/BLOCKERS.md` Blocker #5 is already marked **Resolved** as of 2026-02-14. Do NOT modify.
 
 ---
+
+## Remaining Task — Verification Only
+
+There is **nothing left to implement**. Codex must run the following verification commands and confirm all pass before closing this task.
+
+### Step 1: Confirm no-op bodies are in place
+
+```bash
+for f in apps/core/db/migrate/20260216*.rb; do
+  echo "=== $f ==="; cat "$f"; echo
+done
+```
+
+Expected: all 7 files have an empty `def change` with a `# No-op:` comment and no DDL.
+
+### Step 2: Confirm migration status
+
+```bash
+cd apps/core && bundle exec rails db:migrate:status 2>&1 | grep -E "down|DUPLICATE" | head -20
+```
+
+Expected: no output (zero `down` or `DUPLICATE` entries).
+
+### Step 3: Run the schema consistency spec
+
+```bash
+cd apps/core && bundle exec rspec spec/contracts/schema_consistency_spec.rb --format documentation
+```
+
+Expected output:
+```
+Schema consistency
+  has no pending migrations
+  has unique migration timestamps
+
+2 examples, 0 failures
+```
+
+### Step 4: Run the full suite
+
+```bash
+cd apps/core && bundle exec rspec
+```
+
+Expected: all specs pass, 0 failures.
+
+### Step 5: Rubocop
+
+```bash
+cd apps/core && bundle exec rubocop apps/core/db/migrate/20260216*.rb
+```
+
+Expected: no offenses.
+
+---
+
+## Files to Create
+
+None. All files exist.
 
 ## Files to Modify
 
-| File | Action |
-|------|--------|
-| `apps/core/db/migrate/20260216000001_create_ai_provider_configs_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000002_create_ai_task_policies_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000003_create_ai_templates_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000004_create_ai_invocations_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000005_create_lti_registrations_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000006_create_lti_resource_links_migration.rb` | Replace body with no-op |
-| `apps/core/db/migrate/20260216000007_create_data_retention_policies_migration.rb` | Replace body with no-op |
-| `apps/core/spec/contracts/schema_consistency_spec.rb` | Create — migration drift guard |
-| `docs/BLOCKERS.md` | Update Blocker #5 status |
+None. All fixes are in place.
 
 ---
 
 ## Definition of Done
 
-- [ ] All 7 duplicate migrations are no-ops with explanatory comments
-- [ ] `bundle exec rails db:migrate` runs cleanly on fresh database
-- [ ] `bundle exec rspec` passes (1441+ specs, 0 failures)
-- [ ] Schema parity verified between dev and test environments
-- [ ] CI guard spec added and passing
-- [ ] No Rubocop violations introduced
+- [x] All 7 duplicate migrations are no-ops with explanatory comments
+- [x] `apps/core/spec/contracts/schema_consistency_spec.rb` exists with both checks
+- [x] `docs/BLOCKERS.md` Blocker #5 marked Resolved
+- [ ] `bundle exec rails db:migrate:status` verified — no `down` entries
+- [ ] `bundle exec rspec spec/contracts/schema_consistency_spec.rb` passes
+- [ ] `bundle exec rspec` passes (full suite, 0 failures)
+- [ ] `bundle exec rubocop` passes
+- [ ] Pushed and merged to main on branch `batch8/1-migration-cleanup`

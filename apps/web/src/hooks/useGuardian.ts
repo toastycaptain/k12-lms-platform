@@ -48,6 +48,84 @@ export interface GuardianAnnouncement {
   course_id: number;
 }
 
+export interface GuardianAttendanceSummary {
+  total: number;
+  present: number;
+  absent: number;
+  tardy: number;
+  excused: number;
+}
+
+export interface GuardianAttendanceRecord {
+  id: number;
+  student_id: number;
+  student_name: string;
+  section_id: number | null;
+  section_name: string | null;
+  course_id: number | null;
+  course_name: string | null;
+  occurred_on: string;
+  status: "present" | "absent" | "tardy" | "excused";
+  notes: string | null;
+  recorded_by: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface GuardianAttendanceResponse {
+  summary: GuardianAttendanceSummary;
+  records: GuardianAttendanceRecord[];
+}
+
+export interface GuardianClassToday {
+  student_id: number;
+  student_name: string;
+  section_id: number;
+  section_name: string;
+  course_id: number;
+  course_name: string;
+  weekday: number;
+  start_at: string;
+  end_at: string;
+  location: string | null;
+  teachers: Array<{
+    id: number;
+    name: string;
+  }>;
+}
+
+export interface GuardianCalendarEvent {
+  type: "unit_plan" | "assignment" | "quiz";
+  id: number;
+  title: string;
+  course_id: number;
+  start_date?: string;
+  end_date?: string;
+  due_date?: string;
+  status?: string;
+}
+
+export interface GuardianCalendarResponse {
+  events: GuardianCalendarEvent[];
+}
+
+interface DateRangeOptions {
+  startDate?: string;
+  endDate?: string;
+}
+
+function dateRangeQuery(options?: DateRangeOptions): string {
+  if (!options) return "";
+
+  const params = new URLSearchParams();
+  if (options.startDate) params.set("start_date", options.startDate);
+  if (options.endDate) params.set("end_date", options.endDate);
+  const query = params.toString();
+
+  return query ? `?${query}` : "";
+}
+
 export function useGuardianStudents(config?: SWRConfiguration<GuardianStudent[]>) {
   return useAppSWR<GuardianStudent[]>("/api/v1/guardian/students", config);
 }
@@ -78,6 +156,40 @@ export function useGuardianAnnouncements(
 ) {
   return useAppSWR<GuardianAnnouncement[]>(
     studentId ? `/api/v1/guardian/students/${studentId}/announcements` : null,
+    config,
+  );
+}
+
+export function useGuardianAttendance(
+  studentId: string | number | null | undefined,
+  options?: DateRangeOptions,
+  config?: SWRConfiguration<GuardianAttendanceResponse>,
+) {
+  return useAppSWR<GuardianAttendanceResponse>(
+    studentId
+      ? `/api/v1/guardian/students/${studentId}/attendance${dateRangeQuery(options)}`
+      : null,
+    config,
+  );
+}
+
+export function useGuardianClassesToday(
+  studentId: string | number | null | undefined,
+  config?: SWRConfiguration<GuardianClassToday[]>,
+) {
+  return useAppSWR<GuardianClassToday[]>(
+    studentId ? `/api/v1/guardian/students/${studentId}/classes_today` : null,
+    config,
+  );
+}
+
+export function useGuardianCalendar(
+  studentId: string | number | null | undefined,
+  options?: DateRangeOptions,
+  config?: SWRConfiguration<GuardianCalendarResponse>,
+) {
+  return useAppSWR<GuardianCalendarResponse>(
+    studentId ? `/api/v1/guardian/students/${studentId}/calendar${dateRangeQuery(options)}` : null,
     config,
   );
 }

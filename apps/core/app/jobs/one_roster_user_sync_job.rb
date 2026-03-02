@@ -92,9 +92,11 @@ class OneRosterUserSyncJob < ApplicationJob
       process_record(sync_run, klass["sourcedId"]) do
         term = resolve_term(config, klass)
         academic_year = term.academic_year
+        school = resolve_school(config, klass)
 
         course_name = klass["title"].presence || klass["classCode"].presence || "Imported Course"
         course = Course.where(tenant: config.tenant, academic_year: academic_year, name: course_name).first_or_create!
+        update_course_curriculum_metadata!(course, config.tenant, school: school)
 
         section_mapping = SyncMapping.find_external(config, "oneroster_class", klass["sourcedId"])
         section = section_mapping ? Section.find_by(id: section_mapping.local_id, tenant_id: config.tenant_id) : nil
@@ -178,6 +180,43 @@ class OneRosterUserSyncJob < ApplicationJob
       start_date: Date.current.beginning_of_year,
       end_date: Date.current.end_of_year
     )
+  end
+
+  def resolve_school(config, klass)
+    school_sourced_id =
+      klass.dig("school", "sourcedId").presence ||
+      klass.dig("school", "id").presence ||
+      Array(klass["schools"]).first&.dig("sourcedId").presence
+    return nil if school_sourced_id.blank?
+
+    school_mapping = SyncMapping.find_external(config, "oneroster_org", school_sourced_id)
+    return nil unless school_mapping
+
+    School.find_by(id: school_mapping.local_id, tenant_id: config.tenant_id)
+  end
+
+  def update_course_curriculum_metadata!(course, tenant, school:)
+    course_changed = false
+
+    if school.present? && course.school_id != school.id
+      course.school = school
+      course_changed = true
+    end
+
+    resolved = CurriculumProfileResolver.resolve(tenant: tenant, school: course.school, course: course)
+    settings = course.settings.is_a?(Hash) ? course.settings.deep_dup : {}
+    settings["integration_curriculum_context"] = {
+      "profile_key" => resolved[:profile_key],
+      "source" => resolved[:source],
+      "oneroster_context_tag" => resolved.dig(:integration_hints, "oneroster_context_tag")
+    }
+
+    if course.settings != settings
+      course.settings = settings
+      course_changed = true
+    end
+
+    course.save! if course_changed
   end
 
   def process_record(sync_run, external_id)

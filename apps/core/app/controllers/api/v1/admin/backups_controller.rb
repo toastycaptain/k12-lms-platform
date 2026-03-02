@@ -17,22 +17,21 @@ module Api
 
         def create
           authorize :backup, :create?
-          DatabaseBackupJob.perform_later(backup_type: params[:backup_type] || "full")
+          BackupService.trigger_backup(backup_type: params[:backup_type] || "full")
           render json: { message: "Backup job enqueued" }, status: :accepted
+        rescue ArgumentError => e
+          render json: { error: e.message }, status: :unprocessable_content
         end
 
         def status
           authorize :backup, :index?
-          latest = BackupRecord.successful.order(created_at: :desc).first
-          latest_verified = BackupRecord.latest_verified
+          summary = BackupService.status_summary
 
           render json: {
-            latest_backup: latest&.as_json(only: [ :id, :status, :created_at, :size_bytes, :duration_seconds ]),
-            latest_verified: latest_verified&.as_json(only: [ :id, :status, :verified_at ]),
-            total_backups: BackupRecord.count,
-            failed_count: BackupRecord.where(status: "failed")
-              .where("created_at > ?", 30.days.ago)
-              .count
+            latest_backup: summary[:latest_backup]&.as_json(only: [ :id, :status, :created_at, :size_bytes, :duration_seconds ]),
+            latest_verified: summary[:latest_verified]&.as_json(only: [ :id, :status, :verified_at ]),
+            total_backups: summary[:total_backups],
+            failed_count: summary[:failed_last_30_days]
           }
         end
 

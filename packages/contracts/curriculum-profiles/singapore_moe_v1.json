@@ -1,0 +1,52 @@
+{
+  "key": "singapore_moe_v1",
+  "label": "Singapore MOE",
+  "version": "2026.1",
+  "description": "MOE-aligned syllabus defaults for Singapore curriculum implementation.",
+  "jurisdiction": "Singapore MOE",
+  "planner_taxonomy": {
+    "subject_label": "Subject",
+    "grade_label": "Level",
+    "unit_label": "Syllabus Unit"
+  },
+  "subject_options": [
+    "English Language",
+    "Mathematics",
+    "Science",
+    "Mother Tongue",
+    "Humanities",
+    "Character and Citizenship Education"
+  ],
+  "grade_or_stage_options": [
+    "Primary 1",
+    "Primary 2",
+    "Primary 3",
+    "Primary 4",
+    "Primary 5",
+    "Primary 6",
+    "Secondary 1",
+    "Secondary 2",
+    "Secondary 3",
+    "Secondary 4",
+    "Secondary 5",
+    "JC Year 1",
+    "JC Year 2"
+  ],
+  "framework_defaults": [
+    "Singapore MOE Syllabus"
+  ],
+  "template_defaults": {
+    "default_status": "draft",
+    "suggested_sections": [
+      "Syllabus Outcomes",
+      "Lesson Sequence",
+      "Assessment Tasks"
+    ]
+  },
+  "integration_hints": {
+    "google_addon_context": "sg_moe",
+    "lti_context_tag": "singapore",
+    "oneroster_context_tag": "sg_moe"
+  },
+  "status": "active"
+}

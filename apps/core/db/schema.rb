@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_02_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -251,6 +251,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
     t.index ["tenant_id"], name: "index_attempt_answers_on_tenant_id"
   end
 
+  create_table "attendances", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.date "occurred_on", null: false
+    t.bigint "recorded_by_id"
+    t.bigint "section_id", null: false
+    t.string "status", default: "present", null: false
+    t.bigint "student_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["recorded_by_id"], name: "index_attendances_on_recorded_by_id"
+    t.index ["section_id"], name: "index_attendances_on_section_id"
+    t.index ["student_id"], name: "index_attendances_on_student_id"
+    t.index ["tenant_id", "section_id", "occurred_on"], name: "idx_attendance_section_day"
+    t.index ["tenant_id", "student_id", "occurred_on"], name: "idx_attendance_student_day"
+    t.index ["tenant_id", "student_id", "section_id", "occurred_on"], name: "idx_attendance_unique_student_section_day", unique: true
+    t.index ["tenant_id"], name: "index_attendances_on_tenant_id"
+  end
+
   create_table "audit_logs", force: :cascade do |t|
     t.bigint "actor_id"
     t.bigint "auditable_id"
@@ -315,11 +334,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
     t.text "description"
     t.integer "enrollments_count", default: 0, null: false
     t.string "name", null: false
+    t.bigint "school_id"
     t.tsvector "search_vector"
     t.jsonb "settings", default: {}, null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_courses_on_academic_year_id"
+    t.index ["school_id"], name: "index_courses_on_school_id"
     t.index ["search_vector"], name: "index_courses_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
   end
@@ -887,10 +908,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
   create_table "schools", force: :cascade do |t|
     t.text "address"
     t.datetime "created_at", null: false
+    t.string "curriculum_profile_key"
     t.string "name", null: false
     t.bigint "tenant_id", null: false
     t.string "timezone"
     t.datetime "updated_at", null: false
+    t.index ["tenant_id", "curriculum_profile_key"], name: "idx_schools_tenant_curriculum_profile"
     t.index ["tenant_id"], name: "index_schools_on_tenant_id"
   end
 
@@ -1207,11 +1230,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_090002) do
   add_foreign_key "attempt_answers", "quiz_attempts"
   add_foreign_key "attempt_answers", "tenants"
   add_foreign_key "attempt_answers", "users", column: "graded_by_id"
+  add_foreign_key "attendances", "sections"
+  add_foreign_key "attendances", "tenants"
+  add_foreign_key "attendances", "users", column: "recorded_by_id"
+  add_foreign_key "attendances", "users", column: "student_id"
   add_foreign_key "audit_logs", "tenants"
   add_foreign_key "audit_logs", "users", column: "actor_id"
   add_foreign_key "course_modules", "courses"
   add_foreign_key "course_modules", "tenants"
   add_foreign_key "courses", "academic_years"
+  add_foreign_key "courses", "schools"
   add_foreign_key "courses", "tenants"
   add_foreign_key "data_retention_policies", "tenants"
   add_foreign_key "data_retention_policies", "users", column: "created_by_id"

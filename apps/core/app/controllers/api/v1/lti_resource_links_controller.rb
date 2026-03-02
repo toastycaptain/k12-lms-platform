@@ -16,7 +16,9 @@ module Api
       end
 
       def create
-        @lti_resource_link = @lti_registration.lti_resource_links.new(lti_resource_link_params)
+        @lti_resource_link = @lti_registration.lti_resource_links.new(
+          with_curriculum_context(lti_resource_link_params)
+        )
         @lti_resource_link.tenant = Current.tenant
         authorize @lti_resource_link
 
@@ -29,7 +31,7 @@ module Api
 
       def update
         authorize @lti_resource_link
-        if @lti_resource_link.update(lti_resource_link_params)
+        if @lti_resource_link.update(with_curriculum_context(lti_resource_link_params))
           render json: @lti_resource_link
         else
           render json: { errors: @lti_resource_link.errors.full_messages }, status: :unprocessable_content
@@ -60,6 +62,30 @@ module Api
           :course_id,
           custom_params: {}
         )
+      end
+
+      def with_curriculum_context(attributes)
+        attrs = attributes.to_h.deep_dup
+        course_id = attrs["course_id"] || attrs[:course_id]
+        return attrs unless course_id.present?
+
+        course = policy_scope(Course).find_by(id: course_id)
+        return attrs unless course
+
+        resolved = CurriculumProfileResolver.resolve(
+          tenant: Current.tenant,
+          school: course.school,
+          course: course
+        )
+
+        custom_params = attrs["custom_params"] || attrs[:custom_params] || {}
+        custom_params = custom_params.to_h
+        custom_params["effective_curriculum_profile_key"] ||= resolved[:profile_key]
+        custom_params["effective_curriculum_source"] ||= resolved[:source]
+        custom_params["lti_context_tag"] ||= resolved.dig(:integration_hints, "lti_context_tag")
+
+        attrs["custom_params"] = custom_params
+        attrs
       end
     end
   end

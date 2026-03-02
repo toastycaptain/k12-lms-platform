@@ -30,6 +30,13 @@ log/
 .DS_Store
 Thumbs.db
 
+# Xcode / Apple
+DerivedData/
+.build/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+
 # Rails
 db/*.sqlite3
 db/*.sqlite3-journal

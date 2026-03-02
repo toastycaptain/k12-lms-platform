@@ -22,7 +22,9 @@ test("teacher can create, align, lesson-plan, and publish a unit", async ({ page
   await page.goto("/plan/units/new");
 
   await page.getByPlaceholder("e.g., Ecosystems and Biodiversity").fill(unitTitle);
-  await page.locator("select").first().selectOption({ index: 1 });
+  await page.getByLabel("Grade Level").selectOption({ label: "9" });
+  await page.getByLabel("Course Subject").selectOption({ label: "Science" });
+  await page.getByLabel("Course", { exact: true }).selectOption({ label: "E2E Biology 101" });
   await page.getByRole("button", { name: "Create Unit Plan" }).click();
 
   await expect(page).toHaveURL(/\/plan\/units\/\d+$/);

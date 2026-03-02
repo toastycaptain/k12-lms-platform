@@ -1,0 +1,49 @@
+{
+  "key": "british_cambridge_v1",
+  "label": "British/Cambridge",
+  "version": "2026.1",
+  "description": "Stage-based planner defaults for British National Curriculum and Cambridge pathway schools.",
+  "jurisdiction": "UK/Cambridge",
+  "planner_taxonomy": {
+    "subject_label": "Subject",
+    "grade_label": "Key Stage / Year",
+    "unit_label": "Scheme of Work Unit"
+  },
+  "subject_options": [
+    "English",
+    "Mathematics",
+    "Science",
+    "Humanities",
+    "Computing",
+    "Arts"
+  ],
+  "grade_or_stage_options": [
+    "Key Stage 1",
+    "Key Stage 2",
+    "Key Stage 3",
+    "Key Stage 4",
+    "Key Stage 5",
+    "Cambridge Primary",
+    "Cambridge Lower Secondary",
+    "IGCSE",
+    "AS/A Level"
+  ],
+  "framework_defaults": [
+    "UK National Curriculum",
+    "Cambridge Pathway"
+  ],
+  "template_defaults": {
+    "default_status": "draft",
+    "suggested_sections": [
+      "Learning Objectives",
+      "Success Criteria",
+      "Assessment Evidence"
+    ]
+  },
+  "integration_hints": {
+    "google_addon_context": "british_stage",
+    "lti_context_tag": "british",
+    "oneroster_context_tag": "uk_cambridge"
+  },
+  "status": "active"
+}

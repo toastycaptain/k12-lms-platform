@@ -13,6 +13,8 @@ class User < ApplicationRecord
   has_many :message_thread_participants, dependent: :destroy
   has_many :message_threads, through: :message_thread_participants
   has_many :sent_messages, class_name: "Message", foreign_key: :sender_id, inverse_of: :sender, dependent: :destroy
+  has_many :attendance_records, class_name: "Attendance", foreign_key: :student_id, inverse_of: :student, dependent: :destroy
+  has_many :recorded_attendances, class_name: "Attendance", foreign_key: :recorded_by_id, inverse_of: :recorded_by, dependent: :nullify
   has_many :guardian_links_as_guardian, class_name: "GuardianLink", foreign_key: :guardian_id, dependent: :destroy
   has_many :guardian_links_as_student, class_name: "GuardianLink", foreign_key: :student_id, dependent: :destroy
   has_many :wards, through: :guardian_links_as_guardian, source: :student

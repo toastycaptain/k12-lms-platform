@@ -96,7 +96,8 @@ module Api
             :academic_year_start_month,
             :safety_level,
             :ai_enabled,
-            :google_enabled
+            :google_enabled,
+            :curriculum_default_profile_key
           )
         end
       end

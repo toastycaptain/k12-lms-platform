@@ -6,7 +6,7 @@ module Api
       def index
         @courses = paginate(
           policy_scope(Course)
-            .includes(:sections, :academic_year, :course_modules)
+            .includes(:school, :sections, :academic_year, :course_modules)
             .order(:name)
         )
         render json: @courses
@@ -44,12 +44,17 @@ module Api
       private
 
       def set_course
-        @course = Course.includes(:sections, :academic_year, :course_modules).find(params[:id])
+        @course = Course.includes(:school, :sections, :academic_year, :course_modules).find(params[:id])
         authorize @course
       end
 
       def course_params
-        params.require(:course).permit(:academic_year_id, :name, :code, :description)
+        permitted = [ :academic_year_id, :name, :code, :description ]
+        if Current.user&.has_role?(:admin)
+          permitted << :school_id
+          permitted << { settings: [ :curriculum_profile_key ] }
+        end
+        params.require(:course).permit(*permitted)
       end
 
       def enqueue_course_folder_if_requested(course)

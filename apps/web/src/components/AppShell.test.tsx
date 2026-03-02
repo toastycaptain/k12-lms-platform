@@ -115,6 +115,26 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Teach" })).toBeInTheDocument();
   });
 
+  it("hides curriculum profile management links for non-admin roles", () => {
+    mockedUsePathname.mockReturnValue("/admin/dashboard");
+    mockedUseAuth.mockReturnValue({
+      user: createMockUser({ roles: ["curriculum_lead"] }),
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
+    });
+
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "Admin" }).closest("div") as HTMLElement);
+    expect(screen.queryByRole("link", { name: "Curriculum Profiles" })).not.toBeInTheDocument();
+  });
+
   it("renders district nav item for district administrators", () => {
     mockedUseAuth.mockReturnValue({
       user: createMockUser({ roles: ["district_admin"] }),
@@ -205,7 +225,9 @@ describe("AppShell", () => {
     );
 
     const planLink = screen.getByRole("link", { name: "Plan" });
-    fireEvent.mouseEnter(planLink.closest("div") as HTMLElement);
+    const planListItem = planLink.closest("li");
+    expect(planListItem).toBeTruthy();
+    fireEvent.mouseEnter(planListItem as HTMLElement);
 
     expect(screen.getByRole("link", { name: "Units" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Calendar" })).toBeInTheDocument();

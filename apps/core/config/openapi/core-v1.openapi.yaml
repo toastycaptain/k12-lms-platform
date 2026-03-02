@@ -1668,6 +1668,98 @@ paths:
       required: true
       schema:
         type: integer
+  "/api/v1/curriculum_profiles":
+    get:
+      summary: List curriculum profiles
+      operationId: get_api_v1_curriculum_profiles
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Available curriculum profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/CurriculumProfile"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+  "/api/v1/admin/curriculum_settings":
+    get:
+      summary: Show curriculum settings
+      operationId: get_api_v1_admin_curriculum_settings
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Admin curriculum settings payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CurriculumSettings"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+    put:
+      summary: Update curriculum settings
+      operationId: put_api_v1_admin_curriculum_settings
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CurriculumSettings"
+      responses:
+        '200':
+          description: Updated curriculum settings
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CurriculumSettings"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '422':
+          "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/admin/curriculum_settings/import":
+    post:
+      summary: Request curriculum profile import
+      operationId: post_api_v1_admin_curriculum_settings_import
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '501':
+          description: Import pipeline not implemented
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/courses":
     get:
       summary: List courses
@@ -8476,7 +8568,7 @@ paths:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/GenericResource"
+                  "$ref": "#/components/schemas/GuardianStudent"
         '401':
           "$ref": "#/components/responses/Unauthorized"
         '403':
@@ -8503,7 +8595,7 @@ paths:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/GenericResource"
+                  "$ref": "#/components/schemas/GuardianGrade"
         '401':
           "$ref": "#/components/responses/Unauthorized"
         '403':
@@ -8532,7 +8624,7 @@ paths:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/GenericResource"
+                  "$ref": "#/components/schemas/GuardianAssignment"
         '401':
           "$ref": "#/components/responses/Unauthorized"
         '403':
@@ -8561,7 +8653,110 @@ paths:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/Announcement"
+                  "$ref": "#/components/schemas/GuardianAnnouncement"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/guardian/students/{id}/attendance":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    - in: query
+      name: start_date
+      schema:
+        type: string
+        format: date
+    - in: query
+      name: end_date
+      schema:
+        type: string
+        format: date
+    get:
+      summary: List guardian-visible attendance records for a student
+      operationId: get_api_v1_guardian_students_id_attendance
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student attendance payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GuardianAttendanceResponse"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/guardian/students/{id}/classes_today":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List today's class meetings for a guardian-linked student
+      operationId: get_api_v1_guardian_students_id_classes_today
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student classes today
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GuardianClassToday"
+        '401':
+          "$ref": "#/components/responses/Unauthorized"
+        '403':
+          "$ref": "#/components/responses/Forbidden"
+        '404':
+          "$ref": "#/components/responses/NotFound"
+  "/api/v1/guardian/students/{id}/calendar":
+    parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    - in: query
+      name: start_date
+      schema:
+        type: string
+        format: date
+    - in: query
+      name: end_date
+      schema:
+        type: string
+        format: date
+    get:
+      summary: List calendar events for a guardian-linked student
+      operationId: get_api_v1_guardian_students_id_calendar
+      tags:
+      - Guardians
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Student calendar event payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GuardianCalendarResponse"
         '401':
           "$ref": "#/components/responses/Unauthorized"
         '403':
@@ -10574,6 +10769,18 @@ components:
           nullable: true
         academic_year_id:
           type: integer
+        school_id:
+          type: integer
+          nullable: true
+        effective_curriculum_profile_key:
+          type: string
+        effective_curriculum_profile_version:
+          type: string
+          nullable: true
+        effective_curriculum_source:
+          type: string
+        curriculum_context:
+          "$ref": "#/components/schemas/CurriculumContext"
         sections:
           type: array
           items:
@@ -10598,6 +10805,11 @@ components:
           type: string
         description:
           type: string
+        school_id:
+          type: integer
+        settings:
+          type: object
+          additionalProperties: true
     CourseModule:
       type: object
       required:
@@ -10654,6 +10866,112 @@ components:
           type: string
         description:
           type: string
+        school_id:
+          type: integer
+        settings:
+          type: object
+          additionalProperties: true
+    CurriculumContext:
+      type: object
+      properties:
+        subject_label:
+          type: string
+        grade_label:
+          type: string
+        unit_label:
+          type: string
+        subject_options:
+          type: array
+          items:
+            type: string
+        grade_or_stage_options:
+          type: array
+          items:
+            type: string
+        framework_defaults:
+          type: array
+          items:
+            type: string
+        template_defaults:
+          type: object
+          additionalProperties: true
+        integration_hints:
+          type: object
+          additionalProperties: true
+    CurriculumProfile:
+      type: object
+      required:
+      - key
+      - label
+      - version
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        jurisdiction:
+          type: string
+        planner_taxonomy:
+          type: object
+          additionalProperties: true
+        subject_options:
+          type: array
+          items:
+            type: string
+        grade_or_stage_options:
+          type: array
+          items:
+            type: string
+        framework_defaults:
+          type: array
+          items:
+            type: string
+        template_defaults:
+          type: object
+          additionalProperties: true
+        integration_hints:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+    CurriculumSettings:
+      type: object
+      required:
+      - tenant_default_profile_key
+      - available_profile_keys
+      - school_overrides
+      properties:
+        tenant_default_profile_key:
+          type: string
+        available_profile_keys:
+          type: array
+          items:
+            type: string
+        school_overrides:
+          type: array
+          items:
+            type: object
+            required:
+            - school_id
+            - school_name
+            - effective_curriculum_profile_key
+            - effective_curriculum_source
+            properties:
+              school_id:
+                type: integer
+              school_name:
+                type: string
+              curriculum_profile_key:
+                type: string
+                nullable: true
+              effective_curriculum_profile_key:
+                type: string
+              effective_curriculum_source:
+                type: string
     CsrfTokenResponse:
       type: object
       required:
@@ -11908,6 +12226,9 @@ components:
         timezone:
           type: string
           nullable: true
+        curriculum_profile_key:
+          type: string
+          nullable: true
         tenant_id:
           type: integer
     SchoolInput:
@@ -11918,6 +12239,8 @@ components:
         address:
           type: string
         timezone:
+          type: string
+        curriculum_profile_key:
           type: string
     SearchResponse:
       type: object
@@ -12401,6 +12724,9 @@ components:
           type: string
         slug:
           type: string
+        curriculum_default_profile_key:
+          type: string
+          nullable: true
     Term:
       type: object
       required:
@@ -12805,6 +13131,309 @@ components:
         role:
           type: string
           nullable: true
+    GuardianStudentCourse:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+    GuardianStudent:
+      type: object
+      required:
+      - id
+      - first_name
+      - last_name
+      - email
+      - course_count
+      - courses
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        course_count:
+          type: integer
+        courses:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GuardianStudentCourse"
+    GuardianGrade:
+      type: object
+      required:
+      - id
+      - assignment_id
+      - assignment_title
+      - course_id
+      - course_name
+      - status
+      properties:
+        id:
+          type: integer
+        assignment_id:
+          type: integer
+        assignment_title:
+          type: string
+          nullable: true
+        course_id:
+          type: integer
+          nullable: true
+        course_name:
+          type: string
+          nullable: true
+        score:
+          type: number
+          nullable: true
+        points_possible:
+          type: number
+          nullable: true
+        percentage:
+          type: number
+          nullable: true
+        graded_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+    GuardianAssignment:
+      type: object
+      required:
+      - id
+      - title
+      - course_id
+      - course_name
+      - status
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        course_id:
+          type: integer
+        course_name:
+          type: string
+          nullable: true
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        grade:
+          type: number
+          nullable: true
+        points_possible:
+          type: number
+          nullable: true
+    GuardianAnnouncement:
+      type: object
+      required:
+      - id
+      - title
+      - message
+      - created_at
+      - course_id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        course_id:
+          type: integer
+    GuardianAttendanceRecordedBy:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    GuardianAttendanceSummary:
+      type: object
+      required:
+      - total
+      - present
+      - absent
+      - tardy
+      - excused
+      properties:
+        total:
+          type: integer
+        present:
+          type: integer
+        absent:
+          type: integer
+        tardy:
+          type: integer
+        excused:
+          type: integer
+    GuardianAttendanceRecord:
+      type: object
+      required:
+      - id
+      - student_id
+      - student_name
+      - occurred_on
+      - status
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        student_name:
+          type: string
+        section_id:
+          type: integer
+          nullable: true
+        section_name:
+          type: string
+          nullable: true
+        course_id:
+          type: integer
+          nullable: true
+        course_name:
+          type: string
+          nullable: true
+        occurred_on:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+          - present
+          - absent
+          - tardy
+          - excused
+        notes:
+          type: string
+          nullable: true
+        recorded_by:
+          allOf:
+          - "$ref": "#/components/schemas/GuardianAttendanceRecordedBy"
+          nullable: true
+    GuardianAttendanceResponse:
+      type: object
+      required:
+      - summary
+      - records
+      properties:
+        summary:
+          "$ref": "#/components/schemas/GuardianAttendanceSummary"
+        records:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GuardianAttendanceRecord"
+    GuardianClassToday:
+      type: object
+      required:
+      - student_id
+      - student_name
+      - section_id
+      - section_name
+      - course_id
+      - course_name
+      - weekday
+      - start_at
+      - end_at
+      - teachers
+      properties:
+        student_id:
+          type: integer
+        student_name:
+          type: string
+        section_id:
+          type: integer
+        section_name:
+          type: string
+        course_id:
+          type: integer
+        course_name:
+          type: string
+        weekday:
+          type: integer
+        start_at:
+          type: string
+          format: date-time
+        end_at:
+          type: string
+          format: date-time
+        location:
+          type: string
+          nullable: true
+        teachers:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ClassTeacherSummary"
+    GuardianCalendarEvent:
+      type: object
+      required:
+      - type
+      - id
+      - title
+      - course_id
+      properties:
+        type:
+          type: string
+          enum:
+          - unit_plan
+          - assignment
+          - quiz
+        id:
+          type: integer
+        title:
+          type: string
+        course_id:
+          type: integer
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          nullable: true
+    GuardianCalendarResponse:
+      type: object
+      required:
+      - events
+      properties:
+        events:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GuardianCalendarEvent"
     GuardianLink:
       type: object
       required:

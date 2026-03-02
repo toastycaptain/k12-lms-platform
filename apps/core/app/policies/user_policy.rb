@@ -37,7 +37,18 @@ class UserPolicy < ApplicationPolicy
 
   class SearchScope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      return scope.all unless user.has_role?(:guardian)
+
+      linked_student_ids = GuardianLink.active.where(guardian_id: user.id).select(:student_id)
+      section_ids = Enrollment.where(user_id: linked_student_ids, role: "student").select(:section_id)
+      teacher_ids = Enrollment.where(section_id: section_ids, role: "teacher").select(:user_id)
+      co_guardian_ids = GuardianLink.active.where(student_id: linked_student_ids).select(:guardian_id)
+
+      scope.where(id: linked_student_ids)
+        .or(scope.where(id: teacher_ids))
+        .or(scope.where(id: co_guardian_ids))
+        .or(scope.where(id: user.id))
+        .distinct
     end
   end
 end

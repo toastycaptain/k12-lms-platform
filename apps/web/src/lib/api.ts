@@ -181,6 +181,7 @@ export interface CurrentUser {
   google_connected: boolean;
   onboarding_complete: boolean;
   preferences: Record<string, unknown>;
+  curriculum_default_profile_key?: string;
 }
 
 interface MeResponse {
@@ -199,12 +200,13 @@ interface MeResponse {
     id: number;
     name: string;
     slug: string;
+    curriculum_default_profile_key?: string;
   };
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUser> {
   const data = await apiFetch<MeResponse>("/api/v1/me");
-  return {
+  const currentUser: CurrentUser = {
     id: data.user.id,
     email: data.user.email,
     first_name: data.user.first_name,
@@ -216,6 +218,12 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
     onboarding_complete: data.user.onboarding_complete ?? false,
     preferences: data.user.preferences ?? {},
   };
+
+  if (data.tenant.curriculum_default_profile_key) {
+    currentUser.curriculum_default_profile_key = data.tenant.curriculum_default_profile_key;
+  }
+
+  return currentUser;
 }
 
 export function __resetApiClientStateForTests() {

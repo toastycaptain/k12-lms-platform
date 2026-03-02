@@ -57,7 +57,8 @@ module Api
           title: params[:drive_file_title],
           provider: "google_drive",
           drive_file_id: params[:drive_file_id],
-          mime_type: params[:drive_mime_type]
+          mime_type: params[:drive_mime_type],
+          metadata: resource_link_metadata_for(linkable)
         )
         render json: resource_link, status: :created
       end
@@ -241,6 +242,43 @@ module Api
           "CourseModule" => CourseModule,
           "Assignment" => Assignment
         }[linkable_type.to_s]
+      end
+
+      def resource_link_metadata_for(linkable)
+        context = curriculum_context_for_linkable(linkable)
+        return {} if context.blank?
+
+        {
+          "effective_curriculum_profile_key" => context[:profile_key],
+          "effective_curriculum_source" => context[:source],
+          "integration_context_tag" => context.dig(:integration_hints, "google_addon_context")
+        }
+      end
+
+      def curriculum_context_for_linkable(linkable)
+        course = course_for_linkable(linkable)
+        return nil unless course
+
+        CurriculumProfileResolver.resolve(
+          tenant: Current.tenant,
+          school: course.school,
+          course: course
+        )
+      end
+
+      def course_for_linkable(linkable)
+        case linkable
+        when Assignment, CourseModule
+          linkable.course
+        when LessonPlan
+          linkable.unit_plan&.course
+        when LessonVersion
+          linkable.lesson_plan&.unit_plan&.course
+        when UnitVersion
+          linkable.unit_plan&.course
+        else
+          nil
+        end
       end
 
       def normalized_context

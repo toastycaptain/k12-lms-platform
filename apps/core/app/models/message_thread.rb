@@ -17,7 +17,7 @@ class MessageThread < ApplicationRecord
 
   def unread_count_for(user)
     participant = message_thread_participants.find_by(user: user)
-    return messages.count unless participant&.last_read_at
+    return messages_count unless participant&.last_read_at
 
     messages.where("created_at > ?", participant.last_read_at).count
   end

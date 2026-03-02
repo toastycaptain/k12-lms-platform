@@ -47,7 +47,7 @@ module Api
       end
 
       def school_params
-        params.require(:school).permit(:name, :address, :timezone)
+        params.require(:school).permit(:name, :address, :timezone, :curriculum_profile_key)
       end
     end
   end
