@@ -24,12 +24,12 @@ gem "active_model_serializers", "~> 0.10"
 
 # PDF generation
 gem "matrix", "~> 0.4" # Required by prawn on Ruby 4.0+
-gem "prawn", "~> 2.4"
+gem "prawn", "~> 2.5"
 gem "prawn-table", "~> 0.2"
 
 # Google APIs
 gem "google-apis-classroom_v1", "~> 0.50"
-gem "google-apis-drive_v3", "~> 0.77"
+gem "google-apis-drive_v3", "~> 0.78"
 
 # HTTP client for AI Gateway and OneRoster
 gem "faraday", "~> 2.14"
@@ -43,7 +43,7 @@ gem "rack-cors", "~> 3.0"
 gem "rack-attack", "~> 6.8"
 
 # Error tracking
-gem "sentry-ruby", "~> 6.3"
+gem "sentry-ruby", "~> 6.4"
 gem "sentry-rails", "~> 6.3"
 gem "aws-sdk-s3", "~> 1.178"
 
