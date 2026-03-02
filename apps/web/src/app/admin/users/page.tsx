@@ -25,6 +25,11 @@ interface IntegrationConfig {
   status: string;
 }
 
+interface RoleRow {
+  id: number;
+  name: string;
+}
+
 interface GuardianLinkRow {
   id: number;
   guardian_id: number;
@@ -35,7 +40,28 @@ interface GuardianLinkRow {
   student?: { id: number; first_name: string; last_name: string; email: string };
 }
 
-const ROLE_OPTIONS = ["admin", "curriculum_lead", "teacher", "student", "guardian"];
+const SYSTEM_ROLE_OPTIONS = ["admin", "curriculum_lead", "teacher", "student", "guardian"];
+const ROLE_NAME_PATTERN = /^[a-z0-9_:-]+$/;
+
+function buildRoleOptions(roleNames: string[], users: UserRow[]): string[] {
+  const allRoleNames = new Set<string>(SYSTEM_ROLE_OPTIONS);
+  const knownSystemRoles = new Set<string>(SYSTEM_ROLE_OPTIONS);
+
+  roleNames.forEach((role) => {
+    if (ROLE_NAME_PATTERN.test(role)) allRoleNames.add(role);
+  });
+  users.forEach((row) => {
+    row.roles.forEach((role) => {
+      if (ROLE_NAME_PATTERN.test(role)) allRoleNames.add(role);
+    });
+  });
+
+  const customRoles = Array.from(allRoleNames)
+    .filter((role) => !knownSystemRoles.has(role))
+    .sort((left, right) => left.localeCompare(right));
+
+  return [...SYSTEM_ROLE_OPTIONS, ...customRoles];
+}
 
 export default function UsersAndRolesPage() {
   const { user } = useAuth();
@@ -43,12 +69,14 @@ export default function UsersAndRolesPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [configs, setConfigs] = useState<IntegrationConfig[]>([]);
   const [guardianLinks, setGuardianLinks] = useState<GuardianLinkRow[]>([]);
+  const [roleOptions, setRoleOptions] = useState<string[]>(SYSTEM_ROLE_OPTIONS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
+  const [customRoleName, setCustomRoleName] = useState("");
 
   const [form, setForm] = useState({
     id: "",
@@ -64,6 +92,10 @@ export default function UsersAndRolesPage() {
 
   const isAdmin = user?.roles?.includes("admin") || false;
   const canAccess = isAdmin || user?.roles?.includes("curriculum_lead");
+  const defaultRole = useMemo(() => {
+    if (roleOptions.includes("teacher")) return "teacher";
+    return roleOptions[0] || "";
+  }, [roleOptions]);
 
   const oneRosterConfigured = useMemo(
     () => configs.some((row) => row.provider === "oneroster" && row.status === "active"),
@@ -84,12 +116,33 @@ export default function UsersAndRolesPage() {
     async function fetchData() {
       setLoading(true);
       try {
-        const [userRows, integrationRows] = await Promise.all([
-          apiFetch<UserRow[]>(`/api/v1/users?page=${page}&per_page=${perPage}`),
+        const userParams = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+        if (roleFilter) userParams.set("role", roleFilter);
+        const [userRows, integrationRows, roles] = await Promise.all([
+          apiFetch<UserRow[]>(`/api/v1/users?${userParams.toString()}`),
           apiFetch<IntegrationConfig[]>("/api/v1/integration_configs"),
+          isAdmin ? apiFetch<RoleRow[]>("/api/v1/roles") : Promise.resolve([]),
         ]);
+
+        const nextRoleOptions = buildRoleOptions(
+          roles.map((role) => role.name),
+          userRows,
+        );
+
         setUsers(userRows);
         setConfigs(integrationRows);
+        setRoleOptions(nextRoleOptions);
+        setForm((previous) => ({
+          ...previous,
+          role: nextRoleOptions.includes(previous.role)
+            ? previous.role
+            : nextRoleOptions.includes("teacher")
+              ? "teacher"
+              : nextRoleOptions[0] || "",
+        }));
+        if (roleFilter && !nextRoleOptions.includes(roleFilter)) {
+          setRoleFilter("");
+        }
         setTotalPages(userRows.length < perPage ? page : page + 1);
       } catch {
         setError("Failed to load users.");
@@ -99,7 +152,7 @@ export default function UsersAndRolesPage() {
     }
 
     void fetchData();
-  }, [page, perPage]);
+  }, [isAdmin, page, perPage, roleFilter]);
 
   const fetchGuardianLinks = useCallback(async () => {
     if (!isAdmin) return;
@@ -115,22 +168,6 @@ export default function UsersAndRolesPage() {
   useEffect(() => {
     void fetchGuardianLinks();
   }, [fetchGuardianLinks]);
-
-  useEffect(() => {
-    async function refetchUsers() {
-      try {
-        const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
-        if (roleFilter) params.set("role", roleFilter);
-        const userRows = await apiFetch<UserRow[]>(`/api/v1/users?${params.toString()}`);
-        setUsers(userRows);
-        setTotalPages(userRows.length < perPage ? page : page + 1);
-      } catch {
-        setError("Failed to refresh users.");
-      }
-    }
-
-    void refetchUsers();
-  }, [roleFilter, page, perPage]);
 
   async function saveUser() {
     if (!form.email.trim() || !form.first_name.trim() || !form.last_name.trim()) {
@@ -168,12 +205,38 @@ export default function UsersAndRolesPage() {
 
       const saveParams = new URLSearchParams({ page: String(page), per_page: String(perPage) });
       if (roleFilter) saveParams.set("role", roleFilter);
-      setUsers(await apiFetch<UserRow[]>(`/api/v1/users?${saveParams.toString()}`));
+      const userRows = await apiFetch<UserRow[]>(`/api/v1/users?${saveParams.toString()}`);
+      setUsers(userRows);
+      setRoleOptions((previous) => buildRoleOptions(previous, userRows));
       if (!form.id) {
-        setForm({ id: "", email: "", first_name: "", last_name: "", role: "teacher" });
+        setForm({ id: "", email: "", first_name: "", last_name: "", role: defaultRole });
       }
     } catch (e) {
       addToast("error", e instanceof ApiError ? e.message : "Failed to save user.");
+    }
+  }
+
+  async function createCustomRole() {
+    if (!isAdmin) return;
+
+    const normalized = customRoleName.trim().toLowerCase();
+    if (!normalized) return;
+    if (!ROLE_NAME_PATTERN.test(normalized)) {
+      addToast("error", "Role names may use lowercase letters, numbers, _, :, and -.");
+      return;
+    }
+
+    try {
+      await apiFetch("/api/v1/roles", {
+        method: "POST",
+        body: JSON.stringify({ role: { name: normalized } }),
+      });
+      setRoleOptions((previous) => buildRoleOptions([...previous, normalized], users));
+      setForm((previous) => ({ ...previous, role: normalized }));
+      setCustomRoleName("");
+      addToast("success", `Role "${normalized}" created.`);
+    } catch (e) {
+      addToast("error", e instanceof ApiError ? e.message : "Failed to create role.");
     }
   }
 
@@ -248,7 +311,7 @@ export default function UsersAndRolesPage() {
                         onChange={(event) => setRoleFilter(event.target.value)}
                       >
                         <option value="">All Roles</option>
-                        {ROLE_OPTIONS.map((role) => (
+                        {roleOptions.map((role) => (
                           <option key={role} value={role}>
                             {role}
                           </option>
@@ -268,7 +331,7 @@ export default function UsersAndRolesPage() {
                           email: row.email,
                           first_name: row.first_name,
                           last_name: row.last_name,
-                          role: row.roles[0] || "teacher",
+                          role: row.roles[0] || defaultRole,
                         })
                       }
                       className="block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-left hover:bg-gray-100"
@@ -305,7 +368,13 @@ export default function UsersAndRolesPage() {
                   <h2 className="text-lg font-semibold text-gray-900">Create / Edit User</h2>
                   <button
                     onClick={() =>
-                      setForm({ id: "", email: "", first_name: "", last_name: "", role: "teacher" })
+                      setForm({
+                        id: "",
+                        email: "",
+                        first_name: "",
+                        last_name: "",
+                        role: defaultRole,
+                      })
                     }
                     className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
                   >
@@ -367,7 +436,7 @@ export default function UsersAndRolesPage() {
                         }
                         required
                       >
-                        {ROLE_OPTIONS.map((role) => (
+                        {roleOptions.map((role) => (
                           <option key={role} value={role}>
                             {role}
                           </option>
@@ -375,6 +444,34 @@ export default function UsersAndRolesPage() {
                       </Select>
                     </FormField>
                   </div>
+
+                  {isAdmin && (
+                    <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 p-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-600">
+                        Create Custom Role
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-end gap-2">
+                        <div className="flex-1">
+                          <FormField label="Role Name" htmlFor="new-role-name">
+                            <TextInput
+                              id="new-role-name"
+                              value={customRoleName}
+                              onChange={(event) => setCustomRoleName(event.target.value)}
+                              placeholder="data_export_manager"
+                            />
+                          </FormField>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void createCustomRole()}
+                          disabled={!customRoleName.trim()}
+                          className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                        >
+                          Add Role
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <FormActions
                     submitLabel={form.id ? "Update User" : "Create User"}

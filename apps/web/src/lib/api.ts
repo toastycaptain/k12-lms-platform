@@ -178,6 +178,13 @@ export interface CurrentUser {
   tenant_id: number;
   roles: string[];
   district_admin?: boolean;
+  impersonating?: boolean;
+  impersonator?: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+  } | null;
   google_connected: boolean;
   onboarding_complete: boolean;
   preferences: Record<string, unknown>;
@@ -192,6 +199,13 @@ interface MeResponse {
     last_name: string;
     roles: string[];
     district_admin?: boolean;
+    impersonating?: boolean;
+    impersonator?: {
+      id: number;
+      email: string;
+      first_name: string;
+      last_name: string;
+    } | null;
     google_connected?: boolean;
     onboarding_complete?: boolean;
     preferences?: Record<string, unknown>;
@@ -214,6 +228,8 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
     tenant_id: data.tenant.id,
     roles: data.user.roles,
     district_admin: data.user.district_admin ?? data.user.roles.includes("district_admin"),
+    impersonating: data.user.impersonating ?? false,
+    impersonator: data.user.impersonator ?? null,
     google_connected: data.user.google_connected ?? false,
     onboarding_complete: data.user.onboarding_complete ?? false,
     preferences: data.user.preferences ?? {},

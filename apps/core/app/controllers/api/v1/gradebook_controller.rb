@@ -14,10 +14,60 @@ module Api
       def export
         authorize @course, :gradebook_export?
 
-        csv_data = GradebookExportService.new(course: @course, payload: gradebook_payload).call
+        payload = gradebook_payload
+        csv_data = GradebookExportService.new(course: @course, payload: payload).call
+        audit_event(
+          "gradebook.exported",
+          auditable: @course,
+          metadata: {
+            course_id: @course.id,
+            student_count: payload[:students]&.length.to_i,
+            assignment_count: payload[:assignments]&.length.to_i
+          }
+        )
         send_data csv_data,
                   filename: "gradebook-#{@course.id}-#{Date.current}.csv",
                   type: "text/csv"
+      end
+
+      # POST /api/v1/courses/:id/gradebook/export_async
+      def export_async
+        authorize @course, :gradebook_export?
+
+        @course.gradebook_export.purge if @course.gradebook_export.attached?
+        payload = gradebook_payload
+        job = GradebookExportJob.perform_later(@course.id, payload, Current.user.id)
+        job_identifier = job.provider_job_id || job.job_id
+
+        audit_event(
+          "gradebook.export_async.queued",
+          auditable: @course,
+          metadata: {
+            course_id: @course.id,
+            job_id: job_identifier,
+            student_count: payload[:students]&.length.to_i,
+            assignment_count: payload[:assignments]&.length.to_i
+          }
+        )
+
+        render json: {
+          status: "queued",
+          job_id: job_identifier
+        }, status: :accepted
+      end
+
+      # GET /api/v1/courses/:id/gradebook/export_status
+      def export_status
+        authorize @course, :gradebook_export?
+
+        if @course.gradebook_export.attached?
+          render json: {
+            status: "completed",
+            download_url: rails_blob_url(@course.gradebook_export, disposition: "attachment")
+          }
+        else
+          render json: { status: "processing" }
+        end
       end
 
       # GET /api/v1/courses/:id/gradebook/export_csv
@@ -56,6 +106,15 @@ module Api
             updated_submissions << submission
           end
         end
+
+        audit_event(
+          "gradebook.bulk_graded",
+          auditable: @course,
+          metadata: {
+            course_id: @course.id,
+            updated_count: updated_submissions.length
+          }
+        )
 
         render json: {
           updated_count: updated_submissions.length,

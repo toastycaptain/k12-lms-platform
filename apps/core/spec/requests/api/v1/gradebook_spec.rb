@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Gradebook", type: :request do
+  include ActiveJob::TestHelper
+
   let(:tenant) { create(:tenant, settings: { "mastery_threshold" => 80 }) }
   let(:other_tenant) { create(:tenant) }
 
@@ -134,6 +136,8 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
   end
 
   after do
+    clear_enqueued_jobs
+    clear_performed_jobs
     Current.tenant = nil
     Current.user = nil
   end
@@ -201,7 +205,9 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
     it "returns a CSV export" do
       mock_session(teacher, tenant: tenant)
 
-      get "/api/v1/courses/#{course.id}/gradebook/export"
+      expect {
+        get "/api/v1/courses/#{course.id}/gradebook/export"
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.headers["Content-Type"]).to include("text/csv")
@@ -210,6 +216,7 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
       expect(response.body).to include("MISSING")
       expect(response.body).to include("(LATE)")
       expect(response.body).to include("Class Average")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("gradebook.exported")
     end
   end
 
@@ -225,18 +232,62 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
     end
   end
 
+  describe "POST /api/v1/courses/:id/gradebook/export_async" do
+    it "queues asynchronous CSV generation" do
+      mock_session(teacher, tenant: tenant)
+
+      expect {
+        post "/api/v1/courses/#{course.id}/gradebook/export_async"
+      }.to have_enqueued_job(GradebookExportJob).with(course.id, kind_of(Hash), teacher.id)
+        .and change(AuditLog.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:accepted)
+      expect(response.parsed_body["status"]).to eq("queued")
+      expect(response.parsed_body["job_id"]).to be_present
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("gradebook.export_async.queued")
+    end
+  end
+
+  describe "GET /api/v1/courses/:id/gradebook/export_status" do
+    it "returns processing when export is not ready" do
+      mock_session(teacher, tenant: tenant)
+
+      get "/api/v1/courses/#{course.id}/gradebook/export_status"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("processing")
+    end
+
+    it "returns download URL when export is complete" do
+      mock_session(teacher, tenant: tenant)
+      course.gradebook_export.attach(
+        io: StringIO.new("Student Name,Email\nSam Student,sam@example.com\n"),
+        filename: "gradebook.csv",
+        content_type: "text/csv"
+      )
+
+      get "/api/v1/courses/#{course.id}/gradebook/export_status"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["status"]).to eq("completed")
+      expect(response.parsed_body["download_url"]).to be_present
+    end
+  end
+
   describe "POST /api/v1/courses/:id/gradebook/bulk_grade" do
     it "grades multiple submissions in one request" do
       mock_session(teacher, tenant: tenant)
       first_submission = Submission.find_by!(assignment: assignment_one, user: student_one)
       second_submission = Submission.find_by!(assignment: assignment_one, user: student_two)
 
-      post "/api/v1/courses/#{course.id}/gradebook/bulk_grade", params: {
-        grades: [
-          { submission_id: first_submission.id, grade: 96, feedback: "Great work" },
-          { submission_id: second_submission.id, grade: 82, feedback: "Strong revision" }
-        ]
-      }
+      expect {
+        post "/api/v1/courses/#{course.id}/gradebook/bulk_grade", params: {
+          grades: [
+            { submission_id: first_submission.id, grade: 96, feedback: "Great work" },
+            { submission_id: second_submission.id, grade: 82, feedback: "Strong revision" }
+          ]
+        }
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["updated_count"]).to eq(2)
@@ -244,6 +295,7 @@ RSpec.describe "Api::V1::Gradebook", type: :request do
       expect(first_submission.feedback).to eq("Great work")
       expect(first_submission.status).to eq("graded")
       expect(second_submission.reload.grade.to_f).to eq(82.0)
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("gradebook.bulk_graded")
     end
 
     it "forbids non-teacher users" do

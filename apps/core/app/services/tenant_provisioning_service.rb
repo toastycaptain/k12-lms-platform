@@ -79,10 +79,14 @@ class TenantProvisioningService
       raise ProvisioningError, "Email '#{@params[:admin_email]}' is already registered"
     end
 
-    return if @params[:curriculum_default_profile_key].blank?
-    return if CurriculumProfileRegistry.keys.include?(@params[:curriculum_default_profile_key])
+    if @params[:curriculum_default_profile_key].present? &&
+       !CurriculumProfileRegistry.keys.include?(@params[:curriculum_default_profile_key])
+      raise ProvisioningError, "Unknown curriculum_default_profile_key '#{@params[:curriculum_default_profile_key]}'"
+    end
 
-    raise ProvisioningError, "Unknown curriculum_default_profile_key '#{@params[:curriculum_default_profile_key]}'"
+    if @params[:district_id].present? && !District.exists?(id: @params[:district_id])
+      raise ProvisioningError, "District not found"
+    end
   end
 
   def create_tenant
@@ -90,6 +94,7 @@ class TenantProvisioningService
       CurriculumProfileRegistry.default_profile_key
 
     Tenant.create!(
+      district_id: @params[:district_id].presence,
       name: @params[:school_name],
       slug: @params[:subdomain],
       settings: {

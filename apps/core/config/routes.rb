@@ -18,6 +18,8 @@ Rails.application.routes.draw do
       get "saml/metadata", to: "saml#metadata"
 
       delete "/session", to: "sessions#destroy"
+      post "/session/impersonation/:user_id", to: "sessions#start_impersonation"
+      delete "/session/impersonation", to: "sessions#stop_impersonation"
       get "/me", to: "sessions#me"
       patch "/me", to: "sessions#update_me"
       get "/curriculum_profiles", to: "curriculum_profiles#index"
@@ -41,6 +43,8 @@ Rails.application.routes.draw do
         get :standards_coverage, on: :member, controller: "standards_coverage", action: "by_course"
         get :gradebook, on: :member, controller: "gradebook", action: "show"
         get "gradebook/export", on: :member, controller: "gradebook", action: "export"
+        post "gradebook/export_async", on: :member, controller: "gradebook", action: "export_async"
+        get "gradebook/export_status", on: :member, controller: "gradebook", action: "export_status"
         get "gradebook/export_csv", on: :member, controller: "gradebook", action: "export_csv"
         post "gradebook/bulk_grade", on: :member, controller: "gradebook", action: "bulk_grade"
         get :quiz_performance, on: :member, controller: "quiz_analytics", action: "course_summary"
@@ -274,6 +278,7 @@ Rails.application.routes.draw do
       end
       resources :notification_preferences, param: :event_type, only: [ :index, :update ]
       resources :permissions, only: [ :index, :create, :update, :destroy ]
+      resources :roles, only: [ :index, :show, :create, :update, :destroy ]
       resources :guardian_links, only: [ :index, :create, :destroy ]
       get "guardian/students", to: "guardian#students"
       get "guardian/students/:id/grades", to: "guardian#grades"

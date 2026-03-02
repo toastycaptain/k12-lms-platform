@@ -307,6 +307,8 @@ describe("apiFetch", () => {
       tenant_id: 3,
       roles: ["teacher"],
       district_admin: false,
+      impersonating: false,
+      impersonator: null,
       google_connected: true,
       onboarding_complete: true,
       preferences: { theme: "light" },

@@ -1,7 +1,9 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
-  let!(:tenant) { create(:tenant) }
+  let!(:district) { create(:district) }
+  let!(:tenant) { create(:tenant, district: district) }
+  let!(:outside_tenant) { create(:tenant, district: create(:district)) }
   let(:admin) do
     Current.tenant = tenant
     user = create(:user, tenant: tenant)
@@ -9,6 +11,7 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
     Current.tenant = nil
     user
   end
+  let(:district_admin) { create(:user, tenant: tenant, district_admin: true) }
   let(:teacher) do
     Current.tenant = tenant
     user = create(:user, tenant: tenant)
@@ -65,6 +68,25 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
 
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "forces district scoping for delegated district admins" do
+      mock_session(district_admin, tenant: tenant)
+
+      post "/api/v1/admin/provisioning/create_school", params: {
+        school: {
+          school_name: "District Scoped School",
+          subdomain: "district-scoped-school",
+          admin_email: "admin@districtscoped.edu",
+          admin_first_name: "Dina",
+          admin_last_name: "Scoped",
+          district_id: outside_tenant.district_id
+        }
+      }
+
+      expect(response).to have_http_status(:created)
+      created_tenant = Tenant.unscoped.find(response.parsed_body["tenant_id"])
+      expect(created_tenant.district_id).to eq(district.id)
+    end
   end
 
   describe "GET /api/v1/admin/provisioning/checklist/:tenant_id" do
@@ -77,6 +99,14 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
       expect(response.parsed_body["items"]).to be_an(Array)
       expect(response.parsed_body["completion_percentage"]).to be_a(Integer)
     end
+
+    it "returns not found for district admin outside of district scope" do
+      mock_session(district_admin, tenant: tenant)
+
+      get "/api/v1/admin/provisioning/checklist/#{outside_tenant.id}"
+
+      expect(response).to have_http_status(:not_found)
+    end
   end
 
   describe "GET /api/v1/admin/provisioning/tenants" do
@@ -87,6 +117,17 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to be_an(Array)
+    end
+
+    it "returns only same-district tenants for district admins" do
+      mock_session(district_admin, tenant: tenant)
+
+      get "/api/v1/admin/provisioning/tenants"
+
+      expect(response).to have_http_status(:ok)
+      ids = response.parsed_body.map { |row| row["id"] }
+      expect(ids).to include(tenant.id)
+      expect(ids).not_to include(outside_tenant.id)
     end
   end
 
@@ -101,6 +142,17 @@ RSpec.describe "Api::V1::Admin::Provisioning", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["created"]).to eq(1)
+    end
+
+    it "returns not found for district admin outside of district scope" do
+      mock_session(district_admin, tenant: tenant)
+
+      post "/api/v1/admin/provisioning/import/#{outside_tenant.id}", params: {
+        import_type: "users",
+        csv_content: "email,first_name,last_name,role\ntest@school.edu,Test,User,teacher\n"
+      }
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

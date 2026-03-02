@@ -43,49 +43,89 @@ module Api
         render json: { message: "Signed out successfully" }, status: :ok
       end
 
-      def me
-        render json: {
-          user: {
-            id: Current.user.id,
-            email: Current.user.email,
-            first_name: Current.user.first_name,
-            last_name: Current.user.last_name,
-            roles: Current.user.role_names,
-            district_admin: Current.user.district_admin?,
-            google_connected: Current.user.google_connected?,
-            onboarding_complete: Current.user.onboarding_complete,
-            preferences: Current.user.preferences || {}
-          },
-          tenant: {
-            id: Current.tenant.id,
-            name: Current.tenant.name,
-            slug: Current.tenant.slug,
-            curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
+      def start_impersonation
+        unless can_manage_impersonation?
+          render json: { error: "Forbidden" }, status: :forbidden
+          return
+        end
+
+        if impersonating?
+          render json: { error: "An impersonation session is already active" }, status: :unprocessable_content
+          return
+        end
+
+        target_user = User.unscoped.find_by(id: params[:user_id], tenant_id: Current.tenant.id)
+        unless target_user
+          render json: { error: "User not found" }, status: :not_found
+          return
+        end
+
+        if target_user.id == Current.user.id
+          render json: { error: "Cannot impersonate your own account" }, status: :unprocessable_content
+          return
+        end
+
+        impersonator = Current.user
+        session[:impersonator_user_id] = impersonator.id
+        session[:impersonator_tenant_id] = Current.tenant.id
+        session[:impersonated_user_id] = target_user.id
+        session[:user_id] = target_user.id
+        session[:last_seen_at] = Time.current.to_i
+        Current.user = target_user
+
+        audit_event(
+          "session.impersonation.started",
+          actor: impersonator,
+          auditable: target_user,
+          metadata: {
+            tenant_id: Current.tenant.id,
+            impersonator_user_id: impersonator.id,
+            impersonated_user_id: target_user.id
           }
-        }
+        )
+
+        render json: session_payload
+      end
+
+      def stop_impersonation
+        impersonator = impersonator_user
+        unless impersonator
+          render json: { error: "No active impersonation session" }, status: :unprocessable_content
+          return
+        end
+
+        impersonated_user = Current.user
+        session[:tenant_id] = impersonator.tenant_id
+        session[:user_id] = impersonator.id
+        session[:last_seen_at] = Time.current.to_i
+        session.delete(:impersonator_user_id)
+        session.delete(:impersonator_tenant_id)
+        session.delete(:impersonated_user_id)
+
+        Current.tenant = impersonator.tenant
+        Current.user = impersonator
+
+        audit_event(
+          "session.impersonation.ended",
+          actor: impersonator,
+          auditable: impersonated_user,
+          metadata: {
+            tenant_id: impersonator.tenant_id,
+            impersonator_user_id: impersonator.id,
+            impersonated_user_id: impersonated_user&.id
+          }
+        )
+
+        render json: session_payload
+      end
+
+      def me
+        render json: session_payload
       end
 
       def update_me
         if Current.user.update(current_user_params)
-          render json: {
-            user: {
-              id: Current.user.id,
-              email: Current.user.email,
-              first_name: Current.user.first_name,
-              last_name: Current.user.last_name,
-              roles: Current.user.role_names,
-              district_admin: Current.user.district_admin?,
-              google_connected: Current.user.google_connected?,
-              onboarding_complete: Current.user.onboarding_complete,
-              preferences: Current.user.preferences || {}
-            },
-            tenant: {
-              id: Current.tenant.id,
-              name: Current.tenant.name,
-              slug: Current.tenant.slug,
-              curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
-            }
-          }
+          render json: session_payload
         else
           render json: { errors: Current.user.errors.full_messages }, status: :unprocessable_content
         end
@@ -378,6 +418,68 @@ module Api
             grade_levels: []
           ]
         )
+      end
+
+      def session_payload
+        {
+          user: current_user_payload,
+          tenant: current_tenant_payload
+        }
+      end
+
+      def current_user_payload
+        {
+          id: Current.user.id,
+          email: Current.user.email,
+          first_name: Current.user.first_name,
+          last_name: Current.user.last_name,
+          roles: Current.user.role_names,
+          district_admin: Current.user.district_admin?,
+          google_connected: Current.user.google_connected?,
+          onboarding_complete: Current.user.onboarding_complete,
+          preferences: Current.user.preferences || {},
+          impersonating: impersonating?,
+          impersonator: impersonator_payload
+        }
+      end
+
+      def current_tenant_payload
+        {
+          id: Current.tenant.id,
+          name: Current.tenant.name,
+          slug: Current.tenant.slug,
+          curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
+        }
+      end
+
+      def can_manage_impersonation?
+        Current.user&.has_role?(:admin) || Current.user&.district_admin?
+      end
+
+      def impersonating?
+        session[:impersonator_user_id].present?
+      end
+
+      def impersonator_user
+        return @impersonator_user if defined?(@impersonator_user)
+
+        impersonator_id = session[:impersonator_user_id]
+        impersonator_tenant_id = session[:impersonator_tenant_id] || Current.tenant&.id
+        @impersonator_user = if impersonator_id.present? && impersonator_tenant_id.present?
+          User.unscoped.find_by(id: impersonator_id, tenant_id: impersonator_tenant_id)
+        end
+      end
+
+      def impersonator_payload
+        actor = impersonator_user
+        return nil unless actor
+
+        {
+          id: actor.id,
+          email: actor.email,
+          first_name: actor.first_name,
+          last_name: actor.last_name
+        }
       end
     end
   end

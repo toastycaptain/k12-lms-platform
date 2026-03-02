@@ -2,6 +2,20 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Sessions", type: :request do
   let!(:tenant) { create(:tenant, slug: "example") }
+  let(:admin_user) do
+    Current.tenant = tenant
+    user = create(:user, email: "admin@example.com", tenant: tenant)
+    user.add_role(:admin)
+    Current.tenant = nil
+    user
+  end
+  let(:teacher_user) do
+    Current.tenant = tenant
+    user = create(:user, email: "teacher_account@example.com", tenant: tenant)
+    user.add_role(:teacher)
+    Current.tenant = nil
+    user
+  end
 
   before do
     OmniAuth.config.test_mode = true
@@ -204,6 +218,8 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(body["user"]["roles"]).to include("teacher")
         expect(body["user"]["onboarding_complete"]).to be(false)
         expect(body["user"]["preferences"]).to eq({})
+        expect(body["user"]["impersonating"]).to be(false)
+        expect(body["user"]["impersonator"]).to be_nil
         expect(body["tenant"]["name"]).to eq(tenant.name)
       end
 
@@ -242,6 +258,70 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body["error"]).to eq("Unauthorized")
       end
+    end
+  end
+
+  describe "POST /api/v1/session/impersonation/:user_id" do
+    it "allows admins to impersonate another user" do
+      mock_session(admin_user, tenant: tenant)
+
+      expect {
+        post "/api/v1/session/impersonation/#{teacher_user.id}"
+      }.to change(AuditLog.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.dig("user", "id")).to eq(teacher_user.id)
+      expect(response.parsed_body.dig("user", "impersonating")).to be(true)
+      expect(response.parsed_body.dig("user", "impersonator", "id")).to eq(admin_user.id)
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.impersonation.started")
+    end
+
+    it "returns forbidden for non-admin users" do
+      mock_session(teacher_user, tenant: tenant)
+
+      post "/api/v1/session/impersonation/#{admin_user.id}"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "returns unprocessable content when impersonating self" do
+      mock_session(admin_user, tenant: tenant)
+
+      post "/api/v1/session/impersonation/#{admin_user.id}"
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to include("Cannot impersonate")
+    end
+  end
+
+  describe "DELETE /api/v1/session/impersonation" do
+    it "restores the original admin session" do
+      session_data = {
+        user_id: teacher_user.id,
+        tenant_id: tenant.id,
+        impersonator_user_id: admin_user.id,
+        impersonator_tenant_id: tenant.id,
+        impersonated_user_id: teacher_user.id
+      }
+      allow_any_instance_of(ApplicationController).to receive(:session).and_return(session_data)
+
+      expect {
+        delete "/api/v1/session/impersonation"
+      }.to change(AuditLog.unscoped, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.dig("user", "id")).to eq(admin_user.id)
+      expect(response.parsed_body.dig("user", "impersonating")).to be(false)
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("session.impersonation.ended")
+    end
+
+    it "returns unprocessable content when no impersonation is active" do
+      mock_session(admin_user, tenant: tenant)
+
+      delete "/api/v1/session/impersonation"
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to eq("No active impersonation session")
     end
   end
 

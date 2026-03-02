@@ -48,5 +48,18 @@ RSpec.describe TenantProvisioningService do
       expect { described_class.new(valid_params).call }
         .to raise_error(TenantProvisioningService::ProvisioningError, /already taken/)
     end
+
+    it "assigns tenant to a district when district_id is provided" do
+      district = create(:district)
+
+      result = described_class.new(valid_params.merge(district_id: district.id)).call
+
+      expect(result[:tenant].district_id).to eq(district.id)
+    end
+
+    it "raises for unknown district_id" do
+      expect { described_class.new(valid_params.merge(district_id: -1)).call }
+        .to raise_error(TenantProvisioningService::ProvisioningError, /District not found/)
+    end
   end
 end

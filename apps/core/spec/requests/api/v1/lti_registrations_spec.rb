@@ -68,10 +68,12 @@ RSpec.describe "Api::V1::LtiRegistrations", type: :request do
       expect {
         post "/api/v1/lti_registrations", params: base_params
       }.to change(LtiRegistration.unscoped, :count).by(1)
+        .and change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["name"]).to eq("District LTI Tool")
       expect(response.parsed_body["status"]).to eq("inactive")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("lti.registration.created")
     end
 
     it "returns forbidden for non-admin users" do
@@ -90,11 +92,14 @@ RSpec.describe "Api::V1::LtiRegistrations", type: :request do
       registration = create(:lti_registration, tenant: tenant, created_by: admin, status: "inactive")
       Current.tenant = nil
 
-      post "/api/v1/lti_registrations/#{registration.id}/activate"
+      expect {
+        post "/api/v1/lti_registrations/#{registration.id}/activate"
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]).to eq("active")
       expect(registration.reload.status).to eq("active")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("lti.registration.activated")
     end
   end
 
@@ -105,11 +110,14 @@ RSpec.describe "Api::V1::LtiRegistrations", type: :request do
       registration = create(:lti_registration, tenant: tenant, created_by: admin, status: "active")
       Current.tenant = nil
 
-      post "/api/v1/lti_registrations/#{registration.id}/deactivate"
+      expect {
+        post "/api/v1/lti_registrations/#{registration.id}/deactivate"
+      }.to change(AuditLog.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]).to eq("inactive")
       expect(registration.reload.status).to eq("inactive")
+      expect(AuditLog.unscoped.order(:id).last.event_type).to eq("lti.registration.deactivated")
     end
   end
 end

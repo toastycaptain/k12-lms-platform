@@ -31,5 +31,11 @@ Sidekiq::Cron::Job.load_from_hash(
       }
     ],
     "description" => "Daily full database backup at 2 AM"
+  },
+  "oneroster_auto_sync_every_hour" => {
+    "class" => "OneRosterAutoSyncJob",
+    "cron" => "0 * * * *",
+    "queue" => "default",
+    "description" => "Evaluate and trigger OneRoster auto sync jobs hourly"
   }
 )

@@ -12,6 +12,7 @@ class Course < ApplicationRecord
   has_many :announcements, dependent: :destroy
   has_many :message_threads, dependent: :nullify
   has_many :quizzes, dependent: :destroy
+  has_one_attached :gradebook_export
 
   validates :name, presence: true
   validate :school_must_belong_to_tenant

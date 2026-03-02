@@ -17,6 +17,8 @@ export function createMockUser(overrides: Partial<CurrentUser> = {}): CurrentUse
     tenant_id: 1,
     roles: ["teacher"],
     district_admin: false,
+    impersonating: false,
+    impersonator: null,
     google_connected: false,
     onboarding_complete: true,
     preferences: {},

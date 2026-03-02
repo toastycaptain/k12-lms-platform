@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import UsersAndRolesPage from "@/app/admin/users/page";
 import { ToastProvider } from "@k12/ui";
 import { apiFetch } from "@/lib/api";
@@ -55,13 +55,22 @@ describe("Admin Users Page", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
   const mockedUseAuth = vi.mocked(useAuth);
 
-  function setupApi(users: Array<Record<string, unknown>>) {
-    mockedApiFetch.mockImplementation(async (path: string) => {
+  function setupApi(
+    users: Array<Record<string, unknown>>,
+    roles: Array<Record<string, unknown>> = [],
+  ) {
+    mockedApiFetch.mockImplementation(async (path: string, options?: RequestInit) => {
       if (path === "/api/v1/users" || path.startsWith("/api/v1/users?")) {
         return users as never;
       }
       if (path === "/api/v1/integration_configs") {
         return [{ id: 1, provider: "oneroster", status: "active" }] as never;
+      }
+      if (path === "/api/v1/roles") {
+        if (options?.method === "POST") {
+          return { id: 99, name: "data_export_manager" } as never;
+        }
+        return roles as never;
       }
       return [] as never;
     });
@@ -154,5 +163,55 @@ describe("Admin Users Page", () => {
     );
 
     expect(await screen.findByText("Failed to load users.")).toBeInTheDocument();
+  });
+
+  it("renders custom roles returned by API", async () => {
+    setupApi(
+      [
+        {
+          id: 1,
+          email: "teacher@example.com",
+          first_name: "Taylor",
+          last_name: "Teacher",
+          roles: ["teacher"],
+        },
+      ],
+      [{ id: 10, name: "instructional_coach" }],
+    );
+
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
+
+    const filter = await screen.findByLabelText("Filter by Role");
+    fireEvent.change(filter, { target: { value: "instructional_coach" } });
+    await waitFor(() => {
+      expect(screen.getAllByRole("option", { name: "instructional_coach" }).length).toBeGreaterThan(
+        0,
+      );
+    });
+  });
+
+  it("creates a custom role from the form panel", async () => {
+    render(
+      <ToastProvider>
+        <UsersAndRolesPage />
+      </ToastProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText("Role Name"), {
+      target: { value: "data_export_manager" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add Role" }));
+
+    await waitFor(() => {
+      expect(
+        mockedApiFetch.mock.calls.some(
+          ([path, options]) => path === "/api/v1/roles" && options?.method === "POST",
+        ),
+      ).toBe(true);
+    });
   });
 });

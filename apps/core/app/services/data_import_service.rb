@@ -46,7 +46,7 @@ class DataImportService
       end
 
       role_name = (row["role"]&.strip&.downcase || "student")
-      unless Role::VALID_ROLES.include?(role_name)
+      unless role_name.match?(/\A[a-z0-9_:-]+\z/)
         @results[:errors] << { row: index + 2, error: "Invalid role: #{role_name}" }
         next
       end

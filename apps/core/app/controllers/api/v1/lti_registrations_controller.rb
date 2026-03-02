@@ -20,6 +20,14 @@ module Api
         authorize @lti_registration
 
         if @lti_registration.save
+          audit_event(
+            "lti.registration.created",
+            auditable: @lti_registration,
+            metadata: {
+              registration_id: @lti_registration.id,
+              status: @lti_registration.status
+            }
+          )
           render json: @lti_registration, status: :created
         else
           render json: { errors: @lti_registration.errors.full_messages }, status: :unprocessable_content
@@ -28,7 +36,17 @@ module Api
 
       def update
         authorize @lti_registration
+        previous_status = @lti_registration.status
         if @lti_registration.update(lti_registration_params)
+          audit_event(
+            "lti.registration.updated",
+            auditable: @lti_registration,
+            metadata: {
+              registration_id: @lti_registration.id,
+              previous_status: previous_status,
+              status: @lti_registration.status
+            }
+          )
           render json: @lti_registration
         else
           render json: { errors: @lti_registration.errors.full_messages }, status: :unprocessable_content
@@ -37,6 +55,14 @@ module Api
 
       def destroy
         authorize @lti_registration
+        audit_event(
+          "lti.registration.deleted",
+          auditable: @lti_registration,
+          metadata: {
+            registration_id: @lti_registration.id,
+            status: @lti_registration.status
+          }
+        )
         @lti_registration.destroy!
         head :no_content
       end
@@ -44,12 +70,22 @@ module Api
       def activate
         authorize @lti_registration
         @lti_registration.activate!
+        audit_event(
+          "lti.registration.activated",
+          auditable: @lti_registration,
+          metadata: { registration_id: @lti_registration.id }
+        )
         render json: @lti_registration
       end
 
       def deactivate
         authorize @lti_registration
         @lti_registration.deactivate!
+        audit_event(
+          "lti.registration.deactivated",
+          auditable: @lti_registration,
+          metadata: { registration_id: @lti_registration.id }
+        )
         render json: @lti_registration
       end
 
