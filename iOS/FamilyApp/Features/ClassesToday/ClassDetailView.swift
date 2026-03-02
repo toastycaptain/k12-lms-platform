@@ -6,6 +6,7 @@ struct ClassDetailView: View {
     var body: some View {
         PlaceholderFeatureView(
             title: className,
+            symbol: "book",
             subtitle: "Connected to family class details endpoints"
         )
     }

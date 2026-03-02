@@ -14,16 +14,10 @@ struct MessagingView: View {
     private let tools = MessagingTools(apiClient: APIClient(environment: .current))
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            }
-
+        Group {
             if isLoadingThreads {
                 ProgressView("Loading conversations...")
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else if threads.isEmpty {
                 ContentUnavailableView(
                     "No conversations yet",
@@ -31,13 +25,52 @@ struct MessagingView: View {
                     description: Text("Create one in the web app compose flow, then continue here.")
                 )
             } else {
-                threadPicker
-                Divider()
-                messagePane
-                composer
+                List {
+                    Section("Conversation") {
+                        threadPicker
+                    }
+
+                    Section("Messages") {
+                        messagePane
+                    }
+                }
+                .listStyle(.insetGrouped)
+                .safeAreaInset(edge: .bottom) {
+                    composer
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.bar)
+                }
             }
         }
-        .padding(16)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("Messages")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task {
+                        await loadThreads()
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isLoadingThreads || isSending)
+                .accessibilityLabel("Refresh conversations")
+            }
+        }
+        .overlay(alignment: .top) {
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(uiColor: .secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .padding(.top, 10)
+            }
+        }
         .task {
             await loadThreads()
         }
@@ -80,29 +113,29 @@ struct MessagingView: View {
                 description: Text("Send the first message below.")
             )
         } else {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10) {
-                    ForEach(messages) { message in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(senderName(for: message.sender))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(message.body)
-                                .font(.body)
-                        }
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.secondarySystemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
+            ForEach(messages) { message in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(senderName(for: message.sender))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(message.body)
+                        .font(.body)
+                        .foregroundStyle(.primary)
                 }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                        .padding(.vertical, 2)
+                )
             }
-            .frame(maxHeight: 320)
         }
     }
 
     private var composer: some View {
-        HStack(alignment: .bottom, spacing: 8) {
+        HStack(alignment: .bottom, spacing: 10) {
             TextField("Write a message", text: $draftMessage, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1...4)
@@ -179,7 +212,6 @@ struct MessagingView: View {
             let created = try await tools.sendMessage(threadID: selectedThreadID, body: body)
             draftMessage = ""
             messages.append(created)
-
             threads = try await tools.listThreads()
             if !threads.contains(where: { $0.id == selectedThreadID }) {
                 self.selectedThreadID = threads.first?.id

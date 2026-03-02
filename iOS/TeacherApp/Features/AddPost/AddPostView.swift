@@ -9,61 +9,64 @@ struct AddPostView: View {
     @State private var successMessage: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+        Form {
+            Section {
                 Text("Compose an update for students and families.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+            }
 
-                Group {
-                    Text("Post Title")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("Enter title", text: $title)
-                        .textFieldStyle(.roundedBorder)
+            Section("Post Details") {
+                TextField("Post title", text: $title)
+                    .textInputAutocapitalization(.sentences)
+                TextField("Course (for example, Math 7)", text: $courseName)
+                    .textInputAutocapitalization(.words)
+            }
 
-                    Text("Course")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("Ex: Math 7", text: $courseName)
-                        .textFieldStyle(.roundedBorder)
+            Section("Message") {
+                TextEditor(text: $postBody)
+                    .frame(minHeight: 180)
+            }
 
-                    Text("Post Body")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextEditor(text: $postBody)
-                        .frame(minHeight: 160)
-                        .padding(8)
-                        .background(Color(.secondarySystemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-
-                if let errorMessage {
+            if let errorMessage {
+                Section {
                     Text(errorMessage)
                         .font(.footnote)
                         .foregroundStyle(.red)
                 }
+            }
 
-                if let successMessage {
+            if let successMessage {
+                Section {
                     Text(successMessage)
                         .font(.footnote)
                         .foregroundStyle(.green)
                 }
-
-                Button("Publish Post") {
+            }
+        }
+        .navigationTitle("Add Post")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Publish") {
                     publishPost()
                 }
-                .buttonStyle(.borderedProminent)
+                .disabled(publishDisabled)
             }
-            .padding(16)
         }
+    }
+
+    private var publishDisabled: Bool {
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+            courseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+            postBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func publishPost() {
         successMessage = nil
 
         guard dataStore.addPost(title: title, body: postBody, courseName: courseName) else {
-            errorMessage = "Title, course, and body are required."
+            errorMessage = "Title, course, and message are required."
             return
         }
 

@@ -19,18 +19,52 @@ struct StudentApp: App {
         WindowGroup {
             Group {
                 if bootstrapper.isLoading {
-                    ProgressView("Loading session...")
+                    ZStack {
+                        Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+                        ProgressView("Loading session...")
+                            .controlSize(.large)
+                    }
                 } else if bootstrapper.currentUser != nil {
-                    DashboardView(environment: environment)
+                    StudentRootView(environment: environment)
                 } else {
                     PlaceholderFeatureView(
                         title: "Sign-In Required",
+                        symbol: "person.crop.circle.badge.exclamationmark",
                         subtitle: bootstrapper.errorMessage ?? "Authenticate via Google and retry."
                     )
                 }
             }
             .task {
                 await bootstrapper.bootstrapSession()
+            }
+        }
+    }
+}
+
+private struct StudentRootView: View {
+    let environment: AppEnvironment
+
+    var body: some View {
+        TabView {
+            NavigationStack {
+                DashboardView(environment: environment)
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+
+            NavigationStack {
+                MessagingView()
+            }
+            .tabItem {
+                Label("Messages", systemImage: "message")
+            }
+
+            NavigationStack {
+                PortfolioPlaceholderView(isFeatureEnabled: environment.portfolioLiveEnabled)
+            }
+            .tabItem {
+                Label("Portfolio", systemImage: "folder")
             }
         }
     }

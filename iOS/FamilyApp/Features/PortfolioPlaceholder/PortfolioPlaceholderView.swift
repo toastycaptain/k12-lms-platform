@@ -8,37 +8,46 @@ struct PortfolioPlaceholderView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Family Portfolio")
-                .font(.title)
-                .fontWeight(.bold)
-
-            Image(systemName: "tray")
-                .font(.system(size: 52, weight: .light))
-                .foregroundStyle(.blue)
-
+        ContentUnavailableView {
+            Label("Family Portfolio", systemImage: "folder")
+        } description: {
             Text(viewModel.state.statusMessage)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-
+        } actions: {
             Button("View Portfolio") {}
                 .buttonStyle(.borderedProminent)
-                .disabled(true)
+                .disabled(!viewModel.state.isFeatureEnabled)
 
             Button("Notify me when available") {
                 viewModel.notifyTapped()
             }
             .buttonStyle(.bordered)
-
-            if viewModel.state.showNotifyConfirmation {
-                Text("We will notify you when portfolio is available.")
-                    .foregroundStyle(.green)
-                    .font(.footnote)
-            }
         }
-        .padding(24)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("Portfolio")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("You're on the list", isPresented: notifyAlertBinding) {
+            Button("OK", role: .cancel) {
+                viewModel.dismissNotificationConfirmation()
+            }
+        } message: {
+            Text("We will notify you when portfolio is available.")
+        }
         .onAppear {
             viewModel.onViewAppeared()
         }
+    }
+
+    private var notifyAlertBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.state.showNotifyConfirmation },
+            set: { newValue in
+                if !newValue {
+                    viewModel.dismissNotificationConfirmation()
+                }
+            }
+        )
     }
 }

@@ -21,9 +21,13 @@ struct TeacherApp: App {
         WindowGroup {
             Group {
                 if bootstrapper.isLoading {
-                    ProgressView("Loading teacher session...")
+                    ZStack {
+                        Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+                        ProgressView("Loading teacher session...")
+                            .controlSize(.large)
+                    }
                 } else if let currentUser = bootstrapper.currentUser {
-                    DashboardView(
+                    TeacherRootView(
                         environment: environment,
                         currentUser: currentUser,
                         tenant: bootstrapper.tenant
@@ -32,12 +36,55 @@ struct TeacherApp: App {
                 } else {
                     PlaceholderFeatureView(
                         title: "Sign-In Required",
+                        symbol: "person.crop.circle.badge.exclamationmark",
                         subtitle: bootstrapper.errorMessage ?? "Authenticate via web and retry."
                     )
                 }
             }
             .task {
                 await bootstrapper.bootstrapSession()
+            }
+        }
+    }
+}
+
+private struct TeacherRootView: View {
+    let environment: AppEnvironment
+    let currentUser: CurrentUserEnvelope.User
+    let tenant: CurrentUserEnvelope.Tenant?
+
+    var body: some View {
+        TabView {
+            NavigationStack {
+                DashboardView(
+                    environment: environment,
+                    currentUser: currentUser,
+                    tenant: tenant
+                )
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+
+            NavigationStack {
+                TodoListView()
+            }
+            .tabItem {
+                Label("Tasks", systemImage: "checklist")
+            }
+
+            NavigationStack {
+                MessagingView()
+            }
+            .tabItem {
+                Label("Messages", systemImage: "message")
+            }
+
+            NavigationStack {
+                AnnouncementsView()
+            }
+            .tabItem {
+                Label("Updates", systemImage: "megaphone")
             }
         }
     }

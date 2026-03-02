@@ -8,29 +8,34 @@ struct PostsTimelineView: View {
     }
 
     var body: some View {
-        if sortedPosts.isEmpty {
-            PlaceholderFeatureView(
-                title: "No Posts Yet",
-                subtitle: "Posts you create will appear in your timeline."
-            )
-        } else {
-            List(sortedPosts) { post in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(post.title)
-                        .font(.headline)
-                    Text(post.courseName)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(post.body)
-                        .font(.body)
-                    Text(Self.dateFormatter.string(from: post.createdAt))
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+        Group {
+            if sortedPosts.isEmpty {
+                PlaceholderFeatureView(
+                    title: "No Posts Yet",
+                    symbol: "text.bubble",
+                    subtitle: "Posts you create will appear in your timeline."
+                )
+            } else {
+                List(sortedPosts) { post in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(post.title)
+                            .font(.headline)
+                        Text(post.courseName)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(post.body)
+                            .font(.body)
+                        Text(Self.dateFormatter.string(from: post.createdAt))
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 6)
                 }
-                .padding(.vertical, 6)
+                .listStyle(.insetGrouped)
             }
-            .listStyle(.insetGrouped)
         }
+        .navigationTitle("Posts Timeline")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private static let dateFormatter: DateFormatter = {

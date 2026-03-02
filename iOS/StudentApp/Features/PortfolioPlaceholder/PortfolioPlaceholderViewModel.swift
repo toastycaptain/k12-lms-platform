@@ -23,4 +23,8 @@ final class PortfolioPlaceholderViewModel: ObservableObject {
         analytics.track("portfolio_notify_clicked")
         state.showNotifyConfirmation = true
     }
+
+    func dismissNotificationConfirmation() {
+        state.showNotifyConfirmation = false
+    }
 }
