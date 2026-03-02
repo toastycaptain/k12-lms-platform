@@ -299,7 +299,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   )}
                   {hasVisibleChildren && shouldUseFlyout && flyoutOpen && (
-                    <div className="hidden md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:flex md:min-w-[12rem] md:flex-col md:gap-0.5 md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
+                    <div className="hidden md:absolute md:left-full md:top-0 md:z-50 md:ml-2 md:flex md:min-w-[12rem] md:flex-col md:gap-0.5 md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg before:absolute before:-left-2 before:top-0 before:h-full before:w-2 before:content-['']">
                       {visibleChildren.map((child) => {
                         const childActive = pathname.startsWith(child.href);
                         return (
