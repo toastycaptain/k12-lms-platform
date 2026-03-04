@@ -29,6 +29,7 @@ if settings.sentry_dsn:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    settings.validate_security_configuration()
     registry.clear()
     registry.register("openai", OpenAIProvider())
     registry.register("anthropic", AnthropicProvider())
@@ -39,14 +40,33 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await registry.close_all()
 
 
-app = FastAPI(title="K-12 LMS AI Gateway", version="1.0.0", lifespan=lifespan)
+docs_url = "/docs" if settings.expose_docs else None
+redoc_url = "/redoc" if settings.expose_docs else None
+openapi_url = "/openapi.json" if settings.expose_docs else None
+
+app = FastAPI(
+    title="K-12 LMS AI Gateway",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url=docs_url,
+    redoc_url=redoc_url,
+    openapi_url=openapi_url,
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[s.strip() for s in settings.cors_origins.split(",")],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Service-Auth-Version",
+        "X-Service-Timestamp",
+        "X-Service-Nonce",
+        "X-Service-Signature",
+        "X-Tenant-ID",
+    ],
 )
 
 

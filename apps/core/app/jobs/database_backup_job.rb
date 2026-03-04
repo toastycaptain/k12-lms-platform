@@ -1,4 +1,6 @@
-require "shellwords"
+require "open3"
+require "securerandom"
+require "zlib"
 
 class DatabaseBackupJob < ApplicationJob
   queue_as :low
@@ -7,13 +9,14 @@ class DatabaseBackupJob < ApplicationJob
   S3_REGION = ENV.fetch("BACKUP_S3_REGION", "us-east-1")
 
   def perform(backup_type: "full")
+    normalized_backup_type = normalize_backup_type!(backup_type)
     timestamp = Time.current.strftime("%Y%m%d_%H%M%S")
-    filename = "k12_#{backup_type}_#{timestamp}.sql.gz"
+    filename = "k12_#{normalized_backup_type}_#{timestamp}.sql.gz"
     s3_key = "backups/#{Date.current.strftime('%Y/%m')}/#{filename}"
     local_path = Rails.root.join("tmp", filename)
 
     record = BackupRecord.create!(
-      backup_type: backup_type,
+      backup_type: normalized_backup_type,
       status: "in_progress",
       s3_key: s3_key,
       s3_bucket: S3_BUCKET
@@ -23,9 +26,7 @@ class DatabaseBackupJob < ApplicationJob
 
     begin
       db_config = ActiveRecord::Base.connection_db_config.configuration_hash
-      dump_command = build_dump_command(db_config, local_path)
-      success = system(dump_command)
-      raise "pg_dump failed with exit code #{$?.exitstatus}" unless success
+      dump_database!(db_config, local_path)
 
       file_size = File.size(local_path)
       upload_to_s3(local_path, s3_key)
@@ -45,24 +46,54 @@ class DatabaseBackupJob < ApplicationJob
       Rails.logger.error("[DatabaseBackupJob] Backup failed: #{e.message}")
       raise
     ensure
-      File.delete(local_path) if File.exist?(local_path)
+      safe_delete_temp_file(local_path)
     end
   end
 
   private
 
-  def build_dump_command(config, output_path)
-    parts = [ "pg_dump" ]
-    parts << "-h #{Shellwords.escape(config[:host].to_s)}" if config[:host]
-    parts << "-p #{config[:port]}" if config[:port]
-    parts << "-U #{Shellwords.escape(config[:username].to_s)}" if config[:username]
-    parts << "--no-owner --no-acl"
-    parts << "-Fc"
-    parts << Shellwords.escape(config[:database].to_s)
-    parts << "| gzip > #{Shellwords.escape(output_path.to_s)}"
+  def dump_database!(config, output_path)
+    temp_dump_path = Rails.root.join("tmp", "backup_#{SecureRandom.hex(16)}.dump").to_s
+    output, status = Open3.capture2e(pg_env(config), "pg_dump", *pg_dump_args(config, temp_dump_path))
+    raise "pg_dump failed with exit code #{status.exitstatus}: #{output.to_s.truncate(500)}" unless status.success?
 
-    env_prefix = config[:password].present? ? "PGPASSWORD=#{Shellwords.escape(config[:password])} " : ""
-    "#{env_prefix}#{parts.join(' ')}"
+    compress_dump!(temp_dump_path, output_path)
+  ensure
+    safe_delete_temp_file(temp_dump_path)
+  end
+
+  def pg_dump_args(config, output_path)
+    args = []
+    args.concat([ "-h", config[:host].to_s ]) if config[:host].present?
+    args.concat([ "-p", config[:port].to_s ]) if config[:port].present?
+    args.concat([ "-U", config[:username].to_s ]) if config[:username].present?
+    args.concat(%w[--no-owner --no-acl -Fc])
+    args.concat([ "-f", output_path.to_s ])
+    args << config[:database].to_s
+    args
+  end
+
+  def pg_env(config)
+    return {} if config[:password].blank?
+
+    { "PGPASSWORD" => config[:password].to_s }
+  end
+
+  def compress_dump!(source_path, output_path)
+    File.open(source_path, "rb") do |source|
+      Zlib::GzipWriter.open(output_path.to_s) do |gz|
+        IO.copy_stream(source, gz)
+      end
+    end
+  end
+
+  def normalize_backup_type!(value)
+    normalized = value.to_s.downcase.gsub(/[^a-z0-9_-]/, "")
+    if normalized.blank? || normalized.length > 32
+      raise ArgumentError, "Invalid backup_type"
+    end
+
+    normalized
   end
 
   def upload_to_s3(local_path, s3_key)
@@ -93,5 +124,16 @@ class DatabaseBackupJob < ApplicationJob
     ActiveRecord::Base.connection.select_value(
       "SELECT pg_size_pretty(pg_database_size(current_database())) AS size"
     )
+  end
+
+  def safe_delete_temp_file(path)
+    return if path.blank?
+
+    resolved_path = Pathname.new(path.to_s).expand_path
+    tmp_root = Rails.root.join("tmp").expand_path
+    return unless resolved_path.to_s.start_with?("#{tmp_root}/")
+    return unless resolved_path.file?
+
+    File.delete(resolved_path)
   end
 end

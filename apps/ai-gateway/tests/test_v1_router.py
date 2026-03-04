@@ -1,10 +1,32 @@
+import hashlib
+import hmac
 import json
+import time
 
 from app.config import settings
 from app.prompts.system_prompts import SYSTEM_PROMPTS
 from app.providers.base import ProviderError
 from app.providers.registry import registry
 from tests.conftest import FakeProvider
+
+
+def hmac_headers(path: str, body: str, secret: str, method: str = "POST") -> dict[str, str]:
+    timestamp = int(time.time())
+    nonce = f"nonce-{time.time_ns()}"
+    body_digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    canonical = "\n".join([method, path, str(timestamp), nonce, body_digest])
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        canonical.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return {
+        "Content-Type": "application/json",
+        "X-Service-Auth-Version": "v1",
+        "X-Service-Timestamp": str(timestamp),
+        "X-Service-Nonce": nonce,
+        "X-Service-Signature": signature,
+    }
 
 
 def test_health_endpoint(client):
@@ -31,6 +53,15 @@ def test_health_endpoint_reports_ok_when_provider_key_present(client):
         settings.openai_api_key = ""
 
 
+def test_health_endpoint_requires_service_token_when_configured(client):
+    settings.service_token = "secret-token"
+    response = client.get("/v1/health")
+    assert response.status_code == 401
+
+    authorized = client.get("/v1/health", headers={"Authorization": "Bearer secret-token"})
+    assert authorized.status_code == 200
+
+
 def test_generate_rejects_unknown_provider(client):
     payload = {
         "provider": "missing",
@@ -42,6 +73,23 @@ def test_generate_rejects_unknown_provider(client):
 
     assert response.status_code == 400
     assert "not registered" in response.json()["detail"]
+
+
+def test_generate_accepts_hmac_service_auth(client):
+    settings.service_token = "secret-token"
+    settings.allow_legacy_bearer_auth = False
+    payload = {
+        "provider": "fake",
+        "model": "fake-model",
+        "prompt": "Create a lesson plan",
+    }
+    body = json.dumps(payload)
+    headers = hmac_headers("/v1/generate", body, "secret-token")
+    registry.register("fake", FakeProvider(content='{"title":"Fractions"}'))
+
+    response = client.post("/v1/generate", content=body, headers=headers)
+
+    assert response.status_code == 200
 
 
 def test_generate_blocks_unsafe_input(client):
@@ -297,7 +345,7 @@ def test_generate_stream_emits_unhandled_error_event(client):
     )
 
     assert response.status_code == 200
-    assert '{"error": "unexpected"}' in response.text
+    assert '{"error": "Internal server error"}' in response.text
 
 
 def test_generate_stream_requires_service_token_when_configured(client):

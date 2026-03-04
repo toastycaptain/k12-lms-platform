@@ -18,6 +18,7 @@ RSpec.describe OneRosterClient do
     allow(Rails).to receive(:cache).and_return(cache_store)
     Rails.cache.clear
     allow(Faraday).to receive(:new).and_return(api_conn, token_conn)
+    allow(Resolv).to receive(:getaddresses).with("oneroster.example.com").and_return([ "151.101.2.132" ])
   end
 
   after do

@@ -3,16 +3,24 @@ import logging
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from app.auth import verify_service_token
+from app.auth import ServicePrincipal, verify_service_token
 from app.config import settings
 from app.models.generate import GenerateRequest, GenerateResponseModel
 from app.prompts.system_prompts import SYSTEM_PROMPTS
 from app.providers.base import BaseProvider, ProviderError
 from app.providers.registry import registry
-from app.safety import ContentClassifier, PIIFilter, SafetyCategory, SafetyFilter, SafetyPipeline
+from app.rate_limit import rate_limiter
+from app.safety import (
+    ContentClassifier,
+    PIIFilter,
+    SafetyCategory,
+    SafetyFilter,
+    SafetyPipeline,
+    SafetyResult,
+)
 
 logger = logging.getLogger("ai-gateway.v1")
 safety_logger = logging.getLogger("ai-gateway.safety")
@@ -31,7 +39,7 @@ def create_safety_pipeline(safety_level: str = "strict") -> SafetyPipeline:
 default_pipeline = create_safety_pipeline("strict")
 
 
-def log_safety_event(request: GenerateRequest, result, direction: str) -> None:
+def log_safety_event(request: GenerateRequest, result: SafetyResult, direction: str) -> None:
     context = request.context or {}
     event = {
         "timestamp": datetime.now(UTC).isoformat(),
@@ -54,7 +62,50 @@ def resolve_provider(provider_name: str) -> BaseProvider:
         raise HTTPException(status_code=400, detail=str(exc)) from None
 
 
-@router.get("/health")
+def apply_rate_limit(
+    *,
+    request: Request,
+    principal: ServicePrincipal,
+    per_minute_limit: int,
+) -> None:
+    tenant_id = principal.tenant_id or "unknown"
+    key = f"{principal.token_fingerprint}:{tenant_id}:{request.url.path}"
+    allowed, retry_after = rate_limiter.allow(key=key, limit=per_minute_limit, period_seconds=60)
+    if allowed:
+        return
+
+    raise HTTPException(
+        status_code=429,
+        detail="Rate limit exceeded",
+        headers={"Retry-After": str(retry_after)},
+    )
+
+
+async def require_generate_access(
+    request: Request,
+    principal: ServicePrincipal = Depends(verify_service_token),  # noqa: B008
+) -> ServicePrincipal:
+    apply_rate_limit(
+        request=request,
+        principal=principal,
+        per_minute_limit=settings.rate_limit_generate_per_minute,
+    )
+    return principal
+
+
+async def require_stream_access(
+    request: Request,
+    principal: ServicePrincipal = Depends(verify_service_token),  # noqa: B008
+) -> ServicePrincipal:
+    apply_rate_limit(
+        request=request,
+        principal=principal,
+        per_minute_limit=settings.rate_limit_stream_per_minute,
+    )
+    return principal
+
+
+@router.get("/health", dependencies=[Depends(verify_service_token)])
 async def health() -> dict[str, object]:
     configured_providers: list[str] = []
     if settings.openai_api_key.strip():
@@ -74,13 +125,16 @@ async def health() -> dict[str, object]:
     }
 
 
-@router.get("/providers")
+@router.get("/providers", dependencies=[Depends(verify_service_token)])
 async def list_providers() -> list[dict[str, object]]:
     return registry.list_providers()
 
 
-@router.post("/generate", dependencies=[Depends(verify_service_token)])
-async def generate(request: GenerateRequest) -> GenerateResponseModel:
+@router.post("/generate")
+async def generate(
+    request: GenerateRequest,
+    _principal: ServicePrincipal = Depends(require_generate_access),  # noqa: B008
+) -> GenerateResponseModel:
     context = request.context or {}
     safety_level = str(context.get("safety_level", "strict"))
     pipeline = create_safety_pipeline(safety_level)
@@ -143,8 +197,11 @@ async def generate(request: GenerateRequest) -> GenerateResponseModel:
     )
 
 
-@router.post("/generate_stream", dependencies=[Depends(verify_service_token)])
-async def generate_stream(request: GenerateRequest) -> StreamingResponse:
+@router.post("/generate_stream")
+async def generate_stream(
+    request: GenerateRequest,
+    _principal: ServicePrincipal = Depends(require_stream_access),  # noqa: B008
+) -> StreamingResponse:
     context = request.context or {}
     safety_level = str(context.get("safety_level", "strict"))
     pipeline = create_safety_pipeline(safety_level)
@@ -205,7 +262,8 @@ async def generate_stream(request: GenerateRequest) -> StreamingResponse:
                 yield "data: " + json.dumps(data) + "\n\n"
         except ProviderError as exc:
             yield "data: " + json.dumps({"error": exc.message}) + "\n\n"
-        except Exception as exc:
-            yield "data: " + json.dumps({"error": str(exc)}) + "\n\n"
+        except Exception:
+            logger.exception("Unhandled streaming exception in /v1/generate_stream")
+            yield "data: " + json.dumps({"error": "Internal server error"}) + "\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

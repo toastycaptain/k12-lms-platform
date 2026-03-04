@@ -1,6 +1,13 @@
+require "digest"
+require "openssl"
+require "securerandom"
+require "uri"
+
 class AiGatewayClient
   BASE_URL = ENV.fetch("AI_GATEWAY_URL", "http://localhost:8000")
   SERVICE_TOKEN = ENV.fetch("AI_GATEWAY_TOKEN", ENV.fetch("AI_GATEWAY_SERVICE_TOKEN", ""))
+  REQUEST_TIMEOUT_SECONDS = 120
+  STREAM_TIMEOUT_SECONDS = 300
 
   class AiGatewayError < StandardError
     attr_reader :status_code, :response_body
@@ -13,25 +20,35 @@ class AiGatewayClient
   end
 
   def self.generate(provider:, model:, messages:, task_type: nil, max_tokens: 4096, temperature: 0.7, context: nil)
+    ensure_secure_configuration!
     prompt_payload = build_prompt_payload(messages)
+    payload = {
+      provider: provider,
+      model: model,
+      prompt: prompt_payload[:prompt],
+      system_prompt: prompt_payload[:system_prompt],
+      task_type: task_type,
+      max_tokens: max_tokens,
+      temperature: temperature,
+      context: normalize_context(context)
+    }.compact
+    payload_json = payload.to_json
     conn = Faraday.new(url: BASE_URL) do |f|
-      f.request :json
       f.response :json
-      f.options.timeout = 120
+      f.options.timeout = REQUEST_TIMEOUT_SECONDS
+      f.options.open_timeout = 15
     end
 
     response = conn.post("/v1/generate") do |req|
-      req.headers["Authorization"] = "Bearer #{SERVICE_TOKEN}"
-      req.body = {
-        provider: provider,
-        model: model,
-        prompt: prompt_payload[:prompt],
-        system_prompt: prompt_payload[:system_prompt],
-        task_type: task_type,
-        max_tokens: max_tokens,
-        temperature: temperature,
-        context: normalize_context(context)
-      }.compact
+      req.headers["Content-Type"] = "application/json"
+      req.headers["Accept"] = "application/json"
+      apply_service_auth_headers!(
+        request: req,
+        method: "POST",
+        path: "/v1/generate",
+        payload_json: payload_json
+      )
+      req.body = payload_json
     end
 
     unless response.success?
@@ -43,14 +60,16 @@ class AiGatewayClient
     end
 
     response.body
+  rescue Faraday::Error => e
+    raise AiGatewayError.new("AI Gateway request failed: #{e.message}", status_code: 502, response_body: e.message)
   end
 
   # Streams tokens from the AI Gateway. Yields each chunk as it arrives.
   # Returns the full accumulated response text.
   def self.generate_stream(provider:, model:, messages:, task_type: nil, max_tokens: 4096, temperature: 0.7, context: nil, &block)
+    ensure_secure_configuration!
     prompt_payload = build_prompt_payload(messages)
     conn = Faraday.new(url: BASE_URL) do |f|
-      f.request :json
       f.adapter :net_http
     end
 
@@ -64,16 +83,23 @@ class AiGatewayClient
       temperature: temperature,
       context: normalize_context(context)
     }.compact
+    payload_json = payload.to_json
 
     full_text = +""
     buffer = +""
 
     response = conn.post("/v1/generate_stream") do |req|
-      req.headers["Authorization"] = "Bearer #{SERVICE_TOKEN}"
       req.headers["Content-Type"] = "application/json"
       req.headers["Accept"] = "text/event-stream"
-      req.options.timeout = 300
-      req.body = payload.to_json
+      apply_service_auth_headers!(
+        request: req,
+        method: "POST",
+        path: "/v1/generate_stream",
+        payload_json: payload_json
+      )
+      req.options.timeout = STREAM_TIMEOUT_SECONDS
+      req.options.open_timeout = 15
+      req.body = payload_json
 
       req.options.on_data = proc do |chunk, _size, _env|
         buffer << chunk
@@ -192,6 +218,45 @@ class AiGatewayClient
     base_context.presence
   end
   private_class_method :normalize_context
+
+  def self.ensure_secure_configuration!
+    uri = URI.parse(BASE_URL)
+    raise AiGatewayError.new("AI_GATEWAY_URL must include a hostname") if uri.host.blank?
+    if Rails.env.production? && uri.scheme != "https"
+      raise AiGatewayError.new("AI_GATEWAY_URL must use https in production")
+    end
+    if Rails.env.production? && SERVICE_TOKEN.blank?
+      raise AiGatewayError.new("AI_GATEWAY_TOKEN is required in production")
+    end
+  rescue URI::InvalidURIError => e
+    raise AiGatewayError.new("AI_GATEWAY_URL is invalid: #{e.message}")
+  end
+  private_class_method :ensure_secure_configuration!
+
+  def self.apply_service_auth_headers!(request:, method:, path:, payload_json:)
+    token = SERVICE_TOKEN.to_s
+    if token.blank?
+      return unless Rails.env.production?
+
+      raise AiGatewayError.new("AI_GATEWAY_TOKEN is required in production")
+    end
+
+    timestamp = Time.current.to_i
+    nonce = SecureRandom.hex(16)
+    body_digest = Digest::SHA256.hexdigest(payload_json.to_s)
+    canonical = [ method.to_s.upcase, path.to_s, timestamp, nonce, body_digest ].join("\n")
+    signature = OpenSSL::HMAC.hexdigest("SHA256", token, canonical)
+
+    request.headers["X-Service-Auth-Version"] = "v1"
+    request.headers["X-Service-Timestamp"] = timestamp.to_s
+    request.headers["X-Service-Nonce"] = nonce
+    request.headers["X-Service-Signature"] = signature
+    request.headers["X-Tenant-ID"] = Current.tenant.id.to_s if defined?(Current) && Current.tenant&.id
+
+    # Allow gradual migration in non-production environments only.
+    request.headers["Authorization"] = "Bearer #{token}" unless Rails.env.production?
+  end
+  private_class_method :apply_service_auth_headers!
 
   private_class_method :parse_stream_line
 end

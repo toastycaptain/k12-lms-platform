@@ -152,6 +152,31 @@ RSpec.describe "Api::V1::Addon", type: :request do
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["drive_file_id"]).to eq("abc123")
     end
+
+    it "returns forbidden for linkables the addon user cannot update" do
+      Current.tenant = tenant
+      academic_year = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: academic_year)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: admin)
+      other_teacher = create(:user, tenant: tenant)
+      other_teacher.add_role(:teacher)
+      lesson = create(:lesson_plan, tenant: tenant, unit_plan: unit_plan, created_by: other_teacher)
+      version = lesson.create_version!(title: "Other Teacher Version")
+      Current.tenant = nil
+
+      post "/api/v1/addon/attach",
+        params: {
+          linkable_type: "LessonVersion",
+          linkable_id: version.id,
+          drive_file_url: "https://docs.google.com/document/d/protected",
+          drive_file_title: "Protected Notes",
+          drive_file_id: "protected",
+          drive_mime_type: "application/vnd.google-apps.document"
+        },
+        headers: auth_headers
+
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "authentication" do

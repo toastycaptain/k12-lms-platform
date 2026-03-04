@@ -1,6 +1,6 @@
 # Environment variable validation — runs on boot
 #
-# Required vars cause a logged warning in production (does not crash).
+# Required vars raise in production (fail closed).
 # Recommended vars cause a logged info message if missing.
 # A startup summary is always logged.
 
@@ -8,16 +8,23 @@ Rails.application.config.after_initialize do
   next if Rails.env.test? && !ENV["VALIDATE_ENV_IN_TEST"]
 
   logger = Rails.logger || Logger.new($stdout)
+  parse_bool = ->(value) { ActiveModel::Type::Boolean.new.cast(value) }
 
   required_vars = %w[DATABASE_URL REDIS_URL SECRET_KEY_BASE]
 
   if Rails.env.production?
+    required_vars += %w[CORS_ORIGINS FRONTEND_URL ALLOWED_HOSTS]
     missing_required = required_vars.select { |var| ENV[var].blank? }
     if missing_required.any?
-      logger.warn(
-        "PRODUCTION WARNING: Missing required environment variables: #{missing_required.join(', ')}. " \
-        "The application may not function correctly.",
-      )
+      raise "Missing required environment variables in production: #{missing_required.join(', ')}"
+    end
+
+    if parse_bool.call(ENV["AUTH_BYPASS_MODE"])
+      raise "AUTH_BYPASS_MODE must be disabled in production"
+    end
+
+    if ENV["CORS_ORIGINS"].to_s.split(",").map(&:strip).any? { |origin| origin == "*" }
+      raise "CORS_ORIGINS must not include '*' in production"
     end
   end
 

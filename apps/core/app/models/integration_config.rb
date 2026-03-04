@@ -45,7 +45,18 @@ class IntegrationConfig < ApplicationRecord
     url = settings&.dig("base_url")
     return if url.blank?
 
-    validator = SafeUrlValidator.new(attributes: [ :base_url ])
+    allowed_domains = if provider == "oneroster"
+      ENV["ONEROSTER_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?).presence
+    end
+    allowed_ports = if provider == "oneroster" && Rails.env.production?
+      [ 443 ]
+    end
+
+    validator = SafeUrlValidator.new(
+      attributes: [ :base_url ],
+      allowed_domains: allowed_domains,
+      allowed_ports: allowed_ports
+    )
     validator.validate_each(self, :base_url, url)
   end
 

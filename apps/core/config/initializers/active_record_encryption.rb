@@ -15,9 +15,8 @@ if Rails.env.production?
   missing = ENCRYPTION_KEYS.select { |key| ENV[key].blank? }
 
   if missing.any?
-    Rails.logger.warn(
-      "WARNING: Missing Active Record Encryption keys: #{missing.join(', ')}. " \
-      "Encrypted columns will not work correctly. " \
+    raise(
+      "Missing Active Record Encryption keys in production: #{missing.join(', ')}. " \
       "Generate keys with: rails production:generate_encryption_keys",
     )
   end

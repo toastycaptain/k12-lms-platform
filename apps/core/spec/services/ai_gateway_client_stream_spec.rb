@@ -143,7 +143,7 @@ RSpec.describe AiGatewayClient do
   private
 
   def build_stream_request
-    options = Struct.new(:timeout, :on_data).new
+    options = Struct.new(:timeout, :open_timeout, :on_data).new
     Struct.new(:headers, :body, :options).new({}, nil, options)
   end
 end

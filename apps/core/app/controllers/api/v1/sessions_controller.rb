@@ -66,11 +66,16 @@ module Api
         end
 
         impersonator = Current.user
+        tenant = Current.tenant
+        reset_session
+        clear_impersonation_session_state!
+        session[:tenant_id] = tenant.id
         session[:impersonator_user_id] = impersonator.id
-        session[:impersonator_tenant_id] = Current.tenant.id
+        session[:impersonator_tenant_id] = tenant.id
         session[:impersonated_user_id] = target_user.id
         session[:user_id] = target_user.id
         session[:last_seen_at] = Time.current.to_i
+        Current.tenant = tenant
         Current.user = target_user
 
         audit_event(
@@ -78,7 +83,7 @@ module Api
           actor: impersonator,
           auditable: target_user,
           metadata: {
-            tenant_id: Current.tenant.id,
+            tenant_id: tenant.id,
             impersonator_user_id: impersonator.id,
             impersonated_user_id: target_user.id
           }
@@ -95,14 +100,14 @@ module Api
         end
 
         impersonated_user = Current.user
-        session[:tenant_id] = impersonator.tenant_id
+        impersonator_tenant = impersonator.tenant
+        reset_session
+        clear_impersonation_session_state!
+        session[:tenant_id] = impersonator_tenant.id
         session[:user_id] = impersonator.id
         session[:last_seen_at] = Time.current.to_i
-        session.delete(:impersonator_user_id)
-        session.delete(:impersonator_tenant_id)
-        session.delete(:impersonated_user_id)
 
-        Current.tenant = impersonator.tenant
+        Current.tenant = impersonator_tenant
         Current.user = impersonator
 
         audit_event(
@@ -217,8 +222,11 @@ module Api
       end
 
       def complete_sign_in!(user:, tenant:, provider:)
+        reset_session
+        clear_impersonation_session_state!
         session[:user_id] = user.id
         session[:tenant_id] = tenant.id
+        session[:last_seen_at] = Time.current.to_i
         MetricsService.increment(
           "auth.success",
           tags: {
@@ -480,6 +488,13 @@ module Api
           first_name: actor.first_name,
           last_name: actor.last_name
         }
+      end
+
+      def clear_impersonation_session_state!
+        session.delete(:impersonator_user_id)
+        session.delete(:impersonator_tenant_id)
+        session.delete(:impersonated_user_id)
+        remove_instance_variable(:@impersonator_user) if defined?(@impersonator_user)
       end
     end
   end

@@ -3,9 +3,11 @@ from collections.abc import AsyncGenerator
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 from app.providers.base import BaseProvider, GenerateResponse, ProviderError, StreamChunk, Usage
 from app.providers.registry import registry
+from app.rate_limit import rate_limiter
 
 
 class FakeProvider(BaseProvider):
@@ -79,8 +81,14 @@ class FakeProvider(BaseProvider):
 @pytest.fixture(autouse=True)
 def reset_registry():
     registry.clear()
+    settings.service_token = ""
+    settings.allow_legacy_bearer_auth = True
+    settings.rate_limit_generate_per_minute = 30
+    settings.rate_limit_stream_per_minute = 15
+    rate_limiter.reset()
     yield
     registry.clear()
+    rate_limiter.reset()
 
 
 @pytest.fixture

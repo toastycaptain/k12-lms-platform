@@ -46,15 +46,15 @@ RSpec.describe AiGatewayClient do
         context: { "grade_level" => "5" }
       )
 
-      expect(request.body).to eq(
-        provider: "openai",
-        model: "gpt-4o-mini",
-        prompt: "Write a lesson objective.",
-        system_prompt: "You are a tutor.",
-        task_type: "lesson_plan",
-        max_tokens: 1024,
-        temperature: 0.2,
-        context: {
+      expect(JSON.parse(request.body)).to eq(
+        "provider" => "openai",
+        "model" => "gpt-4o-mini",
+        "prompt" => "Write a lesson objective.",
+        "system_prompt" => "You are a tutor.",
+        "task_type" => "lesson_plan",
+        "max_tokens" => 1024,
+        "temperature" => 0.2,
+        "context" => {
           "grade_level" => "5",
           "tenant_id" => tenant.id,
           "safety_level" => "strict"
@@ -84,18 +84,19 @@ RSpec.describe AiGatewayClient do
         task_type: nil
       )
 
-      expect(request.body).to eq(
-        provider: "anthropic",
-        model: "claude-3-7-sonnet",
-        prompt: "Hello",
-        max_tokens: 4096,
-        temperature: 0.7,
-        context: {
+      parsed_body = JSON.parse(request.body)
+      expect(parsed_body).to eq(
+        "provider" => "anthropic",
+        "model" => "claude-3-7-sonnet",
+        "prompt" => "Hello",
+        "max_tokens" => 4096,
+        "temperature" => 0.7,
+        "context" => {
           "tenant_id" => tenant.id,
           "safety_level" => "strict"
         }
       )
-      expect(request.body).not_to have_key(:task_type)
+      expect(parsed_body).not_to have_key("task_type")
     end
 
     it "raises AiGatewayError when no user prompt can be derived" do
@@ -126,22 +127,26 @@ RSpec.describe AiGatewayClient do
       }
     end
 
-    it "raises Faraday::TimeoutError when the request times out" do
+    it "raises AiGatewayError when the request times out" do
       request = build_request
       allow(conn).to receive(:post).with("/v1/generate").and_yield(request).and_raise(Faraday::TimeoutError.new("execution expired"))
 
       expect {
         described_class.generate(provider: "openai", model: "gpt-4o-mini", messages: messages)
-      }.to raise_error(Faraday::TimeoutError, /execution expired/)
+      }.to raise_error(described_class::AiGatewayError, /AI Gateway request failed/) do |error|
+        expect(error.status_code).to eq(502)
+      end
     end
 
-    it "raises Faraday::ConnectionFailed when the connection fails" do
+    it "raises AiGatewayError when the connection fails" do
       request = build_request
       allow(conn).to receive(:post).with("/v1/generate").and_yield(request).and_raise(Faraday::ConnectionFailed.new("Connection refused"))
 
       expect {
         described_class.generate(provider: "openai", model: "gpt-4o-mini", messages: messages)
-      }.to raise_error(Faraday::ConnectionFailed, /Connection refused/)
+      }.to raise_error(described_class::AiGatewayError, /AI Gateway request failed/) do |error|
+        expect(error.status_code).to eq(502)
+      end
     end
   end
 

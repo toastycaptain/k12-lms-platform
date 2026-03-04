@@ -11,6 +11,7 @@ class OneRosterClient
 
   CACHE_KEY_PREFIX = "one_roster_token"
   DEFAULT_LIMIT = 100
+  ONEROSTER_PATH_PREFIX = "/ims/oneroster"
 
   def initialize(base_url:, client_id:, client_secret:)
     validate_url_safety!(base_url)
@@ -58,23 +59,36 @@ class OneRosterClient
   private
 
   def validate_url_safety!(url)
-    uri = URI.parse(url)
+    allowed_domains = ENV["ONEROSTER_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?).presence
+    allowed_ports = allowed_oneroster_ports
 
-    blocked_hosts = %w[localhost 127.0.0.1 0.0.0.0 ::1 169.254.169.254 metadata.google.internal]
-    if blocked_hosts.include?(uri.host&.downcase)
-      raise ArgumentError, "OneRoster base_url cannot point to internal addresses: #{uri.host}"
+    uri = OutboundUrlGuard.validate!(
+      url,
+      allowed_schemes: OutboundUrlGuard.default_allowed_schemes,
+      allowed_ports: allowed_ports,
+      allowed_host_patterns: allowed_domains,
+      require_dns_resolution: true
+    )
+
+    path = uri.path.presence || "/"
+    unless path == "/" || path.start_with?(ONEROSTER_PATH_PREFIX)
+      raise ArgumentError, "OneRoster base_url path must be '/' or start with '#{ONEROSTER_PATH_PREFIX}'"
+    end
+  rescue OutboundUrlGuard::ValidationError => e
+    raise ArgumentError, "OneRoster base_url #{e.message}"
+  end
+
+  def allowed_oneroster_ports
+    configured = ENV["ONEROSTER_ALLOWED_PORTS"].to_s.split(",").map(&:strip).reject(&:blank?).filter_map do |value|
+      Integer(value)
+    rescue ArgumentError, TypeError
+      nil
     end
 
-    begin
-      addr = IPAddr.new(uri.host)
-      if addr.private? || addr.loopback? || addr.link_local?
-        raise ArgumentError, "OneRoster base_url cannot point to private IP: #{uri.host}"
-      end
-    rescue IPAddr::InvalidAddressError
-      # Hostname, not IP — fine
-    end
-  rescue URI::InvalidURIError
-    raise ArgumentError, "OneRoster base_url is not a valid URL: #{url}"
+    return configured if configured.present?
+    return [ 443 ] if Rails.env.production?
+
+    []
   end
 
   def authenticate!

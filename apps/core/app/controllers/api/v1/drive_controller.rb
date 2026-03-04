@@ -128,7 +128,9 @@ module Api
           return
         end
 
-        linkable = params[:linkable_type].constantize.find(params[:linkable_id])
+        linkable = resolve_linkable_for_resource_link
+        return if performed?
+
         ResourceLink.create!(
           tenant: Current.tenant,
           linkable: linkable,
@@ -151,10 +153,54 @@ module Api
       end
 
       def attach_course_folder!(folder)
-        course = Course.find(params[:course_id])
+        course = policy_scope(Course).find_by(id: params[:course_id])
+        unless course
+          render json: { error: "Course not found" }, status: :not_found
+          return
+        end
+
+        authorize course, :gradebook?
         settings = course.settings.to_h
         settings["drive_folder_id"] = folder[:id]
         course.update!(settings: settings)
+      end
+
+      def resolve_linkable_for_resource_link
+        linkable_id = params[:linkable_id]
+
+        case params[:linkable_type]
+        when "Assignment"
+          linkable = policy_scope(Assignment).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable, :update?
+          linkable
+        when "CourseModule"
+          linkable = policy_scope(CourseModule).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable, :update?
+          linkable
+        when "LessonVersion"
+          linkable = LessonVersion.includes(:lesson_plan).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable.lesson_plan, :update?
+          linkable
+        when "UnitVersion"
+          linkable = UnitVersion.includes(:unit_plan).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable.unit_plan, :update?
+          linkable
+        else
+          linkable_not_found
+        end
+      end
+
+      def linkable_not_found
+        render json: { error: "Linkable resource not found" }, status: :not_found
+        nil
       end
 
       def resource_link_metadata(linkable)

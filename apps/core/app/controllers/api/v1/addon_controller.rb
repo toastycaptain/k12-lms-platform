@@ -38,15 +38,11 @@ module Api
 
       def attach
         authorize :addon, :attach?
-        linkable_class = linkable_class_for(params[:linkable_type])
-        unless linkable_class
-          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
-          return
-        end
+        linkable = resolve_linkable_for_attach
+        return if performed?
 
-        linkable = linkable_class.find(params[:linkable_id])
-        if linkable.respond_to?(:tenant_id) && linkable.tenant_id != Current.tenant.id
-          render json: { error: "Forbidden" }, status: :forbidden
+        unless linkable
+          render json: { error: "Invalid linkable_type" }, status: :unprocessable_entity
           return
         end
 
@@ -234,14 +230,46 @@ module Api
         JSON.parse(Base64.urlsafe_decode64(padded))
       end
 
-      def linkable_class_for(linkable_type)
-        {
-          "LessonPlan" => LessonPlan,
-          "LessonVersion" => LessonVersion,
-          "UnitVersion" => UnitVersion,
-          "CourseModule" => CourseModule,
-          "Assignment" => Assignment
-        }[linkable_type.to_s]
+      def resolve_linkable_for_attach
+        linkable_id = params[:linkable_id]
+
+        case params[:linkable_type].to_s
+        when "LessonPlan"
+          linkable = LessonPlan.find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable, :update?
+          linkable
+        when "LessonVersion"
+          linkable = LessonVersion.includes(:lesson_plan).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable.lesson_plan, :update?
+          linkable
+        when "UnitVersion"
+          linkable = UnitVersion.includes(:unit_plan).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable.unit_plan, :update?
+          linkable
+        when "CourseModule"
+          linkable = policy_scope(CourseModule).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable, :update?
+          linkable
+        when "Assignment"
+          linkable = policy_scope(Assignment).find_by(id: linkable_id)
+          return linkable_not_found unless linkable
+
+          authorize linkable, :update?
+          linkable
+        end
+      end
+
+      def linkable_not_found
+        render json: { error: "Linkable resource not found" }, status: :not_found
+        nil
       end
 
       def resource_link_metadata_for(linkable)

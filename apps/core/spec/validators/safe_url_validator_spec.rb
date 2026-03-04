@@ -6,7 +6,7 @@ RSpec.describe SafeUrlValidator do
       include ActiveModel::Model
       include ActiveModel::Validations
       attr_accessor :url
-      validates :url, safe_url: true
+      validates :url, safe_url: { require_dns_resolution: true }
 
       def self.model_name
         ActiveModel::Name.new(self, nil, "TestModel")
@@ -15,6 +15,23 @@ RSpec.describe SafeUrlValidator do
   end
 
   subject(:model) { validatable_class.new(url: url) }
+
+  before do
+    allow(Resolv).to receive(:getaddresses) do |host|
+      case host
+      when "example.com"
+        [ "93.184.216.34" ]
+      when "oneroster.school.edu"
+        [ "151.101.2.132" ]
+      when "external-service.com"
+        [ "104.21.48.1" ]
+      when "dns-rebind.example"
+        [ "10.1.2.3" ]
+      else
+        []
+      end
+    end
+  end
 
   describe "valid URLs" do
     %w[
@@ -69,6 +86,12 @@ RSpec.describe SafeUrlValidator do
         it { is_expected.not_to be_valid }
       end
     end
+  end
+
+  describe "DNS rebinding protections" do
+    let(:url) { "https://dns-rebind.example/resource" }
+
+    it { is_expected.not_to be_valid }
   end
 
   describe "blank URL" do

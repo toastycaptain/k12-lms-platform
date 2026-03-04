@@ -59,6 +59,8 @@ RSpec.describe "Api::V1::Drive", type: :request do
       Current.tenant = tenant
       ay = create(:academic_year, tenant: tenant)
       course = create(:course, tenant: tenant, academic_year: ay)
+      section = create(:section, tenant: tenant, course: course)
+      create(:enrollment, tenant: tenant, user: user, section: section, role: "teacher")
       assignment = create(:assignment, tenant: tenant, course: course, created_by: user)
       Current.tenant = nil
 
@@ -75,6 +77,32 @@ RSpec.describe "Api::V1::Drive", type: :request do
       }.to change(ResourceLink.unscoped, :count).by(1)
 
       expect(response).to have_http_status(:created)
+    end
+
+    it "returns not found when linking to an unauthorized assignment" do
+      mock_session(user, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      section = create(:section, tenant: tenant, course: course)
+      other_teacher = create(:user, tenant: tenant)
+      other_teacher.add_role(:teacher)
+      create(:enrollment, tenant: tenant, user: other_teacher, section: section, role: "teacher")
+      assignment = create(:assignment, tenant: tenant, course: course, created_by: other_teacher)
+      Current.tenant = nil
+
+      allow(drive_service).to receive(:create_document).and_return({
+        id: "doc_789", title: "Hidden Doc", url: "https://docs.google.com/doc/789", mime_type: "application/vnd.google-apps.document"
+      })
+
+      post "/api/v1/drive/documents", params: {
+        title: "Hidden Doc",
+        linkable_type: "Assignment",
+        linkable_id: assignment.id
+      }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body["error"]).to eq("Linkable resource not found")
     end
   end
 
@@ -169,6 +197,8 @@ RSpec.describe "Api::V1::Drive", type: :request do
       Current.tenant = tenant
       academic_year = create(:academic_year, tenant: tenant)
       course = create(:course, tenant: tenant, academic_year: academic_year)
+      section = create(:section, tenant: tenant, course: course)
+      create(:enrollment, tenant: tenant, user: user, section: section, role: "teacher")
       Current.tenant = nil
       allow(drive_service).to receive(:create_folder).and_return({
         id: "folder_1",

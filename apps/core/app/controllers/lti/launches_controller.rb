@@ -4,6 +4,9 @@ module Lti
 
     private def skip_authorization? = true
 
+    JWKS_FETCH_TIMEOUT_SECONDS = 5
+    JWKS_FETCH_OPEN_TIMEOUT_SECONDS = 3
+
     def oidc_login
       registration = LtiRegistration.unscoped.find_by!(
         issuer: params[:iss],
@@ -53,6 +56,7 @@ module Lti
       end
 
       Current.user = user
+      reset_session
       session[:user_id] = user.id
       session[:tenant_id] = tenant.id
 
@@ -100,7 +104,7 @@ module Lti
       return nil if token.blank?
 
       validate_external_url!(registration.jwks_url)
-      jwks_response = Faraday.get(registration.jwks_url)
+      jwks_response = jwks_connection.get(registration.jwks_url)
       return nil unless jwks_response.success?
 
       jwks = JSON::JWK::Set.new(JSON.parse(jwks_response.body))
@@ -118,6 +122,14 @@ module Lti
     rescue StandardError => e
       Rails.logger.error("LTI JWT validation failed: #{e.message}")
       nil
+    end
+
+    def jwks_connection
+      @jwks_connection ||= Faraday.new do |f|
+        f.options.timeout = JWKS_FETCH_TIMEOUT_SECONDS
+        f.options.open_timeout = JWKS_FETCH_OPEN_TIMEOUT_SECONDS
+        f.ssl.verify = true
+      end
     end
 
     def resolve_user(claims, tenant)
@@ -154,22 +166,22 @@ module Lti
     end
 
     def validate_external_url!(url)
-      uri = URI.parse(url)
-      blocked = %w[localhost 127.0.0.1 0.0.0.0 ::1 169.254.169.254 metadata.google.internal]
-      if blocked.include?(uri.host&.downcase)
-        raise SecurityError, "Cannot fetch from internal address: #{uri.host}"
+      allowed_hosts = ENV["LTI_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?).presence
+      allowed_ports = if Rails.env.production?
+        [ 443 ]
+      else
+        [ 80, 443 ]
       end
 
-      begin
-        addr = IPAddr.new(uri.host)
-        if addr.private? || addr.loopback? || addr.link_local?
-          raise SecurityError, "Cannot fetch from private IP: #{uri.host}"
-        end
-      rescue IPAddr::InvalidAddressError
-        # Hostname — fine
-      end
-    rescue URI::InvalidURIError
-      raise SecurityError, "Invalid URL: #{url}"
+      OutboundUrlGuard.validate!(
+        url,
+        allowed_schemes: OutboundUrlGuard.default_allowed_schemes,
+        allowed_ports: allowed_ports,
+        allowed_host_patterns: allowed_hosts,
+        require_dns_resolution: true
+      )
+    rescue OutboundUrlGuard::ValidationError => e
+      raise SecurityError, e.message
     end
 
     def frontend_url

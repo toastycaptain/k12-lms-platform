@@ -60,8 +60,12 @@ jobs:
           cache-dependency-path: apps/ai-gateway/pyproject.toml
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade "pip>=26.0"
           pip install -e .[dev]
+      - name: Dependency audit
+        run: pip-audit --strict
+      - name: Generate AI Gateway SBOM
+        run: cyclonedx-py environment -o sbom-ai-gateway.json
       - name: Lint
         run: ruff check .
       - name: Format check
@@ -76,6 +80,12 @@ jobs:
           name: ai-gateway-coverage
           path: apps/ai-gateway/.coverage
           if-no-files-found: ignore
+      - name: Upload AI Gateway SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-gateway-sbom
+          path: apps/ai-gateway/sbom-ai-gateway.json
+          if-no-files-found: error
 
   core:
     name: Core API (rspec, rubocop, brakeman)
@@ -142,6 +152,15 @@ jobs:
           gem install bundler-audit
           bundle audit check --update
         working-directory: apps/core
+      - name: Generate Core Dependency Inventory
+        run: ruby script/generate_dependency_inventory.rb Gemfile.lock sbom-core.json
+        working-directory: apps/core
+      - name: Upload Core Dependency Inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-dependency-inventory
+          path: apps/core/sbom-core.json
+          if-no-files-found: error
 
   e2e:
     name: E2E (Playwright)

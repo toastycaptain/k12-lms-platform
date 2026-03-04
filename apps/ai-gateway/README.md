@@ -17,6 +17,7 @@ OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 SERVICE_TOKEN=
 CORS_ORIGINS=http://localhost:3000
+EXPOSE_DOCS=false
 ```
 
 ## Run
@@ -37,3 +38,13 @@ pytest
 - `GET /v1/providers`
 - `POST /v1/generate`
 - `POST /v1/generate_stream`
+
+All endpoints use service-to-service authentication. In production, send
+short-lived HMAC request headers:
+
+- `X-Service-Auth-Version`
+- `X-Service-Timestamp`
+- `X-Service-Nonce`
+- `X-Service-Signature`
+
+Legacy bearer auth is only allowed outside production when explicitly enabled.

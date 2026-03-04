@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Protocol
 
 
 class SafetyCategory(StrEnum):
@@ -20,11 +21,15 @@ class SafetyResult:
     action: str = ""
 
 
-class SafetyPipeline:
-    def __init__(self, filters: list | None = None):
-        self.filters = filters or []
+class SafetyFilterProtocol(Protocol):
+    def check(self, text: str, direction: str) -> SafetyResult: ...
 
-    def add_filter(self, filter_instance) -> None:
+
+class SafetyPipeline:
+    def __init__(self, filters: list[SafetyFilterProtocol] | None = None):
+        self.filters: list[SafetyFilterProtocol] = filters or []
+
+    def add_filter(self, filter_instance: SafetyFilterProtocol) -> None:
         self.filters.append(filter_instance)
 
     def check_input(self, text: str) -> SafetyResult:

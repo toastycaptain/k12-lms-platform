@@ -76,6 +76,8 @@ class ApplicationController < ActionController::API
   end
 
   def auth_bypass_enabled?
+    return false if Rails.env.production?
+
     raw = ENV["AUTH_BYPASS_MODE"]
     raw.present? && %w[1 true yes on].include?(raw.to_s.strip.downcase)
   end

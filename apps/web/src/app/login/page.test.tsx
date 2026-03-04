@@ -40,13 +40,13 @@ describe("LoginPage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders Google sign-in link", () => {
+  it("renders Google sign-in form", () => {
     render(<LoginPage />);
 
-    expect(screen.getByRole("link", { name: "Sign in with Google" })).toHaveAttribute(
-      "href",
-      "http://localhost:3001/auth/google_oauth2",
-    );
+    const button = screen.getByRole("button", { name: "Sign in with Google" });
+    const form = button.closest("form");
+    expect(form).toHaveAttribute("action", "http://localhost:3001/auth/google_oauth2");
+    expect(form).toHaveAttribute("method", "post");
   });
 
   it("renders SSO button", () => {
@@ -134,8 +134,10 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    expect(screen.getByRole("link", { name: "Sign in with Google" })).toHaveAttribute(
-      "href",
+    const button = screen.getByRole("button", { name: "Sign in with Google" });
+    const form = button.closest("form");
+    expect(form).toHaveAttribute(
+      "action",
       "http://localhost:3001/auth/google_oauth2?redirect=%2Fteach%2Fcourses%2F1%2Fgradebook",
     );
   });
