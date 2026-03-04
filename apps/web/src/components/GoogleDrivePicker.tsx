@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { apiFetch } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 
 interface DriveFile {
   id: string;
@@ -102,14 +103,16 @@ function normalizePickedDoc(doc: PickerDoc): DriveFile {
     ? new Date(Number(doc.lastEditedUtc)).toISOString()
     : undefined;
   const size = doc.sizeBytes ? Number(doc.sizeBytes) : undefined;
+  const fallbackUrl = `https://drive.google.com/file/d/${doc.id}/view`;
+  const fallbackPreviewUrl = `https://drive.google.com/file/d/${doc.id}/preview`;
   return {
     id: doc.id,
     name: doc.name || doc.title || "Untitled",
     mimeType,
-    url: doc.url || `https://drive.google.com/file/d/${doc.id}/view`,
+    url: sanitizeHttpUrl(doc.url || "") || fallbackUrl,
     iconUrl: doc.iconUrl,
     thumbnailUrl: doc.thumbnailUrl,
-    previewUrl: `https://drive.google.com/file/d/${doc.id}/preview`,
+    previewUrl: sanitizeHttpUrl(fallbackPreviewUrl) || fallbackUrl,
     size,
     modifiedTime,
     fileIcon: iconFromMimeType(mimeType),
@@ -118,14 +121,16 @@ function normalizePickedDoc(doc: PickerDoc): DriveFile {
 
 function normalizeCreatedFile(file: DriveCreateResponse): DriveFile {
   const mimeType = file.mime_type || "application/octet-stream";
+  const fallbackUrl = `https://drive.google.com/file/d/${file.id}/view`;
+  const fallbackPreviewUrl = `https://drive.google.com/file/d/${file.id}/preview`;
   return {
     id: file.id,
     name: file.title || file.name || "Untitled",
     mimeType,
-    url: file.url || `https://drive.google.com/file/d/${file.id}/view`,
+    url: sanitizeHttpUrl(file.url || "") || fallbackUrl,
     iconUrl: file.icon_link,
     thumbnailUrl: file.thumbnail_link,
-    previewUrl: file.preview_url || `https://drive.google.com/file/d/${file.id}/preview`,
+    previewUrl: sanitizeHttpUrl(file.preview_url || "") || fallbackPreviewUrl,
     size: file.size,
     modifiedTime: file.modified_time,
     fileIcon: file.file_icon || iconFromMimeType(mimeType),
@@ -284,6 +289,8 @@ export default function GoogleDrivePicker({
             const size = formatSize(file.size);
             const modified = formatModifiedDate(file.modifiedTime);
             const meta = [size, modified].filter(Boolean).join(" • ");
+            const safeFileHref = sanitizeHttpUrl(file.url);
+            const safePreviewHref = sanitizeHttpUrl(file.previewUrl || file.url);
 
             return (
               <div
@@ -295,14 +302,18 @@ export default function GoogleDrivePicker({
                     <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-800">
                       {file.fileIcon || iconFromMimeType(file.mimeType)}
                     </span>
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate text-sm text-blue-700 hover:underline"
-                    >
-                      {file.name}
-                    </a>
+                    {safeFileHref ? (
+                      <a
+                        href={safeFileHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate text-sm text-blue-700 hover:underline"
+                      >
+                        {file.name}
+                      </a>
+                    ) : (
+                      <span className="truncate text-sm text-gray-700">{file.name}</span>
+                    )}
                   </div>
                   <p className="truncate text-xs text-gray-500">{meta || file.mimeType}</p>
                 </div>
@@ -315,15 +326,17 @@ export default function GoogleDrivePicker({
                     className="h-10 w-16 rounded border border-gray-200 object-cover"
                     loading="lazy"
                   />
-                ) : (
+                ) : safePreviewHref ? (
                   <a
-                    href={file.previewUrl || file.url}
+                    href={safePreviewHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-gray-500 hover:text-gray-700"
                   >
                     Preview
                   </a>
+                ) : (
+                  <span className="text-xs text-gray-500">Preview unavailable</span>
                 )}
               </div>
             );

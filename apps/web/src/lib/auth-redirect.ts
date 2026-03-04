@@ -5,11 +5,24 @@ export function sanitizeRedirectPath(redirect: string | null): string | null {
     return null;
   }
 
-  if (!redirect.startsWith("/") || redirect.startsWith("//")) {
+  if (
+    !redirect.startsWith("/") ||
+    redirect.startsWith("//") ||
+    redirect.includes("\\") ||
+    /[\u0000-\u001F\u007F]/.test(redirect)
+  ) {
     return null;
   }
 
-  return redirect;
+  try {
+    const parsed = new URL(redirect, "https://k12.local");
+    if (parsed.origin !== "https://k12.local") {
+      return null;
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
 }
 
 export function buildAuthUrlWithRedirect(url: string, redirectPath: string | null): string {

@@ -12,6 +12,7 @@ import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
 import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
 import { parseLessonOutput, type LessonPlanOutput } from "@/lib/ai-output-parser";
+import { sanitizeHttpUrl } from "@/lib/security";
 
 interface LessonPlan {
   id: number;
@@ -142,13 +143,16 @@ export default function LessonEditorPage() {
 
   const handleAddResource = async () => {
     if (!newResourceUrl.trim() || !currentVersion) return;
+    const safeUrl = sanitizeHttpUrl(newResourceUrl);
+    if (!safeUrl) return;
+
     try {
       await apiFetch(`/api/v1/lesson_versions/${currentVersion.id}/resource_links`, {
         method: "POST",
         body: JSON.stringify({
           resource_link: {
-            url: newResourceUrl,
-            title: newResourceTitle || newResourceUrl,
+            url: safeUrl,
+            title: newResourceTitle || safeUrl,
             provider: "url",
           },
         }),
@@ -324,7 +328,10 @@ export default function LessonEditorPage() {
 
           if (status.status === "completed" && status.download_url) {
             setExportMessage("PDF is ready. Opening download...");
-            window.open(status.download_url, "_blank", "noopener,noreferrer");
+            const safeUrl = sanitizeHttpUrl(status.download_url);
+            if (safeUrl) {
+              window.open(safeUrl, "_blank", "noopener,noreferrer");
+            }
           } else {
             setExportMessage("PDF is still processing. Please export again shortly.");
           }
@@ -485,32 +492,39 @@ export default function LessonEditorPage() {
             <label className="block text-sm font-medium text-gray-700">Resource Links</label>
             {resources.length > 0 && (
               <ul className="mt-2 space-y-2">
-                {resources.map((resource) => (
-                  <li
-                    key={resource.id}
-                    className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2"
-                  >
-                    <div>
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {resource.title}
-                      </a>
-                      <span className="ml-2 text-xs text-gray-400">{resource.provider}</span>
-                    </div>
-                    {isEditable && (
-                      <button
-                        onClick={() => handleDeleteResource(resource.id)}
-                        className="text-sm text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </li>
-                ))}
+                {resources.map((resource) => {
+                  const safeHref = sanitizeHttpUrl(resource.url);
+                  return (
+                    <li
+                      key={resource.id}
+                      className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2"
+                    >
+                      <div>
+                        {safeHref ? (
+                          <a
+                            href={safeHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                          >
+                            {resource.title}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-500">Invalid resource link</span>
+                        )}
+                        <span className="ml-2 text-xs text-gray-400">{resource.provider}</span>
+                      </div>
+                      {isEditable && (
+                        <button
+                          onClick={() => handleDeleteResource(resource.id)}
+                          className="text-sm text-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
             {isEditable && currentVersion && (
@@ -554,7 +568,10 @@ export default function LessonEditorPage() {
                               }),
                             },
                           );
-                          window.open(result.url, "_blank");
+                          const safeUrl = sanitizeHttpUrl(result.url);
+                          if (safeUrl) {
+                            window.open(safeUrl, "_blank", "noopener,noreferrer");
+                          }
                           await fetchData();
                         } catch {
                           // Handle error
@@ -578,7 +595,10 @@ export default function LessonEditorPage() {
                               }),
                             },
                           );
-                          window.open(result.url, "_blank");
+                          const safeUrl = sanitizeHttpUrl(result.url);
+                          if (safeUrl) {
+                            window.open(safeUrl, "_blank", "noopener,noreferrer");
+                          }
                           await fetchData();
                         } catch {
                           // Handle error
@@ -590,6 +610,11 @@ export default function LessonEditorPage() {
                     </button>
                     <GoogleDrivePicker
                       onSelect={async (file) => {
+                        const safeUrl = sanitizeHttpUrl(file.url);
+                        if (!safeUrl) {
+                          return;
+                        }
+
                         try {
                           await apiFetch(
                             `/api/v1/lesson_versions/${currentVersion.id}/resource_links`,
@@ -597,7 +622,7 @@ export default function LessonEditorPage() {
                               method: "POST",
                               body: JSON.stringify({
                                 resource_link: {
-                                  url: file.url,
+                                  url: safeUrl,
                                   title: file.name,
                                   provider: "google_drive",
                                   drive_file_id: file.id,

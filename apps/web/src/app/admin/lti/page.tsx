@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError, getApiOrigin } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { useToast } from "@k12/ui";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -154,6 +155,28 @@ export default function LtiManagementPage() {
 
   async function saveRegistration() {
     if (!registrationForm.name.trim() || !registrationForm.issuer.trim()) return;
+    const authLoginUrl = registrationForm.auth_login_url.trim()
+      ? sanitizeHttpUrl(registrationForm.auth_login_url)
+      : null;
+    const authTokenUrl = registrationForm.auth_token_url.trim()
+      ? sanitizeHttpUrl(registrationForm.auth_token_url)
+      : null;
+    const jwksUrl = registrationForm.jwks_url.trim()
+      ? sanitizeHttpUrl(registrationForm.jwks_url)
+      : null;
+
+    if (registrationForm.auth_login_url.trim() && !authLoginUrl) {
+      addToast("error", "Auth login URL must be a valid http(s) URL.");
+      return;
+    }
+    if (registrationForm.auth_token_url.trim() && !authTokenUrl) {
+      addToast("error", "Auth token URL must be a valid http(s) URL.");
+      return;
+    }
+    if (registrationForm.jwks_url.trim() && !jwksUrl) {
+      addToast("error", "JWKS URL must be a valid http(s) URL.");
+      return;
+    }
 
     const payload = {
       lti_registration: {
@@ -161,9 +184,9 @@ export default function LtiManagementPage() {
         issuer: registrationForm.issuer.trim(),
         client_id: registrationForm.client_id.trim(),
         deployment_id: registrationForm.deployment_id.trim(),
-        auth_login_url: registrationForm.auth_login_url.trim(),
-        auth_token_url: registrationForm.auth_token_url.trim(),
-        jwks_url: registrationForm.jwks_url.trim(),
+        auth_login_url: authLoginUrl || "",
+        auth_token_url: authTokenUrl || "",
+        jwks_url: jwksUrl || "",
         description: registrationForm.description.trim() || null,
       },
     };
@@ -205,6 +228,11 @@ export default function LtiManagementPage() {
 
   async function createResourceLink() {
     if (!selectedRegistrationId || !resourceForm.title.trim()) return;
+    const safeResourceUrl = resourceForm.url.trim() ? sanitizeHttpUrl(resourceForm.url) : null;
+    if (resourceForm.url.trim() && !safeResourceUrl) {
+      addToast("error", "Resource URL must be a valid http(s) URL.");
+      return;
+    }
 
     try {
       await apiFetch(`/api/v1/lti_registrations/${selectedRegistrationId}/lti_resource_links`, {
@@ -213,7 +241,7 @@ export default function LtiManagementPage() {
           lti_resource_link: {
             title: resourceForm.title.trim(),
             description: resourceForm.description.trim() || null,
-            url: resourceForm.url.trim() || null,
+            url: safeResourceUrl,
             course_id: resourceForm.course_id ? Number(resourceForm.course_id) : null,
             custom_params: {},
           },

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
 interface Submission {
@@ -161,6 +162,7 @@ export default function GradingViewPage() {
     (sum, s) => sum + s.points_awarded,
     0,
   );
+  const safeSubmissionUrl = submission?.url ? sanitizeHttpUrl(submission.url) : null;
 
   async function handleSaveRubricGrade() {
     setSaving(true);
@@ -268,14 +270,18 @@ export default function GradingViewPage() {
                 {submission?.url && (
                   <div>
                     <span className="text-sm font-medium text-gray-700">URL: </span>
-                    <a
-                      href={submission.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      {submission.url}
-                    </a>
+                    {safeSubmissionUrl ? (
+                      <a
+                        href={safeSubmissionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        {safeSubmissionUrl}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-gray-500">Invalid submission URL</span>
+                    )}
                   </div>
                 )}
                 {!submission?.body && !submission?.url && (

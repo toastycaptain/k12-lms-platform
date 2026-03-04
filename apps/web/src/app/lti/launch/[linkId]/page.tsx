@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { sanitizeHttpUrl } from "@/lib/security";
 
 interface LtiResourceLink {
   id: number;
@@ -44,6 +45,10 @@ export default function LtiToolLaunchPage() {
     if (!resourceLink?.course_id) return "/dashboard";
     return `/teach/courses/${resourceLink.course_id}`;
   }, [resourceLink?.course_id]);
+  const safeLaunchUrl = useMemo(
+    () => (resourceLink?.url ? sanitizeHttpUrl(resourceLink.url) : null),
+    [resourceLink?.url],
+  );
 
   return (
     <ProtectedRoute>
@@ -67,13 +72,15 @@ export default function LtiToolLaunchPage() {
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">{resourceLink.title}</h2>
-                  <p className="text-sm text-gray-600">{resourceLink.description || "No description provided."}</p>
+                  <p className="text-sm text-gray-600">
+                    {resourceLink.description || "No description provided."}
+                  </p>
                 </div>
-                {resourceLink.url && (
+                {safeLaunchUrl && (
                   <a
-                    href={resourceLink.url}
+                    href={safeLaunchUrl}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     Open in New Tab
@@ -81,14 +88,20 @@ export default function LtiToolLaunchPage() {
                 )}
               </div>
 
-              {!resourceLink.url && <p className="text-sm text-gray-500">No launch URL configured for this link.</p>}
+              {!safeLaunchUrl && (
+                <p className="text-sm text-gray-500">
+                  No valid launch URL configured for this link.
+                </p>
+              )}
 
-              {resourceLink.url && (
+              {safeLaunchUrl && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Launching...</p>
-                  {iframeLoading && <p className="text-xs text-gray-500">Loading tool content...</p>}
+                  {iframeLoading && (
+                    <p className="text-xs text-gray-500">Loading tool content...</p>
+                  )}
                   <iframe
-                    src={resourceLink.url}
+                    src={safeLaunchUrl}
                     title={resourceLink.title}
                     className="h-[70vh] w-full rounded border border-gray-200"
                     onLoad={() => setIframeLoading(false)}

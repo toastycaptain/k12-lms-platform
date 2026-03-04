@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { CourseHomeSkeleton } from "@/components/skeletons/CourseHomeSkeleton";
 
 interface UnitPlan {
@@ -201,7 +202,10 @@ export default function UnitPublishPreviewPage() {
           );
           if (status.status === "completed" && status.download_url) {
             setMessage("PDF is ready. Opening download...");
-            window.open(status.download_url, "_blank", "noopener,noreferrer");
+            const safeUrl = sanitizeHttpUrl(status.download_url);
+            if (safeUrl) {
+              window.open(safeUrl, "_blank", "noopener,noreferrer");
+            }
           } else {
             setMessage("PDF is still processing. Please try export again shortly.");
           }
@@ -366,18 +370,27 @@ export default function UnitPublishPreviewPage() {
                           <p className="mt-1 text-sm text-gray-500">No resources linked.</p>
                         ) : (
                           <ul className="mt-1 space-y-1">
-                            {lesson.resources.map((resource) => (
-                              <li key={resource.id}>
-                                <a
-                                  href={resource.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-blue-600 hover:underline"
-                                >
-                                  {resource.title || resource.url}
-                                </a>
-                              </li>
-                            ))}
+                            {lesson.resources.map((resource) => {
+                              const safeHref = sanitizeHttpUrl(resource.url);
+                              return (
+                                <li key={resource.id}>
+                                  {safeHref ? (
+                                    <a
+                                      href={safeHref}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm text-blue-600 hover:underline"
+                                    >
+                                      {resource.title || safeHref}
+                                    </a>
+                                  ) : (
+                                    <span className="text-sm text-gray-500">
+                                      Invalid resource link
+                                    </span>
+                                  )}
+                                </li>
+                              );
+                            })}
                           </ul>
                         )}
                       </div>

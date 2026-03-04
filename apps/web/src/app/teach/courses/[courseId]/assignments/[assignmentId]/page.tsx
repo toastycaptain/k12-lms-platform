@@ -8,6 +8,7 @@ import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { sanitizeHttpUrl, sanitizeRichTextHtml } from "@/lib/security";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Assignment {
@@ -161,7 +162,9 @@ export default function AssignmentEditorPage() {
   function execFormat(command: string, value?: string) {
     document.execCommand(command, false, value);
     if (descriptionRef.current) {
-      setDescription(descriptionRef.current.innerHTML);
+      const sanitized = sanitizeRichTextHtml(descriptionRef.current.innerHTML);
+      descriptionRef.current.innerHTML = sanitized;
+      setDescription(sanitized);
     }
   }
 
@@ -198,7 +201,10 @@ export default function AssignmentEditorPage() {
       setResources(resourceList);
 
       setTitle(assignmentData.title);
-      setDescription(assignmentData.description || assignmentData.instructions || "");
+      const sanitizedDescription = sanitizeRichTextHtml(
+        assignmentData.description || assignmentData.instructions || "",
+      );
+      setDescription(sanitizedDescription);
       setPointsPossible(assignmentData.points_possible || "");
       setDueDate(toDatetimeLocal(assignmentData.due_at));
       setAvailableFrom(toDatetimeLocal(assignmentData.unlock_at));
@@ -284,7 +290,7 @@ export default function AssignmentEditorPage() {
   // Sync loaded description into the contentEditable div
   useEffect(() => {
     if (assignment && descriptionRef.current && descriptionRef.current.innerHTML !== description) {
-      descriptionRef.current.innerHTML = description;
+      descriptionRef.current.innerHTML = sanitizeRichTextHtml(description);
     }
     // Only run when assignment loads, not on every keystroke
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -418,6 +424,11 @@ export default function AssignmentEditorPage() {
 
   async function attachManualResource() {
     if (!manualResourceUrl.trim() || !assignment) return;
+    const safeUrl = sanitizeHttpUrl(manualResourceUrl);
+    if (!safeUrl) {
+      setError("Enter a valid http(s) resource URL.");
+      return;
+    }
 
     try {
       const created = await apiFetch<ResourceLink>(
@@ -426,8 +437,8 @@ export default function AssignmentEditorPage() {
           method: "POST",
           body: JSON.stringify({
             resource_link: {
-              title: manualResourceTitle || manualResourceUrl,
-              url: manualResourceUrl,
+              title: manualResourceTitle || safeUrl,
+              url: safeUrl,
               provider: "url",
             },
           }),
@@ -448,6 +459,11 @@ export default function AssignmentEditorPage() {
     mimeType: string;
   }) {
     if (!assignment) return;
+    const safeUrl = sanitizeHttpUrl(file.url);
+    if (!safeUrl) {
+      setError("Selected Drive file URL is invalid.");
+      return;
+    }
 
     try {
       const created = await apiFetch<ResourceLink>(
@@ -457,7 +473,7 @@ export default function AssignmentEditorPage() {
           body: JSON.stringify({
             resource_link: {
               title: file.name,
-              url: file.url,
+              url: safeUrl,
               provider: "google_drive",
               drive_file_id: file.id,
               mime_type: file.mimeType,
@@ -664,7 +680,9 @@ export default function AssignmentEditorPage() {
                 aria-labelledby="assignment-description-label"
                 onInput={() => {
                   if (descriptionRef.current) {
-                    setDescription(descriptionRef.current.innerHTML);
+                    const sanitized = sanitizeRichTextHtml(descriptionRef.current.innerHTML);
+                    descriptionRef.current.innerHTML = sanitized;
+                    setDescription(sanitized);
                   }
                 }}
                 className="block min-h-[9rem] w-full rounded-b-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -901,27 +919,34 @@ export default function AssignmentEditorPage() {
               <p className="text-sm text-gray-500">No resources attached.</p>
             ) : (
               <div className="space-y-2">
-                {resources.map((resource) => (
-                  <div
-                    key={resource.id}
-                    className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2"
-                  >
-                    <a
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
+                {resources.map((resource) => {
+                  const safeHref = sanitizeHttpUrl(resource.url);
+                  return (
+                    <div
+                      key={resource.id}
+                      className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2"
                     >
-                      {resource.title || resource.url}
-                    </a>
-                    <button
-                      onClick={() => removeResource(resource.id)}
-                      className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                      {safeHref ? (
+                        <a
+                          href={safeHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          {resource.title || safeHref}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-500">Invalid resource link</span>
+                      )}
+                      <button
+                        onClick={() => removeResource(resource.id)}
+                        className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>

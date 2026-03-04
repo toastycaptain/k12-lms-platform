@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/api";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { mutateWithOfflineQueue } from "@/lib/swr-mutations";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { sanitizeHttpUrl } from "@/lib/security";
 
 interface Assignment {
   id: number;
@@ -122,10 +123,16 @@ export default function StudentSubmissionPage() {
   async function handleSubmit() {
     setSubmitting(true);
     try {
+      const safeUrl = url.trim() ? sanitizeHttpUrl(url) : null;
+      if (url.trim() && !safeUrl) {
+        setNetworkNotice("Enter a valid http(s) URL before submitting.");
+        return;
+      }
+
       const payload = {
-        submission_type: url ? "url" : "text",
+        submission_type: safeUrl ? "url" : "text",
         body: body || null,
-        url: url || null,
+        url: safeUrl,
       };
 
       const result = await mutateWithOfflineQueue<Submission>(
@@ -166,6 +173,7 @@ export default function StudentSubmissionPage() {
   const isPastDue = assignment?.due_at ? new Date(assignment.due_at) < now : false;
   const isLocked = assignment?.lock_at ? new Date(assignment.lock_at) < now : false;
   const canSubmit = assignment?.status === "published" && !isLocked && !submission;
+  const safeSubmittedUrl = submission?.url ? sanitizeHttpUrl(submission.url) : null;
 
   if (loading) {
     return (
@@ -277,16 +285,19 @@ export default function StudentSubmissionPage() {
                 </p>
               )}
               {submission.body && <p className="text-sm text-gray-600">{submission.body}</p>}
-              {submission.url && (
-                <a
-                  href={submission.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {submission.url}
-                </a>
-              )}
+              {submission.url &&
+                (safeSubmittedUrl ? (
+                  <a
+                    href={safeSubmittedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {safeSubmittedUrl}
+                  </a>
+                ) : (
+                  <span className="text-sm text-gray-500">Invalid submission URL</span>
+                ))}
               {(submission.status === "graded" || submission.status === "returned") && (
                 <div className="mt-4 space-y-2 border-t pt-4">
                   <div className="flex items-center gap-2">

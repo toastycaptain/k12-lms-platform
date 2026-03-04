@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { useToast } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 
@@ -200,6 +201,7 @@ export default function CourseAssignmentGradingPage() {
     () => Object.values(scores).reduce((sum, entry) => sum + entry.score, 0),
     [scores],
   );
+  const safeSubmissionUrl = submission?.url ? sanitizeHttpUrl(submission.url) : null;
 
   function setCriterionRating(criterionId: number, ratingId: number, score: number) {
     setScores((previous) => ({
@@ -343,14 +345,18 @@ export default function CourseAssignmentGradingPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Attached link
                     </p>
-                    <a
-                      href={submission.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      {submission.url}
-                    </a>
+                    {safeSubmissionUrl ? (
+                      <a
+                        href={safeSubmissionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        {safeSubmissionUrl}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-gray-500">Invalid submission URL</span>
+                    )}
                   </div>
                 )}
 

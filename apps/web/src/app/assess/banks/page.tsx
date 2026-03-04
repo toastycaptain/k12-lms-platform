@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
 import { apiFetch, buildApiUrl, getCsrfToken } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { Pagination } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { EmptyState } from "@k12/ui";
@@ -53,7 +54,10 @@ export default function QuestionBankListPage() {
             `/api/v1/question_banks/${bankId}/export_qti_status`,
           );
           if (status.status === "completed" && status.download_url) {
-            window.open(status.download_url, "_blank");
+            const safeUrl = sanitizeHttpUrl(status.download_url);
+            if (safeUrl) {
+              window.open(safeUrl, "_blank", "noopener,noreferrer");
+            }
             break;
           }
         } catch {

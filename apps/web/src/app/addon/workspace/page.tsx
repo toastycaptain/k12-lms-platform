@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { addonApiFetch, openAddonSignInPopup, resolveAddonToken } from "@/lib/addon-api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { useToast } from "@k12/ui";
 
 type WorkspaceTab = "units" | "standards" | "ai";
@@ -208,7 +209,8 @@ function WorkspaceAddonInner() {
 
     const normalizedTitle = fileTitle.trim() || "Google Workspace Attachment";
     const normalizedMime = fileMimeType.trim() || "application/vnd.google-apps.document";
-    const normalizedUrl = fileUrl.trim() || fallbackFileUrl(normalizedId, normalizedMime);
+    const fallbackUrl = fallbackFileUrl(normalizedId, normalizedMime);
+    const normalizedUrl = sanitizeHttpUrl(fileUrl) || fallbackUrl;
 
     return {
       drive_file_id: normalizedId,

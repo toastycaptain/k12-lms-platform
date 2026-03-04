@@ -19,7 +19,10 @@ export async function apiFetchStream(
   onError?: (error: string) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+  });
   headers.set("X-CSRF-Token", await getCsrfToken());
 
   const requestOptions: RequestInit = {

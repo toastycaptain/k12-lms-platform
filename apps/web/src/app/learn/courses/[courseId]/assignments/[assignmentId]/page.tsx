@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import GoogleDrivePicker from "@/components/GoogleDrivePicker";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ApiError, apiFetch } from "@/lib/api";
+import { sanitizeHttpUrl } from "@/lib/security";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 
 interface Assignment {
@@ -202,6 +203,7 @@ export default function LearnAssignmentSubmissionPage() {
     ? new Date(assignment.lock_at).getTime() < Date.now()
     : false;
   const isGraded = submission?.status === "graded" || submission?.status === "returned";
+  const safeSubmissionUrl = submission?.url ? sanitizeHttpUrl(submission.url) : null;
 
   async function submitAssignment() {
     if (!assignment) return;
@@ -211,6 +213,12 @@ export default function LearnAssignmentSubmissionPage() {
     setMessage(null);
 
     try {
+      const safeUrl = url.trim() ? sanitizeHttpUrl(url) : null;
+      if (url.trim() && !safeUrl) {
+        setError("Enter a valid http(s) URL for link submissions.");
+        return;
+      }
+
       let created: Submission;
 
       if (selectedFile) {
@@ -218,19 +226,19 @@ export default function LearnAssignmentSubmissionPage() {
         formData.append("submission_type", "file_upload");
         formData.append("attachment", selectedFile);
         if (body.trim()) formData.append("body", body.trim());
-        if (url.trim()) formData.append("url", url.trim());
+        if (safeUrl) formData.append("url", safeUrl);
         created = await apiFetch<Submission>(`/api/v1/assignments/${assignment.id}/submissions`, {
           method: "POST",
           body: formData,
         });
       } else {
-        const submissionType = url.trim() ? "url" : "online_text";
+        const submissionType = safeUrl ? "url" : "online_text";
         created = await apiFetch<Submission>(`/api/v1/assignments/${assignment.id}/submissions`, {
           method: "POST",
           body: JSON.stringify({
             submission_type: submissionType,
             body: body.trim() || null,
-            url: url.trim() || null,
+            url: safeUrl,
           }),
         });
       }
@@ -249,8 +257,12 @@ export default function LearnAssignmentSubmissionPage() {
   }
 
   function onDriveFileSelect(file: DriveFile) {
+    const safeUrl = sanitizeHttpUrl(file.url);
+    if (!safeUrl) {
+      return;
+    }
     setSelectedDriveFile(file);
-    setUrl(file.url);
+    setUrl(safeUrl);
   }
 
   if (loading) {
@@ -448,16 +460,19 @@ export default function LearnAssignmentSubmissionPage() {
                     {submission.body && (
                       <p className="whitespace-pre-wrap text-sm text-gray-700">{submission.body}</p>
                     )}
-                    {submission.url && (
-                      <a
-                        href={submission.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        {submission.url}
-                      </a>
-                    )}
+                    {submission.url &&
+                      (safeSubmissionUrl ? (
+                        <a
+                          href={safeSubmissionUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          {safeSubmissionUrl}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-500">Invalid submission URL</span>
+                      ))}
                     {!isLocked && (
                       <button
                         onClick={() => {
@@ -547,21 +562,28 @@ export default function LearnAssignmentSubmissionPage() {
                 <p className="mt-3 text-sm text-gray-500">No resources attached.</p>
               ) : (
                 <ul className="mt-3 space-y-2">
-                  {resources.map((resource) => (
-                    <li key={resource.id} className="text-sm">
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {resource.title || resource.url}
-                      </a>
-                      <span className="ml-2 text-xs uppercase text-gray-500">
-                        {resource.provider}
-                      </span>
-                    </li>
-                  ))}
+                  {resources.map((resource) => {
+                    const safeHref = sanitizeHttpUrl(resource.url);
+                    return (
+                      <li key={resource.id} className="text-sm">
+                        {safeHref ? (
+                          <a
+                            href={safeHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {resource.title || safeHref}
+                          </a>
+                        ) : (
+                          <span className="text-gray-500">Invalid resource link</span>
+                        )}
+                        <span className="ml-2 text-xs uppercase text-gray-500">
+                          {resource.provider}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

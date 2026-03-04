@@ -111,6 +111,9 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json");
   }
+  if (!headers.has("X-Requested-With")) {
+    headers.set("X-Requested-With", "XMLHttpRequest");
+  }
 
   if (selectedSchoolId && !headers.has("X-School-Id")) {
     headers.set("X-School-Id", selectedSchoolId);
