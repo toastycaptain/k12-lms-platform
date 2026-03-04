@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+require "uri"
+
 # Environment variable validation — runs on boot
 #
 # Required vars raise in production (fail closed).
@@ -13,10 +17,35 @@ Rails.application.config.after_initialize do
   required_vars = %w[DATABASE_URL REDIS_URL SECRET_KEY_BASE]
 
   if Rails.env.production?
-    required_vars += %w[CORS_ORIGINS FRONTEND_URL ALLOWED_HOSTS]
+    parse_hosts = lambda do |raw_value|
+      raw_value.to_s.split(",").map(&:strip).filter_map do |entry|
+        next if entry.blank?
+        next entry if entry.start_with?("/") && entry.end_with?("/")
+
+        begin
+          uri = URI.parse(entry)
+          uri.host.presence || entry
+        rescue URI::InvalidURIError
+          entry
+        end
+      end
+    end
+
+    required_vars += %w[CORS_ORIGINS FRONTEND_URL]
     missing_required = required_vars.select { |var| ENV[var].blank? }
     if missing_required.any?
       raise "Missing required environment variables in production: #{missing_required.join(', ')}"
+    end
+
+    host_allowlist = [
+      *parse_hosts.call(ENV["ALLOWED_HOSTS"]),
+      *parse_hosts.call(ENV["RAILWAY_PUBLIC_DOMAIN"]),
+      *parse_hosts.call(ENV["RAILWAY_PRIVATE_DOMAIN"]),
+      *parse_hosts.call(ENV["RAILWAY_STATIC_URL"])
+    ].uniq
+
+    if host_allowlist.empty?
+      raise "Host allowlist is empty in production. Set ALLOWED_HOSTS or Railway host environment variables."
     end
 
     auth_bypass_enabled = parse_bool.call(ENV["AUTH_BYPASS_MODE"])

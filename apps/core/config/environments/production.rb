@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require "uri"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -62,9 +63,30 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding and Host header protections with an explicit allowlist.
-  raw_hosts = ENV.fetch("ALLOWED_HOSTS", "")
-  parsed_hosts = raw_hosts.split(",").map(&:strip).reject(&:blank?)
-  raise "ALLOWED_HOSTS must include at least one hostname in production" if parsed_hosts.empty?
+  parse_hosts = lambda do |raw_value|
+    raw_value.to_s.split(",").map(&:strip).filter_map do |entry|
+      next if entry.blank?
+      next entry if entry.start_with?("/") && entry.end_with?("/")
+
+      begin
+        uri = URI.parse(entry)
+        uri.host.presence || entry
+      rescue URI::InvalidURIError
+        entry
+      end
+    end
+  end
+
+  parsed_hosts = [
+    *parse_hosts.call(ENV["ALLOWED_HOSTS"]),
+    *parse_hosts.call(ENV["RAILWAY_PUBLIC_DOMAIN"]),
+    *parse_hosts.call(ENV["RAILWAY_PRIVATE_DOMAIN"]),
+    *parse_hosts.call(ENV["RAILWAY_STATIC_URL"])
+  ].uniq
+
+  if parsed_hosts.empty?
+    raise "Host allowlist is empty in production. Set ALLOWED_HOSTS or Railway host environment variables."
+  end
 
   config.hosts = parsed_hosts.map do |host|
     if host.start_with?("/") && host.end_with?("/") && host.length > 2
