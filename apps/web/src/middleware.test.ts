@@ -1,7 +1,11 @@
 import type { NextRequest } from "next/server";
 import { middleware } from "@/middleware";
 
-function buildRequest(path: string, sessionCookie?: string): NextRequest {
+function buildRequest(
+  path: string,
+  sessionCookie?: string,
+  sessionCookieName = "_k12_lms_session",
+): NextRequest {
   const url = new URL(path, "https://k12.example.com");
 
   return {
@@ -13,7 +17,7 @@ function buildRequest(path: string, sessionCookie?: string): NextRequest {
     url: url.toString(),
     cookies: {
       get: (name: string) => {
-        if (name === "_k12_lms_session" && sessionCookie) {
+        if (name === sessionCookieName && sessionCookie) {
           return { name, value: sessionCookie };
         }
 
@@ -81,6 +85,18 @@ describe("middleware", () => {
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+  });
+
+  it("recognizes secure session cookie names used in production", () => {
+    const secureCookieResponse = middleware(
+      buildRequest("/dashboard", "session-123", "__Secure-k12_lms_session"),
+    );
+    const hostCookieResponse = middleware(
+      buildRequest("/dashboard", "session-123", "__Host-k12_lms_session"),
+    );
+
+    expect(secureCookieResponse.headers.get("location")).toBeNull();
+    expect(hostCookieResponse.headers.get("location")).toBeNull();
   });
 
   it("allows static asset requests", () => {
@@ -161,6 +177,17 @@ describe("middleware", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login?redirect=%2Fdashboard");
+  });
+
+  it("allows auth bypass mode in production when explicitly allowed", () => {
+    env.NODE_ENV = "production";
+    env.AUTH_BYPASS_MODE = "true";
+    env.ALLOW_AUTH_BYPASS_IN_PRODUCTION = "true";
+    env.NEXT_PUBLIC_API_URL = "https://k12.example.com/api/v1";
+
+    const response = middleware(buildRequest("/dashboard"));
+
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("redirects login to dashboard when auth bypass mode is enabled", () => {

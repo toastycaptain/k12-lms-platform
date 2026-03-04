@@ -259,6 +259,39 @@ RSpec.describe "Api::V1::Sessions", type: :request do
         expect(response.parsed_body["error"]).to eq("Unauthorized")
       end
     end
+
+    context "when auth bypass mode is enabled" do
+      around do |example|
+        original_auth_bypass_mode = ENV["AUTH_BYPASS_MODE"]
+        original_allow_in_production = ENV["ALLOW_AUTH_BYPASS_IN_PRODUCTION"]
+        original_auth_bypass_user_email = ENV["AUTH_BYPASS_USER_EMAIL"]
+        original_force_admin_role = ENV["AUTH_BYPASS_FORCE_ADMIN_ROLE"]
+        begin
+          ENV["AUTH_BYPASS_MODE"] = "true"
+          ENV["ALLOW_AUTH_BYPASS_IN_PRODUCTION"] = "true"
+          ENV["AUTH_BYPASS_USER_EMAIL"] = "bypass-admin@example.com"
+          ENV["AUTH_BYPASS_FORCE_ADMIN_ROLE"] = "true"
+          example.run
+        ensure
+          ENV["AUTH_BYPASS_MODE"] = original_auth_bypass_mode
+          ENV["ALLOW_AUTH_BYPASS_IN_PRODUCTION"] = original_allow_in_production
+          ENV["AUTH_BYPASS_USER_EMAIL"] = original_auth_bypass_user_email
+          ENV["AUTH_BYPASS_FORCE_ADMIN_ROLE"] = original_force_admin_role
+        end
+      end
+
+      it "authenticates the configured user and grants admin role when requested" do
+        Current.tenant = tenant
+        create(:user, email: "bypass-admin@example.com", tenant: tenant)
+        Current.tenant = nil
+
+        get "/api/v1/me"
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body.dig("user", "email")).to eq("bypass-admin@example.com")
+        expect(response.parsed_body.dig("user", "roles")).to include("admin")
+      end
+    end
   end
 
   describe "POST /api/v1/session/impersonation/:user_id" do

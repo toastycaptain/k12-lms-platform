@@ -76,10 +76,14 @@ class ApplicationController < ActionController::API
   end
 
   def auth_bypass_enabled?
-    return false if Rails.env.production?
+    return false unless truthy_env?(ENV["AUTH_BYPASS_MODE"])
+    return true unless Rails.env.production?
 
-    raw = ENV["AUTH_BYPASS_MODE"]
-    raw.present? && %w[1 true yes on].include?(raw.to_s.strip.downcase)
+    truthy_env?(ENV["ALLOW_AUTH_BYPASS_IN_PRODUCTION"])
+  end
+
+  def auth_bypass_force_admin_role?
+    truthy_env?(ENV["AUTH_BYPASS_FORCE_ADMIN_ROLE"])
   end
 
   def apply_auth_bypass!
@@ -89,6 +93,7 @@ class ApplicationController < ActionController::API
 
     if preferred_email && tenant
       user = User.unscoped.find_by(email: preferred_email, tenant_id: tenant.id)
+      user ||= bootstrap_auth_bypass_user(email: preferred_email, tenant: tenant)
     end
 
     if user.nil? && tenant
@@ -102,11 +107,46 @@ class ApplicationController < ActionController::API
 
     return unless tenant && user
 
+    ensure_auth_bypass_admin_role!(user) if auth_bypass_force_admin_role?
     Current.tenant = tenant
     Current.user = user
     session[:tenant_id] = tenant.id
     session[:user_id] = user.id
     session[:last_seen_at] = Time.current.to_i
+  end
+
+  def bootstrap_auth_bypass_user(email:, tenant:)
+    return nil unless auth_bypass_force_admin_role?
+
+    User.unscoped.create!(
+      email: email,
+      first_name: ENV["AUTH_BYPASS_FIRST_NAME"].presence || "Temporary",
+      last_name: ENV["AUTH_BYPASS_LAST_NAME"].presence || "Admin",
+      tenant: tenant
+    )
+  rescue ActiveRecord::RecordInvalid
+    nil
+  end
+
+  def ensure_auth_bypass_admin_role!(user)
+    return if user.has_role?(:admin)
+    return if user.instance_variable_defined?(:@auth_bypass_admin_override)
+
+    user.instance_variable_set(:@auth_bypass_admin_override, true)
+
+    user.define_singleton_method(:has_role?) do |role_name|
+      return true if role_name.to_s == "admin"
+
+      super(role_name)
+    end
+
+    user.define_singleton_method(:role_names) do
+      (super() + [ "admin" ]).uniq
+    end
+  end
+
+  def truthy_env?(value)
+    value.present? && %w[1 true yes on].include?(value.to_s.strip.downcase)
   end
 
   def session_stale?

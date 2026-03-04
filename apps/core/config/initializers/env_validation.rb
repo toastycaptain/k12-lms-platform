@@ -19,8 +19,15 @@ Rails.application.config.after_initialize do
       raise "Missing required environment variables in production: #{missing_required.join(', ')}"
     end
 
-    if parse_bool.call(ENV["AUTH_BYPASS_MODE"])
-      raise "AUTH_BYPASS_MODE must be disabled in production"
+    auth_bypass_enabled = parse_bool.call(ENV["AUTH_BYPASS_MODE"])
+    allow_auth_bypass_in_production = parse_bool.call(ENV["ALLOW_AUTH_BYPASS_IN_PRODUCTION"])
+
+    if auth_bypass_enabled && !allow_auth_bypass_in_production
+      raise "AUTH_BYPASS_MODE in production requires ALLOW_AUTH_BYPASS_IN_PRODUCTION=true"
+    end
+
+    if auth_bypass_enabled && ENV["AUTH_BYPASS_USER_EMAIL"].to_s.strip.blank?
+      raise "AUTH_BYPASS_USER_EMAIL must be set when AUTH_BYPASS_MODE is enabled in production"
     end
 
     if ENV["CORS_ORIGINS"].to_s.split(",").map(&:strip).any? { |origin| origin == "*" }

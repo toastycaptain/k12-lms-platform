@@ -16,6 +16,11 @@ const ADDON_ROUTES = ["/addon"];
 const ADMIN_ROUTES = ["/admin"];
 const SETUP_ROUTES = ["/setup"];
 const API_ROUTES = ["/api"];
+const SESSION_COOKIE_NAMES = [
+  "_k12_lms_session",
+  "__Secure-k12_lms_session",
+  "__Host-k12_lms_session",
+];
 const ASSET_PATH_EXTENSIONS =
   /\.(?:css|js|mjs|map|png|jpg|jpeg|gif|svg|webp|avif|ico|txt|xml|json|woff2?|ttf|otf)$/i;
 const GOOGLE_SCRIPT_SOURCES = [
@@ -196,6 +201,10 @@ function shouldEnforceSessionCookie(request: NextRequest): boolean {
   }
 }
 
+function hasSessionCookie(request: NextRequest): boolean {
+  return SESSION_COOKIE_NAMES.some((cookieName) => Boolean(request.cookies.get(cookieName)?.value));
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const bypassAuth = authBypassEnabled();
@@ -245,7 +254,7 @@ export function middleware(request: NextRequest) {
     return buildNext();
   }
 
-  const hasSession = Boolean(request.cookies.get("_k12_lms_session")?.value);
+  const hasSession = hasSessionCookie(request);
 
   if (!hasSession && shouldEnforceSessionCookie(request) && !bypassAuth) {
     const loginUrl = new URL("/login", request.url);
