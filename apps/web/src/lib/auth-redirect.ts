@@ -1,4 +1,5 @@
 const AUTH_REDIRECT_STORAGE_KEY = "k12.auth.redirect";
+const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
 
 export function sanitizeRedirectPath(redirect: string | null): string | null {
   if (!redirect) {
@@ -30,9 +31,14 @@ export function buildAuthUrlWithRedirect(url: string, redirectPath: string | nul
     return url;
   }
 
-  const nextUrl = new URL(url);
+  const nextUrl = new URL(url, "https://k12.local");
   nextUrl.searchParams.set("redirect", redirectPath);
-  return nextUrl.toString();
+
+  if (ABSOLUTE_URL_PATTERN.test(url) || url.startsWith("//")) {
+    return nextUrl.toString();
+  }
+
+  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
 }
 
 export function persistAuthRedirect(redirectPath: string | null): void {
