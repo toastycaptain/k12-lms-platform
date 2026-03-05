@@ -18,6 +18,17 @@ interface CurriculumContext {
   subject_options?: string[];
   grade_or_stage_options?: string[];
   framework_defaults?: string[];
+  planner_object_schemas?: {
+    unit_plan?: {
+      fields?: Array<{
+        id: string;
+        label?: string;
+        component?: string;
+        options?: string[];
+        required?: boolean;
+      }>;
+    };
+  };
 }
 
 interface Course {
@@ -64,19 +75,28 @@ export default function NewUnitPlanPage() {
     [courseId, courses],
   );
   const resolvedCurriculumContext = selectedCourse?.curriculum_context;
+  const plannerSchemaFields =
+    resolvedCurriculumContext?.planner_object_schemas?.unit_plan?.fields || [];
+  const subjectField = plannerSchemaFields.find((field) => field.id === "subject");
+  const gradeField = plannerSchemaFields.find((field) => field.id === "grade_or_stage");
+  const titleField = plannerSchemaFields.find((field) => field.id === "title");
   const gradeLabel = resolvedCurriculumContext?.grade_label || "Grade Level";
   const subjectLabel = resolvedCurriculumContext?.subject_label || "Course Subject";
   const unitLabel = resolvedCurriculumContext?.unit_label || "Unit";
   const availableSubjectOptions =
-    resolvedCurriculumContext?.subject_options &&
-    resolvedCurriculumContext.subject_options.length > 0
-      ? resolvedCurriculumContext.subject_options
-      : SUBJECT_OPTIONS;
+    subjectField?.options && subjectField.options.length > 0
+      ? subjectField.options
+      : resolvedCurriculumContext?.subject_options &&
+          resolvedCurriculumContext.subject_options.length > 0
+        ? resolvedCurriculumContext.subject_options
+        : SUBJECT_OPTIONS;
   const availableGradeOptions =
-    resolvedCurriculumContext?.grade_or_stage_options &&
-    resolvedCurriculumContext.grade_or_stage_options.length > 0
-      ? resolvedCurriculumContext.grade_or_stage_options
-      : GRADE_OPTIONS;
+    gradeField?.options && gradeField.options.length > 0
+      ? gradeField.options
+      : resolvedCurriculumContext?.grade_or_stage_options &&
+          resolvedCurriculumContext.grade_or_stage_options.length > 0
+        ? resolvedCurriculumContext.grade_or_stage_options
+        : GRADE_OPTIONS;
   const preferredSubjectValue =
     preferredSubjects.find((subject) => availableSubjectOptions.includes(subject)) || "";
   const preferredGradeValue =
@@ -218,7 +238,7 @@ export default function NewUnitPlanPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="unit-grade-level" className="block text-sm font-medium text-gray-700">
-                {gradeLabel}
+                {gradeField?.label || gradeLabel}
               </label>
               <select
                 id="unit-grade-level"
@@ -240,7 +260,7 @@ export default function NewUnitPlanPage() {
                 htmlFor="unit-course-subject"
                 className="block text-sm font-medium text-gray-700"
               >
-                {subjectLabel}
+                {subjectField?.label || subjectLabel}
               </label>
               <select
                 id="unit-course-subject"
@@ -260,7 +280,7 @@ export default function NewUnitPlanPage() {
 
           <div>
             <label htmlFor="unit-title" className="block text-sm font-medium text-gray-700">
-              {unitLabel} Title
+              {titleField?.label || `${unitLabel} Title`}
             </label>
             <input
               id="unit-title"

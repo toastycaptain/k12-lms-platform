@@ -209,14 +209,18 @@ module Api
       end
 
       def curriculum_metadata_for_linkable(linkable)
-        context = curriculum_context_for_linkable(linkable)
-        return {} if context.blank?
+        course = course_for_linkable(linkable)
+        return {} unless course
 
-        {
-          "effective_curriculum_profile_key" => context[:profile_key],
-          "effective_curriculum_source" => context[:source],
-          "integration_context_tag" => context.dig(:integration_hints, "google_addon_context")
-        }
+        envelope = CurriculumContextEnvelopeBuilder.for_course(tenant: Current.tenant, course: course)
+        context = envelope["curriculum_context"] || {}
+
+        envelope.merge(
+          "effective_curriculum_profile_key" => context["effective_curriculum_profile_key"],
+          "effective_curriculum_profile_version" => context["effective_curriculum_profile_version"],
+          "effective_curriculum_source" => context["effective_curriculum_source"],
+          "integration_context_tag" => context["google_addon_context_tag"]
+        )
       end
 
       def curriculum_context_for_linkable(linkable)

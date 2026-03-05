@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurriculumProfileV2",
+  "type": "object",
+  "required": [
+    "identity",
+    "versioning",
+    "terminology",
+    "navigation",
+    "planner_object_schemas",
+    "workflow_bindings",
+    "report_bindings",
+    "capability_modules",
+    "integration_hints",
+    "status"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["key", "label", "description", "jurisdiction"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "jurisdiction": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "versioning": {
+      "type": "object",
+      "required": ["version", "compatibility"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "compatibility": {
+          "type": "string",
+          "enum": ["v1_compatible", "v2_only"]
+        },
+        "schema_version": { "type": "string" },
+        "supersedes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "terminology": {
+      "type": "object",
+      "required": ["subject_label", "grade_label", "unit_label"],
+      "properties": {
+        "subject_label": { "type": "string" },
+        "grade_label": { "type": "string" },
+        "unit_label": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "navigation": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "planner_object_schemas": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "label", "component"],
+              "properties": {
+                "id": { "type": "string" },
+                "label": { "type": "string" },
+                "component": {
+                  "type": "string",
+                  "enum": ["text", "textarea", "select", "multiselect", "date", "checkbox"]
+                },
+                "options": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "required": { "type": "boolean" },
+                "placeholder": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "defaults": { "type": "object" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "workflow_bindings": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "report_bindings": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "capability_modules": {
+      "type": "object",
+      "additionalProperties": { "type": ["boolean", "string", "number", "object", "array", "null"] }
+    },
+    "integration_hints": {
+      "type": "object",
+      "properties": {
+        "google_addon_context": { "type": "string" },
+        "lti_context_tag": { "type": "string" },
+        "oneroster_context_tag": { "type": "string" },
+        "classroom_context_tag": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "deprecated", "frozen"]
+    }
+  },
+  "additionalProperties": true
+}

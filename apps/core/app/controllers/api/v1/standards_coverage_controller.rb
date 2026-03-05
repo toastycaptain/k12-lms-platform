@@ -6,22 +6,27 @@ module Api
         authorize :standards_coverage, :index?
 
         course_ids = policy_scope(Course).where(academic_year_id: academic_year.id).pluck(:id)
+        reference_course = policy_scope(Course).where(academic_year_id: academic_year.id).includes(:school).order(:id).first
+        resolved = resolve_curriculum_for(course: reference_course)
 
         render json: {
           academic_year_id: academic_year.id,
           academic_year: academic_year.name,
-          frameworks: build_framework_reports(course_ids, include_source_details: false)
+          frameworks: build_framework_reports(course_ids, include_source_details: false),
+          curriculum_report_defaults: curriculum_report_defaults_payload(resolved)
         }
       end
 
       def by_course
         authorize :standards_coverage, :index?
         course = policy_scope(Course).find(params[:course_id] || params[:id])
+        resolved = resolve_curriculum_for(course: course)
 
         render json: {
           course_id: course.id,
           course_name: course.name,
-          frameworks: build_framework_reports([ course.id ], include_source_details: true)
+          frameworks: build_framework_reports([ course.id ], include_source_details: true),
+          curriculum_report_defaults: curriculum_report_defaults_payload(resolved)
         }
       end
 
@@ -108,6 +113,26 @@ module Api
           assignment_ids: assignment_ids,
           unit_plan_ids: unit_plan_ids
         )
+      end
+
+      def resolve_curriculum_for(course:)
+        CurriculumProfileResolver.resolve(
+          tenant: Current.tenant,
+          school: course&.school,
+          course: course,
+          academic_year: course&.academic_year
+        )
+      end
+
+      def curriculum_report_defaults_payload(resolved)
+        {
+          profile_key: resolved[:profile_key],
+          profile_version: resolved[:resolved_profile_version],
+          selected_from: resolved[:selected_from],
+          resolution_trace_id: resolved[:resolution_trace_id],
+          report_blocks: resolved[:report_bindings] || {},
+          framework_defaults: resolved[:framework_defaults] || []
+        }
       end
     end
   end

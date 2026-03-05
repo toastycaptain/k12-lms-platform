@@ -204,11 +204,21 @@ class OneRosterUserSyncJob < ApplicationJob
     end
 
     resolved = CurriculumProfileResolver.resolve(tenant: tenant, school: course.school, course: course)
+    envelope = CurriculumContextEnvelopeBuilder.build(
+      resolved: resolved,
+      tenant_id: tenant.id,
+      school_id: course.school_id,
+      course_id: course.id
+    )
+    context = envelope["curriculum_context"] || {}
     settings = course.settings.is_a?(Hash) ? course.settings.deep_dup : {}
+    settings["curriculum_context"] = context
     settings["integration_curriculum_context"] = {
-      "profile_key" => resolved[:profile_key],
-      "source" => resolved[:source],
-      "oneroster_context_tag" => resolved.dig(:integration_hints, "oneroster_context_tag")
+      "profile_key" => context["effective_curriculum_profile_key"],
+      "profile_version" => context["effective_curriculum_profile_version"],
+      "source" => context["effective_curriculum_source"],
+      "resolution_trace_id" => context["resolution_trace_id"],
+      "oneroster_context_tag" => context["oneroster_context_tag"]
     }
 
     if course.settings != settings

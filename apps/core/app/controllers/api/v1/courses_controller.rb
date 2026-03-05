@@ -21,6 +21,7 @@ module Api
         authorize @course
 
         if @course.save
+          CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
           enqueue_course_folder_if_requested(@course)
           render json: @course, status: :created
         else
@@ -30,6 +31,7 @@ module Api
 
       def update
         if @course.update(course_params)
+          CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
           render json: @course
         else
           render json: { errors: @course.errors.full_messages }, status: :unprocessable_content
@@ -38,6 +40,7 @@ module Api
 
       def destroy
         @course.destroy!
+        CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
         head :no_content
       end
 
@@ -52,7 +55,7 @@ module Api
         permitted = [ :academic_year_id, :name, :code, :description ]
         if Current.user&.has_role?(:admin)
           permitted << :school_id
-          permitted << { settings: [ :curriculum_profile_key ] }
+          permitted << { settings: [ :curriculum_profile_key, :curriculum_profile_version ] }
         end
         params.require(:course).permit(*permitted)
       end

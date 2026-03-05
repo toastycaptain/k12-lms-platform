@@ -92,12 +92,13 @@ RSpec.describe "Api::V1::Admin::CurriculumSettings", type: :request do
   end
 
   describe "POST /api/v1/admin/curriculum_settings/import" do
-    it "returns not implemented for admin while preserving admin-only policy" do
+    it "returns validation error for invalid admin payload while preserving admin-only policy" do
       mock_session(admin, tenant: tenant)
 
-      post "/api/v1/admin/curriculum_settings/import", params: { payload: { version: "draft" } }
+      post "/api/v1/admin/curriculum_settings/import", params: { operation: "validate", payload: { version: "draft" } }
 
-      expect(response).to have_http_status(:not_implemented)
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["valid"]).to eq(false)
     end
 
     it "returns 403 for non-admin roles" do

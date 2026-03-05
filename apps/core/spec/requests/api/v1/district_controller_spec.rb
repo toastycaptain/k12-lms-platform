@@ -61,7 +61,9 @@ RSpec.describe "Api::V1::District", type: :request do
       get "/api/v1/district/schools"
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body.map { |school| school["name"] }).to contain_exactly("North Campus", "South Campus")
+      expect(response.parsed_body.map { |school| school["school_name"] }).to contain_exactly("North Campus", "South Campus")
+      expect(response.parsed_body.first["effective_curriculum_profile_key"]).to be_present
+      expect(response.parsed_body.first["resolution_trace_id"]).to be_present
     end
 
     it "returns forbidden for non-district-admin users" do
@@ -119,6 +121,24 @@ RSpec.describe "Api::V1::District", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["pushed"].first["school"]).to eq("South High")
+    end
+
+    it "distributes curriculum profile assignments across district tenants" do
+      mock_session(district_admin, tenant: north_tenant)
+
+      post "/api/v1/district/push_template", params: {
+        operation: "push_curriculum",
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1",
+        target_tenant_ids: [ south_tenant.id ]
+      }
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["distributed"].first["tenant_id"]).to eq(south_tenant.id)
+      expect(south_tenant.reload.settings["curriculum_default_profile_key"]).to eq("ib_continuum_v1")
+      expect(
+        CurriculumProfileAssignment.where(tenant_id: south_tenant.id, scope_type: "tenant", active: true).count
+      ).to eq(1)
     end
   end
 end

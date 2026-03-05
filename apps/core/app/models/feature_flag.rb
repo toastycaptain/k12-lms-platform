@@ -7,6 +7,17 @@ class FeatureFlag < ApplicationRecord
     "ai_enabled" => true,
     "google_integration" => true,
     "curriculum_profiles_v1" => true,
+    "curriculum_profiles_v2_core" => false,
+    "curriculum_pack_lifecycle_v1" => false,
+    "curriculum_profile_version_pinning_v1" => false,
+    "curriculum_resolution_observability_v1" => false,
+    "planner_schema_renderer_v1" => false,
+    "runtime_nav_composition_v1" => false,
+    "profile_derived_surfaces_v1" => false,
+    "curriculum_workflow_engine_v1" => false,
+    "district_curriculum_governance_v1" => false,
+    "integration_curriculum_envelope_v1" => false,
+    "curriculum_security_derived_only_v1" => false,
     "new_gradebook" => false,
     "beta_reports" => false
   }.freeze

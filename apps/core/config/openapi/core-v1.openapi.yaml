@@ -10779,6 +10779,13 @@ components:
           nullable: true
         effective_curriculum_source:
           type: string
+        curriculum_selected_from:
+          type: string
+        curriculum_fallback_reason:
+          type: string
+          nullable: true
+        curriculum_resolution_trace_id:
+          type: string
         curriculum_context:
           "$ref": "#/components/schemas/CurriculumContext"
         sections:

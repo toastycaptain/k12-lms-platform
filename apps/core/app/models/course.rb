@@ -12,6 +12,8 @@ class Course < ApplicationRecord
   has_many :announcements, dependent: :destroy
   has_many :message_threads, dependent: :nullify
   has_many :quizzes, dependent: :destroy
+  has_many :curriculum_profile_assignments, dependent: :nullify
+  has_one :curriculum_course_mapping_issue, dependent: :destroy
   has_one_attached :gradebook_export
 
   validates :name, presence: true
@@ -28,9 +30,11 @@ class Course < ApplicationRecord
 
   def curriculum_profile_override_must_exist
     override_key = settings&.dig("curriculum_profile_key")
+    override_version = settings&.dig("curriculum_profile_version")
     return if override_key.blank?
-    return if CurriculumProfileRegistry.keys.include?(override_key)
+    return if override_version.blank? && CurriculumProfileRegistry.keys.include?(override_key)
+    return if CurriculumProfileRegistry.exists?(override_key, override_version)
 
-    errors.add(:settings, "contains an unknown curriculum_profile_key")
+    errors.add(:settings, "contains an unknown curriculum_profile_key/curriculum_profile_version")
   end
 end

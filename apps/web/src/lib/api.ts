@@ -192,6 +192,15 @@ export interface CurrentUser {
   onboarding_complete: boolean;
   preferences: Record<string, unknown>;
   curriculum_default_profile_key?: string;
+  curriculum_default_profile_version?: string;
+  curriculum_runtime?: {
+    profile_key?: string;
+    profile_version?: string;
+    selected_from?: string;
+    terminology?: Record<string, string>;
+    navigation?: Record<string, string[]>;
+    visible_navigation?: string[];
+  };
 }
 
 interface MeResponse {
@@ -218,6 +227,15 @@ interface MeResponse {
     name: string;
     slug: string;
     curriculum_default_profile_key?: string;
+    curriculum_default_profile_version?: string;
+    curriculum_runtime?: {
+      profile_key?: string;
+      profile_version?: string;
+      selected_from?: string;
+      terminology?: Record<string, string>;
+      navigation?: Record<string, string[]>;
+      visible_navigation?: string[];
+    };
   };
 }
 
@@ -240,6 +258,12 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
 
   if (data.tenant.curriculum_default_profile_key) {
     currentUser.curriculum_default_profile_key = data.tenant.curriculum_default_profile_key;
+  }
+  if (data.tenant.curriculum_default_profile_version) {
+    currentUser.curriculum_default_profile_version = data.tenant.curriculum_default_profile_version;
+  }
+  if (data.tenant.curriculum_runtime) {
+    currentUser.curriculum_runtime = data.tenant.curriculum_runtime;
   }
 
   return currentUser;

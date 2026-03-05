@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -343,6 +343,73 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_090100) do
     t.index ["school_id"], name: "index_courses_on_school_id"
     t.index ["search_vector"], name: "index_courses_on_search_vector", using: :gin
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
+  end
+
+  create_table "curriculum_course_mapping_issues", force: :cascade do |t|
+    t.jsonb "candidate_school_ids", default: [], null: false
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "reason", default: "missing_school_id", null: false
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.bigint "resolved_school_id"
+    t.string "status", default: "unresolved", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_curriculum_course_mapping_issues_on_course_id"
+    t.index ["resolved_by_id"], name: "index_curriculum_course_mapping_issues_on_resolved_by_id"
+    t.index ["resolved_school_id"], name: "index_curriculum_course_mapping_issues_on_resolved_school_id"
+    t.index ["tenant_id", "course_id"], name: "idx_curriculum_course_mapping_issues_course", unique: true
+    t.index ["tenant_id", "status", "created_at"], name: "idx_curriculum_course_mapping_issues_state"
+    t.index ["tenant_id"], name: "index_curriculum_course_mapping_issues_on_tenant_id"
+  end
+
+  create_table "curriculum_profile_assignments", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.boolean "active", default: true, null: false
+    t.bigint "assigned_by_id"
+    t.bigint "course_id"
+    t.datetime "created_at", null: false
+    t.boolean "is_frozen", default: false, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.boolean "pinned", default: false, null: false
+    t.string "profile_key", null: false
+    t.string "profile_version"
+    t.bigint "school_id"
+    t.string "scope_type", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_curriculum_profile_assignments_on_academic_year_id"
+    t.index ["assigned_by_id"], name: "index_curriculum_profile_assignments_on_assigned_by_id"
+    t.index ["course_id"], name: "index_curriculum_profile_assignments_on_course_id"
+    t.index ["school_id"], name: "index_curriculum_profile_assignments_on_school_id"
+    t.index ["tenant_id", "academic_year_id", "is_frozen", "active"], name: "idx_curriculum_profile_assignments_freeze"
+    t.index ["tenant_id", "course_id", "academic_year_id", "active"], name: "idx_curriculum_profile_assignments_course_year"
+    t.index ["tenant_id", "school_id", "academic_year_id", "active"], name: "idx_curriculum_profile_assignments_school_year"
+    t.index ["tenant_id", "scope_type", "active"], name: "idx_curriculum_profile_assignments_scope"
+    t.index ["tenant_id"], name: "index_curriculum_profile_assignments_on_tenant_id"
+  end
+
+  create_table "curriculum_profile_releases", force: :cascade do |t|
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.datetime "deprecated_at"
+    t.datetime "frozen_at"
+    t.bigint "imported_by_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "profile_key", null: false
+    t.string "profile_version", null: false
+    t.datetime "published_at"
+    t.string "rolled_back_from_version"
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["imported_by_id"], name: "index_curriculum_profile_releases_on_imported_by_id"
+    t.index ["tenant_id", "profile_key", "profile_version"], name: "idx_curriculum_profile_releases_identity", unique: true
+    t.index ["tenant_id", "profile_key", "status"], name: "idx_curriculum_profile_releases_state"
+    t.index ["tenant_id"], name: "index_curriculum_profile_releases_on_tenant_id"
   end
 
   create_table "data_retention_policies", force: :cascade do |t|
@@ -909,10 +976,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_090100) do
     t.text "address"
     t.datetime "created_at", null: false
     t.string "curriculum_profile_key"
+    t.string "curriculum_profile_version"
     t.string "name", null: false
     t.bigint "tenant_id", null: false
     t.string "timezone"
     t.datetime "updated_at", null: false
+    t.index ["tenant_id", "curriculum_profile_key", "curriculum_profile_version"], name: "idx_schools_tenant_curriculum_profile_version"
     t.index ["tenant_id", "curriculum_profile_key"], name: "idx_schools_tenant_curriculum_profile"
     t.index ["tenant_id"], name: "index_schools_on_tenant_id"
   end
@@ -1241,6 +1310,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_090100) do
   add_foreign_key "courses", "academic_years"
   add_foreign_key "courses", "schools"
   add_foreign_key "courses", "tenants"
+  add_foreign_key "curriculum_course_mapping_issues", "courses"
+  add_foreign_key "curriculum_course_mapping_issues", "schools", column: "resolved_school_id"
+  add_foreign_key "curriculum_course_mapping_issues", "tenants"
+  add_foreign_key "curriculum_course_mapping_issues", "users", column: "resolved_by_id"
+  add_foreign_key "curriculum_profile_assignments", "academic_years"
+  add_foreign_key "curriculum_profile_assignments", "courses"
+  add_foreign_key "curriculum_profile_assignments", "schools"
+  add_foreign_key "curriculum_profile_assignments", "tenants"
+  add_foreign_key "curriculum_profile_assignments", "users", column: "assigned_by_id"
+  add_foreign_key "curriculum_profile_releases", "tenants"
+  add_foreign_key "curriculum_profile_releases", "users", column: "imported_by_id"
   add_foreign_key "data_retention_policies", "tenants"
   add_foreign_key "data_retention_policies", "users", column: "created_by_id"
   add_foreign_key "discussion_posts", "discussion_posts", column: "parent_post_id"

@@ -55,14 +55,15 @@ module Api
 
       def publish
         authorize @unit_plan
-        if approval_required? && @unit_plan.status == "draft"
-          return render json: { errors: [ "Approval is required. Use submit_for_approval instead." ] },
-                        status: :unprocessable_content
-        end
-        @unit_plan.publish!
+        CurriculumWorkflowEngine.transition!(
+          record: @unit_plan,
+          event: :publish,
+          actor: Current.user,
+          context: { approval_required: approval_required? }
+        )
         render json: @unit_plan
-      rescue ActiveRecord::RecordInvalid
-        render json: { errors: [ "Cannot publish: unit must be in draft status with a current version" ] },
+      rescue CurriculumWorkflowEngine::TransitionError => e
+        render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
 
@@ -72,20 +73,28 @@ module Api
           return render json: { errors: [ "Approval is not required for this tenant" ] },
                         status: :unprocessable_content
         end
-        @unit_plan.submit_for_approval!(user: Current.user)
+        CurriculumWorkflowEngine.transition!(
+          record: @unit_plan,
+          event: :submit_for_approval,
+          actor: Current.user
+        )
         notify_approvers_for_approval_request!(@unit_plan)
         render json: @unit_plan
-      rescue ActiveRecord::RecordInvalid
-        render json: { errors: [ "Cannot submit: unit must be in draft status with a current version" ] },
+      rescue CurriculumWorkflowEngine::TransitionError => e
+        render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
 
       def archive
         authorize @unit_plan
-        @unit_plan.archive!
+        CurriculumWorkflowEngine.transition!(
+          record: @unit_plan,
+          event: :archive,
+          actor: Current.user
+        )
         render json: @unit_plan
-      rescue ActiveRecord::RecordInvalid
-        render json: { errors: [ "Cannot archive: unit must be in published status" ] },
+      rescue CurriculumWorkflowEngine::TransitionError => e
+        render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
 

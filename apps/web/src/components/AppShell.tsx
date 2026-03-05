@@ -17,6 +17,11 @@ interface NavItem {
   children?: { label: string; href: string; roles?: string[] }[];
 }
 
+function pluralize(label: string): string {
+  if (!label) return label;
+  return label.endsWith("s") ? label : `${label}s`;
+}
+
 const FLYOUT_NAV_IDS = new Set(["plan", "teach", "assess", "admin", "report", "communicate"]);
 
 const NAV_ITEMS: NavItem[] = [
@@ -139,20 +144,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const roles = user?.roles ?? [];
+  const runtimeTerminology = user?.curriculum_runtime?.terminology ?? {};
+  const runtimeVisibleNav = user?.curriculum_runtime?.visible_navigation ?? [];
+  const runtimeTopLevel = runtimeVisibleNav.filter((id) =>
+    NAV_ITEMS.some((item) => item.id === id),
+  );
+  const runtimeFilteringEnabled = runtimeTopLevel.length > 0;
   const isStudentOnly = roles.length > 0 && roles.every((role) => role === "student");
   const isGuardianOnly = roles.length > 0 && roles.every((role) => role === "guardian");
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
-    if (roles.length === 0 || !item.roles || item.roles.length === 0) return true;
-    return item.roles.some((role) => roles.includes(role));
-  }).filter((item) => {
-    if (isGuardianOnly) {
-      return item.id === "guardian" || item.id === "communicate";
-    }
+  const navItemsWithTerminology = NAV_ITEMS.map((item) => {
+    if (item.id !== "plan") return item;
 
-    if (!isStudentOnly) return item.id !== "guardian";
-    return !["plan", "teach", "admin", "district", "guardian"].includes(item.id);
+    const unitLabel = runtimeTerminology.unit_label || "Unit";
+    const unitPlural = pluralize(unitLabel);
+    return {
+      ...item,
+      children: (item.children || []).map((child) =>
+        child.label === "Units" ? { ...child, label: unitPlural } : child,
+      ),
+    };
   });
+
+  const visibleNavItems = navItemsWithTerminology
+    .filter((item) => {
+      if (runtimeFilteringEnabled && !runtimeTopLevel.includes(item.id)) return false;
+      if (roles.length === 0 || !item.roles || item.roles.length === 0) return true;
+      return item.roles.some((role) => roles.includes(role));
+    })
+    .filter((item) => {
+      if (isGuardianOnly) {
+        return item.id === "guardian" || item.id === "communicate";
+      }
+
+      if (!isStudentOnly) return item.id !== "guardian";
+      return !["plan", "teach", "admin", "district", "guardian"].includes(item.id);
+    });
 
   const homeHref = isGuardianOnly
     ? "/guardian/dashboard"

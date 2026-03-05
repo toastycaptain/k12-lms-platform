@@ -4,6 +4,7 @@ class AcademicYear < ApplicationRecord
 
   has_many :terms, dependent: :destroy
   has_many :courses, dependent: :destroy
+  has_many :curriculum_profile_assignments, dependent: :nullify
 
   validates :name, presence: true
   validates :start_date, presence: true

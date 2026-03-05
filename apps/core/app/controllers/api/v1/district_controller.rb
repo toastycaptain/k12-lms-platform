@@ -6,7 +6,23 @@ module Api
 
       def schools
         authorize :district, :schools?
-        render json: district_schools, each_serializer: SchoolSerializer
+
+        payload = district_schools.map do |school|
+          resolved = CurriculumProfileResolver.resolve(tenant: school.tenant, school: school)
+          {
+            id: school.id,
+            tenant_id: school.tenant_id,
+            school_name: school.name,
+            timezone: school.timezone,
+            effective_curriculum_profile_key: resolved[:profile_key],
+            effective_curriculum_profile_version: resolved[:resolved_profile_version],
+            effective_curriculum_source: resolved[:source],
+            selected_from: resolved[:selected_from],
+            resolution_trace_id: resolved[:resolution_trace_id]
+          }
+        end
+
+        render json: payload
       end
 
       def standards_coverage
@@ -32,6 +48,11 @@ module Api
 
       def push_template
         authorize :district, :push_template?
+
+        if params[:operation].to_s == "push_curriculum"
+          push_curriculum_distribution
+          return
+        end
 
         source_template = Template.find(params[:template_id])
         target_ids = Array(params[:target_tenant_ids]).map(&:to_i).uniq
@@ -78,7 +99,7 @@ module Api
       end
 
       def district_schools
-        School.unscoped.where(tenant_id: district_tenants.select(:id)).order(:name)
+        School.unscoped.includes(tenant: :district).where(tenant_id: district_tenants.select(:id)).order(:name)
       end
 
       def role_count_for_tenant(tenant_id, role_name)
@@ -140,6 +161,106 @@ module Api
                                       .pluck(:standard_id)
 
         (assignment_ids + unit_ids).uniq
+      end
+
+      def push_curriculum_distribution
+        profile_key = params[:profile_key].to_s.strip
+        profile_version = params[:profile_version].to_s.strip.presence
+
+        if profile_key.blank?
+          render json: { error: "profile_key is required" }, status: :unprocessable_content
+          return
+        end
+
+        unless CurriculumProfileRegistry.exists?(profile_key, profile_version)
+          render json: { error: "Invalid profile key/version" }, status: :unprocessable_content
+          return
+        end
+
+        target_tenants = district_tenants.where(id: Array(params[:target_tenant_ids]).map(&:to_i))
+        target_tenants = district_tenants if target_tenants.empty?
+
+        distributed = []
+        target_tenants.find_each do |tenant|
+          settings = tenant.settings.is_a?(Hash) ? tenant.settings.deep_dup : {}
+          settings["curriculum_default_profile_key"] = profile_key
+          settings["curriculum_default_profile_version"] = profile_version
+          settings["curriculum_profile_assignment_enabled"] = true
+          tenant.update!(settings: settings)
+
+          assignment = CurriculumProfileAssignment.find_or_initialize_by(
+            tenant_id: tenant.id,
+            scope_type: "tenant",
+            school_id: nil,
+            course_id: nil,
+            academic_year_id: nil,
+            active: true
+          )
+          assignment.assign_attributes(
+            profile_key: profile_key,
+            profile_version: profile_version,
+            pinned: true,
+            is_frozen: false,
+            assigned_by: Current.user,
+            metadata: assignment.metadata.merge(
+              "source" => "district_distribution",
+              "district_id" => current_district.id
+            )
+          )
+          assignment.save!
+
+          Array(params[:target_school_ids]).map(&:to_i).uniq.each do |school_id|
+            school = School.unscoped.find_by(id: school_id, tenant_id: tenant.id)
+            next unless school
+
+            school.update!(
+              curriculum_profile_key: profile_key,
+              curriculum_profile_version: profile_version
+            )
+
+            school_assignment = CurriculumProfileAssignment.find_or_initialize_by(
+              tenant_id: tenant.id,
+              scope_type: "school",
+              school_id: school.id,
+              course_id: nil,
+              academic_year_id: nil,
+              active: true
+            )
+            school_assignment.assign_attributes(
+              profile_key: profile_key,
+              profile_version: profile_version,
+              pinned: true,
+              is_frozen: false,
+              assigned_by: Current.user,
+              metadata: school_assignment.metadata.merge(
+                "source" => "district_distribution",
+                "district_id" => current_district.id
+              )
+            )
+            school_assignment.save!
+          end
+
+          CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+          distributed << {
+            tenant_id: tenant.id,
+            tenant_name: tenant.name,
+            profile_key: profile_key,
+            profile_version: profile_version
+          }
+        end
+
+        audit_event(
+          "district.curriculum.distributed",
+          auditable: current_district,
+          metadata: {
+            district_id: current_district.id,
+            profile_key: profile_key,
+            profile_version: profile_version,
+            target_tenant_ids: distributed.map { |row| row[:tenant_id] }
+          }
+        )
+
+        render json: { distributed: distributed }, status: :created
       end
     end
   end

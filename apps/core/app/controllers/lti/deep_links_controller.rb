@@ -54,10 +54,20 @@ module Lti
         school: course.school,
         course: course
       )
+      envelope = CurriculumContextEnvelopeBuilder.build(
+        resolved: resolved,
+        tenant_id: Current.tenant.id,
+        school_id: course.school_id,
+        course_id: course.id
+      )
+      context = envelope["curriculum_context"] || {}
 
+      params_hash["curriculum_context"] ||= context
       params_hash["effective_curriculum_profile_key"] ||= resolved[:profile_key]
+      params_hash["effective_curriculum_profile_version"] ||= resolved[:resolved_profile_version] || resolved[:profile_version]
       params_hash["effective_curriculum_source"] ||= resolved[:source]
       params_hash["lti_context_tag"] ||= resolved.dig(:integration_hints, "lti_context_tag")
+      params_hash["resolution_trace_id"] ||= resolved[:resolution_trace_id]
       params_hash
     end
 

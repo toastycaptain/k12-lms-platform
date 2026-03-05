@@ -21,8 +21,28 @@ class ApplicationController < ActionController::API
   after_action :verify_authorized, unless: -> { skip_authorization? || action_name == "index" }
   after_action :verify_policy_scoped, if: -> { action_name == "index" && !skip_authorization? }
 
-  rescue_from Pundit::NotAuthorizedError do |_exception|
-    render json: { error: "Forbidden" }, status: :forbidden
+  rescue_from Pundit::NotAuthorizedError do |exception|
+    policy_name = exception.policy&.class&.name || "UnknownPolicy"
+    action_name = exception.query.to_s
+
+    audit_event(
+      "security.authorization.denied",
+      metadata: {
+        policy: policy_name,
+        action: action_name,
+        path: request.path,
+        method: request.request_method
+      }
+    )
+
+    render json: {
+      error: "Forbidden",
+      meta: {
+        policy: policy_name,
+        action: action_name,
+        request_id: request.request_id
+      }
+    }, status: :forbidden
   end
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found

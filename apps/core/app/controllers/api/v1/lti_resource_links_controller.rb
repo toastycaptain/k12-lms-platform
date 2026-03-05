@@ -77,12 +77,22 @@ module Api
           school: course.school,
           course: course
         )
+        envelope = CurriculumContextEnvelopeBuilder.build(
+          resolved: resolved,
+          tenant_id: Current.tenant.id,
+          school_id: course.school_id,
+          course_id: course.id
+        )
+        context = envelope["curriculum_context"] || {}
 
         custom_params = attrs["custom_params"] || attrs[:custom_params] || {}
         custom_params = custom_params.to_h
+        custom_params["curriculum_context"] ||= context
         custom_params["effective_curriculum_profile_key"] ||= resolved[:profile_key]
+        custom_params["effective_curriculum_profile_version"] ||= resolved[:resolved_profile_version] || resolved[:profile_version]
         custom_params["effective_curriculum_source"] ||= resolved[:source]
         custom_params["lti_context_tag"] ||= resolved.dig(:integration_hints, "lti_context_tag")
+        custom_params["resolution_trace_id"] ||= resolved[:resolution_trace_id]
 
         attrs["custom_params"] = custom_params
         attrs

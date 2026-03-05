@@ -19,6 +19,7 @@ module Api
         authorize @school
 
         if @school.save
+          CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
           render json: @school, status: :created
         else
           render json: { errors: @school.errors.full_messages }, status: :unprocessable_content
@@ -28,6 +29,7 @@ module Api
       def update
         authorize @school
         if @school.update(school_params)
+          CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
           render json: @school
         else
           render json: { errors: @school.errors.full_messages }, status: :unprocessable_content
@@ -37,6 +39,7 @@ module Api
       def destroy
         authorize @school
         @school.destroy!
+        CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
         head :no_content
       end
 
@@ -47,7 +50,13 @@ module Api
       end
 
       def school_params
-        params.require(:school).permit(:name, :address, :timezone, :curriculum_profile_key)
+        permitted = [ :name, :address, :timezone ]
+        if Current.user&.has_role?(:admin)
+          permitted << :curriculum_profile_key
+          permitted << :curriculum_profile_version
+        end
+
+        params.require(:school).permit(*permitted)
       end
     end
   end

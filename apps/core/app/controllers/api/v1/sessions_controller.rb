@@ -452,12 +452,29 @@ module Api
       end
 
       def current_tenant_payload
+        resolved = tenant_curriculum_runtime
+        roles = Array(Current.user&.role_names).map(&:to_s)
+        navigation = resolved[:navigation] || {}
+
         {
           id: Current.tenant.id,
           name: Current.tenant.name,
           slug: Current.tenant.slug,
-          curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key
+          curriculum_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key,
+          curriculum_default_profile_version: Current.tenant.settings&.dig("curriculum_default_profile_version"),
+          curriculum_runtime: {
+            profile_key: resolved[:profile_key],
+            profile_version: resolved[:resolved_profile_version],
+            selected_from: resolved[:selected_from],
+            terminology: resolved[:terminology],
+            navigation: navigation,
+            visible_navigation: roles.flat_map { |role| Array(navigation[role]) }.uniq
+          }
         }
+      end
+
+      def tenant_curriculum_runtime
+        @tenant_curriculum_runtime ||= CurriculumProfileResolver.resolve(tenant: Current.tenant)
       end
 
       def can_manage_impersonation?

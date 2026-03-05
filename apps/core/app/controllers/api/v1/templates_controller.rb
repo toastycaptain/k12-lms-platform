@@ -7,7 +7,15 @@ module Api
         @templates = policy_scope(Template).includes(:template_versions)
         @templates = @templates.where(status: "published") unless current_user_can_manage_templates?
         @templates = paginate(@templates)
-        render json: @templates
+
+        if include_curriculum_defaults?
+          render json: {
+            templates: ActiveModelSerializers::SerializableResource.new(@templates),
+            curriculum_defaults: curriculum_defaults_payload
+          }
+        else
+          render json: @templates
+        end
       end
 
       def show
@@ -53,20 +61,26 @@ module Api
 
       def publish
         authorize @template
-        @template.publish!
+        CurriculumWorkflowEngine.transition!(
+          record: @template,
+          event: :publish,
+          actor: Current.user
+        )
         render json: @template
-      rescue ActiveRecord::RecordInvalid
-        render json: { errors: [ "Cannot publish: template must be in draft status with a current version" ] },
-               status: :unprocessable_content
+      rescue CurriculumWorkflowEngine::TransitionError => e
+        render json: { errors: [ e.message ] }, status: :unprocessable_content
       end
 
       def archive
         authorize @template
-        @template.archive!
+        CurriculumWorkflowEngine.transition!(
+          record: @template,
+          event: :archive,
+          actor: Current.user
+        )
         render json: @template
-      rescue ActiveRecord::RecordInvalid
-        render json: { errors: [ "Cannot archive: template must be in published status" ] },
-               status: :unprocessable_content
+      rescue CurriculumWorkflowEngine::TransitionError => e
+        render json: { errors: [ e.message ] }, status: :unprocessable_content
       end
 
       def create_unit
@@ -99,6 +113,29 @@ module Api
 
       def current_user_can_manage_templates?
         Current.user&.has_role?(:admin) || Current.user&.has_role?(:curriculum_lead)
+      end
+
+      def include_curriculum_defaults?
+        ActiveModel::Type::Boolean.new.cast(params[:include_curriculum_defaults])
+      end
+
+      def curriculum_defaults_payload
+        course = policy_scope(Course).find_by(id: params[:course_id]) if params[:course_id].present?
+        resolved = CurriculumProfileResolver.resolve(
+          tenant: Current.tenant,
+          school: course&.school,
+          course: course,
+          academic_year: course&.academic_year
+        )
+
+        {
+          profile_key: resolved[:profile_key],
+          profile_version: resolved[:resolved_profile_version],
+          template_defaults: resolved[:template_defaults],
+          framework_defaults: resolved[:framework_defaults],
+          selected_from: resolved[:selected_from],
+          resolution_trace_id: resolved[:resolution_trace_id]
+        }
       end
     end
   end

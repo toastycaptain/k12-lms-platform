@@ -28,6 +28,10 @@ RSpec.describe "Api::V1::Admin::FeatureFlags", type: :request do
       expect(response).to have_http_status(:ok)
       keys = response.parsed_body.map { |flag| flag["key"] }
       expect(keys).to include("portfolio_enabled")
+      curriculum_core = response.parsed_body.find { |flag| flag["key"] == "curriculum_profiles_v2_core" }
+      expect(curriculum_core).to be_present
+      dependent_flag = response.parsed_body.find { |flag| flag["key"] == "planner_schema_renderer_v1" }
+      expect(dependent_flag["requires"]).to include("curriculum_profiles_v2_core")
     end
 
     it "returns forbidden for non-admin users" do
@@ -47,6 +51,33 @@ RSpec.describe "Api::V1::Admin::FeatureFlags", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(FeatureFlag.enabled?("portfolio_enabled", tenant: tenant)).to be(false)
+    end
+
+    it "blocks enabling dependent curriculum flags when the core flag is disabled" do
+      mock_session(admin, tenant: tenant)
+
+      put "/api/v1/admin/feature_flags/planner_schema_renderer_v1", params: { enabled: true }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to include("curriculum_profiles_v2_core")
+    end
+
+    it "supports rollout updates for multiple target tenants" do
+      mock_session(admin, tenant: tenant)
+      tenant2 = create(:tenant)
+
+      FeatureFlag.find_or_create_by!(key: "curriculum_profiles_v2_core", tenant: tenant) { |flag| flag.enabled = true }
+      FeatureFlag.find_or_create_by!(key: "curriculum_profiles_v2_core", tenant: tenant2) { |flag| flag.enabled = true }
+
+      put "/api/v1/admin/feature_flags/planner_schema_renderer_v1", params: {
+        enabled: true,
+        target_tenant_ids: [ tenant.id, tenant2.id ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["executed"]).to eq(2)
+      expect(FeatureFlag.enabled?("planner_schema_renderer_v1", tenant: tenant)).to eq(true)
+      expect(FeatureFlag.enabled?("planner_schema_renderer_v1", tenant: tenant2)).to eq(true)
     end
   end
 
