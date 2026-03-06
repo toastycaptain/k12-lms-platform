@@ -1,3 +1,5 @@
+export {};
+
 interface GuardianAttendanceSummaryContract {
   total: number;
   present: number;

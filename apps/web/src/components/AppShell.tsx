@@ -1,432 +1,313 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { LiveRegion } from "@k12/ui";
-import SchoolSelector from "@/components/SchoolSelector";
+import { buildNavigation } from "@/features/curriculum/navigation/buildNavigation";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { useUiPreferences } from "@/features/curriculum/runtime/ui-preferences";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
+import SchoolSelector from "@/components/SchoolSelector";
 import TopRightQuickActions from "@/components/TopRightQuickActions";
+import { CommandPalette, DensityToggle, LiveRegion, ThemeToggle } from "@k12/ui";
 
-interface NavItem {
-  id: string;
-  label: string;
-  href: string;
-  roles?: string[];
-  children?: { label: string; href: string; roles?: string[] }[];
+function matchesPath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`) || pathname.startsWith(`${href}#`);
 }
-
-function pluralize(label: string): string {
-  if (!label) return label;
-  return label.endsWith("s") ? label : `${label}s`;
-}
-
-const FLYOUT_NAV_IDS = new Set(["plan", "teach", "assess", "admin", "report", "communicate"]);
-
-const NAV_ITEMS: NavItem[] = [
-  {
-    id: "guardian",
-    label: "My Students",
-    href: "/guardian",
-    roles: ["guardian"],
-    children: [
-      { label: "Dashboard", href: "/guardian/dashboard" },
-      { label: "Messages", href: "/communicate" },
-      { label: "Compose", href: "/communicate/compose" },
-    ],
-  },
-  {
-    id: "learn",
-    label: "Learn",
-    href: "/learn",
-    roles: ["student"],
-    children: [
-      { label: "Dashboard", href: "/learn/dashboard" },
-      { label: "My Courses", href: "/learn/courses" },
-      { label: "To-dos", href: "/learn/todos" },
-      { label: "Goals", href: "/learn/goals" },
-      { label: "Calendar", href: "/learn/calendar" },
-      { label: "Portfolio", href: "/learn/portfolio" },
-      { label: "Grades", href: "/learn/grades" },
-      { label: "Progress", href: "/learn/progress" },
-    ],
-  },
-  {
-    id: "plan",
-    label: "Plan",
-    href: "/plan",
-    roles: ["admin", "curriculum_lead", "teacher"],
-    children: [
-      { label: "Units", href: "/plan/units" },
-      { label: "Calendar", href: "/plan/calendar" },
-      { label: "Templates", href: "/plan/templates" },
-      { label: "Standards", href: "/plan/standards" },
-    ],
-  },
-  {
-    id: "teach",
-    label: "Teach",
-    href: "/teach",
-    roles: ["admin", "teacher"],
-    children: [
-      { label: "Courses", href: "/teach/courses" },
-      { label: "Submissions", href: "/teach/submissions" },
-    ],
-  },
-  {
-    id: "assess",
-    label: "Assess",
-    href: "/assess",
-    roles: ["admin", "curriculum_lead", "teacher"],
-    children: [
-      { label: "Question Banks", href: "/assess/banks" },
-      { label: "Quizzes", href: "/assess/quizzes" },
-    ],
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    href: "/admin",
-    roles: ["admin", "curriculum_lead"],
-    children: [
-      { label: "Dashboard", href: "/admin/dashboard" },
-      { label: "School Setup", href: "/admin/school" },
-      { label: "Users & Roles", href: "/admin/users" },
-      { label: "Integrations", href: "/admin/integrations" },
-      { label: "AI Settings", href: "/admin/ai" },
-      { label: "Curriculum Profiles", href: "/admin/curriculum-profiles", roles: ["admin"] },
-      { label: "LTI", href: "/admin/lti" },
-      { label: "Data Retention", href: "/admin/retention" },
-      { label: "Curriculum Map", href: "/admin/curriculum-map" },
-      { label: "Standards", href: "/admin/standards" },
-      { label: "Approval Queue", href: "/admin/approvals" },
-    ],
-  },
-  {
-    id: "district",
-    label: "District",
-    href: "/district",
-    roles: ["district_admin"],
-    children: [
-      { label: "Dashboard", href: "/district/dashboard" },
-      { label: "Schools", href: "/district/schools" },
-      { label: "Standards", href: "/district/standards" },
-      { label: "Templates", href: "/district/templates" },
-      { label: "Users", href: "/district/users" },
-    ],
-  },
-  {
-    id: "report",
-    label: "Report",
-    href: "/report",
-    roles: ["admin", "curriculum_lead", "teacher"],
-    children: [
-      { label: "Overview", href: "/report" },
-      { label: "Standards Coverage", href: "/report/standards-coverage" },
-    ],
-  },
-  {
-    id: "communicate",
-    label: "Communicate",
-    href: "/communicate",
-    roles: ["admin", "curriculum_lead", "teacher", "student", "guardian"],
-    children: [
-      { label: "Overview", href: "/communicate" },
-      { label: "Compose", href: "/communicate/compose" },
-    ],
-  },
-];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [openFlyoutId, setOpenFlyoutId] = useState<string | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
-  const roles = user?.roles ?? [];
-  const runtimeTerminology = user?.curriculum_runtime?.terminology ?? {};
-  const runtimeVisibleNav = user?.curriculum_runtime?.visible_navigation ?? [];
-  const runtimeTopLevel = runtimeVisibleNav.filter((id) =>
-    NAV_ITEMS.some((item) => item.id === id),
+  const { theme, density, setTheme, setDensity } = useUiPreferences();
+  const { roles, isIb, activeProgramme, isGuardianOnly, isIbDocumentsOnly } =
+    useCurriculumRuntime();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [openItemId, setOpenItemId] = useState<string | null>(null);
+
+  const navigation = useMemo(
+    () =>
+      buildNavigation({
+        isIb,
+        documentsOnlyMode: isIbDocumentsOnly,
+        roles,
+        pathname,
+        activeProgramme,
+        visibleNavigation: user?.curriculum_runtime?.visible_navigation ?? [],
+        terminology: user?.curriculum_runtime?.terminology ?? {},
+      }),
+    [activeProgramme, isIb, isIbDocumentsOnly, pathname, roles, user?.curriculum_runtime],
   );
-  const runtimeFilteringEnabled = runtimeTopLevel.length > 0;
-  const isStudentOnly = roles.length > 0 && roles.every((role) => role === "student");
-  const isGuardianOnly = roles.length > 0 && roles.every((role) => role === "guardian");
 
-  const navItemsWithTerminology = NAV_ITEMS.map((item) => {
-    if (item.id !== "plan") return item;
-
-    const unitLabel = runtimeTerminology.unit_label || "Unit";
-    const unitPlural = pluralize(unitLabel);
-    return {
-      ...item,
-      children: (item.children || []).map((child) =>
-        child.label === "Units" ? { ...child, label: unitPlural } : child,
-      ),
-    };
-  });
-
-  const visibleNavItems = navItemsWithTerminology
-    .filter((item) => {
-      if (runtimeFilteringEnabled && !runtimeTopLevel.includes(item.id)) return false;
-      if (roles.length === 0 || !item.roles || item.roles.length === 0) return true;
-      return item.roles.some((role) => roles.includes(role));
-    })
-    .filter((item) => {
-      if (isGuardianOnly) {
-        return item.id === "guardian" || item.id === "communicate";
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen(true);
       }
+    }
 
-      if (!isStudentOnly) return item.id !== "guardian";
-      return !["plan", "teach", "admin", "district", "guardian"].includes(item.id);
-    });
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-  const homeHref = isGuardianOnly
-    ? "/guardian/dashboard"
-    : isStudentOnly
-      ? "/learn/dashboard"
-      : "/dashboard";
+  const commandItems = useMemo(() => {
+    const primaryItems = navigation.primary.map((item) => ({
+      id: item.id,
+      label: item.label,
+      group: "Workspace",
+      keywords: [item.description || "", item.href],
+      onSelect: () => router.push(item.href),
+    }));
+
+    const childItems = navigation.primary.flatMap((item) =>
+      (item.children || []).map((child) => ({
+        id: child.id,
+        label: `${item.label} • ${child.label}`,
+        group: "Jump",
+        keywords: [child.href, child.description || item.label],
+        onSelect: () => router.push(child.href),
+      })),
+    );
+
+    const quickActions = navigation.quickActions.map((action) => ({
+      id: action.id,
+      label: action.label,
+      group: "Quick Action",
+      keywords: [action.href, action.description],
+      onSelect: () => router.push(action.href),
+    }));
+
+    return [...primaryItems, ...childItems, ...quickActions];
+  }, [navigation, router]);
+
+  const currentWorkspaceValue =
+    navigation.currentWorkspace?.href ||
+    navigation.workspaceOptions[0]?.href ||
+    navigation.homeHref;
 
   return (
-    <div className="flex h-screen">
+    <div className="min-h-screen bg-[var(--app-background)] text-[var(--app-foreground)]">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:ring-2 focus:ring-blue-500"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-slate-950"
       >
         Skip to main content
       </a>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
+      {sidebarOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
           aria-label="Close navigation menu"
           onClick={() => setSidebarOpen(false)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              setSidebarOpen(false);
-            }
-          }}
+          className="fixed inset-0 z-40 bg-slate-950/40 md:hidden"
         />
-      )}
+      ) : null}
 
-      {/* Left sidebar nav — UX §3.2 */}
-      <aside
-        id="primary-sidebar"
-        aria-label="Sidebar"
-        className={`fixed inset-y-0 left-0 z-40 w-60 flex-shrink-0 border-r border-gray-200 bg-white transition-transform md:static md:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex h-16 items-center justify-between px-4">
-          <Link href={homeHref} className="text-lg font-semibold text-gray-900">
-            K-12 LMS
-          </Link>
-          <button
-            className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close navigation menu"
-            aria-controls="primary-sidebar"
-            aria-expanded={sidebarOpen}
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-        <nav aria-label="Main navigation" className="mt-2 px-2">
-          <ul className="flex flex-col gap-1">
-            {visibleNavItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              const visibleChildren = (item.children || []).filter((child) => {
-                if (!child.roles || child.roles.length === 0) return true;
-                return child.roles.some((role) => roles.includes(role));
-              });
-              const hasVisibleChildren = visibleChildren.length > 0;
-              const shouldUseFlyout = Boolean(hasVisibleChildren && FLYOUT_NAV_IDS.has(item.id));
-              const flyoutOpen = Boolean(
-                hasVisibleChildren && shouldUseFlyout && openFlyoutId === item.id,
-              );
-              const mobileFlyoutOpen = Boolean(hasVisibleChildren && shouldUseFlyout && isActive);
-              return (
-                // Hover/focus state is managed at the container level to keep flyout open while navigating children.
-                // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-                <li
-                  key={item.href}
-                  className="group relative"
-                  onMouseEnter={
-                    shouldUseFlyout
-                      ? () => {
-                          setOpenFlyoutId(item.id);
-                        }
-                      : undefined
-                  }
-                  onMouseLeave={
-                    shouldUseFlyout
-                      ? () => {
-                          setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
-                        }
-                      : undefined
-                  }
-                  onFocusCapture={
-                    shouldUseFlyout
-                      ? () => {
-                          setOpenFlyoutId(item.id);
-                        }
-                      : undefined
-                  }
-                  onBlurCapture={
-                    shouldUseFlyout
-                      ? (event) => {
-                          const nextTarget = event.relatedTarget as Node | null;
-                          if (!event.currentTarget.contains(nextTarget)) {
-                            setOpenFlyoutId((previous) => (previous === item.id ? null : previous));
-                          }
-                        }
-                      : undefined
-                  }
-                >
-                  <Link
-                    href={hasVisibleChildren ? visibleChildren[0].href : item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`block rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                      isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+      <div className="grid min-h-screen md:grid-cols-[19rem_minmax(0,1fr)]">
+        <aside
+          id="primary-sidebar"
+          aria-label="Sidebar"
+          className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/60 bg-[var(--app-surface)]/95 p-4 shadow-2xl backdrop-blur transition-transform md:sticky md:top-0 md:h-screen md:w-auto md:translate-x-0 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="rounded-[1.75rem] border border-white/70 bg-white/85 p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Link href={navigation.homeHref} className="block">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--app-accent)]">
+                    K-12 LMS
+                  </p>
+                </Link>
+                <h1 className="mt-2 text-xl font-semibold text-slate-950">
+                  {isIb ? "IB Workspace System" : "Curriculum Workspace"}
+                </h1>
+              </div>
+              <button
+                type="button"
+                aria-label="Close navigation menu"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-500 md:hidden"
+              >
+                Close
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">{navigation.workspaceDescription}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+                {navigation.curriculumBadge}
+              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                {navigation.programmeBadge}
+              </span>
+            </div>
+          </div>
+
+          <nav aria-label="Main navigation" className="mt-5 flex-1 overflow-y-auto pr-1">
+            <ul className="space-y-2">
+              {navigation.primary.map((item) => {
+                const itemActive =
+                  matchesPath(pathname, item.href) ||
+                  (item.children || []).some((child) => matchesPath(pathname, child.href));
+
+                return (
+                  <li
+                    key={item.id}
+                    onMouseEnter={() => setOpenItemId(item.id)}
+                    onMouseLeave={() =>
+                      setOpenItemId((current) => (current === item.id ? null : current))
+                    }
+                    className={`group rounded-[1.5rem] border px-2 py-2 transition ${
+                      itemActive
+                        ? "border-slate-200 bg-white/90 shadow-sm"
+                        : "border-transparent bg-transparent hover:border-white/60 hover:bg-white/70"
                     }`}
                   >
-                    {item.label}
-                  </Link>
-                  {hasVisibleChildren && shouldUseFlyout && mobileFlyoutOpen && (
-                    <div className="ml-4 mt-1 flex flex-col gap-0.5 md:hidden">
-                      {visibleChildren.map((child) => {
-                        const childActive = pathname.startsWith(child.href);
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setSidebarOpen(false)}
-                            aria-current={childActive ? "page" : undefined}
-                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                              childActive
-                                ? "text-blue-700 bg-blue-50"
-                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                            }`}
-                          >
-                            {child.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {hasVisibleChildren && shouldUseFlyout && flyoutOpen && (
-                    <div className="hidden md:absolute md:left-full md:top-0 md:z-50 md:flex md:min-w-[12rem] md:flex-col md:gap-0.5 md:rounded-md md:border md:border-gray-200 md:bg-white md:p-1 md:shadow-lg">
-                      {visibleChildren.map((child) => {
-                        const childActive = pathname.startsWith(child.href);
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setSidebarOpen(false)}
-                            aria-current={childActive ? "page" : undefined}
-                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                              childActive
-                                ? "text-blue-700 bg-blue-50"
-                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                            }`}
-                          >
-                            {child.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {hasVisibleChildren && !shouldUseFlyout && isActive && (
-                    <div className="ml-4 mt-1 flex flex-col gap-0.5">
-                      {visibleChildren.map((child) => {
-                        const childActive = pathname.startsWith(child.href);
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setSidebarOpen(false)}
-                            aria-current={childActive ? "page" : undefined}
-                            className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-                              childActive
-                                ? "text-blue-700 bg-blue-50"
-                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            {child.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </aside>
+                    <Link
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      aria-current={itemActive ? "page" : undefined}
+                      aria-label={item.label}
+                      className="block rounded-2xl px-3 py-2"
+                    >
+                      <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+                      {item.description ? (
+                        <p className="mt-1 text-xs text-slate-500">{item.description}</p>
+                      ) : null}
+                    </Link>
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
-        <header
-          role="banner"
-          className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6"
-        >
-          <div className="flex min-w-0 flex-1 items-center gap-4 pr-4">
-            <button
-              className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation menu"
-              aria-controls="primary-sidebar"
-              aria-expanded={sidebarOpen}
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-            {user && (
-              <>
-                <SchoolSelector />
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {user && <TopRightQuickActions showNotifications={!isGuardianOnly} />}
-          </div>
-        </header>
-        <ConnectionBanner />
+                    {item.children?.length && (itemActive || openItemId === item.id) ? (
+                      <div className="overflow-hidden pb-2 pl-3 pr-1 transition">
+                        <div className="space-y-1 pt-1">
+                          {item.children.map((child) => {
+                            const childActive = matchesPath(pathname, child.href);
+                            return (
+                              <Link
+                                key={child.id}
+                                href={child.href}
+                                onClick={() => setSidebarOpen(false)}
+                                aria-current={childActive ? "page" : undefined}
+                                aria-label={child.label}
+                                className={`block rounded-xl px-3 py-2 text-sm ${
+                                  childActive
+                                    ? "bg-slate-900 text-white"
+                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                }`}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-        <main id="main-content" role="main" className="flex-1 overflow-auto bg-gray-50 p-6">
-          <LiveRegion />
-          <div className="flex min-h-full flex-col">
-            <div className="flex-1">{children}</div>
-            <footer className="mt-6 border-t border-gray-200 pt-3 text-xs text-gray-500">
-              <Link
-                href="/docs/api"
-                className="font-medium text-blue-700 hover:text-blue-800 hover:underline"
-              >
-                API Docs
-              </Link>
-            </footer>
+          <div className="mt-5 space-y-4 rounded-[1.5rem] border border-white/70 bg-white/85 p-4 shadow-sm">
+            <ThemeToggle value={theme} onChange={setTheme} />
+            <DensityToggle value={density} onChange={setDensity} />
           </div>
-        </main>
+        </aside>
+
+        <div className="min-w-0">
+          <header
+            role="banner"
+            className="sticky top-0 z-30 border-b border-white/60 bg-[var(--app-surface)]/90 backdrop-blur"
+          >
+            <div className="flex flex-col gap-4 px-4 py-4 md:px-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <button
+                    type="button"
+                    aria-label="Open navigation menu"
+                    aria-controls="primary-sidebar"
+                    aria-expanded={sidebarOpen}
+                    onClick={() => setSidebarOpen(true)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm md:hidden"
+                  >
+                    Menu
+                  </button>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      {navigation.curriculumBadge} workspace
+                    </p>
+                    <h2 className="mt-1 truncate text-2xl font-semibold text-slate-950">
+                      {navigation.workspaceTitle}
+                    </h2>
+                    <p className="mt-1 max-w-3xl text-sm text-slate-600">
+                      {navigation.workspaceDescription}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaletteOpen(true)}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+                  >
+                    Jump
+                    <span className="ml-2 text-xs text-slate-400">Ctrl K</span>
+                  </button>
+                  {user ? <TopRightQuickActions showNotifications={!isGuardianOnly} /> : null}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                  {user ? <SchoolSelector /> : null}
+                  <label className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-sm text-slate-600 shadow-sm">
+                    <span>Workspace</span>
+                    <select
+                      value={currentWorkspaceValue}
+                      onChange={(event) => router.push(event.target.value)}
+                      className="bg-transparent text-sm font-medium text-slate-900 outline-none"
+                    >
+                      {navigation.workspaceOptions.map((item) => (
+                        <option key={item.id} value={item.href}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {navigation.quickActions.map((action) => (
+                    <Link
+                      key={action.id}
+                      href={action.href}
+                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+                    >
+                      {action.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <ConnectionBanner />
+
+          <main id="main-content" role="main" className="px-4 py-6 md:px-6">
+            <LiveRegion />
+            <div className="mx-auto min-h-[calc(100vh-10rem)] max-w-[92rem]">{children}</div>
+          </main>
+        </div>
       </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        items={commandItems}
+        onClose={() => setPaletteOpen(false)}
+      />
     </div>
   );
 }

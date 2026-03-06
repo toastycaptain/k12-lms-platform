@@ -19,6 +19,8 @@ module Api
       def create
         @course = Course.new(course_params)
         authorize @course
+        apply_current_school_to_course!(@course)
+        return if performed?
 
         if @course.save
           CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
@@ -30,6 +32,9 @@ module Api
       end
 
       def update
+        apply_current_school_to_course!(@course, proposed_school_id: course_params[:school_id])
+        return if performed?
+
         if @course.update(course_params)
           CurriculumProfileResolver.invalidate_cache!(tenant: Current.tenant)
           render json: @course
@@ -47,7 +52,7 @@ module Api
       private
 
       def set_course
-        @course = Course.includes(:school, :sections, :academic_year, :course_modules).find(params[:id])
+        @course = policy_scope(Course).includes(:school, :sections, :academic_year, :course_modules).find(params[:id])
         authorize @course
       end
 
@@ -65,6 +70,18 @@ module Api
         return unless Current.user&.google_connected?
 
         CreateCourseFolderJob.perform_later(course.id, Current.user.id)
+      end
+
+      def apply_current_school_to_course!(course, proposed_school_id: nil)
+        return unless Current.respond_to?(:school) && Current.school.present?
+
+        school_id = proposed_school_id.presence&.to_i || course.school_id || Current.school.id
+        if school_id != Current.school.id
+          render json: { error: "School mismatch" }, status: :unprocessable_content
+          return
+        end
+
+        course.school_id = Current.school.id
       end
     end
   end

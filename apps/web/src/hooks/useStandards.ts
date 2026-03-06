@@ -1,5 +1,6 @@
 import { type SWRConfiguration } from "swr";
-import { buildQueryString, useAppSWR } from "@/lib/swr";
+import { buildQueryString } from "@/lib/swr";
+import { useSchoolSWR } from "@/lib/useSchoolSWR";
 
 export interface Standard {
   id: number;
@@ -37,18 +38,18 @@ export function useStandards(
   config?: SWRConfiguration<Standard[]>,
 ) {
   const query = buildQueryString(params);
-  return useAppSWR<Standard[]>(`/api/v1/standards${query}`, config);
+  return useSchoolSWR<Standard[]>(`/api/v1/standards${query}`, config);
 }
 
 export function useStandardFrameworks(config?: SWRConfiguration<StandardFramework[]>) {
-  return useAppSWR<StandardFramework[]>("/api/v1/standard_frameworks", config);
+  return useSchoolSWR<StandardFramework[]>("/api/v1/standard_frameworks", config);
 }
 
 export function useStandardTree(
   frameworkId: string | number | null | undefined,
   config?: SWRConfiguration<StandardTree[]>,
 ) {
-  return useAppSWR<StandardTree[]>(
+  return useSchoolSWR<StandardTree[]>(
     frameworkId ? `/api/v1/standard_frameworks/${frameworkId}/tree` : null,
     config,
   );

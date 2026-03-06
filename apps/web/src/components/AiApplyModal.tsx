@@ -1,3 +1,5 @@
+import { DiffViewer } from "@k12/ui";
+
 export interface AiApplyChange {
   field: string;
   previous: string;
@@ -9,6 +11,8 @@ interface AiApplyModalProps {
   title?: string;
   changes: AiApplyChange[];
   applying?: boolean;
+  selectedFields?: string[];
+  onSelectionChange?: (fields: string[]) => void;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -18,10 +22,14 @@ export default function AiApplyModal({
   title = "Apply AI changes",
   changes,
   applying = false,
+  selectedFields,
+  onSelectionChange,
   onCancel,
   onConfirm,
 }: AiApplyModalProps) {
   if (!open) return null;
+
+  const activeSelection = selectedFields ?? changes.map((change) => change.field);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -36,26 +44,26 @@ export default function AiApplyModal({
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-4 py-4">
           {changes.map((change) => (
             <div key={change.field} className="rounded-md border border-gray-200">
-              <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
-                {change.field}
+              <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
+                <span>{change.field}</span>
+                {onSelectionChange ? (
+                  <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-500">
+                    <input
+                      type="checkbox"
+                      checked={activeSelection.includes(change.field)}
+                      onChange={(event) => {
+                        const next = event.target.checked
+                          ? [...activeSelection, change.field]
+                          : activeSelection.filter((field) => field !== change.field);
+                        onSelectionChange(Array.from(new Set(next)));
+                      }}
+                    />
+                    Apply
+                  </label>
+                ) : null}
               </div>
-              <div className="grid gap-3 p-3 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Current
-                  </p>
-                  <pre className="mt-1 whitespace-pre-wrap rounded bg-gray-50 p-2 text-xs text-gray-700">
-                    {change.previous || "(empty)"}
-                  </pre>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    AI Proposal
-                  </p>
-                  <pre className="mt-1 whitespace-pre-wrap rounded bg-emerald-50 p-2 text-xs text-emerald-800">
-                    {change.next || "(empty)"}
-                  </pre>
-                </div>
+              <div className="p-3">
+                <DiffViewer previous={change.previous} next={change.next} />
               </div>
             </div>
           ))}
@@ -73,10 +81,14 @@ export default function AiApplyModal({
           <button
             type="button"
             onClick={onConfirm}
-            disabled={applying}
+            disabled={applying || activeSelection.length === 0}
             className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
           >
-            {applying ? "Applying..." : "Confirm Apply"}
+            {applying
+              ? "Applying..."
+              : onSelectionChange
+                ? "Apply Selected Changes"
+                : "Confirm Apply"}
           </button>
         </div>
       </div>

@@ -35,6 +35,8 @@ RSpec.describe CurriculumProfileResolver do
       expect(resolved[:selected_from]).to eq("course_assignment")
       expect(resolved[:resolution_trace_id]).to be_present
       expect(resolved[:resolved_profile_version]).to eq("2026.1")
+      expect(resolved[:document_types]).to be_a(Hash)
+      expect(resolved[:document_schema_index]).to be_a(Hash)
     end
 
     it "uses school override when course override is absent" do
@@ -71,6 +73,35 @@ RSpec.describe CurriculumProfileResolver do
       expect(resolved[:source]).to eq("system")
       expect(resolved[:selected_from]).to eq("system_fallback")
       expect(resolved[:fallback_reason]).to be_present
+    end
+
+    it "uses tenant release payloads when curriculum_pack_store_v1 is enabled" do
+      FeatureFlag.create!(key: "curriculum_pack_store_v1", enabled: true)
+      tenant.update!(
+        settings: {
+          "curriculum_default_profile_key" => "ib_continuum_v1",
+          "curriculum_default_profile_version" => "2026.1"
+        }
+      )
+
+      payload = CurriculumProfileRegistry.find("ib_continuum_v1", "2026.1").deep_dup
+      payload["terminology"]["subject_label"] = "Domain"
+      release = CurriculumProfileRelease.create!(
+        tenant: tenant,
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1",
+        status: "published",
+        payload: payload,
+        metadata: {}
+      )
+
+      resolved = described_class.resolve(tenant: tenant, school: school, course: course)
+
+      expect(resolved[:profile_key]).to eq("ib_continuum_v1")
+      expect(resolved.dig(:terminology, "subject_label")).to eq("Domain")
+      expect(resolved[:pack_payload_source]).to eq("tenant_release")
+      expect(resolved[:pack_release_id]).to eq(release.id)
+      expect(resolved.dig(:framework_bindings, "defaults")).to be_an(Array)
     end
   end
 end

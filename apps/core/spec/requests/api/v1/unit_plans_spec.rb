@@ -158,7 +158,7 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
 
       get "/api/v1/unit_plans/#{unit_plan.id}"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -211,6 +211,24 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
       expect(response.parsed_body["status"]).to eq("published")
     end
 
+    it "respects pack guard rules when curriculum_pack_workflows_v1 is enabled" do
+      FeatureFlag.create!(key: "curriculum_pack_workflows_v1", enabled: true, tenant: tenant)
+      tenant.update!(settings: tenant.settings.merge("approval_required" => true))
+
+      mock_session(teacher, tenant: tenant)
+      Current.tenant = tenant
+      ay = create(:academic_year, tenant: tenant)
+      course = create(:course, tenant: tenant, academic_year: ay)
+      unit_plan = create(:unit_plan, tenant: tenant, course: course, created_by: teacher, status: "draft")
+      unit_plan.create_version!(title: "v1")
+      Current.tenant = nil
+
+      post "/api/v1/unit_plans/#{unit_plan.id}/publish"
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["errors"].join(" ")).to include("Guard failed")
+    end
+
     it "returns error when unit plan is already published" do
       mock_session(teacher, tenant: tenant)
       Current.tenant = tenant
@@ -239,7 +257,7 @@ RSpec.describe "Api::V1::UnitPlans", type: :request do
 
       post "/api/v1/unit_plans/#{unit_plan.id}/publish"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:not_found)
     end
 
     it "allows admin to publish any unit plan" do

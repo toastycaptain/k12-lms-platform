@@ -189,4 +189,39 @@ describe("New Unit Plan Page", () => {
     expect(screen.getByRole("option", { name: "MYP 1" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Language and Literature" })).toBeInTheDocument();
   });
+
+  it("redirects IB users to canonical create routes when documents-only mode is enabled", async () => {
+    mockedUseAuth.mockReturnValue({
+      user: {
+        id: 1,
+        email: "teacher@example.com",
+        first_name: "Taylor",
+        last_name: "Teacher",
+        tenant_id: 1,
+        roles: ["teacher"],
+        google_connected: false,
+        onboarding_complete: true,
+        preferences: {
+          ib_programme: "DP",
+        },
+        curriculum_runtime: {
+          pack_key: "ib_continuum_v1",
+          pack_version: "2026.2",
+          feature_flags: {
+            ib_documents_only_v1: true,
+          },
+        },
+      },
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: refreshMock,
+    });
+
+    render(<NewUnitPlanPage />);
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/ib/dp/course-maps/new");
+    });
+  });
 });

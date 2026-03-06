@@ -61,25 +61,25 @@ module Api
 
       def publish
         authorize @template
-        CurriculumWorkflowEngine.transition!(
+        workflow_engine.transition!(
           record: @template,
           event: :publish,
           actor: Current.user
         )
         render json: @template
-      rescue CurriculumWorkflowEngine::TransitionError => e
+      rescue *transition_error_classes => e
         render json: { errors: [ e.message ] }, status: :unprocessable_content
       end
 
       def archive
         authorize @template
-        CurriculumWorkflowEngine.transition!(
+        workflow_engine.transition!(
           record: @template,
           event: :archive,
           actor: Current.user
         )
         render json: @template
-      rescue CurriculumWorkflowEngine::TransitionError => e
+      rescue *transition_error_classes => e
         render json: { errors: [ e.message ] }, status: :unprocessable_content
       end
 
@@ -136,6 +136,18 @@ module Api
           selected_from: resolved[:selected_from],
           resolution_trace_id: resolved[:resolution_trace_id]
         }
+      end
+
+      def workflow_engine
+        if FeatureFlag.enabled?("curriculum_pack_workflows_v1", tenant: Current.tenant)
+          Curriculum::WorkflowEngine
+        else
+          CurriculumWorkflowEngine
+        end
+      end
+
+      def transition_error_classes
+        [ CurriculumWorkflowEngine::TransitionError, Curriculum::WorkflowEngine::TransitionError ]
       end
     end
   end

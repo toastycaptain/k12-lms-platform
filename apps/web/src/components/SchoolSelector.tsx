@@ -1,79 +1,56 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-
-interface School {
-  id: number;
-  name: string;
-}
-
-const STORAGE_KEY = "k12.selectedSchoolId";
+import { useSchool } from "@/lib/school-context";
 
 export default function SchoolSelector() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-
-  const initializeSchools = useCallback(async () => {
-    setLoading(true);
-    try {
-      const schoolList = await apiFetch<School[]>("/api/v1/schools");
-      setSchools(schoolList);
-
-      if (schoolList.length === 0) {
-        setSelectedSchoolId("");
-        return;
-      }
-
-      const storedSchoolId =
-        typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-      const defaultSchoolId = schoolList.some((school) => String(school.id) === storedSchoolId)
-        ? String(storedSchoolId)
-        : String(schoolList[0].id);
-
-      setSelectedSchoolId(defaultSchoolId);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(STORAGE_KEY, defaultSchoolId);
-      }
-    } catch {
-      setSchools([]);
-      setSelectedSchoolId("");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void initializeSchools();
-  }, [initializeSchools]);
+  const { schools, schoolId, setSchoolId, loading } = useSchool();
 
   if (loading) {
-    return <span className="text-sm text-gray-500">Loading school...</span>;
+    return (
+      <span className="rounded-full border border-white/70 bg-white/90 px-3 py-2 text-sm text-slate-500 shadow-sm">
+        Loading school...
+      </span>
+    );
   }
 
-  if (schools.length === 0) {
-    return <span className="text-sm text-gray-500">No school</span>;
+  if (schools.length === 0 || !schoolId) {
+    return (
+      <label
+        htmlFor="school-selector-empty"
+        className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-sm text-slate-500 shadow-sm"
+      >
+        <span>School</span>
+        <select
+          id="school-selector-empty"
+          value=""
+          disabled
+          className="bg-transparent text-sm font-medium text-slate-500 outline-none"
+        >
+          <option value="">No school</option>
+        </select>
+      </label>
+    );
   }
 
   if (schools.length === 1) {
-    return <span className="text-sm font-medium text-gray-700">{schools[0].name}</span>;
+    return (
+      <span className="rounded-full border border-white/70 bg-white/90 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
+        {schools[0].name}
+      </span>
+    );
   }
 
   return (
-    <label htmlFor="school-selector" className="flex items-center gap-2 text-sm text-gray-600">
+    <label
+      htmlFor="school-selector"
+      className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-sm text-slate-600 shadow-sm"
+    >
       <span>School</span>
       <select
         id="school-selector"
-        value={selectedSchoolId}
-        onChange={(event) => {
-          const nextSchoolId = event.target.value;
-          setSelectedSchoolId(nextSchoolId);
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem(STORAGE_KEY, nextSchoolId);
-          }
-        }}
-        className="ml-2 rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        value={schoolId}
+        onChange={(event) => setSchoolId(event.target.value)}
+        className="bg-transparent text-sm font-medium text-slate-900 outline-none"
       >
         {schools.map((school) => (
           <option key={school.id} value={String(school.id)}>

@@ -46,7 +46,7 @@ module Api
       private
 
       def set_school
-        @school = School.find(params[:id])
+        @school = policy_scope(School).find(params[:id])
       end
 
       def school_params

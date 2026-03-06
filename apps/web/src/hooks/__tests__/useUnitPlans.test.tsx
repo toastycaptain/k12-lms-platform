@@ -2,10 +2,15 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { SWRConfig } from "swr";
 import { apiFetch } from "@/lib/api";
+import { useSchool } from "@/lib/school-context";
 import { useUnitPlan, useUnitPlans, useUnitPlanVersions } from "@/hooks/useUnitPlans";
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock("@/lib/school-context", () => ({
+  useSchool: vi.fn(),
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -16,9 +21,16 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe("useUnitPlans", () => {
   const mockedApiFetch = vi.mocked(apiFetch);
+  const mockedUseSchool = vi.mocked(useSchool);
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedUseSchool.mockReturnValue({
+      schools: [{ id: 7, name: "Lincoln High" }],
+      schoolId: "7",
+      setSchoolId: vi.fn(),
+      loading: false,
+    });
   });
 
   it("fetches unit plans with filters", async () => {

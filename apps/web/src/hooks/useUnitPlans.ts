@@ -1,5 +1,6 @@
 import { type SWRConfiguration } from "swr";
-import { buildQueryString, useAppSWR } from "@/lib/swr";
+import { buildQueryString } from "@/lib/swr";
+import { useSchoolSWR } from "@/lib/useSchoolSWR";
 
 export interface UnitPlan {
   id: number;
@@ -30,21 +31,21 @@ export function useUnitPlans(
   config?: SWRConfiguration<UnitPlan[]>,
 ) {
   const query = buildQueryString(params);
-  return useAppSWR<UnitPlan[]>(`/api/v1/unit_plans${query}`, config);
+  return useSchoolSWR<UnitPlan[]>(`/api/v1/unit_plans${query}`, config);
 }
 
 export function useUnitPlan(
   unitPlanId: string | number | null | undefined,
   config?: SWRConfiguration<UnitPlan>,
 ) {
-  return useAppSWR<UnitPlan>(unitPlanId ? `/api/v1/unit_plans/${unitPlanId}` : null, config);
+  return useSchoolSWR<UnitPlan>(unitPlanId ? `/api/v1/unit_plans/${unitPlanId}` : null, config);
 }
 
 export function useUnitPlanVersions(
   unitPlanId: string | number | null | undefined,
   config?: SWRConfiguration<UnitVersion[]>,
 ) {
-  return useAppSWR<UnitVersion[]>(
+  return useSchoolSWR<UnitVersion[]>(
     unitPlanId ? `/api/v1/unit_plans/${unitPlanId}/versions` : null,
     config,
   );

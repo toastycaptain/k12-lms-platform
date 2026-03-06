@@ -140,5 +140,47 @@ RSpec.describe "Api::V1::District", type: :request do
         CurriculumProfileAssignment.where(tenant_id: south_tenant.id, scope_type: "tenant", active: true).count
       ).to eq(1)
     end
+
+    it "copies tenant release payloads to target tenants during curriculum distribution" do
+      mock_session(district_admin, tenant: north_tenant)
+      FeatureFlag.create!(key: "curriculum_pack_store_v1", enabled: true)
+
+      payload = CurriculumProfileRegistry.find("ib_continuum_v1", "2026.1").deep_dup
+      payload["terminology"]["subject_label"] = "Domain"
+      CurriculumProfileRelease.create!(
+        tenant: north_tenant,
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1",
+        status: "published",
+        payload: payload,
+        metadata: {}
+      )
+
+      post "/api/v1/district/push_template", params: {
+        operation: "push_curriculum",
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1",
+        target_tenant_ids: [ south_tenant.id ]
+      }
+
+      expect(response).to have_http_status(:created)
+      copied_release = CurriculumProfileRelease.find_by(
+        tenant_id: south_tenant.id,
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1"
+      )
+      expect(copied_release).to be_present
+      expect(copied_release.status).to eq("published")
+
+      fetched = CurriculumPackStore.fetch(
+        tenant: south_tenant,
+        key: "ib_continuum_v1",
+        version: "2026.1",
+        with_metadata: true
+      )
+      expect(fetched).to be_present
+      expect(fetched[:source]).to eq("tenant_release")
+      expect(fetched.dig(:payload, "terminology", "subject_label")).to eq("Domain")
+    end
   end
 end

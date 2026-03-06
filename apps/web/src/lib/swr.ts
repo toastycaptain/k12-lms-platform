@@ -1,4 +1,4 @@
-import useSWR, { type SWRConfiguration, type SWRResponse } from "swr";
+import useSWR, { type Key, type SWRConfiguration, type SWRResponse } from "swr";
 import { apiFetch } from "@/lib/api";
 
 export type QueryValue = string | number | boolean | null | undefined;
@@ -63,12 +63,17 @@ export function buildQueryString(params: object = {}): string {
   return serialized ? `?${serialized}` : "";
 }
 
-export function defaultFetcher<T>(url: string): Promise<T> {
+export function defaultFetcher<T>(key: string | readonly unknown[]): Promise<T> {
+  const url = Array.isArray(key) ? key[0] : key;
+  if (typeof url !== "string") {
+    throw new Error("SWR keys must begin with a URL string.");
+  }
+
   return apiFetch<T>(url);
 }
 
 export function useAppSWR<Data = unknown, ErrorType = Error>(
-  key: string | null,
+  key: Key | null,
   config?: SWRConfiguration<Data, ErrorType>,
 ): SWRResponse<Data, ErrorType> {
   return useSWR<Data, ErrorType>(key, defaultFetcher<Data>, {

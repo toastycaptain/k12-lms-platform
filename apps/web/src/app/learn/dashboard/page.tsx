@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { StudentExperience } from "@/features/ib/student/StudentExperience";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { EmptyState } from "@k12/ui";
 import { swrConfig } from "@/lib/swr";
@@ -120,6 +122,7 @@ const QUICK_LINKS = [
 
 export default function LearnDashboardPage() {
   const { user } = useAuth();
+  const { isIb } = useCurriculumRuntime();
   const {
     data,
     error: loadError,
@@ -256,6 +259,16 @@ export default function LearnDashboardPage() {
     day: "numeric",
     year: "numeric",
   });
+
+  if (isIb) {
+    return (
+      <ProtectedRoute requiredRoles={LEARN_ROLES}>
+        <AppShell>
+          <StudentExperience variant="dashboard" />
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute requiredRoles={LEARN_ROLES}>

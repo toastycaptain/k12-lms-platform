@@ -38,8 +38,17 @@ class CurriculumProfileAssignment < ApplicationRecord
 
   def profile_key_must_exist
     return if profile_key.blank?
-    return if CurriculumProfileRegistry.exists?(profile_key)
+    tenant = Tenant.unscoped.find_by(id: tenant_id)
+    version = profile_version.to_s.presence
 
-    errors.add(:profile_key, "is not a recognized curriculum profile")
+    exists = if tenant
+      CurriculumPackStore.exists?(tenant: tenant, key: profile_key, version: version)
+    else
+      CurriculumPackStore.system_exists?(profile_key, version)
+    end
+
+    return if exists
+
+    errors.add(:profile_key, "is not a recognized curriculum pack")
   end
 end

@@ -9,7 +9,7 @@ RSpec.describe Standard, type: :model do
   end
 
   describe "validations" do
-    it { should validate_presence_of(:code) }
+    it { should validate_presence_of(:kind) }
     it { should validate_presence_of(:tenant_id) }
   end
 
@@ -46,6 +46,28 @@ RSpec.describe Standard, type: :model do
       expect(tree[:code]).to eq("1.OA")
       expect(tree[:children].length).to eq(1)
       expect(tree[:children].first[:code]).to eq("1.OA.1")
+    end
+
+    it "allows nodes without code when identifier is present" do
+      framework = create(:standard_framework, tenant: tenant)
+      standard = build(:standard, tenant: tenant, standard_framework: framework, code: nil, identifier: "IB-ATL-1")
+
+      expect(standard).to be_valid
+    end
+
+    it "requires one of code, identifier, or label" do
+      framework = create(:standard_framework, tenant: tenant)
+      standard = build(
+        :standard,
+        tenant: tenant,
+        standard_framework: framework,
+        code: nil,
+        identifier: nil,
+        label: nil
+      )
+
+      expect(standard).not_to be_valid
+      expect(standard.errors[:base]).to include("at least one of code, identifier, or label must be present")
     end
   end
 end

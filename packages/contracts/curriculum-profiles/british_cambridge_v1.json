@@ -1,49 +1,214 @@
 {
-  "key": "british_cambridge_v1",
-  "label": "British/Cambridge",
-  "version": "2026.1",
-  "description": "Stage-based planner defaults for British National Curriculum and Cambridge pathway schools.",
-  "jurisdiction": "UK/Cambridge",
-  "planner_taxonomy": {
+  "identity": {
+    "key": "british_cambridge_v1",
+    "label": "British/Cambridge",
+    "description": "Stage-based planner defaults for British National Curriculum and Cambridge pathway schools.",
+    "jurisdiction": "UK/Cambridge"
+  },
+  "versioning": {
+    "version": "2026.1",
+    "schema_version": "3.0",
+    "compatibility": "v3"
+  },
+  "status": "active",
+  "terminology": {
     "subject_label": "Subject",
     "grade_label": "Key Stage / Year",
     "unit_label": "Scheme of Work Unit"
   },
-  "subject_options": [
-    "English",
-    "Mathematics",
-    "Science",
-    "Humanities",
-    "Computing",
-    "Arts"
-  ],
-  "grade_or_stage_options": [
-    "Key Stage 1",
-    "Key Stage 2",
-    "Key Stage 3",
-    "Key Stage 4",
-    "Key Stage 5",
-    "Cambridge Primary",
-    "Cambridge Lower Secondary",
-    "IGCSE",
-    "AS/A Level"
-  ],
-  "framework_defaults": [
-    "UK National Curriculum",
-    "Cambridge Pathway"
-  ],
-  "template_defaults": {
-    "default_status": "draft",
-    "suggested_sections": [
-      "Learning Objectives",
-      "Success Criteria",
-      "Assessment Evidence"
-    ]
+  "navigation": {
+    "admin": ["dashboard", "plan", "teach", "assess", "admin", "report", "communicate"],
+    "curriculum_lead": ["dashboard", "plan", "assess", "report", "communicate"],
+    "teacher": ["dashboard", "plan", "teach", "assess", "report", "communicate"],
+    "student": ["learn", "communicate"],
+    "guardian": ["guardian", "communicate"],
+    "district_admin": ["district", "report"]
+  },
+  "capability_modules": {
+    "portfolio": true,
+    "interventions": false,
+    "pastoral": false,
+    "advanced_reports": true
+  },
+  "planner_object_schemas": {
+    "unit_plan": {
+      "fields": [
+        {
+          "id": "subject",
+          "label": "Subject",
+          "component": "select",
+          "required": true,
+          "options": ["English", "Mathematics", "Science", "Humanities", "Computing", "Arts"]
+        },
+        {
+          "id": "grade_or_stage",
+          "label": "Key Stage / Year",
+          "component": "select",
+          "required": true,
+          "options": ["Key Stage 1", "Key Stage 2", "Key Stage 3", "Key Stage 4", "Key Stage 5", "Cambridge Primary", "Cambridge Lower Secondary", "IGCSE", "AS/A Level"]
+        },
+        {
+          "id": "title",
+          "label": "Scheme of Work Unit Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "lesson_plan": {
+      "fields": [
+        {
+          "id": "title",
+          "label": "Lesson Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "template": {
+      "defaults": {
+        "default_status": "draft",
+        "suggested_sections": ["Learning Objectives", "Success Criteria", "Assessment Evidence"]
+      },
+      "tags": ["uk_national_curriculum", "cambridge_pathway"]
+    }
+  },
+  "document_types": {
+    "unit_plan": {
+      "label": "Scheme of Work Unit",
+      "allowed_schema_keys": ["uk.unit@v1"],
+      "default_schema_key": "uk.unit@v1",
+      "allowed_statuses": ["draft", "published", "archived"],
+      "default_status": "draft",
+      "relationships": {
+        "contains": {
+          "allowed_target_types": ["lesson_plan"],
+          "max": 999,
+          "ordered": true
+        }
+      }
+    },
+    "lesson_plan": {
+      "label": "Lesson",
+      "allowed_schema_keys": ["uk.lesson@v1"],
+      "default_schema_key": "uk.lesson@v1",
+      "allowed_statuses": ["draft", "published", "archived"],
+      "default_status": "draft"
+    },
+    "template": {
+      "label": "Template",
+      "allowed_schema_keys": ["uk.template@v1"],
+      "default_schema_key": "uk.template@v1",
+      "allowed_statuses": ["draft", "published", "archived"],
+      "default_status": "draft"
+    }
+  },
+  "document_schemas": {
+    "uk.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "UK Scheme of Work",
+      "data_schema": {
+        "type": "object",
+        "required": ["title", "learning_objectives", "success_criteria"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "learning_objectives": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "success_criteria": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "misconceptions": { "type": "array", "items": { "type": "string" } },
+          "retrieval_practice": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "uk.lesson@v1": {
+      "document_type": "lesson_plan",
+      "label": "UK Lesson Planner",
+      "data_schema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "starter": { "type": "string" },
+          "main_activity": { "type": "string" },
+          "plenary": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "uk.template@v1": {
+      "document_type": "template",
+      "label": "UK Template",
+      "data_schema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "suggested_sections": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "workflow_definitions": {
+    "unit_default": {
+      "states": ["draft", "published", "archived"],
+      "events": {
+        "publish": {
+          "from": ["draft"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        },
+        "archive": {
+          "from": ["published"],
+          "to": "archived",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    },
+    "lesson_default": {
+      "states": ["draft", "published", "archived"],
+      "events": {
+        "publish": {
+          "from": ["draft"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    },
+    "template_default": {
+      "states": ["draft", "published", "archived"],
+      "events": {
+        "publish": {
+          "from": ["draft"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        },
+        "archive": {
+          "from": ["published"],
+          "to": "archived",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    }
+  },
+  "workflow_bindings": {
+    "unit_plan": "unit_default",
+    "lesson_plan": "lesson_default",
+    "template": "template_default"
+  },
+  "framework_bindings": {
+    "defaults": ["uk_national_curriculum", "cambridge_pathway"],
+    "allowed": ["uk_national_curriculum", "cambridge_pathway", "school_custom"],
+    "node_kinds": ["standard", "objective", "skill"]
+  },
+  "report_bindings": {
+    "standards_coverage": {
+      "default_frameworks": ["uk_national_curriculum", "cambridge_pathway"]
+    }
   },
   "integration_hints": {
     "google_addon_context": "british_stage",
     "lti_context_tag": "british",
     "oneroster_context_tag": "uk_cambridge"
-  },
-  "status": "active"
+  }
 }

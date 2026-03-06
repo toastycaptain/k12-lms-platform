@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { EmptyState } from "@k12/ui";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { GuardianExperience } from "@/features/ib/guardian/GuardianExperience";
 import {
   useGuardianAttendance,
   useGuardianAnnouncements,
@@ -24,6 +26,7 @@ function formatPercent(value: number | null): string {
 export default function GuardianStudentDetailPage() {
   const params = useParams();
   const studentId = String(params.studentId);
+  const { isIb } = useCurriculumRuntime();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
@@ -62,6 +65,10 @@ export default function GuardianStudentDetailPage() {
 
     return (summary.present / summary.total) * 100;
   }, [attendance]);
+
+  if (isIb) {
+    return <GuardianExperience />;
+  }
 
   if (
     gradesLoading ||

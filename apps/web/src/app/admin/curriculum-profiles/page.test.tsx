@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import AdminCurriculumProfilesPage from "@/app/admin/curriculum-profiles/page";
 import { apiFetch } from "@/lib/api";
 
@@ -41,7 +41,7 @@ describe("AdminCurriculumProfilesPage", () => {
           {
             key: "american_common_core_v1",
             label: "American (Common Core + NGSS)",
-            version: "v1",
+            version: "2026.1",
             description: "Default US profile",
             jurisdiction: "US",
             planner_taxonomy: {
@@ -57,7 +57,7 @@ describe("AdminCurriculumProfilesPage", () => {
           {
             key: "ib_continuum_v1",
             label: "IB Continuum",
-            version: "v1",
+            version: "2026.2",
             description: "IB profile",
             jurisdiction: "International",
             planner_taxonomy: {
@@ -76,13 +76,34 @@ describe("AdminCurriculumProfilesPage", () => {
       if (path === "/api/v1/admin/curriculum_settings" && options?.method === "PUT") {
         return {
           tenant_default_profile_key: "ib_continuum_v1",
+          tenant_default_profile_version: "2026.2",
+          available_packs: [
+            {
+              key: "american_common_core_v1",
+              version: "2026.1",
+              label: "American (Common Core + NGSS)",
+              source: "system",
+              release_status: "published",
+              pack_status: "active",
+            },
+            {
+              key: "ib_continuum_v1",
+              version: "2026.2",
+              label: "IB Continuum",
+              source: "tenant_release",
+              release_status: "published",
+              pack_status: "active",
+            },
+          ],
           available_profile_keys: ["american_common_core_v1", "ib_continuum_v1"],
           school_overrides: [
             {
               school_id: 1,
               school_name: "North Campus",
               curriculum_profile_key: "ib_continuum_v1",
+              curriculum_profile_version: "2026.2",
               effective_curriculum_profile_key: "ib_continuum_v1",
+              effective_curriculum_profile_version: "2026.2",
               effective_curriculum_source: "school",
             },
           ],
@@ -92,13 +113,34 @@ describe("AdminCurriculumProfilesPage", () => {
       if (path === "/api/v1/admin/curriculum_settings") {
         return {
           tenant_default_profile_key: "american_common_core_v1",
+          tenant_default_profile_version: "2026.1",
+          available_packs: [
+            {
+              key: "american_common_core_v1",
+              version: "2026.1",
+              label: "American (Common Core + NGSS)",
+              source: "system",
+              release_status: "published",
+              pack_status: "active",
+            },
+            {
+              key: "ib_continuum_v1",
+              version: "2026.2",
+              label: "IB Continuum",
+              source: "tenant_release",
+              release_status: "published",
+              pack_status: "active",
+            },
+          ],
           available_profile_keys: ["american_common_core_v1", "ib_continuum_v1"],
           school_overrides: [
             {
               school_id: 1,
               school_name: "North Campus",
               curriculum_profile_key: null,
+              curriculum_profile_version: null,
               effective_curriculum_profile_key: "american_common_core_v1",
+              effective_curriculum_profile_version: "2026.1",
               effective_curriculum_source: "tenant",
             },
           ],
@@ -113,25 +155,39 @@ describe("AdminCurriculumProfilesPage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders admin curriculum controls and school override context", async () => {
+  it("renders admin pack controls and school override context", async () => {
     render(<AdminCurriculumProfilesPage />);
 
-    expect(await screen.findByText("Tenant Default Profile")).toBeInTheDocument();
+    expect(await screen.findByText("Tenant Default Pack")).toBeInTheDocument();
     expect(screen.getByText("School Overrides")).toBeInTheDocument();
     expect(screen.getByText("North Campus")).toBeInTheDocument();
     expect(screen.getByText("tenant")).toBeInTheDocument();
+    expect(screen.getByText("Pack Catalog")).toBeInTheDocument();
   });
 
   it("saves tenant default and school overrides", async () => {
     render(<AdminCurriculumProfilesPage />);
 
-    await screen.findByText("Tenant Default Profile");
+    const tenantSection = (await screen.findByText("Tenant Default Pack")).closest("section");
+    const schoolSection = screen.getByText("School Overrides").closest("section");
 
-    fireEvent.change(screen.getAllByRole("combobox")[0], {
+    expect(tenantSection).toBeTruthy();
+    expect(schoolSection).toBeTruthy();
+
+    const tenantSelects = within(tenantSection as HTMLElement).getAllByRole("combobox");
+    fireEvent.change(tenantSelects[0], {
       target: { value: "ib_continuum_v1" },
     });
-    fireEvent.change(screen.getAllByRole("combobox")[1], {
+    fireEvent.change(tenantSelects[1], {
+      target: { value: "2026.2" },
+    });
+
+    const schoolSelects = within(schoolSection as HTMLElement).getAllByRole("combobox");
+    fireEvent.change(schoolSelects[0], {
       target: { value: "ib_continuum_v1" },
+    });
+    fireEvent.change(within(schoolSection as HTMLElement).getAllByRole("combobox")[1], {
+      target: { value: "2026.2" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Save Curriculum Settings" }));
@@ -144,6 +200,7 @@ describe("AdminCurriculumProfilesPage", () => {
         }),
       );
     });
+
     expect(addToast).toHaveBeenCalledWith("success", "Curriculum settings saved.");
   });
 });

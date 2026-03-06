@@ -62,7 +62,6 @@ class ApplicationController < ActionController::API
     resolve_tenant
     resolve_user
     apply_auth_bypass! if auth_bypass_enabled? && Current.user.nil?
-    set_request_context
 
     unless Current.user
       render json: { error: "Unauthorized" }, status: :unauthorized
@@ -71,7 +70,13 @@ class ApplicationController < ActionController::API
 
     unless Current.tenant
       render json: { error: "Forbidden: tenant not found" }, status: :forbidden
+      return
     end
+
+    resolve_school_context if school_scoping_enabled?
+    return if performed?
+
+    set_request_context
   end
 
   def resolve_tenant
@@ -179,6 +184,7 @@ class ApplicationController < ActionController::API
   def set_request_context
     request.env["current_tenant_id"] = Current.tenant&.id
     request.env["current_user_id"] = Current.user&.id
+    request.env["current_school_id"] = Current.school&.id
   end
 
   def tenant_from_session
@@ -248,5 +254,39 @@ class ApplicationController < ActionController::API
 
   def set_security_headers
     SECURITY_HEADERS.each { |key, value| response.headers[key] = value }
+  end
+
+  def school_scoping_enabled?
+    return false if Current.tenant.nil?
+
+    FeatureFlag.enabled?("school_scoping_v1", tenant: Current.tenant)
+  end
+
+  def resolve_school_context
+    Current.school = nil
+    school_id = request.headers["X-School-Id"].presence || params[:school_id].presence
+    return if school_id.blank?
+
+    school = School.unscoped.find_by(id: school_id.to_i, tenant_id: Current.tenant.id)
+    if school.nil?
+      render json: { error: "School not found" }, status: :not_found
+      return
+    end
+
+    unless user_allowed_for_school?(Current.user, school)
+      render json: { error: "Forbidden" }, status: :forbidden
+      return
+    end
+
+    Current.school = school
+  end
+
+  def user_allowed_for_school?(user, school)
+    return false if user.nil? || school.nil?
+    return true if user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:district_admin)
+
+    Enrollment.joins(section: :course)
+      .where(user_id: user.id, courses: { school_id: school.id })
+      .exists?
   end
 end

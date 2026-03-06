@@ -80,7 +80,10 @@ class TenantProvisioningService
     end
 
     if @params[:curriculum_default_profile_key].present? &&
-       !CurriculumProfileRegistry.keys.include?(@params[:curriculum_default_profile_key])
+       !CurriculumPackStore.system_exists?(
+         @params[:curriculum_default_profile_key],
+         @params[:curriculum_default_profile_version]
+       )
       raise ProvisioningError, "Unknown curriculum_default_profile_key '#{@params[:curriculum_default_profile_key]}'"
     end
 

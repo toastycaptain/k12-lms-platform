@@ -90,7 +90,7 @@ RSpec.describe "Api::V1::Courses", type: :request do
 
       get "/api/v1/courses/#{course.id}"
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:not_found)
     end
   end
 

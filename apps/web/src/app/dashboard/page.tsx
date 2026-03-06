@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { useIbContext } from "@/features/ib/core/useIbContext";
+import { CoordinatorOverview } from "@/features/ib/home/CoordinatorOverview";
+import { TeacherActionConsole } from "@/features/ib/home/TeacherActionConsole";
+import { isCoordinatorRole } from "@/features/ib/home/useIbHomePayload";
 import { apiFetch } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -40,6 +45,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { isIb, isGuardianOnly, isStudentOnly, roles } = useCurriculumRuntime();
+  const { currentWorkMode } = useIbContext();
   const [unitPlans, setUnitPlans] = useState<UnitPlan[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +68,23 @@ export default function DashboardPage() {
     }
     fetchData();
   }, []);
+
+  if (isIb && !isGuardianOnly && !isStudentOnly) {
+    const coordinator = isCoordinatorRole(roles);
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          {coordinator && currentWorkMode === "review" ? (
+            <CoordinatorOverview />
+          ) : coordinator && !roles.includes("teacher") ? (
+            <CoordinatorOverview />
+          ) : (
+            <TeacherActionConsole />
+          )}
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

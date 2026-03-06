@@ -1,123 +1,110 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import SchoolSelector from "@/components/SchoolSelector";
-import { apiFetch } from "@/lib/api";
+import { useSchool } from "@/lib/school-context";
 
-vi.mock("@/lib/api", () => ({
-  apiFetch: vi.fn(),
+vi.mock("@/lib/school-context", () => ({
+  useSchool: vi.fn(),
 }));
 
 describe("SchoolSelector", () => {
-  const mockedApiFetch = vi.mocked(apiFetch);
-  const store: Record<string, string> = {};
+  const mockedUseSchool = vi.mocked(useSchool);
+  const setSchoolId = vi.fn();
 
   beforeEach(() => {
-    Object.defineProperty(window, "localStorage", {
-      configurable: true,
-      value: {
-        getItem: vi.fn((key: string) => store[key] ?? null),
-        setItem: vi.fn((key: string, value: string) => {
-          store[key] = value;
-        }),
-        removeItem: vi.fn((key: string) => {
-          delete store[key];
-        }),
-        clear: vi.fn(() => {
-          Object.keys(store).forEach((key) => delete store[key]);
-        }),
-      },
+    mockedUseSchool.mockReturnValue({
+      schools: [],
+      schoolId: null,
+      setSchoolId,
+      loading: false,
     });
   });
 
   afterEach(() => {
-    window.localStorage.clear();
     vi.clearAllMocks();
   });
 
   it("renders loading state initially", () => {
-    mockedApiFetch.mockImplementation(() => new Promise(() => {}) as Promise<never>);
+    mockedUseSchool.mockReturnValue({
+      schools: [],
+      schoolId: null,
+      setSchoolId,
+      loading: true,
+    });
 
     render(<SchoolSelector />);
 
     expect(screen.getByText("Loading school...")).toBeInTheDocument();
   });
 
-  it("renders single school name without dropdown", async () => {
-    mockedApiFetch.mockResolvedValue([{ id: 1, name: "Lincoln High" }] as never);
+  it("renders single school name without dropdown", () => {
+    mockedUseSchool.mockReturnValue({
+      schools: [{ id: 1, name: "Lincoln High" }],
+      schoolId: "1",
+      setSchoolId,
+      loading: false,
+    });
 
     render(<SchoolSelector />);
 
-    expect(await screen.findByText("Lincoln High")).toBeInTheDocument();
+    expect(screen.getByText("Lincoln High")).toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
-  it("renders dropdown for multiple schools", async () => {
-    mockedApiFetch.mockResolvedValue([
-      { id: 1, name: "Lincoln High" },
-      { id: 2, name: "Roosevelt Middle" },
-    ] as never);
+  it("renders dropdown for multiple schools", () => {
+    mockedUseSchool.mockReturnValue({
+      schools: [
+        { id: 1, name: "Lincoln High" },
+        { id: 2, name: "Roosevelt Middle" },
+      ],
+      schoolId: "1",
+      setSchoolId,
+      loading: false,
+    });
 
     render(<SchoolSelector />);
 
-    expect(await screen.findByRole("combobox")).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Lincoln High" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Roosevelt Middle" })).toBeInTheDocument();
   });
 
-  it("selects school from localStorage if valid", async () => {
-    window.localStorage.setItem("k12.selectedSchoolId", "2");
-    mockedApiFetch.mockResolvedValue([
-      { id: 1, name: "Lincoln High" },
-      { id: 2, name: "Roosevelt Middle" },
-    ] as never);
-
-    render(<SchoolSelector />);
-
-    const select = await screen.findByRole("combobox");
-    expect(select).toHaveValue("2");
-  });
-
-  it("defaults to first school when localStorage value is invalid", async () => {
-    window.localStorage.setItem("k12.selectedSchoolId", "999");
-    mockedApiFetch.mockResolvedValue([
-      { id: 1, name: "Lincoln High" },
-      { id: 2, name: "Roosevelt Middle" },
-    ] as never);
-
-    render(<SchoolSelector />);
-
-    const select = await screen.findByRole("combobox");
-    expect(select).toHaveValue("1");
-  });
-
-  it("persists selection to localStorage on change", async () => {
-    mockedApiFetch.mockResolvedValue([
-      { id: 1, name: "Lincoln High" },
-      { id: 2, name: "Roosevelt Middle" },
-    ] as never);
-
-    render(<SchoolSelector />);
-
-    const select = await screen.findByRole("combobox");
-    fireEvent.change(select, { target: { value: "2" } });
-
-    expect(window.localStorage.setItem).toHaveBeenCalledWith("k12.selectedSchoolId", "2");
-  });
-
-  it('renders "No school" when API returns empty array', async () => {
-    mockedApiFetch.mockResolvedValue([] as never);
-
-    render(<SchoolSelector />);
-
-    expect(await screen.findByText("No school")).toBeInTheDocument();
-  });
-
-  it("handles API error gracefully", async () => {
-    mockedApiFetch.mockRejectedValue(new Error("boom"));
-
-    render(<SchoolSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText("No school")).toBeInTheDocument();
+  it("uses the selected school id from context", () => {
+    mockedUseSchool.mockReturnValue({
+      schools: [
+        { id: 1, name: "Lincoln High" },
+        { id: 2, name: "Roosevelt Middle" },
+      ],
+      schoolId: "2",
+      setSchoolId,
+      loading: false,
     });
+
+    render(<SchoolSelector />);
+
+    expect(screen.getByRole("combobox")).toHaveValue("2");
+  });
+
+  it("updates the school selection through context", () => {
+    mockedUseSchool.mockReturnValue({
+      schools: [
+        { id: 1, name: "Lincoln High" },
+        { id: 2, name: "Roosevelt Middle" },
+      ],
+      schoolId: "1",
+      setSchoolId,
+      loading: false,
+    });
+
+    render(<SchoolSelector />);
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "2" } });
+
+    expect(setSchoolId).toHaveBeenCalledWith("2");
+  });
+
+  it('renders "No school" when no school is selected', () => {
+    render(<SchoolSelector />);
+
+    expect(screen.getByText("No school")).toBeInTheDocument();
   });
 });

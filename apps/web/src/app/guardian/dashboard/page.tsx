@@ -3,10 +3,17 @@
 import Link from "next/link";
 import { EmptyState } from "@k12/ui";
 import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { GuardianExperience } from "@/features/ib/guardian/GuardianExperience";
 import { useGuardianStudents } from "@/hooks/useGuardian";
 
 export default function GuardianDashboardPage() {
+  const { isIb } = useCurriculumRuntime();
   const { data: students, isLoading, error } = useGuardianStudents();
+
+  if (isIb) {
+    return <GuardianExperience />;
+  }
 
   if (isLoading) {
     return <ListSkeleton />;

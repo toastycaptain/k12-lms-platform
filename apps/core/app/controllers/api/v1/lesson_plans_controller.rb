@@ -72,7 +72,7 @@ module Api
       private
 
       def set_unit_plan
-        @unit_plan = UnitPlan.find(params[:unit_plan_id])
+        @unit_plan = policy_scope(UnitPlan).find(params[:unit_plan_id])
       end
 
       def set_lesson_plan

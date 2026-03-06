@@ -96,18 +96,20 @@ module Api
         def settings_payload
           school_scope = policy_scope(School).order(:name)
           course_scope = policy_scope(Course).includes(:school, :academic_year).order(:name)
+          available_packs = available_packs_payload
 
           {
             tenant_default_profile_key: Current.tenant.settings&.dig("curriculum_default_profile_key") || CurriculumProfileRegistry.default_profile_key,
             tenant_default_profile_version: Current.tenant.settings&.dig("curriculum_default_profile_version"),
-            available_profile_keys: CurriculumProfileRegistry.keys,
-            available_profiles: CurriculumProfileRegistry.all.map { |profile|
+            available_packs: available_packs,
+            available_profile_keys: available_packs.map { |pack| pack[:key] }.uniq,
+            available_profiles: available_packs.map { |pack|
               {
-                key: profile.dig("identity", "key"),
-                version: profile.dig("versioning", "version"),
-                label: profile.dig("identity", "label"),
-                status: profile["status"],
-                compatibility: profile.dig("versioning", "compatibility")
+                key: pack[:key],
+                version: pack[:version],
+                label: pack[:label],
+                status: pack[:pack_status],
+                compatibility: pack[:compatibility]
               }
             },
             school_overrides: school_scope.map { |school|
@@ -137,12 +139,12 @@ module Api
           key = params[:tenant_default_profile_key].presence
           version = params[:tenant_default_profile_version].presence
 
-          if key.present? && !CurriculumProfileRegistry.exists?(key)
+          if key.present? && !pack_exists?(key)
             render json: { error: "Invalid tenant_default_profile_key" }, status: :unprocessable_content
             return
           end
 
-          if key.present? && version.present? && !CurriculumProfileRegistry.exists?(key, version)
+          if key.present? && version.present? && !pack_exists?(key, version)
             render json: { error: "Invalid tenant_default_profile_version for key '#{key}'" }, status: :unprocessable_content
             return
           end
@@ -181,7 +183,7 @@ module Api
             school = policy_scope(School).find(school_id)
             authorize school, :update?
 
-            if key.present? && !CurriculumProfileRegistry.exists?(key, version)
+            if key.present? && !pack_exists?(key, version)
               render json: { error: "Invalid curriculum_profile_key/version for school_id=#{school.id}" }, status: :unprocessable_content
               return
             end
@@ -214,7 +216,7 @@ module Api
             course = policy_scope(Course).find(course_id)
             authorize course, :update?
 
-            if key.present? && !CurriculumProfileRegistry.exists?(key, version)
+            if key.present? && !pack_exists?(key, version)
               render json: { error: "Invalid curriculum_profile_key/version for course_id=#{course.id}" }, status: :unprocessable_content
               return
             end
@@ -257,7 +259,7 @@ module Api
 
             academic_year = AcademicYear.find_by!(id: academic_year_id, tenant_id: Current.tenant.id)
 
-            if frozen && key.present? && !CurriculumProfileRegistry.exists?(key, version)
+            if frozen && key.present? && !pack_exists?(key, version)
               render json: { error: "Invalid freeze curriculum_profile_key/version for academic_year_id=#{academic_year.id}" }, status: :unprocessable_content
               return
             end
@@ -424,6 +426,28 @@ module Api
             },
             candidates: resolved[:candidate_chain]
           }
+        end
+
+        def pack_exists?(key, version = nil)
+          CurriculumPackStore.exists?(tenant: Current.tenant, key: key, version: version)
+        end
+
+        def available_packs_payload
+          CurriculumPackStore.list(tenant: Current.tenant).map do |entry|
+            key = entry[:key]
+            version = entry[:version]
+            payload = CurriculumPackStore.fetch(tenant: Current.tenant, key: key, version: version)
+
+            {
+              key: key,
+              version: version,
+              label: entry[:label],
+              pack_status: entry[:pack_status],
+              release_status: entry[:release_status],
+              source: entry[:source],
+              compatibility: payload&.dig("versioning", "compatibility")
+            }
+          end
         end
 
         def import_payload

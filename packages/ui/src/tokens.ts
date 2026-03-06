@@ -1,4 +1,11 @@
 export const colors = {
+  ib: {
+    50: "#f7f4ee",
+    100: "#ede5d5",
+    500: "#b86a26",
+    700: "#7f4623",
+    900: "#2b1d14",
+  },
   primary: {
     50: "#eff6ff",
     500: "#3b82f6",
@@ -38,11 +45,25 @@ export const spacing = {
   md: "1rem",
   lg: "1.5rem",
   xl: "2rem",
+  "2xl": "3rem",
 } as const;
 
 export const radii = {
   sm: "0.25rem",
   md: "0.375rem",
   lg: "0.5rem",
+  xl: "1rem",
+  "2xl": "1.5rem",
   full: "9999px",
+} as const;
+
+export const shadows = {
+  sm: "0 8px 24px rgba(15, 23, 42, 0.08)",
+  md: "0 18px 40px rgba(15, 23, 42, 0.12)",
+} as const;
+
+export const typography = {
+  display: "\"Space Grotesk\", \"Avenir Next\", sans-serif",
+  body: "\"Avenir Next\", Avenir, \"Segoe UI\", sans-serif",
+  mono: "\"SFMono-Regular\", Menlo, monospace",
 } as const;

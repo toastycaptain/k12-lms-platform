@@ -115,7 +115,7 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Teach" })).toBeInTheDocument();
   });
 
-  it("hides curriculum profile management links for non-admin roles", () => {
+  it("hides curriculum pack management links for non-admin roles", () => {
     mockedUsePathname.mockReturnValue("/admin/dashboard");
     mockedUseAuth.mockReturnValue({
       user: createMockUser({ roles: ["curriculum_lead"] }),
@@ -132,7 +132,7 @@ describe("AppShell", () => {
     );
 
     fireEvent.mouseEnter(screen.getByRole("link", { name: "Admin" }).closest("div") as HTMLElement);
-    expect(screen.queryByRole("link", { name: "Curriculum Profiles" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Curriculum Packs" })).not.toBeInTheDocument();
   });
 
   it("renders district nav item for district administrators", () => {
@@ -175,6 +175,58 @@ describe("AppShell", () => {
     expect(screen.queryByRole("link", { name: "Plan" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Teach" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Admin" })).not.toBeInTheDocument();
+  });
+
+  it("applies runtime nav filtering when visible navigation is present", () => {
+    mockedUseAuth.mockReturnValue({
+      user: createMockUser({
+        roles: ["teacher"],
+        curriculum_runtime: {
+          visible_navigation: ["plan", "communicate"],
+        },
+      }),
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
+    });
+
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("link", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Communicate" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Teach" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Assess" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Report" })).not.toBeInTheDocument();
+  });
+
+  it("pluralizes the unit label from curriculum runtime terminology", () => {
+    mockedUsePathname.mockReturnValue("/plan/units");
+    mockedUseAuth.mockReturnValue({
+      user: createMockUser({
+        curriculum_runtime: {
+          terminology: {
+            unit_label: "Inquiry",
+          },
+        },
+      }),
+      loading: false,
+      error: null,
+      signOut: vi.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
+    });
+
+    render(
+      <AppShell>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("link", { name: "Inquiries" })).toBeInTheDocument();
   });
 
   it("highlights active route", () => {

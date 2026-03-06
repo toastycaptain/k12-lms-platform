@@ -1,53 +1,458 @@
 {
-  "key": "ib_continuum_v1",
-  "label": "IB Continuum",
-  "version": "2026.1",
-  "description": "Planner-first defaults for IB PYP, MYP, and DP environments.",
-  "jurisdiction": "International Baccalaureate",
-  "planner_taxonomy": {
+  "identity": {
+    "key": "ib_continuum_v1",
+    "label": "IB Continuum",
+    "description": "Planner-first defaults for IB PYP, MYP, and DP environments.",
+    "jurisdiction": "International Baccalaureate"
+  },
+  "versioning": {
+    "version": "2026.1",
+    "schema_version": "3.0",
+    "compatibility": "v3",
+    "supersedes": null
+  },
+  "status": "deprecated",
+  "terminology": {
     "subject_label": "Subject Group",
     "grade_label": "Programme Year",
     "unit_label": "Unit of Inquiry"
   },
-  "subject_options": [
-    "Language and Literature",
-    "Language Acquisition",
-    "Individuals and Societies",
-    "Sciences",
-    "Mathematics",
-    "Arts"
-  ],
-  "grade_or_stage_options": [
-    "PYP Year 1",
-    "PYP Year 2",
-    "PYP Year 3",
-    "PYP Year 4",
-    "PYP Year 5",
-    "MYP Year 1",
-    "MYP Year 2",
-    "MYP Year 3",
-    "MYP Year 4",
-    "MYP Year 5",
-    "DP Year 1",
-    "DP Year 2"
-  ],
-  "framework_defaults": [
-    "IB PYP",
-    "IB MYP",
-    "IB DP"
-  ],
-  "template_defaults": {
-    "default_status": "draft",
-    "suggested_sections": [
-      "Statement of Inquiry",
-      "ATL Skills",
-      "Summative Assessment"
+  "navigation": {
+    "admin": [
+      "dashboard",
+      "plan",
+      "teach",
+      "assess",
+      "admin",
+      "report",
+      "communicate"
+    ],
+    "curriculum_lead": [
+      "dashboard",
+      "plan",
+      "assess",
+      "report",
+      "communicate"
+    ],
+    "teacher": [
+      "dashboard",
+      "plan",
+      "teach",
+      "assess",
+      "report",
+      "communicate"
+    ],
+    "student": [
+      "learn",
+      "communicate"
+    ],
+    "guardian": [
+      "guardian",
+      "communicate"
+    ],
+    "district_admin": [
+      "district",
+      "report"
     ]
+  },
+  "capability_modules": {
+    "portfolio": true,
+    "interventions": false,
+    "pastoral": true,
+    "advanced_reports": true
+  },
+  "planner_object_schemas": {
+    "unit_plan": {
+      "fields": [
+        {
+          "id": "subject",
+          "label": "Subject Group",
+          "component": "select",
+          "required": true,
+          "options": [
+            "Language and Literature",
+            "Language Acquisition",
+            "Individuals and Societies",
+            "Sciences",
+            "Mathematics",
+            "Arts"
+          ]
+        },
+        {
+          "id": "grade_or_stage",
+          "label": "Programme Year",
+          "component": "select",
+          "required": true,
+          "options": [
+            "PYP Year 1",
+            "PYP Year 2",
+            "PYP Year 3",
+            "PYP Year 4",
+            "PYP Year 5",
+            "MYP Year 1",
+            "MYP Year 2",
+            "MYP Year 3",
+            "MYP Year 4",
+            "MYP Year 5",
+            "DP Year 1",
+            "DP Year 2"
+          ]
+        },
+        {
+          "id": "title",
+          "label": "Unit of Inquiry Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "lesson_plan": {
+      "fields": [
+        {
+          "id": "title",
+          "label": "Lesson Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "template": {
+      "defaults": {
+        "default_status": "draft",
+        "suggested_sections": [
+          "Statement of Inquiry",
+          "ATL Skills",
+          "Summative Assessment"
+        ]
+      },
+      "tags": [
+        "ib_pyp",
+        "ib_myp",
+        "ib_dp"
+      ]
+    }
+  },
+  "document_types": {
+    "unit_plan": {
+      "label": "Unit",
+      "allowed_schema_keys": [
+        "ib.myp.unit@v1",
+        "ib.pyp.unit@v1"
+      ],
+      "default_schema_key": "ib.myp.unit@v1",
+      "allowed_statuses": [
+        "draft",
+        "pending_approval",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "relationships": {
+        "contains": {
+          "allowed_target_types": [
+            "lesson_plan"
+          ],
+          "max": 999,
+          "ordered": true
+        }
+      }
+    },
+    "lesson_plan": {
+      "label": "Lesson",
+      "allowed_schema_keys": [
+        "ib.myp.lesson@v1"
+      ],
+      "default_schema_key": "ib.myp.lesson@v1",
+      "allowed_statuses": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft"
+    },
+    "template": {
+      "label": "Template",
+      "allowed_schema_keys": [
+        "ib.template@v1"
+      ],
+      "default_schema_key": "ib.template@v1",
+      "allowed_statuses": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft"
+    }
+  },
+  "document_schemas": {
+    "ib.myp.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "MYP Unit Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "statement_of_inquiry",
+          "atl_skills"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "statement_of_inquiry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "atl_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "summative_assessment": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.pyp.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "PYP Unit Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "central_idea",
+          "lines_of_inquiry"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "central_idea": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lines_of_inquiry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "learner_profile": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.myp.lesson@v1": {
+      "document_type": "lesson_plan",
+      "label": "MYP Lesson Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "learning_experiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessment": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.template@v1": {
+      "document_type": "template",
+      "label": "IB Template",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "suggested_sections": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "workflow_definitions": {
+    "unit_default": {
+      "states": [
+        "draft",
+        "pending_approval",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "submit_for_approval": {
+          "from": [
+            "draft"
+          ],
+          "to": "pending_approval",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ],
+          "side_effects": [
+            {
+              "type": "create_approval"
+            }
+          ]
+        },
+        "publish": {
+          "from": [
+            "pending_approval"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ],
+          "guards": [
+            {
+              "type": "approval_not_required_or_approved"
+            }
+          ],
+          "side_effects": [
+            {
+              "type": "auto_approve_pending"
+            }
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "lesson_default": {
+      "states": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "publish": {
+          "from": [
+            "draft"
+          ],
+          "to": "published",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "template_default": {
+      "states": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "publish": {
+          "from": [
+            "draft"
+          ],
+          "to": "published",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    }
+  },
+  "workflow_bindings": {
+    "unit_plan": "unit_default",
+    "lesson_plan": "lesson_default",
+    "template": "template_default"
+  },
+  "framework_bindings": {
+    "defaults": [
+      "ib_pyp",
+      "ib_myp",
+      "ib_dp"
+    ],
+    "allowed": [
+      "ib_pyp",
+      "ib_myp",
+      "ib_dp",
+      "ib_atl",
+      "ib_concepts"
+    ],
+    "node_kinds": [
+      "standard",
+      "skill",
+      "concept"
+    ]
+  },
+  "report_bindings": {
+    "standards_coverage": {
+      "default_frameworks": [
+        "ib_pyp",
+        "ib_myp",
+        "ib_dp"
+      ]
+    }
   },
   "integration_hints": {
     "google_addon_context": "ib_programme",
     "lti_context_tag": "ib",
     "oneroster_context_tag": "ib_programme"
-  },
-  "status": "active"
+  }
 }

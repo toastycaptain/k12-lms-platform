@@ -44,11 +44,15 @@ class CurriculumProfileResolver
       selected, fallback_reason = choose_candidate(candidates, tenant: tenant, feature_flags: feature_flags)
       selected ||= system_fallback_candidate
 
-      profile = select_profile(selected)
+      use_pack_store = feature_flags[:curriculum_pack_store_v1]
+      profile_record = selected[:_resolved_profile] ? selected : resolve_profile_for_candidate(selected, tenant: tenant, use_pack_store: use_pack_store)
+      profile = profile_record&.dig(:_resolved_profile)
       if profile.nil?
         fallback_reason ||= "pack_validation_error"
         selected = system_fallback_candidate
-        profile = select_profile(selected) || CurriculumProfileRegistry.fallback_profile
+        fallback_record = resolve_profile_for_candidate(selected, tenant: tenant, use_pack_store: use_pack_store)
+        profile = fallback_record&.dig(:_resolved_profile) || CurriculumProfileRegistry.fallback_profile
+        profile_record = fallback_record
       end
 
       terminology = stringify_keys(profile["terminology"] || {})
@@ -57,7 +61,15 @@ class CurriculumProfileResolver
       subject_options = field_options(unit_schema_fields, "subject") || Array(profile["subject_options"])
       grade_options = field_options(unit_schema_fields, "grade_or_stage") || Array(profile["grade_or_stage_options"])
       template_defaults = stringify_keys(profile["template_defaults"] || profile.dig("planner_object_schemas", "template", "defaults") || {})
-      framework_defaults = Array(profile["framework_defaults"] || profile.dig("planner_object_schemas", "template", "tags") || [])
+      framework_defaults = Array(
+        profile.dig("framework_bindings", "defaults") ||
+        profile["framework_defaults"] ||
+        profile.dig("planner_object_schemas", "template", "tags") ||
+        []
+      )
+      document_types = stringify_keys(profile["document_types"] || {})
+      document_schemas = stringify_keys(profile["document_schemas"] || {})
+      document_schema_index = build_document_schema_index(document_types: document_types, document_schemas: document_schemas)
 
       {
         profile_key: profile.dig("identity", "key") || profile["key"],
@@ -71,6 +83,8 @@ class CurriculumProfileResolver
         resolver_build_version: RESOLVER_BUILD_VERSION,
         source: selected[:source],
         source_level: selected[:source],
+        pack_payload_source: profile_record&.dig(:_pack_payload_source) || "fallback",
+        pack_release_id: profile_record&.dig(:_pack_release_id),
         planner_taxonomy: planner_taxonomy,
         terminology: terminology,
         derived_labels: {
@@ -85,7 +99,11 @@ class CurriculumProfileResolver
         integration_hints: stringify_keys(profile["integration_hints"] || {}),
         navigation: stringify_keys(profile["navigation"] || {}),
         planner_object_schemas: stringify_keys(profile["planner_object_schemas"] || {}),
+        document_types: document_types,
+        document_schema_index: document_schema_index,
+        workflow_definitions: stringify_keys(profile["workflow_definitions"] || {}),
         workflow_bindings: stringify_keys(profile["workflow_bindings"] || {}),
+        framework_bindings: stringify_keys(profile["framework_bindings"] || {}),
         report_bindings: stringify_keys(profile["report_bindings"] || {}),
         capability_modules: stringify_keys(profile["capability_modules"] || {}),
         status: profile["status"],
@@ -215,36 +233,52 @@ class CurriculumProfileResolver
 
     def choose_candidate(candidates, tenant:, feature_flags:)
       fallback_reason = nil
+      use_pack_store = feature_flags[:curriculum_pack_store_v1]
 
       candidates.each do |candidate|
         key = candidate[:key].to_s
         next if key.blank?
 
-        profile = select_profile(candidate)
-        if profile.nil?
+        profile_record = resolve_profile_for_candidate(candidate, tenant: tenant, use_pack_store: use_pack_store)
+        if profile_record.nil?
           fallback_reason ||= candidate[:version].present? ? "missing_profile_version" : "missing_profile_key"
           next
         end
 
-        if feature_flags[:curriculum_pack_lifecycle_v1]
+        if !use_pack_store && feature_flags[:curriculum_pack_lifecycle_v1]
+          profile = profile_record[:_resolved_profile]
           unless release_eligible?(tenant: tenant, key: key, version: profile.dig("versioning", "version") || profile["version"])
             fallback_reason ||= "invalid_profile_state"
             next
           end
         end
 
-        return [ candidate, fallback_reason ]
+        return [ profile_record, fallback_reason ]
       end
 
       [ nil, fallback_reason || "missing_profile_key" ]
     end
 
-    def select_profile(candidate)
+    def resolve_profile_for_candidate(candidate, tenant:, use_pack_store:)
       key = candidate[:key].to_s
       version = candidate[:version].to_s.presence
       return nil if key.blank?
 
-      CurriculumProfileRegistry.find(key, version)
+      profile_data =
+        if use_pack_store
+          CurriculumPackStore.fetch(tenant: tenant, key: key, version: version, with_metadata: true)
+        else
+          profile = CurriculumProfileRegistry.find(key, version)
+          profile.present? ? { payload: profile, source: "system", release_id: nil } : nil
+        end
+
+      return nil if profile_data.nil? || profile_data[:payload].blank?
+
+      candidate.merge(
+        _resolved_profile: profile_data[:payload],
+        _pack_payload_source: profile_data[:source],
+        _pack_release_id: profile_data[:release_id]
+      )
     end
 
     def release_eligible?(tenant:, key:, version:)
@@ -281,6 +315,7 @@ class CurriculumProfileResolver
     def curriculum_feature_flags_for(tenant)
       keys = %w[
         curriculum_pack_lifecycle_v1
+        curriculum_pack_store_v1
         curriculum_profile_version_pinning_v1
       ]
 
@@ -317,6 +352,28 @@ class CurriculumProfileResolver
     def field_options(fields, id)
       field = fields.find { |row| row["id"] == id }
       Array(field&.dig("options")).map(&:to_s)
+    end
+
+    def build_document_schema_index(document_types:, document_schemas:)
+      document_types.each_with_object({}) do |(document_type, definition), memo|
+        allowed_schema_keys = Array(definition["allowed_schema_keys"]).map(&:to_s)
+        memo[document_type] = {
+          default_schema_key: definition["default_schema_key"].to_s.presence,
+          allowed_schema_keys: allowed_schema_keys,
+          allowed_statuses: Array(definition["allowed_statuses"]).map(&:to_s),
+          relationships: stringify_keys(definition["relationships"] || {}),
+          schemas: allowed_schema_keys.filter_map do |schema_key|
+            schema = document_schemas[schema_key]
+            next if schema.nil?
+
+            {
+              schema_key: schema_key,
+              label: schema["label"],
+              document_type: schema["document_type"]
+            }
+          end
+        }
+      end
     end
 
     def resolution_trace_id

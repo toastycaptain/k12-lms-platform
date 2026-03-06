@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
 
 const SUBJECT_OPTIONS = ["Math", "Science", "ELA", "Social Studies", "Arts", "PE"];
 const GRADE_OPTIONS = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
@@ -46,6 +47,7 @@ interface UnitPlan {
 export default function NewUnitPlanPage() {
   const router = useRouter();
   const { user, refresh } = useAuth();
+  const { isIb, activeProgramme, isIbDocumentsOnly } = useCurriculumRuntime();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
@@ -133,6 +135,88 @@ export default function NewUnitPlanPage() {
 
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    if (!isIb || !isIbDocumentsOnly) {
+      return;
+    }
+
+    const recommendedHref =
+      activeProgramme === "MYP"
+        ? "/ib/myp/units/new"
+        : activeProgramme === "DP"
+          ? "/ib/dp/course-maps/new"
+          : "/ib/pyp/units/new";
+
+    router.push(recommendedHref);
+  }, [activeProgramme, isIb, isIbDocumentsOnly, router]);
+
+  if (isIb) {
+    const recommendedHref =
+      activeProgramme === "MYP"
+        ? "/ib/myp/units/new"
+        : activeProgramme === "DP"
+          ? "/ib/dp/course-maps/new"
+          : "/ib/pyp/units/new";
+
+    return (
+      <ProtectedRoute>
+        <AppShell>
+          <div className="mx-auto max-w-5xl space-y-6">
+            <div>
+              <h1 className="text-3xl font-semibold text-slate-950">
+                Create a new IB planning workspace
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                In IB mode, new planning starts in a programme-native studio instead of the generic
+                unit form.
+                {isIbDocumentsOnly
+                  ? " Documents-only mode is active for this tenant, so this surface redirects to the canonical IB route."
+                  : ""}
+              </p>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-3">
+              {[
+                [
+                  "PYP unit studio",
+                  "/ib/pyp/units/new",
+                  "Programme of Inquiry, inquiry, weekly flow, action, and family window.",
+                ],
+                [
+                  "MYP unit studio",
+                  "/ib/myp/units/new",
+                  "Concept/context builder, inquiry questions, criteria, ATL, and interdisciplinary links.",
+                ],
+                [
+                  "DP course map",
+                  "/ib/dp/course-maps/new",
+                  "Two-year map, assessment windows, IA checkpoints, and core touchpoints.",
+                ],
+              ].map(([title, href, detail]) => (
+                <button
+                  key={href}
+                  type="button"
+                  onClick={() => router.push(href)}
+                  className="rounded-[1.75rem] border border-slate-200 bg-white p-5 text-left shadow-sm hover:bg-slate-50"
+                >
+                  <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+                  <p className="mt-2 text-sm text-slate-600">{detail}</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+              Recommended from your current runtime:{" "}
+              <Link href={recommendedHref} className="font-semibold underline">
+                open the {activeProgramme || "PYP"} workspace
+              </Link>
+            </div>
+          </div>
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
 
   async function handleCreate() {
     if (!selectedGradeValue || !selectedSubjectValue) {

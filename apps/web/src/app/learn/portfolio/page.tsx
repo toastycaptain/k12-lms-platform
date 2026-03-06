@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { PortfolioWorkspace } from "@/features/ib/portfolio/PortfolioWorkspace";
 
 const PORTFOLIO_LIVE_ENABLED = process.env.NEXT_PUBLIC_PORTFOLIO_LIVE_ENABLED === "true";
 
@@ -13,6 +15,7 @@ function trackPortfolioEvent(eventName: string) {
 }
 
 export default function LearnPortfolioPage() {
+  const { isIb } = useCurriculumRuntime();
   const [showNotifyConfirmation, setShowNotifyConfirmation] = useState(false);
 
   const statusMessage = useMemo(() => {
@@ -21,6 +24,16 @@ export default function LearnPortfolioPage() {
     }
     return "Portfolio is coming soon. You will be able to publish your work in a future update.";
   }, []);
+
+  if (isIb) {
+    return (
+      <ProtectedRoute requiredRoles={["student"]}>
+        <AppShell>
+          <PortfolioWorkspace mode="student" />
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute requiredRoles={["student"]}>

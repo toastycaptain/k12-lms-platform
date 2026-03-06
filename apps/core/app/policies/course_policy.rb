@@ -6,10 +6,14 @@ class CoursePolicy < ApplicationPolicy
   end
 
   def show?
+    return false unless school_matches_current_context?
+
     privileged_user? || enrolled_course_ids.include?(record.id)
   end
 
   def gradebook?
+    return false unless school_matches_current_context?
+
     privileged_user? || teacher_course_ids.include?(record.id)
   end
 
@@ -31,13 +35,29 @@ class CoursePolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      return scope.all if privileged_user?
+      scoped = scope.all
+      scoped = scoped.where(school_id: current_school.id) if current_school.present?
+      return scoped if privileged_user?
 
-      scope.joins(sections: :enrollments).where(enrollments: { user_id: user.id }).distinct
+      scoped.joins(sections: :enrollments).where(enrollments: { user_id: user.id }).distinct
+    end
+
+    private
+
+    def current_school
+      return nil unless Current.respond_to?(:school)
+
+      Current.school
     end
   end
 
   private
+
+  def school_matches_current_context?
+    return true unless Current.respond_to?(:school) && Current.school.present?
+
+    record.school_id == Current.school.id
+  end
 
   def enrolled_course_ids
     @enrolled_course_ids ||= Enrollment.joins(:section)

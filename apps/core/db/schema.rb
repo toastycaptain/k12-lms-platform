@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -365,6 +365,85 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
     t.index ["tenant_id"], name: "index_curriculum_course_mapping_issues_on_tenant_id"
   end
 
+  create_table "curriculum_document_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "position", default: 0, null: false
+    t.string "relationship_type", null: false
+    t.bigint "source_document_id", null: false
+    t.bigint "target_document_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_document_id", "target_document_id", "relationship_type"], name: "idx_curriculum_document_links_unique", unique: true
+    t.index ["source_document_id"], name: "index_curriculum_document_links_on_source_document_id"
+    t.index ["target_document_id"], name: "index_curriculum_document_links_on_target_document_id"
+    t.index ["tenant_id", "source_document_id", "relationship_type", "position"], name: "idx_curriculum_document_links_source_rel_position"
+    t.index ["tenant_id", "target_document_id"], name: "idx_curriculum_document_links_target"
+    t.index ["tenant_id"], name: "index_curriculum_document_links_on_tenant_id"
+    t.check_constraint "source_document_id <> target_document_id", name: "curriculum_document_links_not_self"
+  end
+
+  create_table "curriculum_document_version_alignments", force: :cascade do |t|
+    t.string "alignment_type", default: "aligned", null: false
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_version_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "standard_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["curriculum_document_version_id", "standard_id", "alignment_type"], name: "idx_curriculum_doc_version_alignments_unique", unique: true
+    t.index ["curriculum_document_version_id"], name: "idx_on_curriculum_document_version_id_e937e5bd22"
+    t.index ["standard_id"], name: "index_curriculum_document_version_alignments_on_standard_id"
+    t.index ["tenant_id", "standard_id"], name: "idx_curriculum_doc_version_alignments_standard"
+    t.index ["tenant_id"], name: "index_curriculum_document_version_alignments_on_tenant_id"
+  end
+
+  create_table "curriculum_document_versions", force: :cascade do |t|
+    t.jsonb "content", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "curriculum_document_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
+    t.index ["created_by_id"], name: "index_curriculum_document_versions_on_created_by_id"
+    t.index ["curriculum_document_id", "version_number"], name: "idx_curriculum_document_versions_doc_version", unique: true
+    t.index ["curriculum_document_id"], name: "index_curriculum_document_versions_on_curriculum_document_id"
+    t.index ["tenant_id", "curriculum_document_id"], name: "idx_curriculum_document_versions_tenant_doc"
+    t.index ["tenant_id"], name: "index_curriculum_document_versions_on_tenant_id"
+  end
+
+  create_table "curriculum_documents", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "current_version_id"
+    t.string "document_type", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "pack_key", null: false
+    t.string "pack_payload_checksum"
+    t.string "pack_version", null: false
+    t.bigint "planning_context_id", null: false
+    t.string "schema_key", null: false
+    t.bigint "school_id", null: false
+    t.tsvector "search_vector"
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_curriculum_documents_on_academic_year_id"
+    t.index ["created_by_id"], name: "index_curriculum_documents_on_created_by_id"
+    t.index ["current_version_id"], name: "index_curriculum_documents_on_current_version_id"
+    t.index ["planning_context_id"], name: "index_curriculum_documents_on_planning_context_id"
+    t.index ["school_id"], name: "index_curriculum_documents_on_school_id"
+    t.index ["search_vector"], name: "idx_curriculum_documents_search_vector", using: :gin
+    t.index ["tenant_id", "document_type"], name: "idx_curriculum_documents_type"
+    t.index ["tenant_id", "school_id", "planning_context_id"], name: "idx_curriculum_documents_school_context"
+    t.index ["tenant_id"], name: "index_curriculum_documents_on_tenant_id"
+  end
+
   create_table "curriculum_profile_assignments", force: :cascade do |t|
     t.bigint "academic_year_id"
     t.boolean "active", default: true, null: false
@@ -533,6 +612,331 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
     t.index ["student_id"], name: "index_guardian_links_on_student_id"
     t.index ["tenant_id", "guardian_id", "student_id"], name: "idx_on_tenant_id_guardian_id_student_id_7dc4de2073", unique: true
     t.index ["tenant_id"], name: "index_guardian_links_on_tenant_id"
+  end
+
+  create_table "ib_document_collaborators", force: :cascade do |t|
+    t.bigint "assigned_by_id"
+    t.string "contribution_mode", default: "full", null: false
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "role", default: "co_planner", null: false
+    t.string "status", default: "active", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["assigned_by_id"], name: "index_ib_document_collaborators_on_assigned_by_id"
+    t.index ["curriculum_document_id", "user_id", "role"], name: "idx_ib_doc_collaborators_unique", unique: true
+    t.index ["curriculum_document_id"], name: "index_ib_document_collaborators_on_curriculum_document_id"
+    t.index ["tenant_id"], name: "index_ib_document_collaborators_on_tenant_id"
+    t.index ["user_id"], name: "index_ib_document_collaborators_on_user_id"
+  end
+
+  create_table "ib_document_comments", force: :cascade do |t|
+    t.string "anchor_path"
+    t.bigint "author_id", null: false
+    t.text "body", null: false
+    t.string "comment_type", default: "general", null: false
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "parent_comment_id"
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.string "status", default: "open", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "visibility", default: "internal", null: false
+    t.index ["author_id"], name: "index_ib_document_comments_on_author_id"
+    t.index ["curriculum_document_id", "status"], name: "idx_ib_doc_comments_status"
+    t.index ["curriculum_document_id"], name: "index_ib_document_comments_on_curriculum_document_id"
+    t.index ["parent_comment_id"], name: "index_ib_document_comments_on_parent_comment_id"
+    t.index ["resolved_by_id"], name: "index_ib_document_comments_on_resolved_by_id"
+    t.index ["tenant_id"], name: "index_ib_document_comments_on_tenant_id"
+  end
+
+  create_table "ib_evidence_items", force: :cascade do |t|
+    t.string "contributor_type", default: "teacher", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "curriculum_document_id"
+    t.bigint "curriculum_document_version_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.text "next_action"
+    t.bigint "planning_context_id"
+    t.string "programme", default: "PYP", null: false
+    t.bigint "school_id", null: false
+    t.string "status", default: "needs_validation", null: false
+    t.text "story_draft"
+    t.bigint "student_id"
+    t.text "summary"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "visibility", default: "undecided", null: false
+    t.index ["created_by_id"], name: "index_ib_evidence_items_on_created_by_id"
+    t.index ["curriculum_document_id"], name: "index_ib_evidence_items_on_curriculum_document_id"
+    t.index ["curriculum_document_version_id"], name: "index_ib_evidence_items_on_curriculum_document_version_id"
+    t.index ["planning_context_id"], name: "index_ib_evidence_items_on_planning_context_id"
+    t.index ["school_id", "created_by_id", "updated_at"], name: "idx_ib_evidence_items_creator_updated"
+    t.index ["school_id", "planning_context_id", "updated_at"], name: "idx_ib_evidence_items_context_updated"
+    t.index ["school_id", "programme", "status"], name: "idx_ib_evidence_items_queue"
+    t.index ["school_id", "programme", "visibility"], name: "idx_ib_evidence_items_programme_visibility"
+    t.index ["school_id"], name: "index_ib_evidence_items_on_school_id"
+    t.index ["student_id"], name: "index_ib_evidence_items_on_student_id"
+    t.index ["tenant_id"], name: "index_ib_evidence_items_on_tenant_id"
+  end
+
+  create_table "ib_learning_stories", force: :cascade do |t|
+    t.string "audience", default: "families", null: false
+    t.string "cadence", default: "weekly_digest", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "curriculum_document_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "planning_context_id"
+    t.string "programme", default: "PYP", null: false
+    t.datetime "published_at"
+    t.bigint "school_id", null: false
+    t.string "state", default: "draft", null: false
+    t.text "summary"
+    t.text "support_prompt"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_learning_stories_on_created_by_id"
+    t.index ["curriculum_document_id"], name: "index_ib_learning_stories_on_curriculum_document_id"
+    t.index ["planning_context_id"], name: "index_ib_learning_stories_on_planning_context_id"
+    t.index ["school_id", "programme", "updated_at"], name: "idx_ib_learning_stories_programme_updated"
+    t.index ["school_id", "state"], name: "idx_ib_learning_stories_state"
+    t.index ["school_id"], name: "index_ib_learning_stories_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_learning_stories_on_tenant_id"
+  end
+
+  create_table "ib_learning_story_blocks", force: :cascade do |t|
+    t.string "block_type", default: "narrative", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.bigint "ib_learning_story_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_learning_story_id", "position"], name: "idx_ib_learning_story_blocks_position"
+    t.index ["ib_learning_story_id"], name: "index_ib_learning_story_blocks_on_ib_learning_story_id"
+    t.index ["tenant_id"], name: "index_ib_learning_story_blocks_on_tenant_id"
+  end
+
+  create_table "ib_learning_story_evidence_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "ib_evidence_item_id", null: false
+    t.bigint "ib_learning_story_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_evidence_item_id"], name: "index_ib_learning_story_evidence_items_on_ib_evidence_item_id"
+    t.index ["ib_learning_story_id", "ib_evidence_item_id"], name: "idx_ib_story_evidence_unique", unique: true
+    t.index ["ib_learning_story_id"], name: "index_ib_learning_story_evidence_items_on_ib_learning_story_id"
+    t.index ["tenant_id"], name: "index_ib_learning_story_evidence_items_on_tenant_id"
+  end
+
+  create_table "ib_operational_checkpoints", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.bigint "ib_operational_record_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "reviewer_id"
+    t.string "status", default: "pending", null: false
+    t.text "summary"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_operational_record_id", "position"], name: "idx_ib_operational_checkpoints_position"
+    t.index ["ib_operational_record_id"], name: "index_ib_operational_checkpoints_on_ib_operational_record_id"
+    t.index ["reviewer_id"], name: "index_ib_operational_checkpoints_on_reviewer_id"
+    t.index ["tenant_id"], name: "index_ib_operational_checkpoints_on_tenant_id"
+  end
+
+  create_table "ib_operational_records", force: :cascade do |t|
+    t.bigint "advisor_id"
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_id"
+    t.date "due_on"
+    t.jsonb "metadata", default: {}, null: false
+    t.text "next_action"
+    t.bigint "owner_id"
+    t.bigint "planning_context_id"
+    t.string "priority", default: "normal", null: false
+    t.string "programme", default: "PYP", null: false
+    t.string "record_family", null: false
+    t.string "risk_level", default: "healthy", null: false
+    t.string "route_hint"
+    t.bigint "school_id", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "student_id"
+    t.string "subtype", null: false
+    t.text "summary"
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advisor_id"], name: "index_ib_operational_records_on_advisor_id"
+    t.index ["curriculum_document_id"], name: "index_ib_operational_records_on_curriculum_document_id"
+    t.index ["owner_id"], name: "index_ib_operational_records_on_owner_id"
+    t.index ["planning_context_id"], name: "index_ib_operational_records_on_planning_context_id"
+    t.index ["school_id", "programme", "record_family"], name: "idx_ib_operational_records_programme_family"
+    t.index ["school_id"], name: "index_ib_operational_records_on_school_id"
+    t.index ["student_id"], name: "index_ib_operational_records_on_student_id"
+    t.index ["tenant_id"], name: "index_ib_operational_records_on_tenant_id"
+  end
+
+  create_table "ib_programme_settings", force: :cascade do |t|
+    t.string "cadence_mode", default: "weekly_digest", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "programme", default: "Mixed", null: false
+    t.string "review_owner_role", default: "curriculum_lead", null: false
+    t.bigint "school_id"
+    t.bigint "tenant_id", null: false
+    t.jsonb "thresholds", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["school_id"], name: "index_ib_programme_settings_on_school_id"
+    t.index ["tenant_id", "school_id", "programme"], name: "idx_ib_programme_settings_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_programme_settings_on_tenant_id"
+    t.index ["updated_by_id"], name: "index_ib_programme_settings_on_updated_by_id"
+  end
+
+  create_table "ib_publishing_audits", force: :cascade do |t|
+    t.bigint "changed_by_id"
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.string "event_type", null: false
+    t.bigint "ib_learning_story_id"
+    t.bigint "ib_publishing_queue_item_id"
+    t.bigint "school_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["changed_by_id"], name: "index_ib_publishing_audits_on_changed_by_id"
+    t.index ["ib_learning_story_id"], name: "index_ib_publishing_audits_on_ib_learning_story_id"
+    t.index ["ib_publishing_queue_item_id"], name: "index_ib_publishing_audits_on_ib_publishing_queue_item_id"
+    t.index ["school_id"], name: "index_ib_publishing_audits_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_publishing_audits_on_tenant_id"
+  end
+
+  create_table "ib_publishing_queue_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.datetime "delivered_at"
+    t.text "held_reason"
+    t.bigint "ib_learning_story_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "scheduled_for"
+    t.bigint "school_id", null: false
+    t.string "state", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_publishing_queue_items_on_created_by_id"
+    t.index ["ib_learning_story_id"], name: "index_ib_publishing_queue_items_on_ib_learning_story_id"
+    t.index ["school_id", "state"], name: "idx_ib_publishing_queue_state"
+    t.index ["school_id", "updated_at"], name: "idx_ib_publishing_queue_items_updated"
+    t.index ["school_id"], name: "index_ib_publishing_queue_items_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_publishing_queue_items_on_tenant_id"
+  end
+
+  create_table "ib_reflection_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.bigint "ib_evidence_item_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.text "prompt", null: false
+    t.bigint "requested_by_id", null: false
+    t.datetime "responded_at"
+    t.text "response_excerpt"
+    t.string "status", default: "requested", null: false
+    t.bigint "student_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_evidence_item_id"], name: "index_ib_reflection_requests_on_ib_evidence_item_id"
+    t.index ["requested_by_id"], name: "index_ib_reflection_requests_on_requested_by_id"
+    t.index ["student_id"], name: "index_ib_reflection_requests_on_student_id"
+    t.index ["tenant_id"], name: "index_ib_reflection_requests_on_tenant_id"
+  end
+
+  create_table "ib_standards_cycles", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.bigint "coordinator_id"
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "school_id", null: false
+    t.string "status", default: "open", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_ib_standards_cycles_on_academic_year_id"
+    t.index ["coordinator_id"], name: "index_ib_standards_cycles_on_coordinator_id"
+    t.index ["school_id"], name: "index_ib_standards_cycles_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_standards_cycles_on_tenant_id"
+  end
+
+  create_table "ib_standards_exports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.datetime "finished_at"
+    t.bigint "ib_standards_cycle_id"
+    t.bigint "ib_standards_packet_id", null: false
+    t.bigint "initiated_by_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "school_id", null: false
+    t.jsonb "snapshot_payload", default: {}, null: false
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_standards_cycle_id"], name: "index_ib_standards_exports_on_ib_standards_cycle_id"
+    t.index ["ib_standards_packet_id"], name: "index_ib_standards_exports_on_ib_standards_packet_id"
+    t.index ["initiated_by_id"], name: "index_ib_standards_exports_on_initiated_by_id"
+    t.index ["school_id", "status"], name: "idx_ib_standards_exports_school_status"
+    t.index ["school_id"], name: "index_ib_standards_exports_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_standards_exports_on_tenant_id"
+  end
+
+  create_table "ib_standards_packet_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "ib_standards_packet_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.text "relevance_note"
+    t.string "review_state", default: "draft", null: false
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.text "summary"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_standards_packet_id", "source_type", "source_id"], name: "idx_ib_standards_packet_items_source", unique: true
+    t.index ["ib_standards_packet_id"], name: "index_ib_standards_packet_items_on_ib_standards_packet_id"
+    t.index ["tenant_id"], name: "index_ib_standards_packet_items_on_tenant_id"
+  end
+
+  create_table "ib_standards_packets", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "evidence_strength", default: "emerging", null: false
+    t.string "export_status", default: "not_ready", null: false
+    t.bigint "ib_standards_cycle_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "owner_id"
+    t.string "review_state", default: "draft", null: false
+    t.bigint "reviewer_id"
+    t.bigint "school_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ib_standards_cycle_id", "code"], name: "idx_ib_standards_packets_cycle_code", unique: true
+    t.index ["ib_standards_cycle_id"], name: "index_ib_standards_packets_on_ib_standards_cycle_id"
+    t.index ["owner_id"], name: "index_ib_standards_packets_on_owner_id"
+    t.index ["reviewer_id"], name: "index_ib_standards_packets_on_reviewer_id"
+    t.index ["school_id"], name: "index_ib_standards_packets_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_standards_packets_on_tenant_id"
   end
 
   create_table "integration_configs", force: :cascade do |t|
@@ -751,6 +1155,77 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
     t.index ["role_id"], name: "index_permissions_on_role_id"
     t.index ["tenant_id", "role_id", "resource", "action"], name: "idx_permissions_unique", unique: true
     t.index ["tenant_id"], name: "index_permissions_on_tenant_id"
+  end
+
+  create_table "planning_context_courses", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "planning_context_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_planning_context_courses_on_course_id"
+    t.index ["planning_context_id", "course_id"], name: "idx_on_planning_context_id_course_id_5a7234ebbd", unique: true
+    t.index ["planning_context_id"], name: "index_planning_context_courses_on_planning_context_id"
+    t.index ["tenant_id", "course_id"], name: "index_planning_context_courses_on_tenant_id_and_course_id"
+    t.index ["tenant_id"], name: "index_planning_context_courses_on_tenant_id"
+  end
+
+  create_table "planning_contexts", force: :cascade do |t|
+    t.bigint "academic_year_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "kind", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name", null: false
+    t.bigint "school_id", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "active", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_planning_contexts_on_academic_year_id"
+    t.index ["created_by_id"], name: "index_planning_contexts_on_created_by_id"
+    t.index ["school_id"], name: "index_planning_contexts_on_school_id"
+    t.index ["tenant_id", "school_id", "academic_year_id", "kind"], name: "idx_planning_contexts_tenant_school_year_kind"
+    t.index ["tenant_id"], name: "index_planning_contexts_on_tenant_id"
+  end
+
+  create_table "pyp_programme_of_inquiries", force: :cascade do |t|
+    t.bigint "academic_year_id", null: false
+    t.bigint "coordinator_id"
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "school_id", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_pyp_programme_of_inquiries_on_academic_year_id"
+    t.index ["coordinator_id"], name: "index_pyp_programme_of_inquiries_on_coordinator_id"
+    t.index ["school_id", "academic_year_id"], name: "idx_pyp_poi_school_year", unique: true
+    t.index ["school_id"], name: "index_pyp_programme_of_inquiries_on_school_id"
+    t.index ["tenant_id"], name: "index_pyp_programme_of_inquiries_on_tenant_id"
+  end
+
+  create_table "pyp_programme_of_inquiry_entries", force: :cascade do |t|
+    t.text "central_idea"
+    t.string "coherence_signal", default: "healthy", null: false
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "planning_context_id"
+    t.bigint "pyp_programme_of_inquiry_id", null: false
+    t.string "review_state", default: "draft", null: false
+    t.jsonb "specialist_expectations", default: [], null: false
+    t.bigint "tenant_id", null: false
+    t.string "theme", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "year_level", null: false
+    t.index ["curriculum_document_id"], name: "idx_on_curriculum_document_id_05ec9711a7"
+    t.index ["planning_context_id"], name: "index_pyp_programme_of_inquiry_entries_on_planning_context_id"
+    t.index ["pyp_programme_of_inquiry_id", "year_level", "theme"], name: "idx_pyp_poi_entries_unique", unique: true
+    t.index ["pyp_programme_of_inquiry_id"], name: "idx_on_pyp_programme_of_inquiry_id_e3745d8838"
+    t.index ["tenant_id"], name: "index_pyp_programme_of_inquiry_entries_on_tenant_id"
   end
 
   create_table "question_banks", force: :cascade do |t|
@@ -1015,20 +1490,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
 
   create_table "standard_frameworks", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "framework_kind", default: "standard", null: false
     t.string "jurisdiction"
+    t.string "key"
+    t.jsonb "metadata", default: {}, null: false
     t.string "name", null: false
+    t.string "status", default: "active", null: false
     t.string "subject"
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.string "version"
+    t.index ["tenant_id", "framework_kind"], name: "idx_standard_frameworks_tenant_kind"
+    t.index ["tenant_id", "key"], name: "idx_standard_frameworks_tenant_key", unique: true, where: "(key IS NOT NULL)"
     t.index ["tenant_id"], name: "index_standard_frameworks_on_tenant_id"
   end
 
   create_table "standards", force: :cascade do |t|
-    t.string "code", null: false
+    t.string "code"
     t.datetime "created_at", null: false
     t.text "description"
     t.string "grade_band"
+    t.string "identifier"
+    t.string "kind", default: "standard", null: false
+    t.string "label"
+    t.jsonb "metadata", default: {}, null: false
     t.bigint "parent_id"
     t.tsvector "search_vector"
     t.bigint "standard_framework_id", null: false
@@ -1039,6 +1524,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
     t.index ["standard_framework_id", "code"], name: "idx_standards_framework_code", unique: true
     t.index ["standard_framework_id", "parent_id"], name: "idx_standards_framework_parent"
     t.index ["standard_framework_id"], name: "index_standards_on_standard_framework_id"
+    t.index ["tenant_id", "kind"], name: "idx_standards_tenant_kind"
+    t.index ["tenant_id", "standard_framework_id"], name: "idx_standards_tenant_framework"
     t.index ["tenant_id"], name: "index_standards_on_tenant_id"
   end
 
@@ -1314,6 +1801,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
   add_foreign_key "curriculum_course_mapping_issues", "schools", column: "resolved_school_id"
   add_foreign_key "curriculum_course_mapping_issues", "tenants"
   add_foreign_key "curriculum_course_mapping_issues", "users", column: "resolved_by_id"
+  add_foreign_key "curriculum_document_links", "curriculum_documents", column: "source_document_id"
+  add_foreign_key "curriculum_document_links", "curriculum_documents", column: "target_document_id"
+  add_foreign_key "curriculum_document_links", "tenants"
+  add_foreign_key "curriculum_document_version_alignments", "curriculum_document_versions"
+  add_foreign_key "curriculum_document_version_alignments", "standards"
+  add_foreign_key "curriculum_document_version_alignments", "tenants"
+  add_foreign_key "curriculum_document_versions", "curriculum_documents"
+  add_foreign_key "curriculum_document_versions", "tenants"
+  add_foreign_key "curriculum_document_versions", "users", column: "created_by_id"
+  add_foreign_key "curriculum_documents", "academic_years"
+  add_foreign_key "curriculum_documents", "curriculum_document_versions", column: "current_version_id"
+  add_foreign_key "curriculum_documents", "planning_contexts"
+  add_foreign_key "curriculum_documents", "schools"
+  add_foreign_key "curriculum_documents", "tenants"
+  add_foreign_key "curriculum_documents", "users", column: "created_by_id"
   add_foreign_key "curriculum_profile_assignments", "academic_years"
   add_foreign_key "curriculum_profile_assignments", "courses"
   add_foreign_key "curriculum_profile_assignments", "schools"
@@ -1341,6 +1843,74 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
   add_foreign_key "guardian_links", "tenants"
   add_foreign_key "guardian_links", "users", column: "guardian_id"
   add_foreign_key "guardian_links", "users", column: "student_id"
+  add_foreign_key "ib_document_collaborators", "curriculum_documents"
+  add_foreign_key "ib_document_collaborators", "tenants"
+  add_foreign_key "ib_document_collaborators", "users"
+  add_foreign_key "ib_document_collaborators", "users", column: "assigned_by_id"
+  add_foreign_key "ib_document_comments", "curriculum_documents"
+  add_foreign_key "ib_document_comments", "ib_document_comments", column: "parent_comment_id"
+  add_foreign_key "ib_document_comments", "tenants"
+  add_foreign_key "ib_document_comments", "users", column: "author_id"
+  add_foreign_key "ib_document_comments", "users", column: "resolved_by_id"
+  add_foreign_key "ib_evidence_items", "curriculum_document_versions"
+  add_foreign_key "ib_evidence_items", "curriculum_documents"
+  add_foreign_key "ib_evidence_items", "planning_contexts"
+  add_foreign_key "ib_evidence_items", "schools"
+  add_foreign_key "ib_evidence_items", "tenants"
+  add_foreign_key "ib_evidence_items", "users", column: "created_by_id"
+  add_foreign_key "ib_evidence_items", "users", column: "student_id"
+  add_foreign_key "ib_learning_stories", "curriculum_documents"
+  add_foreign_key "ib_learning_stories", "planning_contexts"
+  add_foreign_key "ib_learning_stories", "schools"
+  add_foreign_key "ib_learning_stories", "tenants"
+  add_foreign_key "ib_learning_stories", "users", column: "created_by_id"
+  add_foreign_key "ib_learning_story_blocks", "ib_learning_stories"
+  add_foreign_key "ib_learning_story_blocks", "tenants"
+  add_foreign_key "ib_learning_story_evidence_items", "ib_evidence_items"
+  add_foreign_key "ib_learning_story_evidence_items", "ib_learning_stories"
+  add_foreign_key "ib_learning_story_evidence_items", "tenants"
+  add_foreign_key "ib_operational_checkpoints", "ib_operational_records"
+  add_foreign_key "ib_operational_checkpoints", "tenants"
+  add_foreign_key "ib_operational_checkpoints", "users", column: "reviewer_id"
+  add_foreign_key "ib_operational_records", "curriculum_documents"
+  add_foreign_key "ib_operational_records", "planning_contexts"
+  add_foreign_key "ib_operational_records", "schools"
+  add_foreign_key "ib_operational_records", "tenants"
+  add_foreign_key "ib_operational_records", "users", column: "advisor_id"
+  add_foreign_key "ib_operational_records", "users", column: "owner_id"
+  add_foreign_key "ib_operational_records", "users", column: "student_id"
+  add_foreign_key "ib_programme_settings", "schools"
+  add_foreign_key "ib_programme_settings", "tenants"
+  add_foreign_key "ib_programme_settings", "users", column: "updated_by_id"
+  add_foreign_key "ib_publishing_audits", "ib_learning_stories"
+  add_foreign_key "ib_publishing_audits", "ib_publishing_queue_items"
+  add_foreign_key "ib_publishing_audits", "schools"
+  add_foreign_key "ib_publishing_audits", "tenants"
+  add_foreign_key "ib_publishing_audits", "users", column: "changed_by_id"
+  add_foreign_key "ib_publishing_queue_items", "ib_learning_stories"
+  add_foreign_key "ib_publishing_queue_items", "schools"
+  add_foreign_key "ib_publishing_queue_items", "tenants"
+  add_foreign_key "ib_publishing_queue_items", "users", column: "created_by_id"
+  add_foreign_key "ib_reflection_requests", "ib_evidence_items"
+  add_foreign_key "ib_reflection_requests", "tenants"
+  add_foreign_key "ib_reflection_requests", "users", column: "requested_by_id"
+  add_foreign_key "ib_reflection_requests", "users", column: "student_id"
+  add_foreign_key "ib_standards_cycles", "academic_years"
+  add_foreign_key "ib_standards_cycles", "schools"
+  add_foreign_key "ib_standards_cycles", "tenants"
+  add_foreign_key "ib_standards_cycles", "users", column: "coordinator_id"
+  add_foreign_key "ib_standards_exports", "ib_standards_cycles"
+  add_foreign_key "ib_standards_exports", "ib_standards_packets"
+  add_foreign_key "ib_standards_exports", "schools"
+  add_foreign_key "ib_standards_exports", "tenants"
+  add_foreign_key "ib_standards_exports", "users", column: "initiated_by_id"
+  add_foreign_key "ib_standards_packet_items", "ib_standards_packets"
+  add_foreign_key "ib_standards_packet_items", "tenants"
+  add_foreign_key "ib_standards_packets", "ib_standards_cycles"
+  add_foreign_key "ib_standards_packets", "schools"
+  add_foreign_key "ib_standards_packets", "tenants"
+  add_foreign_key "ib_standards_packets", "users", column: "owner_id"
+  add_foreign_key "ib_standards_packets", "users", column: "reviewer_id"
   add_foreign_key "integration_configs", "tenants"
   add_foreign_key "integration_configs", "users", column: "created_by_id"
   add_foreign_key "lesson_plans", "lesson_versions", column: "current_version_id"
@@ -1376,6 +1946,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_090400) do
   add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "permissions", "roles"
   add_foreign_key "permissions", "tenants"
+  add_foreign_key "planning_context_courses", "courses"
+  add_foreign_key "planning_context_courses", "planning_contexts"
+  add_foreign_key "planning_context_courses", "tenants"
+  add_foreign_key "planning_contexts", "academic_years"
+  add_foreign_key "planning_contexts", "schools"
+  add_foreign_key "planning_contexts", "tenants"
+  add_foreign_key "planning_contexts", "users", column: "created_by_id"
+  add_foreign_key "pyp_programme_of_inquiries", "academic_years"
+  add_foreign_key "pyp_programme_of_inquiries", "schools"
+  add_foreign_key "pyp_programme_of_inquiries", "tenants"
+  add_foreign_key "pyp_programme_of_inquiries", "users", column: "coordinator_id"
+  add_foreign_key "pyp_programme_of_inquiry_entries", "curriculum_documents"
+  add_foreign_key "pyp_programme_of_inquiry_entries", "planning_contexts"
+  add_foreign_key "pyp_programme_of_inquiry_entries", "pyp_programme_of_inquiries"
+  add_foreign_key "pyp_programme_of_inquiry_entries", "tenants"
   add_foreign_key "question_banks", "tenants"
   add_foreign_key "question_banks", "users", column: "created_by_id"
   add_foreign_key "question_versions", "questions"

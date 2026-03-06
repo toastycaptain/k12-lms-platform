@@ -1,0 +1,2228 @@
+{
+  "identity": {
+    "key": "ib_continuum_v1",
+    "label": "IB Continuum",
+    "description": "Planner-first defaults for IB PYP, MYP, and DP environments.",
+    "jurisdiction": "International Baccalaureate"
+  },
+  "versioning": {
+    "version": "2026.2",
+    "schema_version": "3.0",
+    "compatibility": "v3",
+    "supersedes": "2026.1"
+  },
+  "status": "active",
+  "terminology": {
+    "subject_label": "Subject Group",
+    "grade_label": "Programme Year",
+    "unit_label": "IB Planning Record"
+  },
+  "navigation": {
+    "admin": [
+      "dashboard",
+      "plan",
+      "teach",
+      "assess",
+      "admin",
+      "report",
+      "communicate"
+    ],
+    "curriculum_lead": [
+      "dashboard",
+      "plan",
+      "assess",
+      "report",
+      "communicate"
+    ],
+    "teacher": [
+      "dashboard",
+      "plan",
+      "teach",
+      "assess",
+      "report",
+      "communicate"
+    ],
+    "student": [
+      "learn",
+      "communicate"
+    ],
+    "guardian": [
+      "guardian",
+      "communicate"
+    ],
+    "district_admin": [
+      "district",
+      "report"
+    ]
+  },
+  "capability_modules": {
+    "portfolio": true,
+    "interventions": false,
+    "pastoral": true,
+    "advanced_reports": true
+  },
+  "planner_object_schemas": {
+    "unit_plan": {
+      "fields": [
+        {
+          "id": "subject",
+          "label": "Subject Group",
+          "component": "select",
+          "required": true,
+          "options": [
+            "Language and Literature",
+            "Language Acquisition",
+            "Individuals and Societies",
+            "Sciences",
+            "Mathematics",
+            "Arts"
+          ]
+        },
+        {
+          "id": "grade_or_stage",
+          "label": "Programme Year",
+          "component": "select",
+          "required": true,
+          "options": [
+            "PYP Year 1",
+            "PYP Year 2",
+            "PYP Year 3",
+            "PYP Year 4",
+            "PYP Year 5",
+            "MYP Year 1",
+            "MYP Year 2",
+            "MYP Year 3",
+            "MYP Year 4",
+            "MYP Year 5",
+            "DP Year 1",
+            "DP Year 2"
+          ]
+        },
+        {
+          "id": "title",
+          "label": "Unit of Inquiry Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "lesson_plan": {
+      "fields": [
+        {
+          "id": "title",
+          "label": "Lesson Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "template": {
+      "defaults": {
+        "default_status": "draft",
+        "suggested_sections": [
+          "Statement of Inquiry",
+          "ATL Skills",
+          "Summative Assessment"
+        ]
+      },
+      "tags": [
+        "ib_pyp",
+        "ib_myp",
+        "ib_dp"
+      ]
+    }
+  },
+  "document_types": {
+    "unit_plan": {
+      "label": "Unit",
+      "allowed_schema_keys": [
+        "ib.myp.unit@v1",
+        "ib.pyp.unit@v1"
+      ],
+      "default_schema_key": "ib.myp.unit@v1",
+      "allowed_statuses": [
+        "draft",
+        "pending_approval",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "relationships": {
+        "contains": {
+          "allowed_target_types": [
+            "lesson_plan"
+          ],
+          "max": 999,
+          "ordered": true
+        }
+      }
+    },
+    "lesson_plan": {
+      "label": "Lesson",
+      "allowed_schema_keys": [
+        "ib.myp.lesson@v1"
+      ],
+      "default_schema_key": "ib.myp.lesson@v1",
+      "allowed_statuses": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft"
+    },
+    "template": {
+      "label": "Template",
+      "allowed_schema_keys": [
+        "ib.template@v1"
+      ],
+      "default_schema_key": "ib.template@v1",
+      "allowed_statuses": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft"
+    },
+    "ib_pyp_programme_of_inquiry": {
+      "label": "PYP Programme of Inquiry",
+      "allowed_schema_keys": [
+        "ib.pyp.programme_of_inquiry@v2"
+      ],
+      "default_schema_key": "ib.pyp.programme_of_inquiry@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "relationships": {
+        "maps_units": {
+          "allowed_target_types": [
+            "ib_pyp_unit"
+          ],
+          "max": 60,
+          "ordered": true
+        }
+      },
+      "workflow": "ib_review_cycle"
+    },
+    "ib_pyp_unit": {
+      "label": "PYP Unit",
+      "allowed_schema_keys": [
+        "ib.pyp.unit@v2"
+      ],
+      "default_schema_key": "ib.pyp.unit@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "relationships": {
+        "weekly_flow": {
+          "allowed_target_types": [
+            "ib_pyp_weekly_flow"
+          ],
+          "max": 1
+        },
+        "family_window": {
+          "allowed_target_types": [
+            "ib_pyp_family_window"
+          ],
+          "max": 1
+        },
+        "poi_entry": {
+          "allowed_target_types": [
+            "ib_pyp_programme_of_inquiry"
+          ],
+          "max": 1
+        },
+        "exhibition": {
+          "allowed_target_types": [
+            "ib_pyp_exhibition"
+          ],
+          "max": 1
+        }
+      },
+      "readiness_rules": {
+        "required_groups": [
+          "core_identity",
+          "inquiry",
+          "evidence",
+          "family_window"
+        ]
+      },
+      "workflow": "ib_review_cycle"
+    },
+    "ib_pyp_weekly_flow": {
+      "label": "PYP Weekly Flow",
+      "allowed_schema_keys": [
+        "ib.pyp.weekly_flow@v2"
+      ],
+      "default_schema_key": "ib.pyp.weekly_flow@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_review_cycle"
+    },
+    "ib_pyp_family_window": {
+      "label": "PYP Family Window",
+      "allowed_schema_keys": [
+        "ib.pyp.family_window@v2"
+      ],
+      "default_schema_key": "ib.pyp.family_window@v2",
+      "allowed_statuses": [
+        "draft",
+        "ready_for_review",
+        "ready_for_digest",
+        "published",
+        "held"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_family_publish_cycle"
+    },
+    "ib_pyp_exhibition": {
+      "label": "PYP Exhibition",
+      "allowed_schema_keys": [
+        "ib.pyp.exhibition@v2"
+      ],
+      "default_schema_key": "ib.pyp.exhibition@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_project_cycle"
+    },
+    "ib_myp_unit": {
+      "label": "MYP Unit",
+      "allowed_schema_keys": [
+        "ib.myp.unit@v2"
+      ],
+      "default_schema_key": "ib.myp.unit@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_review_cycle"
+    },
+    "ib_myp_interdisciplinary_unit": {
+      "label": "MYP Interdisciplinary Unit",
+      "allowed_schema_keys": [
+        "ib.myp.interdisciplinary@v2"
+      ],
+      "default_schema_key": "ib.myp.interdisciplinary@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_project_cycle"
+    },
+    "ib_myp_project": {
+      "label": "MYP Project",
+      "allowed_schema_keys": [
+        "ib.myp.project@v2"
+      ],
+      "default_schema_key": "ib.myp.project@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_project_cycle"
+    },
+    "ib_myp_service_reflection": {
+      "label": "MYP Service Reflection",
+      "allowed_schema_keys": [
+        "ib.myp.service_reflection@v2"
+      ],
+      "default_schema_key": "ib.myp.service_reflection@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_project_cycle"
+    },
+    "ib_dp_course_map": {
+      "label": "DP Course Map",
+      "allowed_schema_keys": [
+        "ib.dp.course_map@v2"
+      ],
+      "default_schema_key": "ib.dp.course_map@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_review_cycle"
+    },
+    "ib_dp_internal_assessment": {
+      "label": "DP Internal Assessment",
+      "allowed_schema_keys": [
+        "ib.dp.internal_assessment@v2"
+      ],
+      "default_schema_key": "ib.dp.internal_assessment@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_dp_tok": {
+      "label": "DP TOK Record",
+      "allowed_schema_keys": [
+        "ib.dp.tok@v2"
+      ],
+      "default_schema_key": "ib.dp.tok@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_dp_extended_essay": {
+      "label": "DP Extended Essay",
+      "allowed_schema_keys": [
+        "ib.dp.extended_essay@v2"
+      ],
+      "default_schema_key": "ib.dp.extended_essay@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_dp_cas_experience": {
+      "label": "DP CAS Experience",
+      "allowed_schema_keys": [
+        "ib.dp.cas_experience@v2"
+      ],
+      "default_schema_key": "ib.dp.cas_experience@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_dp_cas_project": {
+      "label": "DP CAS Project",
+      "allowed_schema_keys": [
+        "ib.dp.cas_project@v2"
+      ],
+      "default_schema_key": "ib.dp.cas_project@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_dp_cas_reflection": {
+      "label": "DP CAS Reflection",
+      "allowed_schema_keys": [
+        "ib.dp.cas_reflection@v2"
+      ],
+      "default_schema_key": "ib.dp.cas_reflection@v2",
+      "allowed_statuses": [
+        "draft",
+        "advisor_review",
+        "published",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_dp_advisory_cycle"
+    },
+    "ib_learning_story": {
+      "label": "Learning Story",
+      "allowed_schema_keys": [
+        "ib.learning_story@v2"
+      ],
+      "default_schema_key": "ib.learning_story@v2",
+      "allowed_statuses": [
+        "draft",
+        "ready_for_review",
+        "ready_for_digest",
+        "published",
+        "held"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_family_publish_cycle"
+    },
+    "ib_standards_practices_evidence_packet": {
+      "label": "Standards & Practices Evidence Packet",
+      "allowed_schema_keys": [
+        "ib.standards_practices.evidence_packet@v2"
+      ],
+      "default_schema_key": "ib.standards_practices.evidence_packet@v2",
+      "allowed_statuses": [
+        "draft",
+        "in_review",
+        "approved",
+        "exported",
+        "archived"
+      ],
+      "default_status": "draft",
+      "workflow": "ib_standards_evidence_cycle"
+    }
+  },
+  "document_schemas": {
+    "ib.myp.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "MYP Unit Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "statement_of_inquiry",
+          "atl_skills"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "statement_of_inquiry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "atl_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "summative_assessment": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.pyp.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "PYP Unit Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "central_idea",
+          "lines_of_inquiry"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "central_idea": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lines_of_inquiry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "learner_profile": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.myp.lesson@v1": {
+      "document_type": "lesson_plan",
+      "label": "MYP Lesson Planner",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "learning_experiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessment": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.template@v1": {
+      "document_type": "template",
+      "label": "IB Template",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "suggested_sections": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ib.pyp.programme_of_inquiry@v2": {
+      "document_type": "ib_pyp_programme_of_inquiry",
+      "label": "PYP Programme of Inquiry",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "academic_year",
+          "entries"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "academic_year": {
+            "type": "string",
+            "title": "Academic year",
+            "minLength": 1
+          },
+          "entries": {
+            "type": "array",
+            "title": "Entries",
+            "items": {
+              "type": "object",
+              "properties": {
+                "year_level": {
+                  "type": "string",
+                  "title": "Year level",
+                  "minLength": 1
+                },
+                "theme": {
+                  "type": "string",
+                  "title": "Theme",
+                  "minLength": 1
+                },
+                "unit_title": {
+                  "type": "string",
+                  "title": "Unit title",
+                  "minLength": 1
+                },
+                "central_idea": {
+                  "type": "string",
+                  "title": "Central idea",
+                  "minLength": 1
+                },
+                "specialist_expectations": {
+                  "type": "array",
+                  "title": "Specialist expectations",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Scope",
+            "fields": [
+              "title",
+              "academic_year"
+            ]
+          },
+          {
+            "title": "Entries",
+            "fields": [
+              "entries"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.pyp.unit@v2": {
+      "document_type": "ib_pyp_unit",
+      "label": "PYP Unit",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "transdisciplinary_theme",
+          "central_idea",
+          "lines_of_inquiry"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "transdisciplinary_theme": {
+            "type": "string",
+            "title": "Theme",
+            "minLength": 1
+          },
+          "central_idea": {
+            "type": "string",
+            "title": "Central idea",
+            "minLength": 1
+          },
+          "lines_of_inquiry": {
+            "type": "array",
+            "title": "Lines of inquiry",
+            "items": {
+              "type": "string"
+            }
+          },
+          "learner_profile": {
+            "type": "array",
+            "title": "Learner profile",
+            "items": {
+              "type": "string"
+            }
+          },
+          "atl_skills": {
+            "type": "array",
+            "title": "ATL skills",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prior_learning": {
+            "type": "string",
+            "title": "Prior learning"
+          },
+          "provocations": {
+            "type": "array",
+            "title": "Provocations",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_moments": {
+            "type": "array",
+            "title": "Evidence moments",
+            "items": {
+              "type": "string"
+            }
+          },
+          "student_action": {
+            "type": "string",
+            "title": "Student action"
+          },
+          "reflection_summary": {
+            "type": "string",
+            "title": "Reflection summary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Core identity",
+            "fields": [
+              "title",
+              "transdisciplinary_theme",
+              "central_idea"
+            ]
+          },
+          {
+            "title": "Inquiry",
+            "fields": [
+              "lines_of_inquiry",
+              "learner_profile",
+              "atl_skills",
+              "provocations"
+            ]
+          },
+          {
+            "title": "Evidence and reflection",
+            "fields": [
+              "evidence_moments",
+              "student_action",
+              "reflection_summary"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.pyp.weekly_flow@v2": {
+      "document_type": "ib_pyp_weekly_flow",
+      "label": "PYP Weekly Flow",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "weeks"
+        ],
+        "properties": {
+          "weeks": {
+            "type": "array",
+            "title": "Weeks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "week_title": {
+                  "type": "string",
+                  "title": "Week title",
+                  "minLength": 1
+                },
+                "focus": {
+                  "type": "string",
+                  "title": "Focus",
+                  "minLength": 1
+                },
+                "evidence_prompt": {
+                  "type": "string",
+                  "title": "Evidence prompt"
+                },
+                "family_signal": {
+                  "type": "string",
+                  "title": "Family signal"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Weekly flow",
+            "fields": [
+              "weeks"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.pyp.family_window@v2": {
+      "document_type": "ib_pyp_family_window",
+      "label": "PYP Family Window",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "support_prompt"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "minLength": 1
+          },
+          "support_prompt": {
+            "type": "string",
+            "title": "Support prompt",
+            "minLength": 1
+          },
+          "milestone": {
+            "type": "string",
+            "title": "Family-visible milestone"
+          },
+          "visibility_notes": {
+            "type": "string",
+            "title": "Visibility notes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Family-facing content",
+            "fields": [
+              "summary",
+              "support_prompt",
+              "milestone",
+              "visibility_notes"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.pyp.exhibition@v2": {
+      "document_type": "ib_pyp_exhibition",
+      "label": "PYP Exhibition",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "mentor_pairs",
+          "checkpoint_summary"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "mentor_pairs": {
+            "type": "array",
+            "title": "Mentor pairs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checkpoint_summary": {
+            "type": "string",
+            "title": "Checkpoint summary",
+            "minLength": 1
+          },
+          "showcase_window": {
+            "type": "string",
+            "title": "Showcase window"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Exhibition planning",
+            "fields": [
+              "title",
+              "mentor_pairs",
+              "checkpoint_summary",
+              "showcase_window"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.myp.unit@v2": {
+      "document_type": "ib_myp_unit",
+      "label": "MYP Unit",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "statement_of_inquiry",
+          "global_context",
+          "key_concept"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "statement_of_inquiry": {
+            "type": "string",
+            "title": "Statement of inquiry",
+            "minLength": 1
+          },
+          "global_context": {
+            "type": "string",
+            "title": "Global context",
+            "minLength": 1
+          },
+          "key_concept": {
+            "type": "string",
+            "title": "Key concept",
+            "minLength": 1
+          },
+          "related_concepts": {
+            "type": "array",
+            "title": "Related concepts",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inquiry_questions": {
+            "type": "array",
+            "title": "Inquiry questions",
+            "items": {
+              "type": "string"
+            }
+          },
+          "atl_focus": {
+            "type": "array",
+            "title": "ATL focus",
+            "items": {
+              "type": "string"
+            }
+          },
+          "criteria_plan": {
+            "type": "array",
+            "title": "Criteria plan",
+            "items": {
+              "type": "object",
+              "properties": {
+                "criterion": {
+                  "type": "string",
+                  "title": "Criterion",
+                  "minLength": 1
+                },
+                "task": {
+                  "type": "string",
+                  "title": "Task",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "type": "string",
+                  "title": "Evidence"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Concept and context",
+            "fields": [
+              "title",
+              "statement_of_inquiry",
+              "global_context",
+              "key_concept",
+              "related_concepts"
+            ]
+          },
+          {
+            "title": "Inquiry and assessment",
+            "fields": [
+              "inquiry_questions",
+              "atl_focus",
+              "criteria_plan"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.myp.interdisciplinary@v2": {
+      "document_type": "ib_myp_interdisciplinary_unit",
+      "label": "MYP Interdisciplinary Unit",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "participating_subjects",
+          "shared_goal"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "participating_subjects": {
+            "type": "array",
+            "title": "Participating subjects",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shared_goal": {
+            "type": "string",
+            "title": "Shared goal",
+            "minLength": 1
+          },
+          "common_statement": {
+            "type": "string",
+            "title": "Common statement"
+          },
+          "milestone_plan": {
+            "type": "array",
+            "title": "Milestone plan",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Shared planning spine",
+            "fields": [
+              "title",
+              "participating_subjects",
+              "shared_goal",
+              "common_statement",
+              "milestone_plan"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.myp.project@v2": {
+      "document_type": "ib_myp_project",
+      "label": "MYP Project",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "project_type",
+          "milestone_plan"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "project_type": {
+            "type": "string",
+            "title": "Project type",
+            "minLength": 1
+          },
+          "advisor": {
+            "type": "string",
+            "title": "Advisor"
+          },
+          "milestone_plan": {
+            "type": "array",
+            "title": "Milestone plan",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reflection_summary": {
+            "type": "string",
+            "title": "Reflection summary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Project operations",
+            "fields": [
+              "title",
+              "project_type",
+              "advisor",
+              "milestone_plan",
+              "reflection_summary"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.myp.service_reflection@v2": {
+      "document_type": "ib_myp_service_reflection",
+      "label": "MYP Service Reflection",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "service_goal",
+          "reflection"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "service_goal": {
+            "type": "string",
+            "title": "Service goal",
+            "minLength": 1
+          },
+          "reflection": {
+            "type": "string",
+            "title": "Reflection",
+            "minLength": 1
+          },
+          "evidence_links": {
+            "type": "array",
+            "title": "Evidence links",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Service reflection",
+            "fields": [
+              "title",
+              "service_goal",
+              "reflection",
+              "evidence_links"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.course_map@v2": {
+      "document_type": "ib_dp_course_map",
+      "label": "DP Course Map",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "sequence_overview",
+          "assessment_windows"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "sequence_overview": {
+            "type": "array",
+            "title": "Sequence overview",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessment_windows": {
+            "type": "array",
+            "title": "Assessment windows",
+            "items": {
+              "type": "string"
+            }
+          },
+          "core_touchpoints": {
+            "type": "array",
+            "title": "Core touchpoints",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Course mapping",
+            "fields": [
+              "title",
+              "sequence_overview",
+              "assessment_windows",
+              "core_touchpoints"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.internal_assessment@v2": {
+      "document_type": "ib_dp_internal_assessment",
+      "label": "DP Internal Assessment",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "subject",
+          "checkpoints"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "minLength": 1
+          },
+          "checkpoints": {
+            "type": "array",
+            "title": "Checkpoints",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authenticity_notes": {
+            "type": "string",
+            "title": "Authenticity notes"
+          },
+          "advisor_comments": {
+            "type": "string",
+            "title": "Advisor comments"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "IA operations",
+            "fields": [
+              "title",
+              "subject",
+              "checkpoints",
+              "authenticity_notes",
+              "advisor_comments"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.tok@v2": {
+      "document_type": "ib_dp_tok",
+      "label": "DP TOK",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "prompt",
+          "objects"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "minLength": 1
+          },
+          "objects": {
+            "type": "array",
+            "title": "Objects",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checkpoint_summary": {
+            "type": "string",
+            "title": "Checkpoint summary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "TOK planning",
+            "fields": [
+              "title",
+              "prompt",
+              "objects",
+              "checkpoint_summary"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.extended_essay@v2": {
+      "document_type": "ib_dp_extended_essay",
+      "label": "DP Extended Essay",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "research_question",
+          "checkpoints"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "research_question": {
+            "type": "string",
+            "title": "Research question",
+            "minLength": 1
+          },
+          "checkpoints": {
+            "type": "array",
+            "title": "Checkpoints",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supervisor_notes": {
+            "type": "string",
+            "title": "Supervisor notes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "EE supervision",
+            "fields": [
+              "title",
+              "research_question",
+              "checkpoints",
+              "supervisor_notes"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.cas_experience@v2": {
+      "document_type": "ib_dp_cas_experience",
+      "label": "DP CAS Experience",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "outcomes",
+          "evidence"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "outcomes": {
+            "type": "array",
+            "title": "CAS outcomes",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "title": "Evidence",
+            "items": {
+              "type": "string"
+            }
+          },
+          "advisor_review": {
+            "type": "string",
+            "title": "Advisor review"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "CAS experience",
+            "fields": [
+              "title",
+              "outcomes",
+              "evidence",
+              "advisor_review"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.cas_project@v2": {
+      "document_type": "ib_dp_cas_project",
+      "label": "DP CAS Project",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "outcomes",
+          "milestone_plan"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "outcomes": {
+            "type": "array",
+            "title": "CAS outcomes",
+            "items": {
+              "type": "string"
+            }
+          },
+          "milestone_plan": {
+            "type": "array",
+            "title": "Milestone plan",
+            "items": {
+              "type": "string"
+            }
+          },
+          "advisor_review": {
+            "type": "string",
+            "title": "Advisor review"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "CAS project",
+            "fields": [
+              "title",
+              "outcomes",
+              "milestone_plan",
+              "advisor_review"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.dp.cas_reflection@v2": {
+      "document_type": "ib_dp_cas_reflection",
+      "label": "DP CAS Reflection",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "reflection"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "reflection": {
+            "type": "string",
+            "title": "Reflection",
+            "minLength": 1
+          },
+          "outcomes": {
+            "type": "array",
+            "title": "Outcomes covered",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "CAS reflection",
+            "fields": [
+              "title",
+              "reflection",
+              "outcomes"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.learning_story@v2": {
+      "document_type": "ib_learning_story",
+      "label": "Learning Story",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "summary",
+          "support_prompt"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "minLength": 1
+          },
+          "support_prompt": {
+            "type": "string",
+            "title": "Support prompt",
+            "minLength": 1
+          },
+          "audience": {
+            "type": "string",
+            "title": "Audience"
+          },
+          "cadence": {
+            "type": "string",
+            "title": "Cadence"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Family-facing story",
+            "fields": [
+              "title",
+              "summary",
+              "support_prompt",
+              "audience",
+              "cadence"
+            ]
+          }
+        ]
+      }
+    },
+    "ib.standards_practices.evidence_packet@v2": {
+      "document_type": "ib_standards_practices_evidence_packet",
+      "label": "Standards & Practices Evidence Packet",
+      "data_schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "standard_code",
+          "claim",
+          "sources"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "minLength": 1
+          },
+          "standard_code": {
+            "type": "string",
+            "title": "Standard code",
+            "minLength": 1
+          },
+          "claim": {
+            "type": "string",
+            "title": "Claim",
+            "minLength": 1
+          },
+          "sources": {
+            "type": "array",
+            "title": "Sources",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          {
+            "title": "Evidence packet",
+            "fields": [
+              "title",
+              "standard_code",
+              "claim",
+              "sources"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "workflow_definitions": {
+    "unit_default": {
+      "states": [
+        "draft",
+        "pending_approval",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "submit_for_approval": {
+          "from": [
+            "draft"
+          ],
+          "to": "pending_approval",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ],
+          "side_effects": [
+            {
+              "type": "create_approval"
+            }
+          ]
+        },
+        "publish": {
+          "from": [
+            "pending_approval"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ],
+          "guards": [
+            {
+              "type": "approval_not_required_or_approved"
+            }
+          ],
+          "side_effects": [
+            {
+              "type": "auto_approve_pending"
+            }
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "lesson_default": {
+      "states": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "publish": {
+          "from": [
+            "draft"
+          ],
+          "to": "published",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "template_default": {
+      "states": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "publish": {
+          "from": [
+            "draft"
+          ],
+          "to": "published",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "ib_review_cycle": {
+      "states": [
+        "draft",
+        "in_review",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "submit_for_review": {
+          "from": [
+            "draft"
+          ],
+          "to": "in_review",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ],
+          "side_effects": [
+            {
+              "type": "create_approval"
+            }
+          ]
+        },
+        "return_to_draft": {
+          "from": [
+            "in_review"
+          ],
+          "to": "draft",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ],
+          "side_effects": [
+            {
+              "type": "notify_roles",
+              "roles": [
+                "teacher"
+              ]
+            }
+          ]
+        },
+        "publish": {
+          "from": [
+            "in_review"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ],
+          "guards": [
+            {
+              "type": "approval_not_required_or_approved"
+            }
+          ],
+          "side_effects": [
+            {
+              "type": "auto_approve_pending"
+            }
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "ib_family_publish_cycle": {
+      "states": [
+        "draft",
+        "ready_for_review",
+        "ready_for_digest",
+        "published",
+        "held"
+      ],
+      "events": {
+        "submit_for_review": {
+          "from": [
+            "draft"
+          ],
+          "to": "ready_for_review",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "queue_for_digest": {
+          "from": [
+            "ready_for_review"
+          ],
+          "to": "ready_for_digest",
+          "roles": [
+            "curriculum_lead",
+            "admin",
+            "teacher"
+          ]
+        },
+        "publish": {
+          "from": [
+            "ready_for_digest"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "hold": {
+          "from": [
+            "ready_for_review",
+            "ready_for_digest"
+          ],
+          "to": "held",
+          "roles": [
+            "curriculum_lead",
+            "admin",
+            "teacher"
+          ]
+        }
+      }
+    },
+    "ib_project_cycle": {
+      "states": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "submit_to_advisor": {
+          "from": [
+            "draft"
+          ],
+          "to": "advisor_review",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "submit_to_coordinator": {
+          "from": [
+            "advisor_review"
+          ],
+          "to": "coordinator_review",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "publish": {
+          "from": [
+            "coordinator_review"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "ib_dp_advisory_cycle": {
+      "states": [
+        "draft",
+        "advisor_review",
+        "coordinator_review",
+        "published",
+        "archived"
+      ],
+      "events": {
+        "submit_to_advisor": {
+          "from": [
+            "draft"
+          ],
+          "to": "advisor_review",
+          "roles": [
+            "teacher",
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "submit_to_coordinator": {
+          "from": [
+            "advisor_review"
+          ],
+          "to": "coordinator_review",
+          "roles": [
+            "curriculum_lead",
+            "admin",
+            "teacher"
+          ]
+        },
+        "publish": {
+          "from": [
+            "coordinator_review"
+          ],
+          "to": "published",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "archive": {
+          "from": [
+            "published"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    },
+    "ib_standards_evidence_cycle": {
+      "states": [
+        "draft",
+        "in_review",
+        "approved",
+        "exported",
+        "archived"
+      ],
+      "events": {
+        "submit_for_review": {
+          "from": [
+            "draft"
+          ],
+          "to": "in_review",
+          "roles": [
+            "curriculum_lead",
+            "admin",
+            "teacher"
+          ]
+        },
+        "approve": {
+          "from": [
+            "in_review"
+          ],
+          "to": "approved",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "export": {
+          "from": [
+            "approved"
+          ],
+          "to": "exported",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        },
+        "archive": {
+          "from": [
+            "exported"
+          ],
+          "to": "archived",
+          "roles": [
+            "curriculum_lead",
+            "admin"
+          ]
+        }
+      }
+    }
+  },
+  "workflow_bindings": {
+    "unit_plan": "unit_default",
+    "lesson_plan": "lesson_default",
+    "template": "template_default",
+    "ib_pyp_programme_of_inquiry": "ib_review_cycle",
+    "ib_pyp_unit": "ib_review_cycle",
+    "ib_pyp_weekly_flow": "ib_review_cycle",
+    "ib_pyp_family_window": "ib_family_publish_cycle",
+    "ib_pyp_exhibition": "ib_project_cycle",
+    "ib_myp_unit": "ib_review_cycle",
+    "ib_myp_interdisciplinary_unit": "ib_project_cycle",
+    "ib_myp_project": "ib_project_cycle",
+    "ib_myp_service_reflection": "ib_project_cycle",
+    "ib_dp_course_map": "ib_review_cycle",
+    "ib_dp_internal_assessment": "ib_dp_advisory_cycle",
+    "ib_dp_tok": "ib_dp_advisory_cycle",
+    "ib_dp_extended_essay": "ib_dp_advisory_cycle",
+    "ib_dp_cas_experience": "ib_dp_advisory_cycle",
+    "ib_dp_cas_project": "ib_dp_advisory_cycle",
+    "ib_dp_cas_reflection": "ib_dp_advisory_cycle",
+    "ib_learning_story": "ib_family_publish_cycle",
+    "ib_standards_practices_evidence_packet": "ib_standards_evidence_cycle"
+  },
+  "framework_bindings": {
+    "defaults": [
+      "ib_pyp_themes",
+      "ib_learner_profile",
+      "ib_myp_global_contexts",
+      "ib_dp_core_categories"
+    ],
+    "allowed": [
+      "ib_pyp_themes",
+      "ib_learner_profile",
+      "ib_pyp_key_concepts",
+      "ib_pyp_atl",
+      "ib_myp_global_contexts",
+      "ib_myp_key_concepts",
+      "ib_myp_related_concepts",
+      "ib_myp_atl",
+      "ib_myp_criteria",
+      "ib_dp_subject_pathways",
+      "ib_dp_core_categories",
+      "ib_cas_outcomes",
+      "ib_standards_practices"
+    ],
+    "node_kinds": [
+      "standard",
+      "skill",
+      "concept",
+      "theme",
+      "criterion",
+      "outcome",
+      "practice"
+    ]
+  },
+  "report_bindings": {
+    "standards_coverage": {
+      "default_frameworks": [
+        "ib_pyp",
+        "ib_myp",
+        "ib_dp"
+      ]
+    },
+    "programme_operations": {
+      "default_views": [
+        "whole_school",
+        "pyp",
+        "myp",
+        "dp"
+      ]
+    },
+    "family_publishing": {
+      "states": [
+        "draft",
+        "ready_for_review",
+        "ready_for_digest",
+        "published",
+        "held"
+      ]
+    },
+    "standards_practices": {
+      "cycle_history": true,
+      "export_formats": [
+        "pdf",
+        "json"
+      ]
+    }
+  },
+  "integration_hints": {
+    "google_addon_context": "ib_programme",
+    "lti_context_tag": "ib",
+    "oneroster_context_tag": "ib_programme"
+  },
+  "governance": {
+    "decision": "Retain the ib_continuum_v1 key and advance versioning to 2026.2 so existing pinned 2026.1 documents stay stable while new IB work resolves to the richer runtime by default.",
+    "naming_conventions": {
+      "document_type": "snake_case with ib_<programme>_<family>",
+      "schema_key": "ib.<programme>.<family>@v2",
+      "workflow": "ib_<family>_cycle",
+      "framework_namespace": "ib_<programme or domain>"
+    },
+    "migration_map": {
+      "unit_plan": [
+        "ib_pyp_unit",
+        "ib_myp_unit",
+        "ib_dp_course_map"
+      ],
+      "lesson_plan": [
+        "ib_pyp_weekly_flow"
+      ],
+      "template": [
+        "ib_learning_story",
+        "ib_standards_practices_evidence_packet"
+      ]
+    }
+  },
+  "document_inventory": [
+    "ib_pyp_programme_of_inquiry",
+    "ib_pyp_unit",
+    "ib_pyp_weekly_flow",
+    "ib_pyp_family_window",
+    "ib_pyp_exhibition",
+    "ib_myp_unit",
+    "ib_myp_interdisciplinary_unit",
+    "ib_myp_project",
+    "ib_myp_service_reflection",
+    "ib_dp_course_map",
+    "ib_dp_internal_assessment",
+    "ib_dp_tok",
+    "ib_dp_extended_essay",
+    "ib_dp_cas_experience",
+    "ib_dp_cas_project",
+    "ib_dp_cas_reflection",
+    "ib_learning_story",
+    "ib_standards_practices_evidence_packet"
+  ],
+  "compatibility_aliases": {
+    "ib.pyp.unit@v1": "ib.pyp.unit@v2",
+    "ib.myp.unit@v1": "ib.myp.unit@v2",
+    "unit_plan": [
+      "ib_pyp_unit",
+      "ib_myp_unit",
+      "ib_dp_course_map"
+    ],
+    "lesson_plan": [
+      "ib_pyp_weekly_flow"
+    ],
+    "template": [
+      "ib_learning_story",
+      "ib_standards_practices_evidence_packet"
+    ]
+  }
+}

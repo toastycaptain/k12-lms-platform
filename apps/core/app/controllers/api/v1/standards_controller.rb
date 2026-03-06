@@ -6,8 +6,15 @@ module Api
 
       def index
         standards_scope = policy_scope(Standard).includes(:standard_framework)
-        standards_scope = standards_scope.where(standard_framework_id: params[:standard_framework_id]) if params[:standard_framework_id].present?
-        @standards = cached_standards(standards_scope)
+        standards_scope = standards_scope.for_framework(params[:standard_framework_id])
+        standards_scope = standards_scope.for_kind(params[:kind])
+        standards_scope = standards_scope.for_grade_band(params[:grade_band])
+
+        if params[:q].present?
+          @standards = standards_scope.merge(Standard.search_ranked(params[:q]))
+        else
+          @standards = cached_standards(standards_scope)
+        end
 
         if include_curriculum_defaults?
           render json: {
@@ -24,10 +31,14 @@ module Api
       end
 
       def tree
-        framework = StandardFramework.find(params[:id])
+        framework = policy_scope(StandardFramework).find(params[:id])
         authorize framework, :show?
 
-        roots = Standard.where(standard_framework_id: framework.id).roots.includes(:children)
+        roots = policy_scope(Standard)
+          .where(standard_framework_id: framework.id)
+          .for_kind(params[:kind])
+          .roots
+          .includes(:children)
         render json: roots.map(&:tree)
       end
 
@@ -58,12 +69,22 @@ module Api
       private
 
       def set_standard
-        @standard = Standard.includes(:standard_framework).find(params[:id])
+        @standard = policy_scope(Standard).includes(:standard_framework).find(params[:id])
         authorize @standard
       end
 
       def standard_params
-        params.require(:standard).permit(:standard_framework_id, :parent_id, :code, :description, :grade_band)
+        params.require(:standard).permit(
+          :standard_framework_id,
+          :parent_id,
+          :code,
+          :description,
+          :grade_band,
+          :kind,
+          :label,
+          :identifier,
+          metadata: {}
+        )
       end
 
       def cached_standards(scope)
@@ -71,7 +92,11 @@ module Api
         return scope.to_a if tenant_id.blank?
 
         framework_key = params[:standard_framework_id].presence || "all"
-        Rails.cache.fetch("tenant:#{tenant_id}:standards:#{framework_key}", expires_in: CACHE_TTL) do
+        kind_key = params[:kind].presence || "all"
+        grade_band_key = params[:grade_band].presence || "all"
+        cache_key = [ "tenant", tenant_id, "standards", framework_key, kind_key, grade_band_key ].join(":")
+
+        Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
           scope.to_a
         end
       end

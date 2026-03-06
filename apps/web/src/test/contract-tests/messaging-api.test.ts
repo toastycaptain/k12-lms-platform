@@ -1,3 +1,5 @@
+export {};
+
 interface ThreadParticipantContract {
   id: number;
   first_name: string;
@@ -11,6 +13,8 @@ interface ThreadMessageContract {
   sender_id: number;
   body: string;
   sender: ThreadParticipantContract;
+  created_at: string;
+  updated_at: string;
 }
 
 interface MessageThreadContract {
@@ -39,6 +43,8 @@ describe("Messaging API Contract", () => {
         sender_id: 2,
         body: "Can we meet Friday?",
         sender: { id: 2, first_name: "Paula", last_name: "Parent", roles: ["guardian"] },
+        created_at: "2026-03-01T10:00:00Z",
+        updated_at: "2026-03-01T10:00:00Z",
       },
     };
 
@@ -61,6 +67,8 @@ describe("Messaging API Contract", () => {
       sender_id: 1,
       body: "Yes, let's meet at 3pm.",
       sender: { id: 1, first_name: "Taylor", last_name: "Teacher", roles: ["teacher"] },
+      created_at: "2026-03-01T11:00:00Z",
+      updated_at: "2026-03-01T11:00:00Z",
     };
 
     expect(typeof messagePayload.id).toBe("number");

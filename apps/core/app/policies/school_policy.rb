@@ -21,7 +21,9 @@ class SchoolPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      return scope.all unless Current.respond_to?(:school) && Current.school.present?
+
+      scope.where(id: Current.school.id)
     end
   end
 

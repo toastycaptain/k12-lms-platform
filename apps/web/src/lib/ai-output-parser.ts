@@ -12,6 +12,29 @@ export interface UnitPlanOutput {
   enduring_understandings?: string[];
 }
 
+export interface AiFieldSuggestion {
+  field: string;
+  label: string;
+  value: string;
+  rationale?: string;
+}
+
+export interface StructuredAiPlanSuggestion {
+  format: "structured" | "legacy";
+  programme?: string;
+  taskType?: string;
+  fields: AiFieldSuggestion[];
+}
+
+export interface AiSuggestionDiff {
+  field: string;
+  label: string;
+  previous: string;
+  next: string;
+  changed: boolean;
+  rationale?: string;
+}
+
 const LESSON_HEADINGS: Record<string, keyof LessonPlanOutput> = {
   objectives: "objectives",
   objective: "objectives",
@@ -44,6 +67,14 @@ function normalizeHeading(raw: string): string {
 
 function normalizeLineValue(value: string): string {
   return value.replace(/^\s*(?:[-*+]|\d+[.)])\s*/, "").trim();
+}
+
+function tryParseJson(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function parseSections<T extends string>(
@@ -94,6 +125,150 @@ function parseDuration(content: string): number | undefined {
 
   const value = Number.parseInt(match[1], 10);
   return Number.isFinite(value) ? value : undefined;
+}
+
+function stringifySuggestionValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).join("\n");
+  }
+
+  if (typeof value === "number") {
+    return String(value);
+  }
+
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeStructuredFieldArray(value: unknown): AiFieldSuggestion[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return [];
+    }
+
+    const record = entry as Record<string, unknown>;
+    const field = typeof record.field === "string" ? record.field : null;
+    const rawValue = record.value ?? record.next ?? record.proposed_value ?? record.proposal ?? "";
+
+    if (!field) return [];
+
+    return [
+      {
+        field,
+        label:
+          typeof record.label === "string" && record.label.trim().length > 0 ? record.label : field,
+        value: stringifySuggestionValue(rawValue),
+        rationale: typeof record.rationale === "string" ? record.rationale : undefined,
+      },
+    ];
+  });
+}
+
+export function parseStructuredAiOutput(text: string): StructuredAiPlanSuggestion | null {
+  const parsed = tryParseJson(text);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return null;
+  }
+
+  const record = parsed as Record<string, unknown>;
+  const directFields = normalizeStructuredFieldArray(record.fields);
+  const suggestedFields =
+    directFields.length > 0
+      ? directFields
+      : normalizeStructuredFieldArray(
+          record.field_suggestions ?? record.suggestions ?? record.changes,
+        );
+
+  const objectFields =
+    suggestedFields.length === 0 &&
+    record.fields &&
+    typeof record.fields === "object" &&
+    !Array.isArray(record.fields)
+      ? Object.entries(record.fields as Record<string, unknown>).map(([field, value]) => ({
+          field,
+          label: field,
+          value: stringifySuggestionValue(value),
+        }))
+      : [];
+
+  const fields = suggestedFields.length > 0 ? suggestedFields : objectFields;
+  if (fields.length === 0) return null;
+
+  return {
+    format: "structured",
+    programme: typeof record.programme === "string" ? record.programme : undefined,
+    taskType: typeof record.task_type === "string" ? record.task_type : undefined,
+    fields,
+  };
+}
+
+export function buildSuggestionDiffs(
+  currentValues: Record<string, string>,
+  suggestion: StructuredAiPlanSuggestion,
+): AiSuggestionDiff[] {
+  return suggestion.fields.map((field) => ({
+    field: field.field,
+    label: field.label,
+    previous: currentValues[field.field] || "",
+    next: field.value,
+    changed: (currentValues[field.field] || "") !== field.value,
+    rationale: field.rationale,
+  }));
+}
+
+export function parseUnitSuggestion(text: string): StructuredAiPlanSuggestion {
+  const structured = parseStructuredAiOutput(text);
+  if (structured) return structured;
+
+  const unit = parseUnitOutput(text);
+  const fields: AiFieldSuggestion[] = [];
+
+  if (unit.description) {
+    fields.push({
+      field: "description",
+      label: "Description",
+      value: unit.description,
+    });
+  }
+
+  if (unit.essential_questions?.length) {
+    fields.push({
+      field: "essential_questions",
+      label: "Essential Questions",
+      value: unit.essential_questions.join("\n"),
+    });
+  }
+
+  if (unit.enduring_understandings?.length) {
+    fields.push({
+      field: "enduring_understandings",
+      label: "Enduring Understandings",
+      value: unit.enduring_understandings.join("\n"),
+    });
+  }
+
+  return {
+    format: "legacy",
+    fields,
+  };
+}
+
+export function parseLessonSuggestion(text: string): StructuredAiPlanSuggestion {
+  const structured = parseStructuredAiOutput(text);
+  if (structured) return structured;
+
+  const lesson = parseLessonOutput(text);
+  const fields: AiFieldSuggestion[] = Object.entries(lesson).map(([field, value]) => ({
+    field,
+    label: field,
+    value: stringifySuggestionValue(value),
+  }));
+
+  return {
+    format: "legacy",
+    fields,
+  };
 }
 
 export function parseLessonOutput(text: string): LessonPlanOutput {

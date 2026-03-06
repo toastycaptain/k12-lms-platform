@@ -22,7 +22,7 @@ class CurriculumProfileLifecycleService
     key = normalized.dig("identity", "key")
     version = normalized.dig("versioning", "version")
 
-    release = CurriculumProfileRelease.find_or_initialize_by(
+    release = CurriculumProfileRelease.unscoped.find_or_initialize_by(
       tenant_id: tenant.id,
       profile_key: key,
       profile_version: version
@@ -37,13 +37,14 @@ class CurriculumProfileLifecycleService
     )
     release.save!
 
+    CurriculumPackStore.invalidate_cache!(tenant: tenant)
     release
   end
 
   def publish!(profile_key:, profile_version:, metadata: {})
     release = load_release!(profile_key: profile_key, profile_version: profile_version)
 
-    CurriculumProfileRelease.where(tenant_id: tenant.id, profile_key: profile_key, status: "published").where.not(id: release.id).find_each do |existing|
+    CurriculumProfileRelease.unscoped.where(tenant_id: tenant.id, profile_key: profile_key, status: "published").where.not(id: release.id).find_each do |existing|
       existing.update!(status: "deprecated", deprecated_at: Time.current)
     end
 
@@ -59,6 +60,7 @@ class CurriculumProfileLifecycleService
     tenant.update!(settings: settings)
 
     CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+    CurriculumPackStore.invalidate_cache!(tenant: tenant)
     release
   end
 
@@ -71,6 +73,7 @@ class CurriculumProfileLifecycleService
     )
 
     CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+    CurriculumPackStore.invalidate_cache!(tenant: tenant)
     release
   end
 
@@ -83,6 +86,7 @@ class CurriculumProfileLifecycleService
     )
 
     CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+    CurriculumPackStore.invalidate_cache!(tenant: tenant)
     release
   end
 
@@ -108,13 +112,14 @@ class CurriculumProfileLifecycleService
     tenant.update!(settings: settings)
 
     CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+    CurriculumPackStore.invalidate_cache!(tenant: tenant)
     target_release
   end
 
   private
 
   def load_release!(profile_key:, profile_version:)
-    CurriculumProfileRelease.find_by!(
+    CurriculumProfileRelease.unscoped.find_by!(
       tenant_id: tenant.id,
       profile_key: profile_key,
       profile_version: profile_version

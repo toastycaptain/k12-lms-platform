@@ -23,6 +23,16 @@ interface CurriculumProfile {
   status: "active" | "deprecated";
 }
 
+interface AvailablePack {
+  key: string;
+  version: string;
+  label: string;
+  source: "tenant_release" | "system" | string;
+  release_status?: string | null;
+  pack_status?: "active" | "deprecated" | string | null;
+  compatibility?: string | null;
+}
+
 interface SchoolOverride {
   school_id: number;
   school_name: string;
@@ -65,6 +75,7 @@ interface CurriculumDiagnostics {
 interface CurriculumSettingsResponse {
   tenant_default_profile_key: string;
   tenant_default_profile_version?: string | null;
+  available_packs?: AvailablePack[];
   available_profile_keys: string[];
   school_overrides: SchoolOverride[];
   lifecycle_releases?: LifecycleRelease[];
@@ -74,9 +85,22 @@ interface CurriculumSettingsResponse {
 
 const ADMIN_ONLY = ["admin"];
 
+function fallbackPackCatalog(profiles: CurriculumProfile[]): AvailablePack[] {
+  return profiles.map((profile) => ({
+    key: profile.key,
+    version: profile.version,
+    label: profile.label,
+    source: "system",
+    release_status: null,
+    pack_status: profile.status,
+    compatibility: null,
+  }));
+}
+
 export default function AdminCurriculumProfilesPage() {
   const { addToast } = useToast();
   const [profiles, setProfiles] = useState<CurriculumProfile[]>([]);
+  const [availablePacks, setAvailablePacks] = useState<AvailablePack[]>([]);
   const [tenantDefaultProfileKey, setTenantDefaultProfileKey] = useState("");
   const [tenantDefaultProfileVersion, setTenantDefaultProfileVersion] = useState("");
   const [schoolOverrides, setSchoolOverrides] = useState<SchoolOverride[]>([]);
@@ -92,11 +116,51 @@ export default function AdminCurriculumProfilesPage() {
   const [runningLifecycle, setRunningLifecycle] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const profilesByKey = useMemo(() => {
+  const packsByKey = useMemo(() => {
+    const map = new Map<string, AvailablePack[]>();
+
+    availablePacks.forEach((pack) => {
+      const rows = map.get(pack.key) ?? [];
+      rows.push(pack);
+      map.set(pack.key, rows);
+    });
+
+    map.forEach((rows) => {
+      rows.sort((left, right) => right.version.localeCompare(left.version));
+    });
+
+    return map;
+  }, [availablePacks]);
+
+  const packKeys = useMemo(() => Array.from(packsByKey.keys()), [packsByKey]);
+
+  const profileDetailsByKey = useMemo(() => {
     const map = new Map<string, CurriculumProfile>();
     profiles.forEach((profile) => map.set(profile.key, profile));
     return map;
   }, [profiles]);
+
+  const getPackOptions = useCallback(
+    (key: string | null | undefined) => (key ? (packsByKey.get(key) ?? []) : []),
+    [packsByKey],
+  );
+
+  const describePackChoice = useCallback(
+    (key: string | null | undefined, version?: string | null) => {
+      if (!key) {
+        return "Inherit tenant default";
+      }
+
+      const pack =
+        getPackOptions(key).find((entry) => entry.version === version) ?? getPackOptions(key)[0];
+      const fallbackLabel = profileDetailsByKey.get(key)?.label ?? key;
+      const label = pack?.label ?? fallbackLabel;
+      const versionLabel = version || pack?.version;
+
+      return versionLabel ? `${label} @${versionLabel}` : label;
+    },
+    [getPackOptions, profileDetailsByKey],
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -108,20 +172,32 @@ export default function AdminCurriculumProfilesPage() {
         apiFetch<CurriculumSettingsResponse>("/api/v1/admin/curriculum_settings"),
       ]);
 
+      const nextAvailablePacks =
+        settings.available_packs && settings.available_packs.length > 0
+          ? settings.available_packs
+          : fallbackPackCatalog(profileRows);
+
       setProfiles(profileRows);
-      setTenantDefaultProfileKey(settings.tenant_default_profile_key);
+      setAvailablePacks(nextAvailablePacks);
+      setTenantDefaultProfileKey(
+        settings.tenant_default_profile_key || nextAvailablePacks[0]?.key || "",
+      );
       setTenantDefaultProfileVersion(settings.tenant_default_profile_version || "");
       setSchoolOverrides(settings.school_overrides);
       setLifecycleReleases(settings.lifecycle_releases || []);
       setCourseMappingIssues(settings.unresolved_course_mappings || []);
       setDiagnostics(settings.diagnostics || null);
-
-      if (!lifecycleProfileKey) {
-        setLifecycleProfileKey(settings.tenant_default_profile_key);
-      }
-      if (!lifecycleProfileVersion && settings.tenant_default_profile_version) {
-        setLifecycleProfileVersion(settings.tenant_default_profile_version);
-      }
+      setLifecycleProfileKey(
+        (current) =>
+          current || settings.tenant_default_profile_key || nextAvailablePacks[0]?.key || "",
+      );
+      setLifecycleProfileVersion(
+        (current) =>
+          current ||
+          settings.tenant_default_profile_version ||
+          nextAvailablePacks[0]?.version ||
+          "",
+      );
     } catch (loadError) {
       const message =
         loadError instanceof ApiError ? loadError.message : "Failed to load curriculum settings.";
@@ -234,27 +310,69 @@ export default function AdminCurriculumProfilesPage() {
     }
   }
 
-  function setSchoolOverride(schoolId: number, key: string): void {
+  function setTenantDefaultPackKey(nextKey: string): void {
+    setTenantDefaultProfileKey(nextKey);
+    if (!nextKey) {
+      setTenantDefaultProfileVersion("");
+      return;
+    }
+
+    const validVersions = getPackOptions(nextKey).map((pack) => pack.version);
+    if (tenantDefaultProfileVersion && validVersions.includes(tenantDefaultProfileVersion)) {
+      return;
+    }
+
+    setTenantDefaultProfileVersion("");
+  }
+
+  function setSchoolOverrideKey(schoolId: number, key: string): void {
+    setSchoolOverrides((current) =>
+      current.map((override) => {
+        if (override.school_id !== schoolId) {
+          return override;
+        }
+
+        const validVersions = getPackOptions(key).map((pack) => pack.version);
+        const nextVersion =
+          key &&
+          override.curriculum_profile_version &&
+          validVersions.includes(override.curriculum_profile_version)
+            ? override.curriculum_profile_version
+            : null;
+
+        return {
+          ...override,
+          curriculum_profile_key: key || null,
+          curriculum_profile_version: nextVersion,
+        };
+      }),
+    );
+  }
+
+  function setSchoolOverrideVersion(schoolId: number, version: string): void {
     setSchoolOverrides((current) =>
       current.map((override) =>
         override.school_id === schoolId
           ? {
               ...override,
-              curriculum_profile_key: key ? key : null,
+              curriculum_profile_version: version || null,
             }
           : override,
       ),
     );
   }
 
+  const tenantPackOptions = getPackOptions(tenantDefaultProfileKey);
+
   return (
     <ProtectedRoute requiredRoles={ADMIN_ONLY} unauthorizedRedirect="/dashboard">
       <AppShell>
         <div className="mx-auto max-w-6xl space-y-6">
           <header>
-            <h1 className="text-2xl font-bold text-gray-900">Curriculum Profiles</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Curriculum Packs</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Admin-only controls for tenant default profile and school-level overrides.
+              Admin-only controls for tenant defaults, school-level overrides, and runtime pack
+              rollout.
             </p>
           </header>
 
@@ -265,38 +383,52 @@ export default function AdminCurriculumProfilesPage() {
           ) : (
             <>
               <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h2 className="text-lg font-semibold text-gray-900">Tenant Default Profile</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Tenant Default Pack</h2>
                 <p className="mt-1 text-sm text-gray-600">
                   Applied when no school or course override exists.
                 </p>
-                <div className="mt-3 max-w-sm">
-                  <div className="grid gap-2">
-                    <select
-                      value={tenantDefaultProfileKey}
-                      onChange={(event) => setTenantDefaultProfileKey(event.target.value)}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    >
-                      {profiles.map((profile) => (
-                        <option key={profile.key} value={profile.key}>
-                          {profile.label} ({profile.version})
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={tenantDefaultProfileVersion}
-                      onChange={(event) => setTenantDefaultProfileVersion(event.target.value)}
-                      placeholder="Default version (optional)"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
-                  </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <select
+                    value={tenantDefaultProfileKey}
+                    onChange={(event) => setTenantDefaultPackKey(event.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {packKeys.map((key) => (
+                      <option key={key} value={key}>
+                        {profileDetailsByKey.get(key)?.label ??
+                          packsByKey.get(key)?.[0]?.label ??
+                          key}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={tenantDefaultProfileVersion}
+                    onChange={(event) => setTenantDefaultProfileVersion(event.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    <option value="">Auto latest available version</option>
+                    {tenantPackOptions.map((pack) => (
+                      <option key={`${pack.key}-${pack.version}`} value={pack.version}>
+                        {pack.version}
+                        {pack.source ? ` • ${pack.source}` : ""}
+                        {pack.release_status ? ` • ${pack.release_status}` : ""}
+                        {pack.pack_status ? ` • ${pack.pack_status}` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                {tenantDefaultProfileKey && (
+                  <p className="mt-3 text-xs text-gray-500">
+                    Selected pack:{" "}
+                    {describePackChoice(tenantDefaultProfileKey, tenantDefaultProfileVersion)}
+                  </p>
+                )}
               </section>
 
               <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h2 className="text-lg font-semibold text-gray-900">School Overrides</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                  Each school can inherit tenant default or use a profile override.
+                  Each school can inherit the tenant default or pin a specific pack version.
                 </p>
 
                 {schoolOverrides.length === 0 ? (
@@ -310,44 +442,82 @@ export default function AdminCurriculumProfilesPage() {
                         <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
                           <th className="px-3 py-2">School</th>
                           <th className="px-3 py-2">Override</th>
+                          <th className="px-3 py-2">Version</th>
                           <th className="px-3 py-2">Effective</th>
                           <th className="px-3 py-2">Source</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {schoolOverrides.map((override) => (
-                          <tr key={override.school_id}>
-                            <td className="px-3 py-2 font-medium text-gray-900">
-                              {override.school_name}
-                            </td>
-                            <td className="px-3 py-2">
-                              <select
-                                value={override.curriculum_profile_key || ""}
-                                onChange={(event) =>
-                                  setSchoolOverride(override.school_id, event.target.value)
-                                }
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
-                              >
-                                <option value="">Inherit tenant default</option>
-                                {profiles.map((profile) => (
-                                  <option key={profile.key} value={profile.key}>
-                                    {profile.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="px-3 py-2 text-gray-700">
-                              {profilesByKey.get(override.effective_curriculum_profile_key)
-                                ?.label || override.effective_curriculum_profile_key}
-                              {override.effective_curriculum_profile_version
-                                ? ` @${override.effective_curriculum_profile_version}`
-                                : ""}
-                            </td>
-                            <td className="px-3 py-2 text-gray-600">
-                              {override.selected_from || override.effective_curriculum_source}
-                            </td>
-                          </tr>
-                        ))}
+                        {schoolOverrides.map((override) => {
+                          const overridePackOptions = getPackOptions(
+                            override.curriculum_profile_key,
+                          );
+
+                          return (
+                            <tr key={override.school_id}>
+                              <td className="px-3 py-2 font-medium text-gray-900">
+                                {override.school_name}
+                              </td>
+                              <td className="px-3 py-2">
+                                <select
+                                  value={override.curriculum_profile_key || ""}
+                                  onChange={(event) =>
+                                    setSchoolOverrideKey(override.school_id, event.target.value)
+                                  }
+                                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                                >
+                                  <option value="">Inherit tenant default</option>
+                                  {packKeys.map((key) => (
+                                    <option key={key} value={key}>
+                                      {profileDetailsByKey.get(key)?.label ??
+                                        packsByKey.get(key)?.[0]?.label ??
+                                        key}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="px-3 py-2">
+                                {override.curriculum_profile_key ? (
+                                  <select
+                                    value={override.curriculum_profile_version || ""}
+                                    onChange={(event) =>
+                                      setSchoolOverrideVersion(
+                                        override.school_id,
+                                        event.target.value,
+                                      )
+                                    }
+                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                                  >
+                                    <option value="">Auto latest available version</option>
+                                    {overridePackOptions.map((pack) => (
+                                      <option
+                                        key={`${pack.key}-${pack.version}`}
+                                        value={pack.version}
+                                      >
+                                        {pack.version}
+                                        {pack.source ? ` • ${pack.source}` : ""}
+                                        {pack.release_status ? ` • ${pack.release_status}` : ""}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span className="text-xs text-gray-500">
+                                    Uses tenant default version
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {describePackChoice(
+                                  override.effective_curriculum_profile_key,
+                                  override.effective_curriculum_profile_version,
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-gray-600">
+                                {override.selected_from || override.effective_curriculum_source}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -355,24 +525,23 @@ export default function AdminCurriculumProfilesPage() {
               </section>
 
               <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h2 className="text-lg font-semibold text-gray-900">Profile Pack Ingestion</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Pack Ingestion</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                  Framework/profile import and ingestion are admin-only operations. Use this surface
-                  for managed profile pack rollout in future waves.
+                  Managed pack lifecycle operations for tenant releases and rollback.
                 </p>
                 <div className="mt-4 grid gap-2 md:grid-cols-3">
                   <input
                     type="text"
                     value={lifecycleProfileKey}
                     onChange={(event) => setLifecycleProfileKey(event.target.value)}
-                    placeholder="profile key"
+                    placeholder="pack key"
                     className="rounded-md border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
                     type="text"
                     value={lifecycleProfileVersion}
                     onChange={(event) => setLifecycleProfileVersion(event.target.value)}
-                    placeholder="profile version"
+                    placeholder="pack version"
                     className="rounded-md border border-gray-300 px-3 py-2 text-sm"
                   />
                   <input
@@ -421,7 +590,7 @@ export default function AdminCurriculumProfilesPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                        <th className="px-3 py-2">Profile</th>
+                        <th className="px-3 py-2">Pack</th>
                         <th className="px-3 py-2">Version</th>
                         <th className="px-3 py-2">Status</th>
                         <th className="px-3 py-2">Updated</th>
@@ -444,23 +613,38 @@ export default function AdminCurriculumProfilesPage() {
               </section>
 
               <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h2 className="text-lg font-semibold text-gray-900">Profile Catalog</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Pack Catalog</h2>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  {profiles.map((profile) => (
-                    <article
-                      key={profile.key}
-                      className="rounded border border-gray-200 bg-gray-50 p-3"
-                    >
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        {profile.label}{" "}
-                        <span className="text-xs text-gray-500">({profile.version})</span>
-                      </h3>
-                      <p className="mt-1 text-xs text-gray-600">{profile.description}</p>
-                      <p className="mt-2 text-xs text-gray-500">
-                        Jurisdiction: {profile.jurisdiction}
-                      </p>
-                    </article>
-                  ))}
+                  {availablePacks.map((pack) => {
+                    const legacyProfile = profileDetailsByKey.get(pack.key);
+
+                    return (
+                      <article
+                        key={`${pack.key}-${pack.version}`}
+                        className="rounded border border-gray-200 bg-gray-50 p-3"
+                      >
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          {pack.label}{" "}
+                          <span className="text-xs text-gray-500">({pack.version})</span>
+                        </h3>
+                        {legacyProfile?.description && (
+                          <p className="mt-1 text-xs text-gray-600">{legacyProfile.description}</p>
+                        )}
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+                          <span>Key: {pack.key}</span>
+                          <span>Source: {pack.source}</span>
+                          {pack.release_status && <span>Release: {pack.release_status}</span>}
+                          {pack.pack_status && <span>Status: {pack.pack_status}</span>}
+                          {pack.compatibility && <span>Compatibility: {pack.compatibility}</span>}
+                        </div>
+                        {legacyProfile?.jurisdiction && (
+                          <p className="mt-2 text-xs text-gray-500">
+                            Jurisdiction: {legacyProfile.jurisdiction}
+                          </p>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               </section>
 
@@ -484,7 +668,7 @@ export default function AdminCurriculumProfilesPage() {
                 </div>
                 {diagnostics && (
                   <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
-                    <div>Profile: {diagnostics.effective.profile_key}</div>
+                    <div>Pack: {diagnostics.effective.profile_key}</div>
                     <div>Version: {diagnostics.effective.resolved_profile_version}</div>
                     <div>Selected from: {diagnostics.effective.selected_from}</div>
                     <div>Fallback reason: {diagnostics.effective.fallback_reason || "none"}</div>

@@ -468,7 +468,8 @@ module Api
             selected_from: resolved[:selected_from],
             terminology: resolved[:terminology],
             navigation: navigation,
-            visible_navigation: roles.flat_map { |role| Array(navigation[role]) }.uniq
+            visible_navigation: roles.flat_map { |role| Array(navigation[role]) }.uniq,
+            feature_flags: FeatureFlag.snapshot(%w[ib_documents_only_v1], tenant: Current.tenant)
           }
         }
       end

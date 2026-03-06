@@ -13,15 +13,19 @@ class School < ApplicationRecord
 
   def curriculum_profile_key_must_exist
     return if curriculum_profile_key.blank?
-    return if CurriculumProfileRegistry.keys.include?(curriculum_profile_key)
 
-    errors.add(:curriculum_profile_key, "is not a recognized curriculum profile")
+    tenant = Tenant.unscoped.find_by(id: tenant_id)
+    return if tenant && CurriculumPackStore.exists?(tenant: tenant, key: curriculum_profile_key)
+
+    errors.add(:curriculum_profile_key, "is not a recognized curriculum pack")
   end
 
   def curriculum_profile_version_must_match_key
     return if curriculum_profile_version.blank?
     return if curriculum_profile_key.blank?
-    return if CurriculumProfileRegistry.exists?(curriculum_profile_key, curriculum_profile_version)
+
+    tenant = Tenant.unscoped.find_by(id: tenant_id)
+    return if tenant && CurriculumPackStore.exists?(tenant: tenant, key: curriculum_profile_key, version: curriculum_profile_version)
 
     errors.add(:curriculum_profile_version, "is not valid for the selected curriculum_profile_key")
   end

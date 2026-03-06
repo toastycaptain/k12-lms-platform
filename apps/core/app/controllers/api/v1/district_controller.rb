@@ -172,19 +172,47 @@ module Api
           return
         end
 
-        unless CurriculumProfileRegistry.exists?(profile_key, profile_version)
-          render json: { error: "Invalid profile key/version" }, status: :unprocessable_content
+        source_tenant = Current.tenant
+        pack_record = CurriculumPackStore.fetch(
+          tenant: source_tenant,
+          key: profile_key,
+          version: profile_version,
+          with_metadata: true
+        )
+
+        if pack_record.nil?
+          render json: { error: "Invalid or unavailable profile key/version" }, status: :unprocessable_content
           return
         end
+
+        resolved_payload = pack_record[:payload]
+        resolved_profile_key = resolved_payload.dig("identity", "key") || resolved_payload["key"]
+        resolved_profile_version = resolved_payload.dig("versioning", "version") || resolved_payload["version"]
 
         target_tenants = district_tenants.where(id: Array(params[:target_tenant_ids]).map(&:to_i))
         target_tenants = district_tenants if target_tenants.empty?
 
         distributed = []
         target_tenants.find_each do |tenant|
+          if pack_record[:source] == "tenant_release" && tenant.id != source_tenant.id
+            lifecycle_service = CurriculumProfileLifecycleService.new(tenant: tenant, actor: Current.user)
+            lifecycle_metadata = {
+              "source" => "district_distribution",
+              "district_id" => current_district.id,
+              "source_tenant_id" => source_tenant.id
+            }
+
+            lifecycle_service.import!(payload: resolved_payload, metadata: lifecycle_metadata)
+            lifecycle_service.publish!(
+              profile_key: resolved_profile_key,
+              profile_version: resolved_profile_version,
+              metadata: lifecycle_metadata
+            )
+          end
+
           settings = tenant.settings.is_a?(Hash) ? tenant.settings.deep_dup : {}
-          settings["curriculum_default_profile_key"] = profile_key
-          settings["curriculum_default_profile_version"] = profile_version
+          settings["curriculum_default_profile_key"] = resolved_profile_key
+          settings["curriculum_default_profile_version"] = resolved_profile_version
           settings["curriculum_profile_assignment_enabled"] = true
           tenant.update!(settings: settings)
 
@@ -197,14 +225,15 @@ module Api
             active: true
           )
           assignment.assign_attributes(
-            profile_key: profile_key,
-            profile_version: profile_version,
+            profile_key: resolved_profile_key,
+            profile_version: resolved_profile_version,
             pinned: true,
             is_frozen: false,
             assigned_by: Current.user,
             metadata: assignment.metadata.merge(
               "source" => "district_distribution",
-              "district_id" => current_district.id
+              "district_id" => current_district.id,
+              "source_tenant_id" => source_tenant.id
             )
           )
           assignment.save!
@@ -214,8 +243,8 @@ module Api
             next unless school
 
             school.update!(
-              curriculum_profile_key: profile_key,
-              curriculum_profile_version: profile_version
+              curriculum_profile_key: resolved_profile_key,
+              curriculum_profile_version: resolved_profile_version
             )
 
             school_assignment = CurriculumProfileAssignment.find_or_initialize_by(
@@ -227,25 +256,28 @@ module Api
               active: true
             )
             school_assignment.assign_attributes(
-              profile_key: profile_key,
-              profile_version: profile_version,
+              profile_key: resolved_profile_key,
+              profile_version: resolved_profile_version,
               pinned: true,
               is_frozen: false,
               assigned_by: Current.user,
               metadata: school_assignment.metadata.merge(
                 "source" => "district_distribution",
-                "district_id" => current_district.id
+                "district_id" => current_district.id,
+                "source_tenant_id" => source_tenant.id
               )
             )
             school_assignment.save!
           end
 
           CurriculumProfileResolver.invalidate_cache!(tenant: tenant)
+          CurriculumPackStore.invalidate_cache!(tenant: tenant)
           distributed << {
             tenant_id: tenant.id,
             tenant_name: tenant.name,
-            profile_key: profile_key,
-            profile_version: profile_version
+            profile_key: resolved_profile_key,
+            profile_version: resolved_profile_version,
+            pack_payload_source: pack_record[:source]
           }
         end
 
@@ -254,13 +286,16 @@ module Api
           auditable: current_district,
           metadata: {
             district_id: current_district.id,
-            profile_key: profile_key,
-            profile_version: profile_version,
+            profile_key: resolved_profile_key,
+            profile_version: resolved_profile_version,
+            source_tenant_id: source_tenant.id,
             target_tenant_ids: distributed.map { |row| row[:tenant_id] }
           }
         )
 
         render json: { distributed: distributed }, status: :created
+      rescue CurriculumProfileLifecycleService::LifecycleError => e
+        render json: { error: e.message }, status: :unprocessable_content
       end
     end
   end

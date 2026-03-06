@@ -1,3 +1,5 @@
+export {};
+
 interface GoalContract {
   id: number;
   student_id: number;

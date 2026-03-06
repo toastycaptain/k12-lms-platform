@@ -1,3 +1,50 @@
+const ANALYTICS_ENDPOINT = "/api/v1/analytics/web_vitals";
+
+interface AnalyticsPayload {
+  name: string;
+  value: number;
+  path: string;
+  category: "web-vital" | "interaction";
+  metadata?: Record<string, unknown>;
+}
+
+function emitAnalyticsEvent(payload: AnalyticsPayload): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent("k12-analytics", { detail: payload }));
+
+  void fetch(ANALYTICS_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {
+    // Fire-and-forget telemetry should never block rendering.
+  });
+}
+
+export function reportInteractionMetric(
+  name: string,
+  value: number,
+  metadata?: Record<string, unknown>,
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  emitAnalyticsEvent({
+    name,
+    value,
+    metadata,
+    path: window.location.pathname,
+    category: "interaction",
+  });
+}
+
 export function reportWebVitals(): void {
   if (typeof window === "undefined" || typeof PerformanceObserver === "undefined") {
     return;
@@ -5,21 +52,11 @@ export function reportWebVitals(): void {
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      const payload = {
+      emitAnalyticsEvent({
         name: entry.name,
         value: entry.startTime,
         path: window.location.pathname,
-      };
-
-      void fetch("/api/v1/analytics/web_vitals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      }).catch(() => {
-        // Fire-and-forget telemetry should never block rendering.
+        category: "web-vital",
       });
     }
   });

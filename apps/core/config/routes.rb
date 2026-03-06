@@ -23,6 +23,87 @@ Rails.application.routes.draw do
       get "/me", to: "sessions#me"
       patch "/me", to: "sessions#update_me"
       get "/curriculum_profiles", to: "curriculum_profiles#index"
+      resources :planning_contexts
+      resources :curriculum_documents do
+        member do
+          post :transition
+        end
+        resources :curriculum_document_versions, path: "versions", only: [ :index, :create ]
+        resources :curriculum_document_links, path: "links", only: [ :index, :create ]
+      end
+      resources :curriculum_document_links, only: [ :destroy ]
+      resources :curriculum_document_versions, only: [] do
+        resources :alignments, controller: "curriculum_document_version_alignments", only: [ :index, :create ] do
+          collection do
+            delete :bulk_destroy
+          end
+        end
+      end
+      namespace :ib do
+        resource :home, only: [ :show ], controller: "home"
+        resource :operations, only: [ :show ], controller: "operations"
+        resource :rollout, only: [ :show ], controller: "rollout"
+        resource :pilot_readiness, only: [ :show ], controller: "pilot_readiness"
+        resource :review_governance, only: [ :show ], controller: "review_governance"
+        resource :resolve, only: [ :show ], controller: "resolutions"
+        resource :specialist, only: [ :show ], controller: "specialist"
+        resource :guardian, only: [ :show ], controller: "guardian"
+        resource :student, only: [ :show ], controller: "student"
+        resources :reviews, only: [ :index ]
+        resources :evidence_items, only: [ :index, :show, :create, :update ] do
+          collection do
+            get :summary
+          end
+          member do
+            post :validate_item
+            post :request_reflection
+            post :set_visibility
+            post :link_story
+          end
+        end
+        resources :learning_stories, only: [ :index, :show, :create, :update ]
+        resources :publishing_queue_items, only: [ :index, :create, :update ] do
+          member do
+            post :schedule
+            post :hold
+            post :publish
+          end
+        end
+        resources :operational_records, only: [ :index, :show, :create, :update ]
+        resources :standards_cycles, only: [ :index, :show, :create, :update ]
+        resources :standards_packets, only: [ :index, :show, :create, :update ] do
+          member do
+            post :export
+            get :export_preview
+            get :comparison
+            post :assign_reviewer
+            post :approve
+            post :return_packet
+          end
+        end
+        resources :programme_settings, only: [ :index, :create ] do
+          collection do
+            patch :update, action: :create
+          end
+        end
+        resources :document_comments, only: [] do
+          collection do
+            get :index
+            post :create
+          end
+        end
+        resources :document_collaborators, only: [] do
+          collection do
+            get :index
+            post :create
+          end
+        end
+        patch "document_comments/:id", to: "document_comments#update"
+        patch "document_collaborators/:id", to: "document_collaborators#update"
+        namespace :pyp do
+          resources :programme_of_inquiries, only: [ :index, :show, :create, :update ]
+        end
+      end
       get "/search", to: "search#index"
       post "/analytics/web_vitals", to: "analytics#web_vitals"
       get "/calendar.ics", to: "calendar#ical"

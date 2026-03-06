@@ -189,7 +189,7 @@ describe("Accessibility", () => {
 
     const { container } = render(<LoginPage />);
 
-    await screen.findByRole("link", { name: "Sign in with Google" });
+    await screen.findByRole("button", { name: "Sign in with Google" });
     const results = await axe(container);
     expect(results.violations).toHaveLength(0);
   });

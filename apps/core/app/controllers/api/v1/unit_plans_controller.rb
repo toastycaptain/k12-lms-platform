@@ -55,14 +55,14 @@ module Api
 
       def publish
         authorize @unit_plan
-        CurriculumWorkflowEngine.transition!(
+        workflow_engine.transition!(
           record: @unit_plan,
           event: :publish,
           actor: Current.user,
           context: { approval_required: approval_required? }
         )
         render json: @unit_plan
-      rescue CurriculumWorkflowEngine::TransitionError => e
+      rescue *transition_error_classes => e
         render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
@@ -73,27 +73,27 @@ module Api
           return render json: { errors: [ "Approval is not required for this tenant" ] },
                         status: :unprocessable_content
         end
-        CurriculumWorkflowEngine.transition!(
+        workflow_engine.transition!(
           record: @unit_plan,
           event: :submit_for_approval,
           actor: Current.user
         )
         notify_approvers_for_approval_request!(@unit_plan)
         render json: @unit_plan
-      rescue CurriculumWorkflowEngine::TransitionError => e
+      rescue *transition_error_classes => e
         render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
 
       def archive
         authorize @unit_plan
-        CurriculumWorkflowEngine.transition!(
+        workflow_engine.transition!(
           record: @unit_plan,
           event: :archive,
           actor: Current.user
         )
         render json: @unit_plan
-      rescue CurriculumWorkflowEngine::TransitionError => e
+      rescue *transition_error_classes => e
         render json: { errors: [ e.message ] },
                status: :unprocessable_content
       end
@@ -119,7 +119,7 @@ module Api
       private
 
       def set_unit_plan
-        @unit_plan = UnitPlan.includes(:unit_versions, current_version: :standards).find(params[:id])
+        @unit_plan = policy_scope(UnitPlan).includes(:unit_versions, current_version: :standards).find(params[:id])
         authorize @unit_plan unless %w[create_version versions publish archive export_pdf export_pdf_status submit_for_approval].include?(action_name)
       end
 
@@ -154,6 +154,18 @@ module Api
             }
           )
         end
+      end
+
+      def workflow_engine
+        if FeatureFlag.enabled?("curriculum_pack_workflows_v1", tenant: Current.tenant)
+          Curriculum::WorkflowEngine
+        else
+          CurriculumWorkflowEngine
+        end
+      end
+
+      def transition_error_classes
+        [ CurriculumWorkflowEngine::TransitionError, Curriculum::WorkflowEngine::TransitionError ]
       end
     end
   end

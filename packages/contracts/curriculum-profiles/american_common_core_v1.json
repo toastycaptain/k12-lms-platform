@@ -1,54 +1,227 @@
 {
-  "key": "american_common_core_v1",
-  "label": "American (Common Core + NGSS)",
-  "version": "2026.1",
-  "description": "US-focused planner defaults for Common Core and NGSS aligned schools.",
-  "jurisdiction": "US",
-  "planner_taxonomy": {
+  "identity": {
+    "key": "american_common_core_v1",
+    "label": "American (Common Core + NGSS)",
+    "description": "US-focused planner defaults for Common Core and NGSS aligned schools.",
+    "jurisdiction": "US"
+  },
+  "versioning": {
+    "version": "2026.1",
+    "schema_version": "3.0",
+    "compatibility": "v3"
+  },
+  "status": "active",
+  "terminology": {
     "subject_label": "Subject",
     "grade_label": "Grade Level",
     "unit_label": "Unit"
   },
-  "subject_options": [
-    "Math",
-    "Science",
-    "ELA",
-    "Social Studies",
-    "Arts",
-    "PE"
-  ],
-  "grade_or_stage_options": [
-    "K",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12"
-  ],
-  "framework_defaults": [
-    "Common Core",
-    "NGSS",
-    "C3 Framework"
-  ],
-  "template_defaults": {
-    "default_status": "draft",
-    "suggested_sections": [
-      "Essential Questions",
-      "Standards Alignment",
-      "Assessment Plan"
-    ]
+  "navigation": {
+    "admin": ["dashboard", "plan", "teach", "assess", "admin", "report", "communicate"],
+    "curriculum_lead": ["dashboard", "plan", "assess", "report", "communicate"],
+    "teacher": ["dashboard", "plan", "teach", "assess", "report", "communicate"],
+    "student": ["learn", "communicate"],
+    "guardian": ["guardian", "communicate"],
+    "district_admin": ["district", "report"]
+  },
+  "capability_modules": {
+    "portfolio": true,
+    "interventions": false,
+    "pastoral": false,
+    "advanced_reports": true
+  },
+  "planner_object_schemas": {
+    "unit_plan": {
+      "fields": [
+        {
+          "id": "subject",
+          "label": "Subject",
+          "component": "select",
+          "required": true,
+          "options": ["Math", "Science", "ELA", "Social Studies", "Arts", "PE"]
+        },
+        {
+          "id": "grade_or_stage",
+          "label": "Grade Level",
+          "component": "select",
+          "required": true,
+          "options": ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+        },
+        {
+          "id": "title",
+          "label": "Unit Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "lesson_plan": {
+      "fields": [
+        {
+          "id": "title",
+          "label": "Lesson Title",
+          "component": "text",
+          "required": true
+        }
+      ]
+    },
+    "template": {
+      "defaults": {
+        "default_status": "draft",
+        "suggested_sections": ["Essential Questions", "Standards Alignment", "Assessment Plan"]
+      },
+      "tags": ["ccss_ela", "ngss", "c3_framework"]
+    }
+  },
+  "document_types": {
+    "unit_plan": {
+      "label": "Unit",
+      "allowed_schema_keys": ["us.unit@v1"],
+      "default_schema_key": "us.unit@v1",
+      "allowed_statuses": ["draft", "pending_approval", "published", "archived"],
+      "default_status": "draft",
+      "relationships": {
+        "contains": {
+          "allowed_target_types": ["lesson_plan"],
+          "max": 999,
+          "ordered": true
+        }
+      }
+    },
+    "lesson_plan": {
+      "label": "Lesson",
+      "allowed_schema_keys": ["us.lesson@v1"],
+      "default_schema_key": "us.lesson@v1",
+      "allowed_statuses": ["draft", "published", "archived"],
+      "default_status": "draft"
+    },
+    "template": {
+      "label": "Template",
+      "allowed_schema_keys": ["us.template@v1"],
+      "default_schema_key": "us.template@v1",
+      "allowed_statuses": ["draft", "published", "archived"],
+      "default_status": "draft"
+    }
+  },
+  "document_schemas": {
+    "us.unit@v1": {
+      "document_type": "unit_plan",
+      "label": "US Unit Planner",
+      "data_schema": {
+        "type": "object",
+        "required": ["title", "priority_standards", "learning_targets", "success_criteria"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "priority_standards": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "learning_targets": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "success_criteria": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "assessment_plan": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "ui_schema": {
+        "sections": [
+          { "title": "Learning Design", "fields": ["priority_standards", "learning_targets", "success_criteria"] },
+          { "title": "Assessment", "fields": ["assessment_plan"] }
+        ]
+      }
+    },
+    "us.lesson@v1": {
+      "document_type": "lesson_plan",
+      "label": "US Lesson Planner",
+      "data_schema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "objective": { "type": "string" },
+          "activities": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "us.template@v1": {
+      "document_type": "template",
+      "label": "US Template",
+      "data_schema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 250 },
+          "suggested_sections": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "workflow_definitions": {
+    "unit_default": {
+      "states": ["draft", "pending_approval", "published", "archived"],
+      "events": {
+        "submit_for_approval": {
+          "from": ["draft"],
+          "to": "pending_approval",
+          "roles": ["teacher", "curriculum_lead", "admin"],
+          "side_effects": [{ "type": "create_approval" }]
+        },
+        "publish": {
+          "from": ["draft", "pending_approval"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"],
+          "guards": [{ "type": "approval_not_required_or_approved" }],
+          "side_effects": [{ "type": "auto_approve_pending" }]
+        },
+        "archive": {
+          "from": ["published"],
+          "to": "archived",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    },
+    "lesson_default": {
+      "states": ["draft", "published", "archived"],
+      "events": {
+        "publish": {
+          "from": ["draft"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    },
+    "template_default": {
+      "states": ["draft", "published", "archived"],
+      "events": {
+        "publish": {
+          "from": ["draft"],
+          "to": "published",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        },
+        "archive": {
+          "from": ["published"],
+          "to": "archived",
+          "roles": ["teacher", "curriculum_lead", "admin"]
+        }
+      }
+    }
+  },
+  "workflow_bindings": {
+    "unit_plan": "unit_default",
+    "lesson_plan": "lesson_default",
+    "template": "template_default"
+  },
+  "framework_bindings": {
+    "defaults": ["ccss_ela", "ngss", "c3_framework"],
+    "allowed": ["ccss_ela", "ngss", "c3_framework", "state_custom"],
+    "node_kinds": ["standard", "skill", "objective"]
+  },
+  "report_bindings": {
+    "standards_coverage": {
+      "default_frameworks": ["ccss_ela", "ngss", "c3_framework"]
+    }
   },
   "integration_hints": {
     "google_addon_context": "us_standard",
     "lti_context_tag": "us_ccss",
     "oneroster_context_tag": "us_default"
-  },
-  "status": "active"
+  }
 }

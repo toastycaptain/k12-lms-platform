@@ -1,4 +1,4 @@
-import { reportWebVitals } from "@/lib/performance";
+import { reportInteractionMetric, reportWebVitals } from "@/lib/performance";
 
 describe("reportWebVitals", () => {
   const originalObserver = globalThis.PerformanceObserver;
@@ -60,5 +60,39 @@ describe("reportWebVitals", () => {
         keepalive: true,
       }),
     );
+  });
+
+  it("posts interaction metrics and dispatches an analytics event", async () => {
+    const listener = vi.fn();
+    globalThis.fetch = vi.fn(async () => new Response(null, { status: 204 })) as typeof fetch;
+    window.addEventListener("k12-analytics", listener as EventListener);
+
+    reportInteractionMetric("ib_workspace_render", 86, { workspace: "IB Home" });
+
+    await Promise.resolve();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "/api/v1/analytics/web_vitals",
+      expect.objectContaining({
+        method: "POST",
+        keepalive: true,
+      }),
+    );
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0];
+    const body = JSON.parse(String(options?.body)) as {
+      name: string;
+      value: number;
+      category: string;
+      metadata?: { workspace?: string };
+    };
+
+    expect(body.name).toBe("ib_workspace_render");
+    expect(body.value).toBe(86);
+    expect(body.category).toBe("interaction");
+    expect(body.metadata?.workspace).toBe("IB Home");
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener("k12-analytics", listener as EventListener);
   });
 });

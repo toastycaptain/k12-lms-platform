@@ -83,21 +83,20 @@ export default function SetupPage() {
                   </li>
                   {isAdmin ? (
                     <li>
-                      <span className="font-semibold">Curriculum Profiles:</span> Set tenant
-                      defaults and school overrides in{" "}
+                      <span className="font-semibold">Curriculum Packs:</span> Set tenant defaults
+                      and school overrides in{" "}
                       <Link
                         href="/admin/curriculum-profiles"
                         className="text-blue-700 underline hover:text-blue-800"
                       >
-                        Admin &gt; Curriculum Profiles
+                        Admin &gt; Curriculum Packs
                       </Link>
                       .
                     </li>
                   ) : (
                     <li>
                       <span className="font-semibold">Curriculum Context:</span> Your planner and
-                      course experience will reflect your admin&apos;s configured curriculum
-                      profile.
+                      course experience will reflect your admin&apos;s configured curriculum pack.
                     </li>
                   )}
                   <li>

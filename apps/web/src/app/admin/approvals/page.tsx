@@ -21,6 +21,18 @@ interface Approval {
   created_at: string;
 }
 
+function approvalLink(approval: Approval): string | null {
+  if (approval.approvable_type === "CurriculumDocument") {
+    return `/plan/documents/${approval.approvable_id}`;
+  }
+
+  if (approval.approvable_type === "UnitPlan") {
+    return `/plan/units/${approval.approvable_id}/preview`;
+  }
+
+  return null;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     pending: "bg-orange-100 text-orange-800",
@@ -142,95 +154,99 @@ export default function ApprovalQueuePage() {
             />
           ) : (
             <div className="space-y-3">
-              {approvals.map((approval) => (
-                <div key={approval.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <StatusBadge status={approval.status} />
-                      <span className="text-sm font-medium text-gray-900">
-                        {approval.approvable_type} #{approval.approvable_id}
-                      </span>
+              {approvals.map((approval) => {
+                const previewLink = approvalLink(approval);
+
+                return (
+                  <div key={approval.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={approval.status} />
+                        <span className="text-sm font-medium text-gray-900">
+                          {approval.approvable_type} #{approval.approvable_id}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {previewLink && (
+                          <Link
+                            href={previewLink}
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            View Preview
+                          </Link>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {approval.approvable_type === "UnitPlan" && (
-                        <Link
-                          href={`/plan/units/${approval.approvable_id}/preview`}
-                          className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          View Preview
-                        </Link>
+
+                    <div className="mt-2 text-xs text-gray-400">
+                      Submitted{" "}
+                      {new Date(approval.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                      {approval.reviewed_at && (
+                        <>
+                          {" "}
+                          | Reviewed{" "}
+                          {new Date(approval.reviewed_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </>
                       )}
                     </div>
-                  </div>
 
-                  <div className="mt-2 text-xs text-gray-400">
-                    Submitted{" "}
-                    {new Date(approval.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                    {approval.reviewed_at && (
-                      <>
-                        {" "}
-                        | Reviewed{" "}
-                        {new Date(approval.reviewed_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </>
-                    )}
-                  </div>
-
-                  {approval.comments && (
-                    <div className="mt-2 rounded bg-gray-50 px-3 py-2 text-sm text-gray-600">
-                      {approval.comments}
-                    </div>
-                  )}
-
-                  {/* Actions for pending approvals */}
-                  {approval.status === "pending" && (
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleApprove(approval.id)}
-                          disabled={actionLoading === approval.id}
-                          className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                        >
-                          {actionLoading === approval.id ? "..." : "Approve"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            setRejectingId(rejectingId === approval.id ? null : approval.id)
-                          }
-                          className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
-                        >
-                          Reject
-                        </button>
+                    {approval.comments && (
+                      <div className="mt-2 rounded bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                        {approval.comments}
                       </div>
-                      {rejectingId === approval.id && (
-                        <div className="flex items-start gap-2">
-                          <textarea
-                            value={rejectComments}
-                            onChange={(e) => setRejectComments(e.target.value)}
-                            placeholder="Reason for rejection (required)..."
-                            rows={2}
-                            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                          />
+                    )}
+
+                    {/* Actions for pending approvals */}
+                    {approval.status === "pending" && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleReject(approval.id)}
+                            onClick={() => handleApprove(approval.id)}
                             disabled={actionLoading === approval.id}
-                            className="rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
                           >
-                            Confirm
+                            {actionLoading === approval.id ? "..." : "Approve"}
+                          </button>
+                          <button
+                            onClick={() =>
+                              setRejectingId(rejectingId === approval.id ? null : approval.id)
+                            }
+                            className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                          >
+                            Reject
                           </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                        {rejectingId === approval.id && (
+                          <div className="flex items-start gap-2">
+                            <textarea
+                              value={rejectComments}
+                              onChange={(e) => setRejectComments(e.target.value)}
+                              placeholder="Reason for rejection (required)..."
+                              rows={2}
+                              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            />
+                            <button
+                              onClick={() => handleReject(approval.id)}
+                              disabled={actionLoading === approval.id}
+                              className="rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                              Confirm
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

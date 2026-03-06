@@ -10035,7 +10035,513 @@ paths:
           "$ref": "#/components/responses/NotFound"
         '422':
           "$ref": "#/components/responses/ValidationErrors"
+  "/api/v1/analytics/web_vitals":
+    post:
+      summary: Record web vitals event
+      operationId: post_api_v1_analytics_web_vitals
+      tags:
+      - Analytics
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/courses/{id}/gradebook/export_async":
+    post:
+      summary: Queue asynchronous gradebook export
+      operationId: post_api_v1_courses_gradebook_export_async
+      tags:
+      - Gradebook
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '202':
+          description: Export queued
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/courses/{id}/gradebook/export_status":
+    get:
+      summary: Get gradebook export job status
+      operationId: get_api_v1_courses_gradebook_export_status
+      tags:
+      - Gradebook
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Export status
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/curriculum_document_links/{id}":
+    delete:
+      summary: Delete curriculum document link
+      operationId: delete_api_v1_curriculum_document_links
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '204':
+          description: Link deleted
+  "/api/v1/curriculum_documents":
+    get:
+      summary: List curriculum documents
+      operationId: get_api_v1_curriculum_documents
+      tags:
+      - Curriculum
+      responses:
+        '200':
+          description: Curriculum documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create curriculum document
+      operationId: post_api_v1_curriculum_documents
+      tags:
+      - Curriculum
+      responses:
+        '201':
+          description: Curriculum document created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/curriculum_documents/{id}":
+    get:
+      summary: Get curriculum document
+      operationId: get_api_v1_curriculum_documents_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Curriculum document
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    patch:
+      summary: Update curriculum document
+      operationId: patch_api_v1_curriculum_documents_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Curriculum document updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    delete:
+      summary: Delete curriculum document
+      operationId: delete_api_v1_curriculum_documents_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '204':
+          description: Curriculum document deleted
+  "/api/v1/curriculum_documents/{curriculum_document_id}/links":
+    get:
+      summary: List document links
+      operationId: get_api_v1_curriculum_documents_links
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Document links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create document link
+      operationId: post_api_v1_curriculum_documents_links
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: Document link created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/curriculum_documents/{curriculum_document_id}/transition":
+    post:
+      summary: Transition curriculum document workflow state
+      operationId: post_api_v1_curriculum_documents_transition
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Transitioned document
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/curriculum_documents/{curriculum_document_id}/versions":
+    get:
+      summary: List curriculum document versions
+      operationId: get_api_v1_curriculum_documents_versions
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Curriculum document versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create curriculum document version
+      operationId: post_api_v1_curriculum_documents_versions
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: Curriculum document version created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/curriculum_document_versions/{curriculum_document_version_id}/alignments":
+    get:
+      summary: List curriculum document version alignments
+      operationId: get_api_v1_curriculum_document_versions_alignments
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Alignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create curriculum document version alignment
+      operationId: post_api_v1_curriculum_document_versions_alignments
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: Alignment created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/curriculum_document_versions/{curriculum_document_version_id}/alignments/bulk_destroy":
+    delete:
+      summary: Bulk delete curriculum document version alignments
+      operationId: delete_api_v1_curriculum_document_versions_alignments_bulk_destroy
+      tags:
+      - Curriculum
+      parameters:
+      - name: curriculum_document_version_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Alignments deleted
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/guardian/students/{id}/attendance":
+    get:
+      summary: List student attendance for guardian view
+      operationId: get_api_v1_guardian_students_attendance
+      tags:
+      - Guardian
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Student attendance
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/guardian/students/{id}/calendar":
+    get:
+      summary: Get student calendar for guardian view
+      operationId: get_api_v1_guardian_students_calendar
+      tags:
+      - Guardian
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Student calendar
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/guardian/students/{id}/classes_today":
+    get:
+      summary: Get today's classes for guardian view
+      operationId: get_api_v1_guardian_students_classes_today
+      tags:
+      - Guardian
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Classes today
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/planning_contexts":
+    get:
+      summary: List planning contexts
+      operationId: get_api_v1_planning_contexts
+      tags:
+      - Curriculum
+      responses:
+        '200':
+          description: Planning contexts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create planning context
+      operationId: post_api_v1_planning_contexts
+      tags:
+      - Curriculum
+      responses:
+        '201':
+          description: Planning context created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/planning_contexts/{id}":
+    get:
+      summary: Get planning context
+      operationId: get_api_v1_planning_contexts_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Planning context
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    patch:
+      summary: Update planning context
+      operationId: patch_api_v1_planning_contexts_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Planning context updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    delete:
+      summary: Delete planning context
+      operationId: delete_api_v1_planning_contexts_id
+      tags:
+      - Curriculum
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '204':
+          description: Planning context deleted
+  "/api/v1/quizzes":
+    get:
+      summary: List quizzes
+      operationId: get_api_v1_quizzes
+      tags:
+      - Quizzes
+      responses:
+        '200':
+          description: Quizzes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Quiz"
+  "/api/v1/roles":
+    get:
+      summary: List roles
+      operationId: get_api_v1_roles
+      tags:
+      - Access
+      responses:
+        '200':
+          description: Roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/GenericResource"
+    post:
+      summary: Create role
+      operationId: post_api_v1_roles
+      tags:
+      - Access
+      responses:
+        '201':
+          description: Role created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/roles/{id}":
+    get:
+      summary: Get role
+      operationId: get_api_v1_roles_id
+      tags:
+      - Access
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    patch:
+      summary: Update role
+      operationId: patch_api_v1_roles_id
+      tags:
+      - Access
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+    delete:
+      summary: Delete role
+      operationId: delete_api_v1_roles_id
+      tags:
+      - Access
+      parameters:
+      - "$ref": "#/components/parameters/id"
+      responses:
+        '204':
+          description: Role deleted
+  "/api/v1/session/impersonation":
+    delete:
+      summary: Stop impersonating
+      operationId: delete_api_v1_session_impersonation
+      tags:
+      - Auth
+      responses:
+        '200':
+          description: Impersonation ended
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/session/impersonation/{user_id}":
+    post:
+      summary: Start impersonating user
+      operationId: post_api_v1_session_impersonation_user_id
+      tags:
+      - Auth
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Impersonation started
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GenericResource"
 components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
   securitySchemes:
     cookieAuth:
       type: apiKey
@@ -10820,6 +11326,34 @@ components:
         jurisdiction:
           type: string
         planner_taxonomy:
+          type: object
+          additionalProperties: true
+        terminology:
+          type: object
+          additionalProperties: true
+        planner_object_schemas:
+          type: object
+          additionalProperties: true
+        document_types:
+          type: object
+          additionalProperties: true
+        document_schemas:
+          type: object
+          additionalProperties: true
+        document_schema_index:
+          type: object
+          additionalProperties: true
+        workflow_definitions:
+          type: object
+          additionalProperties: true
+        workflow_bindings:
+          type: object
+          additionalProperties:
+            type: string
+        framework_bindings:
+          type: object
+          additionalProperties: true
+        report_bindings:
           type: object
           additionalProperties: true
         subject_options:

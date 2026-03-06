@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurriculumPackV1",
+  "type": "object",
+  "required": [
+    "identity",
+    "versioning",
+    "status",
+    "terminology",
+    "navigation",
+    "capability_modules",
+    "document_types",
+    "document_schemas",
+    "workflow_definitions",
+    "workflow_bindings",
+    "framework_bindings",
+    "report_bindings",
+    "integration_hints"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["key", "label", "description", "jurisdiction"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "jurisdiction": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "versioning": {
+      "type": "object",
+      "required": ["version", "schema_version", "compatibility"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "schema_version": { "type": "string", "minLength": 1 },
+        "compatibility": { "type": "string", "minLength": 1 },
+        "supersedes": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "deprecated", "frozen"]
+    },
+    "terminology": {
+      "type": "object",
+      "required": ["subject_label", "grade_label", "unit_label"],
+      "properties": {
+        "subject_label": { "type": "string" },
+        "grade_label": { "type": "string" },
+        "unit_label": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "navigation": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "capability_modules": {
+      "type": "object",
+      "additionalProperties": { "type": ["boolean", "string", "number", "array", "object", "null"] }
+    },
+    "planner_object_schemas": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "document_types": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "allowed_schema_keys", "default_schema_key"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "allowed_schema_keys": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "default_schema_key": { "type": "string", "minLength": 1 },
+          "allowed_statuses": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "default_status": { "type": "string" },
+          "relationships": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["allowed_target_types"],
+              "properties": {
+                "allowed_target_types": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 },
+                  "minItems": 1
+                },
+                "max": { "type": "integer", "minimum": 1 },
+                "ordered": { "type": "boolean" }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "document_schemas": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["document_type", "data_schema"],
+        "properties": {
+          "document_type": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "data_schema": { "type": "object" },
+          "ui_schema": { "type": ["object", "array", "string", "number", "boolean", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "workflow_definitions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["states", "events"],
+        "properties": {
+          "states": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "events": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["from", "to"],
+              "properties": {
+                "from": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 },
+                  "minItems": 1
+                },
+                "to": { "type": "string", "minLength": 1 },
+                "roles": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "guards": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": { "type": "string", "minLength": 1 }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "side_effects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": { "type": "string", "minLength": 1 }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "workflow_bindings": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "framework_bindings": {
+      "type": "object",
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "allowed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "node_kinds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "report_bindings": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "integration_hints": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -32,8 +32,9 @@ class Course < ApplicationRecord
     override_key = settings&.dig("curriculum_profile_key")
     override_version = settings&.dig("curriculum_profile_version")
     return if override_key.blank?
-    return if override_version.blank? && CurriculumProfileRegistry.keys.include?(override_key)
-    return if CurriculumProfileRegistry.exists?(override_key, override_version)
+
+    tenant = Tenant.unscoped.find_by(id: tenant_id)
+    return if tenant && CurriculumPackStore.exists?(tenant: tenant, key: override_key, version: override_version)
 
     errors.add(:settings, "contains an unknown curriculum_profile_key/curriculum_profile_version")
   end

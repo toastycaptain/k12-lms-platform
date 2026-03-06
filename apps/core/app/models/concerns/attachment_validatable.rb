@@ -44,27 +44,42 @@ module AttachmentValidatable
   ].freeze
 
   class_methods do
-    def validates_attachment(attribute, content_types: ALLOWED_SUBMISSION_TYPES, max_size: MAX_SUBMISSION_SIZE)
+    def validates_attachment(attribute, content_types: ALLOWED_SUBMISSION_TYPES, max_size: MAX_SUBMISSION_SIZE, count: nil)
       validate :"validate_#{attribute}_attachment"
 
       define_method(:"validate_#{attribute}_attachment") do
         attachment = send(attribute)
         return unless attachment.attached?
 
-        blob = attachment.blob
+        blobs = attachment.respond_to?(:attachments) ? attachment.attachments.map(&:blob) : [ attachment.blob ]
 
-        unless content_types.include?(blob.content_type)
-          errors.add(attribute, "has an unsupported file type (#{blob.content_type}). Allowed: #{content_types.join(', ')}")
+        if count
+          max_count = count.is_a?(Hash) ? count[:max] : count
+          min_count = count.is_a?(Hash) ? count[:min] : nil
+
+          if max_count && blobs.length > max_count
+            errors.add(attribute, "has too many files (#{blobs.length}). Maximum: #{max_count}")
+          end
+
+          if min_count && blobs.length < min_count
+            errors.add(attribute, "must have at least #{min_count} file#{min_count == 1 ? '' : 's'}")
+          end
         end
 
-        if blob.byte_size > max_size
-          errors.add(attribute, "is too large (#{(blob.byte_size / 1.megabyte.to_f).round(1)}MB). Maximum: #{(max_size / 1.megabyte.to_f).round(0)}MB")
-        end
+        blobs.each do |blob|
+          unless content_types.include?(blob.content_type)
+            errors.add(attribute, "has an unsupported file type (#{blob.content_type}). Allowed: #{content_types.join(', ')}")
+          end
 
-        filename = blob.filename.to_s.downcase
-        extension = File.extname(filename)
-        if DANGEROUS_EXTENSIONS.include?(extension)
-          errors.add(attribute, "has a dangerous file extension (#{extension}). This file type is not allowed.")
+          if blob.byte_size > max_size
+            errors.add(attribute, "is too large (#{(blob.byte_size / 1.megabyte.to_f).round(1)}MB). Maximum: #{(max_size / 1.megabyte.to_f).round(0)}MB")
+          end
+
+          filename = blob.filename.to_s.downcase
+          extension = File.extname(filename)
+          if DANGEROUS_EXTENSIONS.include?(extension)
+            errors.add(attribute, "has a dangerous file extension (#{extension}). This file type is not allowed.")
+          end
         end
       end
     end

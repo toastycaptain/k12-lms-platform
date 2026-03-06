@@ -6,12 +6,21 @@ module Api
 
       def index
         scope = policy_scope(StandardFramework)
+        scope = scope.where(framework_kind: params[:framework_kind].to_s) if params[:framework_kind].present?
+        scope = scope.where(status: params[:status].to_s) if params[:status].present?
         tenant_id = Current.tenant&.id
 
         @standard_frameworks = if tenant_id.present?
-          Rails.cache.fetch("tenant:#{tenant_id}:standard_frameworks", expires_in: CACHE_TTL) { scope.to_a }
+          cache_key = [
+            "tenant",
+            tenant_id,
+            "standard_frameworks",
+            params[:framework_kind].presence || "all",
+            params[:status].presence || "all"
+          ].join(":")
+          Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) { scope.order(:name).to_a }
         else
-          scope.to_a
+          scope.order(:name).to_a
         end
         render json: @standard_frameworks
       end
@@ -47,12 +56,21 @@ module Api
       private
 
       def set_standard_framework
-        @standard_framework = StandardFramework.includes(:standards).find(params[:id])
+        @standard_framework = policy_scope(StandardFramework).includes(:standards).find(params[:id])
         authorize @standard_framework
       end
 
       def standard_framework_params
-        params.require(:standard_framework).permit(:name, :jurisdiction, :subject, :version)
+        params.require(:standard_framework).permit(
+          :name,
+          :jurisdiction,
+          :subject,
+          :version,
+          :key,
+          :framework_kind,
+          :status,
+          metadata: {}
+        )
       end
     end
   end

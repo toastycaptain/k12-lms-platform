@@ -1,3 +1,5 @@
+import { clearStoredSchoolId, readStoredSchoolId } from "@/lib/school-storage";
+
 const DEFAULT_API_BASE_URL = "http://localhost:3001";
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_URL).replace(/[<>]/g, "");
 const API_V1_PREFIX = "/api/v1";
@@ -69,31 +71,53 @@ export async function getCsrfToken(forceRefresh = false): Promise<string> {
   return requestCsrfToken(forceRefresh);
 }
 
-async function parseErrorMessage(response: Response): Promise<string> {
+interface ParsedErrorResponse {
+  message: string;
+  details?: unknown;
+}
+
+async function parseErrorResponse(response: Response): Promise<ParsedErrorResponse> {
   let message = `API error: ${response.statusText}`;
+  let details: unknown;
 
   try {
     const errorBody = await response.json();
+    details = errorBody?.details;
     if (errorBody?.error) {
       message = String(errorBody.error);
     } else if (errorBody?.message) {
       message = String(errorBody.message);
+    } else if (Array.isArray(errorBody?.errors) && errorBody.errors.length > 0) {
+      message = String(errorBody.errors[0]);
     }
   } catch {
     // Fall through to generic status text when body is empty or not JSON.
   }
 
-  return message;
+  return { message, details };
 }
 
 export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public details?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+function shouldResetSchoolSelection(
+  status: number,
+  message: string,
+  schoolId: string | null,
+): boolean {
+  if (!schoolId || (status !== 403 && status !== 404)) {
+    return false;
+  }
+
+  return /school/i.test(message);
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -101,10 +125,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined && options.body !== null;
   const isFormDataBody = typeof FormData !== "undefined" && options.body instanceof FormData;
-  const selectedSchoolId =
-    typeof window !== "undefined" && typeof window.localStorage?.getItem === "function"
-      ? window.localStorage.getItem("k12.selectedSchoolId")
-      : null;
+  const selectedSchoolId = readStoredSchoolId();
   const method = (options.method || "GET").toUpperCase();
   const mutationRequest = isMutationMethod(method);
 
@@ -139,6 +160,15 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   let response = await doRequest();
 
+  if (!response.ok) {
+    const initialError = await parseErrorResponse(response.clone());
+    if (shouldResetSchoolSelection(response.status, initialError.message, selectedSchoolId)) {
+      clearStoredSchoolId();
+      headers.delete("X-School-Id");
+      response = await doRequest();
+    }
+  }
+
   if (!response.ok && mutationRequest && (response.status === 403 || response.status === 422)) {
     try {
       headers.set("X-CSRF-Token", await requestCsrfToken(true));
@@ -149,8 +179,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   if (!response.ok) {
-    const message = await parseErrorMessage(response);
-    throw new ApiError(response.status, message);
+    const { message, details } = await parseErrorResponse(response);
+    throw new ApiError(response.status, message, details);
   }
 
   if (response.status === 204) {
@@ -173,6 +203,20 @@ export function getSignOutUrl(): string {
   return `${getApiOrigin()}/api/v1/session`;
 }
 
+export interface CurriculumRuntimePayload {
+  profile_key?: string;
+  profile_version?: string;
+  pack_key?: string;
+  pack_version?: string;
+  selected_from?: string;
+  terminology?: Record<string, string>;
+  navigation?: Record<string, string[]>;
+  visible_navigation?: string[];
+  feature_flags?: Record<string, boolean>;
+  pack_payload_source?: "tenant_release" | "system" | "fallback";
+  pack_release_id?: number;
+}
+
 export interface CurrentUser {
   id: number;
   email: string;
@@ -193,14 +237,7 @@ export interface CurrentUser {
   preferences: Record<string, unknown>;
   curriculum_default_profile_key?: string;
   curriculum_default_profile_version?: string;
-  curriculum_runtime?: {
-    profile_key?: string;
-    profile_version?: string;
-    selected_from?: string;
-    terminology?: Record<string, string>;
-    navigation?: Record<string, string[]>;
-    visible_navigation?: string[];
-  };
+  curriculum_runtime?: CurriculumRuntimePayload;
 }
 
 interface MeResponse {
@@ -228,14 +265,7 @@ interface MeResponse {
     slug: string;
     curriculum_default_profile_key?: string;
     curriculum_default_profile_version?: string;
-    curriculum_runtime?: {
-      profile_key?: string;
-      profile_version?: string;
-      selected_from?: string;
-      terminology?: Record<string, string>;
-      navigation?: Record<string, string[]>;
-      visible_navigation?: string[];
-    };
+    curriculum_runtime?: CurriculumRuntimePayload;
   };
 }
 

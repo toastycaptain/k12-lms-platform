@@ -11,6 +11,7 @@ import {
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ studentId: "7" }),
+  usePathname: () => "/guardian/students/7",
 }));
 
 vi.mock("@/hooks/useGuardian", () => ({

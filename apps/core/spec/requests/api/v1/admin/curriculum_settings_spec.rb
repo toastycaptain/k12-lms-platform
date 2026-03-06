@@ -74,6 +74,29 @@ RSpec.describe "Api::V1::Admin::CurriculumSettings", type: :request do
       expect(response.parsed_body["error"]).to include("Invalid tenant_default_profile_key")
     end
 
+    it "allows selecting a tenant-published pack version" do
+      payload = CurriculumProfileRegistry.find("ib_continuum_v1", "2026.1").deep_dup
+      CurriculumProfileRelease.create!(
+        tenant: tenant,
+        profile_key: "ib_continuum_v1",
+        profile_version: "2026.1",
+        status: "published",
+        payload: payload,
+        metadata: {}
+      )
+
+      mock_session(admin, tenant: tenant)
+
+      put "/api/v1/admin/curriculum_settings", params: {
+        tenant_default_profile_key: "ib_continuum_v1",
+        tenant_default_profile_version: "2026.1"
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(tenant.reload.settings["curriculum_default_profile_key"]).to eq("ib_continuum_v1")
+      expect(tenant.settings["curriculum_default_profile_version"]).to eq("2026.1")
+    end
+
     it "returns 403 for curriculum leads" do
       mock_session(curriculum_lead, tenant: tenant)
 

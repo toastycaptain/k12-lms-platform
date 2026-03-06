@@ -9,9 +9,14 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AiAssistantPanel from "@/components/AiAssistantPanel";
 import AiApplyModal, { type AiApplyChange } from "@/components/AiApplyModal";
 import { parseUnitOutput, type UnitPlanOutput } from "@/lib/ai-output-parser";
+import { reportInteractionMetric } from "@/lib/performance";
 import { QuizSkeleton } from "@/components/skeletons/QuizSkeleton";
 import { EmptyState } from "@k12/ui";
 import { FormField, TextArea, TextInput } from "@k12/ui/forms";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { PypUnitStudio } from "@/features/ib/pyp/PypUnitStudio";
+import { MypUnitStudio } from "@/features/ib/myp/MypUnitStudio";
+import { DpCourseMap } from "@/features/ib/dp/DpCourseMap";
 
 interface UnitPlan {
   id: number;
@@ -69,7 +74,29 @@ function StatusBadge({ status }: { status: string }) {
 export default function UnitPlannerPage() {
   const params = useParams();
   const unitId = params.id as string;
+  const { isIb, activeProgramme } = useCurriculumRuntime();
 
+  if (isIb) {
+    const studio =
+      activeProgramme === "MYP" ? (
+        <MypUnitStudio unitId={unitId} />
+      ) : activeProgramme === "DP" ? (
+        <DpCourseMap />
+      ) : (
+        <PypUnitStudio unitId={unitId} />
+      );
+
+    return (
+      <ProtectedRoute requiredRoles={TEACHER_ROLES}>
+        <AppShell>{studio}</AppShell>
+      </ProtectedRoute>
+    );
+  }
+
+  return <GenericUnitPlannerPage unitId={unitId} />;
+}
+
+function GenericUnitPlannerPage({ unitId }: { unitId: string }) {
   const [unitPlan, setUnitPlan] = useState<UnitPlan | null>(null);
   const [versions, setVersions] = useState<UnitVersion[]>([]);
   const [currentVersion, setCurrentVersion] = useState<UnitVersion | null>(null);
@@ -280,6 +307,10 @@ export default function UnitPlannerPage() {
     setPendingAiDraft(draft);
     setPendingAiChanges(changes);
     setShowAiApplyModal(true);
+    reportInteractionMetric("ai_diff_preview_opened", changes.length, {
+      target: "unit_plan",
+      unitId: Number(unitId),
+    });
   };
 
   const confirmAiApply = async () => {
@@ -287,6 +318,7 @@ export default function UnitPlannerPage() {
 
     setApplyingAi(true);
     setAiApplyError(null);
+    const applyStartedAt = typeof performance !== "undefined" ? performance.now() : null;
 
     const nextDescription = pendingAiDraft.description ?? description;
     const nextEssentialQuestions =
@@ -327,11 +359,29 @@ export default function UnitPlannerPage() {
 
       await fetchData();
       setAiApplyMessage("AI draft applied and saved as a new unit version.");
+      reportInteractionMetric(
+        "ai_diff_apply_completed",
+        applyStartedAt === null ? 0 : performance.now() - applyStartedAt,
+        {
+          target: "unit_plan",
+          unitId: Number(unitId),
+          changeCount: pendingAiChanges.length,
+        },
+      );
       setShowAiApplyModal(false);
       setPendingAiDraft(null);
       setPendingAiChanges([]);
     } catch {
       setAiApplyError("Failed to apply AI draft to this unit.");
+      reportInteractionMetric(
+        "ai_diff_apply_failed",
+        applyStartedAt === null ? 0 : performance.now() - applyStartedAt,
+        {
+          target: "unit_plan",
+          unitId: Number(unitId),
+          changeCount: pendingAiChanges.length,
+        },
+      );
     } finally {
       setApplyingAi(false);
     }

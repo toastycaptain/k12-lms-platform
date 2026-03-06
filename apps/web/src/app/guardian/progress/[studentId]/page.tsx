@@ -1,11 +1,18 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useCurriculumRuntime } from "@/features/curriculum/runtime/useCurriculumRuntime";
+import { GuardianExperience } from "@/features/ib/guardian/GuardianExperience";
 import StudentProgressView from "@/components/StudentProgressView";
 
 export default function GuardianStudentProgressPage() {
   const params = useParams();
   const studentId = Number(params.studentId);
+  const { isIb } = useCurriculumRuntime();
+
+  if (isIb) {
+    return <GuardianExperience />;
+  }
 
   if (!Number.isFinite(studentId) || studentId <= 0) {
     return (

@@ -1,3 +1,3 @@
 class Current < ActiveSupport::CurrentAttributes
-  attribute :tenant, :user
+  attribute :tenant, :user, :school
 end
