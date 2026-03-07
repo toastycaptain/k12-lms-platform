@@ -51,7 +51,7 @@ jobs:
       - name: Test coverage
         run: npm run test:coverage
       - name: Upload web coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-coverage
           path: apps/web/coverage
@@ -88,13 +88,13 @@ jobs:
       - name: Run tests
         run: pytest
       - name: Upload AI Gateway coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-gateway-coverage
           path: apps/ai-gateway/.coverage
           if-no-files-found: ignore
       - name: Upload AI Gateway SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-gateway-sbom
           path: apps/ai-gateway/sbom-ai-gateway.json
@@ -170,7 +170,7 @@ jobs:
         run: ruby script/generate_dependency_inventory.rb Gemfile.lock sbom-core.json
         working-directory: apps/core
       - name: Upload Core Dependency Inventory
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: core-dependency-inventory
           path: apps/core/sbom-core.json
@@ -226,7 +226,7 @@ jobs:
           working-directory: apps/core
       - name: Run Playwright IB smoke
         run: cd apps/web && npm run e2e -- --grep @ib-smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
