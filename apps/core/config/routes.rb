@@ -44,6 +44,25 @@ Rails.application.routes.draw do
         resource :operations, only: [ :show ], controller: "operations"
         resource :rollout, only: [ :show ], controller: "rollout"
         resource :pilot_readiness, only: [ :show ], controller: "pilot_readiness"
+        resource :pilot_setup, only: [ :show, :update ], controller: "pilot_setups" do
+          post :apply_baseline
+          post :validate_setup
+          post :activate
+          post :pause
+          post :resume
+          post :retire
+        end
+        resources :import_batches, only: [ :index, :show, :create, :update ] do
+          member do
+            post :dry_run
+            post :execute
+            post :rollback
+          end
+        end
+        resource :job_operations, only: [ :show ], controller: "job_operations" do
+          post :replay
+        end
+        resource :analytics, only: [ :show ], controller: "analytics"
         resource :review_governance, only: [ :show ], controller: "review_governance"
         resource :resolve, only: [ :show ], controller: "resolutions"
         resource :specialist, only: [ :show ], controller: "specialist"

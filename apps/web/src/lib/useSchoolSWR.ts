@@ -6,7 +6,7 @@ export function useSchoolSWR<Data = unknown, ErrorType = Error>(
   url: string | null,
   config?: SWRConfiguration<Data, ErrorType>,
 ): SWRResponse<Data, ErrorType> {
-  const { schoolId } = useSchool();
-  const key = url ? (schoolId ? [url, schoolId] : url) : null;
+  const { schoolId, loading } = useSchool();
+  const key = url ? (loading ? null : schoolId ? [url, schoolId] : url) : null;
   return useAppSWR<Data, ErrorType>(key, config);
 }

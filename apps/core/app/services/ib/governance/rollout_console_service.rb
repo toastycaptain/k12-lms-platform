@@ -13,6 +13,8 @@ module Ib
         {
           active_pack: active_pack,
           feature_flags: feature_flags,
+          pilot_baseline: pilot_baseline,
+          pilot_setup: pilot_setup,
           route_readiness: route_readiness,
           migration_drift: migration_drift,
           programme_settings: programme_settings,
@@ -50,11 +52,22 @@ module Ib
       end
 
       def feature_flags
-        snapshot = FeatureFlag.ib_phase5_snapshot(tenant: tenant)
+        snapshot = FeatureFlag.ib_phase6_snapshot(tenant: tenant)
         {
           required: snapshot.map { |key, enabled| { key: key, enabled: enabled } },
           healthy: snapshot.values.all?
         }
+      end
+
+      def pilot_baseline
+        ::Ib::Support::PilotBaselineService.new(tenant: tenant, school: school).verify
+      end
+
+      def pilot_setup
+        scoped_school = school || School.where(tenant_id: tenant.id).first
+        return nil if scoped_school.nil?
+
+        ::Ib::Support::PilotSetupStatusEngine.new(tenant: tenant, school: scoped_school).build
       end
 
       def route_readiness

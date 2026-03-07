@@ -280,9 +280,9 @@ export async function proxyToCore(request: NextRequest): Promise<Response> {
     return NextResponse.json({ error: "CORE_URL is not configured" }, { status: 500 });
   }
 
-  if (coreOrigin.hostname === request.nextUrl.hostname) {
+  if (coreOrigin.origin === request.nextUrl.origin) {
     console.error("Refusing to proxy to self host", {
-      requestHost: request.nextUrl.hostname,
+      requestHost: request.nextUrl.origin,
       coreOrigin: coreOrigin.origin,
       pathname: request.nextUrl.pathname,
     });

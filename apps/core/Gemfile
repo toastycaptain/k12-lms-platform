@@ -4,6 +4,7 @@ gem "rails", "~> 8.1.2"
 gem "pg", "~> 1.1"
 gem "puma", "~> 7.2"
 gem "csv", "~> 3.3"
+gem "roo", "~> 3.0"
 
 # Authentication
 gem "devise", "~> 5.0"

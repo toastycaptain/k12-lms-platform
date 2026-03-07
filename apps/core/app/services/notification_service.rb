@@ -1,6 +1,6 @@
 class NotificationService
   class << self
-    def notify(user:, type: nil, event_type: nil, title: nil, message: nil, url: nil, actor: nil, notifiable: nil, metadata: {})
+    def notify(user:, type: nil, event_type: nil, title: nil, message: nil, url: nil, actor: nil, notifiable: nil, metadata: {}, dedupe_key: nil)
       return if user.blank?
 
       resolved_event_type = (event_type || type).to_s
@@ -16,6 +16,8 @@ class NotificationService
 
       notification = nil
       if preference[:in_app]
+        return existing_notification(user: user, event_type: resolved_event_type, dedupe_key: dedupe_key) if dedupe_key.present? && existing_notification(user: user, event_type: resolved_event_type, dedupe_key: dedupe_key)
+
         notification = Notification.create!(
           tenant: tenant,
           user: user,
@@ -25,7 +27,8 @@ class NotificationService
           message: resolved_message,
           url: url,
           notifiable: notifiable,
-          metadata: normalized_metadata
+          metadata: normalized_metadata,
+          dedupe_key: dedupe_key
         )
       end
 
@@ -112,6 +115,15 @@ class NotificationService
       return notifiable.title if notifiable.respond_to?(:title) && notifiable.title.present?
 
       fallback
+    end
+
+    def existing_notification(user:, event_type:, dedupe_key:)
+      Notification.where(
+        tenant_id: user.tenant_id,
+        user_id: user.id,
+        notification_type: event_type,
+        dedupe_key: dedupe_key
+      ).order(created_at: :desc).first
     end
   end
 end

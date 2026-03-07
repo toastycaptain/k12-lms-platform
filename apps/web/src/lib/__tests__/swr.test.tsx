@@ -110,4 +110,21 @@ describe("swr utilities", () => {
 
     expect(mockedApiFetch).toHaveBeenCalledWith("/api/v1/unit_plans");
   });
+
+  it("useSchoolSWR waits for school context resolution before fetching", async () => {
+    mockedUseSchool.mockReturnValue({
+      schools: [{ id: 7, name: "Lincoln High" }],
+      schoolId: null,
+      setSchoolId: vi.fn(),
+      loading: true,
+    });
+
+    renderHook(() => useSchoolSWR<Array<{ id: number; title: string }>>("/api/v1/unit_plans"), {
+      wrapper,
+    });
+
+    await waitFor(() => {
+      expect(mockedApiFetch).not.toHaveBeenCalled();
+    });
+  });
 });

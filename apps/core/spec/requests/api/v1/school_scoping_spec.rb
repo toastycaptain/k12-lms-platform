@@ -16,6 +16,20 @@ RSpec.describe "School scoping", type: :request do
     Current.tenant = nil
     user
   end
+  let(:student) do
+    Current.tenant = tenant
+    user = create(:user, tenant: tenant)
+    user.add_role(:student)
+    Current.tenant = nil
+    user
+  end
+  let(:guardian) do
+    Current.tenant = tenant
+    user = create(:user, tenant: tenant)
+    user.add_role(:guardian)
+    Current.tenant = nil
+    user
+  end
   let!(:feature_flag) { FeatureFlag.create!(key: "school_scoping_v1", enabled: true, tenant: tenant) }
   let!(:school_a) { create(:school, tenant: tenant, name: "School A") }
   let!(:school_b) { create(:school, tenant: tenant, name: "School B") }
@@ -27,6 +41,8 @@ RSpec.describe "School scoping", type: :request do
   before do
     section = create(:section, tenant: tenant, course: course_a, term: term)
     create(:enrollment, tenant: tenant, user: teacher, section: section, role: "teacher")
+    create(:enrollment, tenant: tenant, user: student, section: section, role: "student")
+    create(:guardian_link, tenant: tenant, guardian: guardian, student: student, status: "active")
   end
 
   after do
@@ -58,5 +74,23 @@ RSpec.describe "School scoping", type: :request do
     get "/api/v1/courses", headers: { "X-School-Id" => school_b.id.to_s }
 
     expect(response).to have_http_status(:forbidden)
+  end
+
+  it "allows students to access their enrolled school context" do
+    mock_session(student, tenant: tenant)
+
+    get "/api/v1/courses", headers: { "X-School-Id" => school_a.id.to_s }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.map { |course| course["id"] }).to include(course_a.id)
+  end
+
+  it "allows guardians to access a linked student's school context" do
+    mock_session(guardian, tenant: tenant)
+
+    get "/api/v1/ib/guardian", headers: { "X-School-Id" => school_a.id.to_s }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body).to include("stories", "current_units", "portfolio_highlights")
   end
 end

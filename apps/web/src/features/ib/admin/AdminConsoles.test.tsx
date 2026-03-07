@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ProgrammeSettingsConsole } from "@/features/ib/admin/ProgrammeSettingsConsole";
 import { RolloutConsole } from "@/features/ib/admin/RolloutConsole";
 import { PilotReadinessConsole } from "@/features/ib/admin/PilotReadinessConsole";
+import { validateIbPilotSetup } from "@/features/ib/admin/api";
 import {
   saveIbProgrammeSetting,
   useIbPilotReadiness,
@@ -34,6 +35,30 @@ vi.mock("@/features/ib/data", () => ({
   saveIbProgrammeSetting: vi.fn(async () => ({})),
   useIbRolloutPayload: vi.fn(),
   useIbPilotReadiness: vi.fn(),
+}));
+
+vi.mock("@/features/ib/admin/api", () => ({
+  validateIbPilotSetup: vi.fn(async () => ({})),
+}));
+
+vi.mock("@/features/ib/admin/PilotSetupWizard", () => ({
+  PilotSetupWizard: () => <div>Pilot Setup Wizard</div>,
+}));
+
+vi.mock("@/features/ib/admin/ImportOperationsConsole", () => ({
+  ImportOperationsConsole: () => <div>Import Operations Console</div>,
+}));
+
+vi.mock("@/features/ib/admin/JobOperationsConsole", () => ({
+  JobOperationsConsole: () => <div>Job Operations Console</div>,
+}));
+
+vi.mock("@/features/ib/admin/PilotAnalyticsConsole", () => ({
+  PilotAnalyticsConsole: () => <div>Pilot Analytics Console</div>,
+}));
+
+vi.mock("@/features/ib/admin/OnboardingSupportPanel", () => ({
+  OnboardingSupportPanel: () => <div>Onboarding Support Panel</div>,
 }));
 
 describe("IB admin consoles", () => {
@@ -71,6 +96,20 @@ describe("IB admin consoles", () => {
         featureFlags: {
           required: [{ key: "curriculum_documents_v1", enabled: true }],
           healthy: true,
+        },
+        pilotBaseline: {
+          packKey: "ib_continuum_v1",
+          packVersion: "2026.2",
+          releaseChannel: "ib-pilot",
+          releaseFrozen: true,
+          baselineApplied: true,
+        },
+        pilotSetup: {
+          status: "in_progress",
+          completedSteps: 5,
+          totalSteps: 8,
+          blockerCount: 2,
+          warningCount: 1,
         },
         routeReadiness: {
           checkedCount: 10,
@@ -116,6 +155,16 @@ describe("IB admin consoles", () => {
             status: "yellow",
             summary: "One programme still needs follow-up.",
             issues: ["MYP settings incomplete"],
+            rules: [
+              {
+                id: "settings.complete",
+                severity: "warning",
+                status: "fail",
+                detail: "Programme settings should be explicit before pilot launch.",
+                remediation: "Complete the missing programme settings in the coordinator console.",
+                href: "/ib/settings",
+              },
+            ],
           },
           {
             key: "route_readiness",
@@ -123,9 +172,13 @@ describe("IB admin consoles", () => {
             status: "green",
             summary: "Canonical route coverage is healthy.",
             issues: [],
+            rules: [],
           },
         ],
+        generatedAt: new Date().toISOString(),
+        staleAfterSeconds: 300,
       },
+      mutate: vi.fn(async () => undefined),
     } as never);
   });
 
@@ -157,6 +210,8 @@ describe("IB admin consoles", () => {
     expect(screen.getByText("Rollout console")).toBeInTheDocument();
     expect(screen.getByText(/Deprecated pack records: 2/)).toBeInTheDocument();
     expect(screen.getByText(/Legacy document routes: 1/)).toBeInTheDocument();
+    expect(screen.getByText("Pilot Setup Wizard")).toBeInTheDocument();
+    expect(screen.getByText("Import Operations Console")).toBeInTheDocument();
   });
 
   it("renders readiness issues with fix links", () => {
@@ -165,5 +220,15 @@ describe("IB admin consoles", () => {
     expect(screen.getByText("Pilot readiness")).toBeInTheDocument();
     expect(screen.getByText("MYP settings incomplete")).toBeInTheDocument();
     expect(screen.getAllByText("Open fix surface").length).toBeGreaterThan(0);
+  });
+
+  it("refreshes readiness from the operator console", async () => {
+    render(<PilotReadinessConsole />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh readiness" }));
+
+    await waitFor(() => {
+      expect(validateIbPilotSetup).toHaveBeenCalledWith("Mixed");
+    });
   });
 });

@@ -13,6 +13,7 @@ import {
 import CreateDocumentWizard from "@/curriculum/documents/CreateDocumentWizard";
 import DocumentList from "@/curriculum/documents/DocumentList";
 import { useCurriculumRuntimeDetails } from "@/curriculum/runtime/useCurriculumPack";
+import { canonicalIbHrefForDocument, isIbDocument } from "@/features/ib/document-routes";
 import { useSchool } from "@/lib/school-context";
 
 export default function PlanDocumentsModule() {
@@ -111,6 +112,11 @@ export default function PlanDocumentsModule() {
           documentTypes={runtime.documentTypes}
           onClose={() => setWizardOpen(false)}
           onCreated={async (document) => {
+            if (isIbDocument(document)) {
+              router.push(canonicalIbHrefForDocument(document) || `/plan/documents/${document.id}`);
+              return;
+            }
+
             router.push(`/plan/documents/${document.id}`);
           }}
         />

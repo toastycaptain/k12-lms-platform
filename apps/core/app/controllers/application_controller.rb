@@ -285,8 +285,16 @@ class ApplicationController < ActionController::API
     return false if user.nil? || school.nil?
     return true if user.has_role?(:admin) || user.has_role?(:curriculum_lead) || user.has_role?(:district_admin)
 
+    return true if enrolled_in_school?(user_ids: [ user.id ], school: school)
+    return false unless user.has_role?(:guardian)
+
+    guardian_student_ids = GuardianLink.active.where(guardian_id: user.id).select(:student_id)
+    enrolled_in_school?(user_ids: guardian_student_ids, school: school)
+  end
+
+  def enrolled_in_school?(user_ids:, school:)
     Enrollment.joins(section: :course)
-      .where(user_id: user.id, courses: { school_id: school.id })
+      .where(user_id: user_ids, courses: { school_id: school.id })
       .exists?
   end
 end

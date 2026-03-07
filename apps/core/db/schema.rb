@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_100500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -687,6 +687,64 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
     t.index ["tenant_id"], name: "index_ib_evidence_items_on_tenant_id"
   end
 
+  create_table "ib_import_batches", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.datetime "created_at", null: false
+    t.jsonb "dry_run_summary", default: {}, null: false
+    t.text "error_message"
+    t.datetime "executed_at"
+    t.bigint "executed_by_id"
+    t.jsonb "execution_summary", default: {}, null: false
+    t.datetime "failed_at"
+    t.bigint "initiated_by_id"
+    t.datetime "last_dry_run_at"
+    t.jsonb "mapping_payload", default: {}, null: false
+    t.jsonb "parser_warnings", default: [], null: false
+    t.string "programme", default: "Mixed", null: false
+    t.text "raw_payload"
+    t.jsonb "rollback_summary", default: {}, null: false
+    t.datetime "rolled_back_at"
+    t.bigint "school_id", null: false
+    t.jsonb "scope_metadata", default: {}, null: false
+    t.string "source_checksum"
+    t.string "source_filename", null: false
+    t.string "source_format", null: false
+    t.string "source_kind", null: false
+    t.string "status", default: "uploaded", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "validation_summary", default: {}, null: false
+    t.index ["academic_year_id"], name: "index_ib_import_batches_on_academic_year_id"
+    t.index ["executed_by_id"], name: "index_ib_import_batches_on_executed_by_id"
+    t.index ["initiated_by_id"], name: "index_ib_import_batches_on_initiated_by_id"
+    t.index ["school_id"], name: "index_ib_import_batches_on_school_id"
+    t.index ["tenant_id", "school_id", "status"], name: "index_ib_import_batches_on_scope_and_status"
+    t.index ["tenant_id"], name: "index_ib_import_batches_on_tenant_id"
+  end
+
+  create_table "ib_import_rows", force: :cascade do |t|
+    t.jsonb "conflict_payload", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.jsonb "error_messages", default: [], null: false
+    t.jsonb "execution_payload", default: {}, null: false
+    t.bigint "ib_import_batch_id", null: false
+    t.jsonb "mapping_payload", default: {}, null: false
+    t.jsonb "normalized_payload", default: {}, null: false
+    t.integer "row_index", null: false
+    t.string "sheet_name"
+    t.string "source_identifier"
+    t.jsonb "source_payload", default: {}, null: false
+    t.string "status", default: "staged", null: false
+    t.string "target_entity_ref"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "warnings", default: [], null: false
+    t.index ["ib_import_batch_id", "row_index"], name: "index_ib_import_rows_on_ib_import_batch_id_and_row_index", unique: true
+    t.index ["ib_import_batch_id", "status"], name: "index_ib_import_rows_on_ib_import_batch_id_and_status"
+    t.index ["ib_import_batch_id"], name: "index_ib_import_rows_on_ib_import_batch_id"
+    t.index ["tenant_id"], name: "index_ib_import_rows_on_tenant_id"
+  end
+
   create_table "ib_learning_stories", force: :cascade do |t|
     t.string "audience", default: "families", null: false
     t.string "cadence", default: "weekly_digest", null: false
@@ -788,6 +846,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
     t.index ["school_id"], name: "index_ib_operational_records_on_school_id"
     t.index ["student_id"], name: "index_ib_operational_records_on_student_id"
     t.index ["tenant_id"], name: "index_ib_operational_records_on_tenant_id"
+  end
+
+  create_table "ib_pilot_setups", force: :cascade do |t|
+    t.datetime "activated_at"
+    t.jsonb "baseline_metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.jsonb "feature_flag_bundle", default: {}, null: false
+    t.datetime "last_validated_at"
+    t.jsonb "owner_assignments", default: {}, null: false
+    t.datetime "paused_at"
+    t.text "paused_reason"
+    t.string "programme", default: "Mixed", null: false
+    t.datetime "retired_at"
+    t.bigint "school_id", null: false
+    t.jsonb "setup_steps", default: {}, null: false
+    t.string "status", default: "not_started", null: false
+    t.jsonb "status_details", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_ib_pilot_setups_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_pilot_setups_on_school_id"
+    t.index ["tenant_id", "school_id", "programme"], name: "index_ib_pilot_setups_on_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_pilot_setups_on_tenant_id"
+    t.index ["updated_by_id"], name: "index_ib_pilot_setups_on_updated_by_id"
   end
 
   create_table "ib_programme_settings", force: :cascade do |t|
@@ -1125,6 +1209,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
   create_table "notifications", force: :cascade do |t|
     t.bigint "actor_id"
     t.datetime "created_at", null: false
+    t.string "dedupe_key"
     t.text "message"
     t.jsonb "metadata", default: {}, null: false
     t.bigint "notifiable_id"
@@ -1138,6 +1223,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
     t.bigint "user_id", null: false
     t.index ["actor_id"], name: "index_notifications_on_actor_id"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable_type_and_notifiable_id"
+    t.index ["tenant_id", "user_id", "notification_type", "dedupe_key"], name: "index_notifications_on_dedupe_key", unique: true, where: "(dedupe_key IS NOT NULL)"
     t.index ["tenant_id"], name: "index_notifications_on_tenant_id"
     t.index ["user_id", "read_at"], name: "idx_notifications_user_read_at"
     t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
@@ -1859,6 +1945,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
   add_foreign_key "ib_evidence_items", "tenants"
   add_foreign_key "ib_evidence_items", "users", column: "created_by_id"
   add_foreign_key "ib_evidence_items", "users", column: "student_id"
+  add_foreign_key "ib_import_batches", "academic_years"
+  add_foreign_key "ib_import_batches", "schools"
+  add_foreign_key "ib_import_batches", "tenants"
+  add_foreign_key "ib_import_batches", "users", column: "executed_by_id"
+  add_foreign_key "ib_import_batches", "users", column: "initiated_by_id"
+  add_foreign_key "ib_import_rows", "ib_import_batches"
+  add_foreign_key "ib_import_rows", "tenants"
   add_foreign_key "ib_learning_stories", "curriculum_documents"
   add_foreign_key "ib_learning_stories", "planning_contexts"
   add_foreign_key "ib_learning_stories", "schools"
@@ -1879,6 +1972,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_151000) do
   add_foreign_key "ib_operational_records", "users", column: "advisor_id"
   add_foreign_key "ib_operational_records", "users", column: "owner_id"
   add_foreign_key "ib_operational_records", "users", column: "student_id"
+  add_foreign_key "ib_pilot_setups", "schools"
+  add_foreign_key "ib_pilot_setups", "tenants"
+  add_foreign_key "ib_pilot_setups", "users", column: "created_by_id"
+  add_foreign_key "ib_pilot_setups", "users", column: "updated_by_id"
   add_foreign_key "ib_programme_settings", "schools"
   add_foreign_key "ib_programme_settings", "tenants"
   add_foreign_key "ib_programme_settings", "users", column: "updated_by_id"

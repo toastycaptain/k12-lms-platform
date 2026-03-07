@@ -52,6 +52,4 @@ module Ib
       end
     end
   end
-
-  ReadinessService = Support::ReadinessService
 end

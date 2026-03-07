@@ -13,6 +13,20 @@ class FeatureFlag < ApplicationRecord
     ib_standards_practices_live_v1
   ].freeze
 
+  IB_PHASE6_REQUIRED_FLAGS = (
+    IB_PHASE5_REQUIRED_FLAGS + %w[
+      ib_documents_only_v1
+      ib_pilot_setup_v1
+      ib_import_pipeline_v1
+      ib_job_operations_v1
+      ib_onboarding_support_v1
+      ib_friction_analytics_v1
+      ib_mobile_quick_actions_v2
+      ib_document_consolidation_v1
+      ib_shared_platform_primitives_v1
+    ]
+  ).uniq.freeze
+
   belongs_to :tenant, optional: true
 
   DEFAULTS = {
@@ -54,6 +68,14 @@ class FeatureFlag < ApplicationRecord
     "ib_dp_core_live_v1" => false,
     "ib_standards_practices_live_v1" => false,
     "ib_documents_only_v1" => false,
+    "ib_pilot_setup_v1" => false,
+    "ib_import_pipeline_v1" => false,
+    "ib_job_operations_v1" => false,
+    "ib_onboarding_support_v1" => false,
+    "ib_friction_analytics_v1" => false,
+    "ib_mobile_quick_actions_v2" => false,
+    "ib_document_consolidation_v1" => false,
+    "ib_shared_platform_primitives_v1" => false,
     "ib_pyp_vertical_slice_v1" => false,
     "ib_myp_vertical_slice_v1" => false,
     "ib_myp_interdisciplinary_slice_v1" => false,
@@ -95,5 +117,9 @@ class FeatureFlag < ApplicationRecord
 
   def self.ib_phase5_snapshot(tenant:)
     snapshot(IB_PHASE5_REQUIRED_FLAGS, tenant: tenant)
+  end
+
+  def self.ib_phase6_snapshot(tenant:)
+    snapshot(IB_PHASE6_REQUIRED_FLAGS, tenant: tenant)
   end
 end

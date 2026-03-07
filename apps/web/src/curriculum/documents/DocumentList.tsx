@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { EmptyState, Pagination } from "@k12/ui";
 import { useCurriculumDocuments } from "@/curriculum/documents/hooks";
 import type { PackRuntimeSubset } from "@/curriculum/runtime/types";
+import { canonicalIbHrefForDocument, isIbDocument } from "@/features/ib/document-routes";
 import WorkflowBadge from "@/curriculum/workflow/WorkflowBadge";
 
 interface DocumentListProps {
@@ -123,7 +124,11 @@ export default function DocumentList({
           {documents.map((document) => (
             <Link
               key={document.id}
-              href={`/plan/documents/${document.id}`}
+              href={
+                isIbDocument(document)
+                  ? (canonicalIbHrefForDocument(document) ?? `/plan/documents/${document.id}`)
+                  : `/plan/documents/${document.id}`
+              }
               className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-3">

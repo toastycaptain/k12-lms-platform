@@ -1,17 +1,26 @@
 require "stringio"
+require "digest"
 
 module Ib
   module Standards
     class ExportService
       class << self
         def enqueue!(packet:, initiated_by:)
+          snapshot = snapshot_for(packet)
+          snapshot_digest = Digest::SHA256.hexdigest(snapshot.to_json)
+          existing = packet.exports.where(status: %w[queued running succeeded]).find do |export|
+            export.metadata.to_h["snapshot_digest"] == snapshot_digest
+          end
+          return existing if existing.present?
+
           export = packet.exports.create!(
             tenant: packet.tenant,
             school: packet.school,
             ib_standards_cycle: packet.ib_standards_cycle,
             initiated_by: initiated_by,
-            snapshot_payload: snapshot_for(packet),
+            snapshot_payload: snapshot,
             metadata: {
+              "snapshot_digest" => snapshot_digest,
               "route_id" => ::Ib::RouteBuilder.route_id_for(packet),
               "route_href" => ::Ib::RouteBuilder.href_for(packet)
             }
@@ -99,7 +108,8 @@ module Ib
       end
 
       class ExportJob < ApplicationJob
-        queue_as :default
+        queue_as :ib_exports
+        retry_on StandardError, wait: 15.seconds, attempts: 3
 
         def perform(export_id)
           export = IbStandardsExport.find(export_id)

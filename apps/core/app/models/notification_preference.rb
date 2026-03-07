@@ -11,7 +11,10 @@ class NotificationPreference < ApplicationRecord
     "quiz_graded" => "Quiz Graded",
     "approval_requested" => "Approval Requested",
     "approval_resolved" => "Approval Resolved",
-    "message_received" => "Message Received"
+    "message_received" => "Message Received",
+    "ib_story_published" => "IB Story Published",
+    "ib_import_failed" => "IB Import Failed",
+    "ib_readiness_blocker" => "IB Readiness Blocker"
   }.freeze
   DEFAULT_FALLBACK = {
     in_app: true,

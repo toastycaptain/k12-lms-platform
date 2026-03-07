@@ -57,6 +57,12 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
+      - name: Verify repo integrity baseline
+        run: |
+          chmod +x scripts/ib_repo_integrity.sh scripts/ib_archive_verify.sh
+          scripts/ib_repo_integrity.sh
+          scripts/ib_archive_verify.sh
+
       - name: Install Railway CLI
         run: |
           npm install -g @railway/cli || true
@@ -186,6 +192,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Verify repo integrity baseline
+        run: |
+          chmod +x scripts/ib_repo_integrity.sh scripts/ib_archive_verify.sh
+          scripts/ib_repo_integrity.sh
+          scripts/ib_archive_verify.sh
 
       - name: Install Railway CLI
         run: |

@@ -7,6 +7,7 @@ class Notification < ApplicationRecord
 
   validates :notification_type, presence: true
   validates :title, presence: true
+  validates :dedupe_key, uniqueness: { scope: [ :tenant_id, :user_id, :notification_type ] }, allow_nil: true
 
   scope :unread, -> { where(read_at: nil) }
   scope :recent, -> { order(created_at: :desc).limit(20) }

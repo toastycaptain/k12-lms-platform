@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { VirtualDataGrid } from "@k12/ui";
+import { ImportOperationsConsole } from "@/features/ib/admin/ImportOperationsConsole";
+import { JobOperationsConsole } from "@/features/ib/admin/JobOperationsConsole";
+import { OnboardingSupportPanel } from "@/features/ib/admin/OnboardingSupportPanel";
+import { PilotAnalyticsConsole } from "@/features/ib/admin/PilotAnalyticsConsole";
+import { PilotSetupWizard } from "@/features/ib/admin/PilotSetupWizard";
 import { useIbRolloutPayload } from "@/features/ib/data";
+import { MobileTriageTray } from "@/features/ib/mobile/MobileTriageTray";
 import { IB_CANONICAL_ROUTES } from "@/features/ib/routes/registry";
 import { IbCoordinatorPageShell, IbPageLoading } from "@/features/ib/layout/IbPageShell";
 import { WorkspacePanel } from "@/features/ib/shared/IbWorkspaceScaffold";
@@ -28,8 +34,16 @@ export function RolloutConsole() {
         {
           label: "Flags enabled",
           value: String(data.featureFlags.required.filter((flag) => flag.enabled).length),
-          detail: "Required Phase 5 flags",
+          detail: "Required Phase 6 flags",
           tone: data.featureFlags.healthy ? "success" : "warm",
+        },
+        {
+          label: "Baseline",
+          value: data.pilotBaseline?.releaseFrozen ? "Frozen" : "Open",
+          detail: data.pilotBaseline
+            ? `${data.pilotBaseline.packKey}@${data.pilotBaseline.packVersion}`
+            : "Baseline not applied",
+          tone: data.pilotBaseline?.releaseFrozen ? "success" : "warm",
         },
         {
           label: "Canonical routes",
@@ -38,17 +52,41 @@ export function RolloutConsole() {
           tone: data.routeReadiness.healthy ? "success" : "warm",
         },
         {
-          label: "Legacy links",
-          value: String(
-            data.legacyUsage.legacyDocumentRoutes +
-              data.legacyUsage.legacyOperationalRoutes +
-              data.legacyUsage.demoRoutes,
-          ),
-          detail: "Still need migration attention",
-          tone: "risk",
+          label: "Setup blockers",
+          value: String(data.pilotSetup?.blockerCount || 0),
+          detail: `${data.pilotSetup?.completedSteps || 0}/${data.pilotSetup?.totalSteps || 0} steps green`,
+          tone: (data.pilotSetup?.blockerCount || 0) > 0 ? "risk" : "success",
         },
       ]}
     >
+      <MobileTriageTray
+        title="Rollout quick actions"
+        description="On mobile, keep the frozen baseline, setup blockers, and import pipeline visible."
+        items={[
+          {
+            id: "pilot-setup",
+            label: "Pilot setup wizard",
+            detail: `${data.pilotSetup?.blockerCount || 0} blockers and ${data.pilotSetup?.warningCount || 0} warnings`,
+            href: IB_CANONICAL_ROUTES.rollout,
+            status: (data.pilotSetup?.blockerCount || 0) > 0 ? "retry" : "saved",
+          },
+          {
+            id: "readiness",
+            label: "Pilot readiness",
+            detail: `${data.routeReadiness.fallbackCount} fallback routes still need cleanup`,
+            href: IB_CANONICAL_ROUTES.readiness,
+            status: data.routeReadiness.healthy ? "saved" : "pending",
+          },
+          {
+            id: "publishing",
+            label: "Publishing queue",
+            detail: "Open the family publishing queue for held or launch-day items.",
+            href: IB_CANONICAL_ROUTES.familiesPublishing,
+            status: "pending",
+          },
+        ]}
+      />
+
       <div className="grid gap-5 xl:grid-cols-2">
         <WorkspacePanel
           title="Required flags"
@@ -110,7 +148,7 @@ export function RolloutConsole() {
 
         <WorkspacePanel
           title="Legacy usage"
-          description="This is the remaining cutover backlog from generic planning surfaces into IB-native routes."
+          description="This is the remaining cutover backlog from generic planning surfaces into the documents-only IB route family."
         >
           <ul className="space-y-3 text-sm text-slate-600">
             <li>Legacy document routes: {data.legacyUsage.legacyDocumentRoutes}</li>
@@ -118,6 +156,14 @@ export function RolloutConsole() {
             <li>Demo routes: {data.legacyUsage.demoRoutes}</li>
           </ul>
         </WorkspacePanel>
+      </div>
+
+      <div className="mt-5 space-y-5">
+        <PilotSetupWizard />
+        <ImportOperationsConsole />
+        <JobOperationsConsole />
+        <PilotAnalyticsConsole />
+        <OnboardingSupportPanel />
       </div>
     </IbCoordinatorPageShell>
   );

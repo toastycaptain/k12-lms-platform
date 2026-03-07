@@ -391,6 +391,20 @@ export interface IbRolloutPayload {
     required: Array<{ key: string; enabled: boolean }>;
     healthy: boolean;
   };
+  pilotBaseline?: {
+    packKey: string;
+    packVersion: string;
+    releaseChannel: string;
+    releaseFrozen: boolean;
+    baselineApplied: boolean;
+  };
+  pilotSetup?: {
+    status: string;
+    completedSteps: number;
+    totalSteps: number;
+    blockerCount: number;
+    warningCount: number;
+  } | null;
   routeReadiness: {
     checkedCount: number;
     canonicalCount: number;
@@ -430,8 +444,17 @@ export interface IbPilotReadinessPayload {
     status: "green" | "yellow" | "red";
     summary: string;
     issues: string[];
+    rules: Array<{
+      id: string;
+      severity: "info" | "warning" | "blocker";
+      status: "pass" | "fail";
+      detail: string;
+      remediation: string;
+      href: string;
+    }>;
   }>;
   generatedAt: string;
+  staleAfterSeconds: number;
 }
 
 export interface IbReviewGovernancePayload {
@@ -1251,6 +1274,63 @@ export function useIbRolloutPayload() {
               : [],
             healthy: Boolean((raw.feature_flags as Record<string, unknown> | undefined)?.healthy),
           },
+          pilotBaseline: raw.pilot_baseline
+            ? {
+                packKey: String(
+                  (raw.pilot_baseline as Record<string, unknown> | undefined)?.pack_key ||
+                    "ib_continuum_v1",
+                ),
+                packVersion: String(
+                  (raw.pilot_baseline as Record<string, unknown> | undefined)?.pack_version ||
+                    "2026.2",
+                ),
+                releaseChannel: String(
+                  (raw.pilot_baseline as Record<string, unknown> | undefined)?.release_channel ||
+                    "ib-pilot",
+                ),
+                releaseFrozen: Boolean(
+                  (raw.pilot_baseline as Record<string, unknown> | undefined)?.release_frozen,
+                ),
+                baselineApplied: Boolean(
+                  (raw.pilot_baseline as Record<string, unknown> | undefined)?.baseline_applied,
+                ),
+              }
+            : undefined,
+          pilotSetup: raw.pilot_setup
+            ? {
+                status: String(
+                  (raw.pilot_setup as Record<string, unknown> | undefined)?.status || "not_started",
+                ),
+                completedSteps: Number(
+                  (
+                    (raw.pilot_setup as Record<string, unknown> | undefined)?.summary_metrics as
+                      | Record<string, unknown>
+                      | undefined
+                  )?.completed_steps || 0,
+                ),
+                totalSteps: Number(
+                  (
+                    (raw.pilot_setup as Record<string, unknown> | undefined)?.summary_metrics as
+                      | Record<string, unknown>
+                      | undefined
+                  )?.total_steps || 0,
+                ),
+                blockerCount: Number(
+                  (
+                    (raw.pilot_setup as Record<string, unknown> | undefined)?.summary_metrics as
+                      | Record<string, unknown>
+                      | undefined
+                  )?.blocker_count || 0,
+                ),
+                warningCount: Number(
+                  (
+                    (raw.pilot_setup as Record<string, unknown> | undefined)?.summary_metrics as
+                      | Record<string, unknown>
+                      | undefined
+                  )?.warning_count || 0,
+                ),
+              }
+            : null,
           routeReadiness: {
             checkedCount: Number(
               (raw.route_readiness as Record<string, unknown> | undefined)?.checked_count || 0,
@@ -1330,7 +1410,9 @@ export function useIbRolloutPayload() {
 }
 
 export function useIbPilotReadiness() {
-  const response = useSchoolSWR<Record<string, unknown>>("/api/v1/ib/pilot_readiness");
+  const response = useSchoolSWR<Record<string, unknown>>("/api/v1/ib/pilot_readiness", {
+    refreshInterval: 60_000,
+  });
   const raw = response.data;
   return {
     ...response,
@@ -1351,9 +1433,22 @@ export function useIbPilotReadiness() {
                 issues: Array.isArray((section as Record<string, unknown>).issues)
                   ? ((section as Record<string, unknown>).issues as unknown[]).map(String)
                   : [],
+                rules: Array.isArray((section as Record<string, unknown>).rules)
+                  ? ((section as Record<string, unknown>).rules as Record<string, unknown>[]).map(
+                      (rule) => ({
+                        id: String(rule.id || "rule"),
+                        severity: String(rule.severity || "info") as "info" | "warning" | "blocker",
+                        status: String(rule.status || "pass") as "pass" | "fail",
+                        detail: String(rule.detail || ""),
+                        remediation: String(rule.remediation || ""),
+                        href: String(rule.href || IB_CANONICAL_ROUTES.readiness),
+                      }),
+                    )
+                  : [],
               }))
             : [],
           generatedAt: String(raw.generated_at || ""),
+          staleAfterSeconds: Number(raw.stale_after_seconds || 300),
         } satisfies IbPilotReadinessPayload)
       : undefined,
   };

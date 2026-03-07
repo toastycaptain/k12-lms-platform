@@ -187,6 +187,4 @@ module Ib
       end
     end
   end
-
-  RouteBuilder = Support::RouteBuilder
 end

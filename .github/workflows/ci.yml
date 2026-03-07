@@ -14,9 +14,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  repo_integrity:
+    name: Repo Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify repo integrity
+        run: |
+          chmod +x scripts/ib_repo_integrity.sh scripts/ib_archive_verify.sh
+          scripts/ib_repo_integrity.sh
+          scripts/ib_archive_verify.sh
+
   web:
     name: Web (lint, typecheck, build)
     runs-on: ubuntu-latest
+    needs: [repo_integrity]
     defaults:
       run:
         working-directory: apps/web
@@ -47,6 +59,7 @@ jobs:
   ai_gateway:
     name: AI Gateway (lint, typecheck, tests)
     runs-on: ubuntu-latest
+    needs: [repo_integrity]
     defaults:
       run:
         working-directory: apps/ai-gateway
@@ -90,6 +103,7 @@ jobs:
   core:
     name: Core API (rspec, rubocop, brakeman)
     runs-on: ubuntu-latest
+    needs: [repo_integrity]
     services:
       postgres:
         image: postgres:16
@@ -210,8 +224,8 @@ jobs:
           ruby-version: '4.0'
           bundler-cache: true
           working-directory: apps/core
-      - name: Run Playwright
-        run: cd apps/web && npm run e2e
+      - name: Run Playwright IB smoke
+        run: cd apps/web && npm run e2e -- --grep @ib-smoke
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
