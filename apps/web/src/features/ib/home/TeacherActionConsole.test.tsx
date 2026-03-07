@@ -77,6 +77,53 @@ vi.mock("@/features/ib/home/useIbHomePayload", () => ({
           programme: "PYP",
         },
       ],
+      pinnedItems: [],
+      dueToday: [
+        {
+          id: "due-1",
+          label: "Due today checkpoint",
+          detail: "Prepare the same-day follow-up.",
+          href: "/ib/projects-core",
+          tone: "warm",
+          programme: "PYP",
+        },
+      ],
+      recentHistory: [
+        {
+          id: "history-1",
+          label: "Recent review queue",
+          detail: "Opened from teacher home.",
+          href: "/ib/review",
+          tone: "default",
+          programme: "PYP",
+        },
+      ],
+      quickMutations: [
+        {
+          id: "mutation-1",
+          label: "Pin current work",
+          detail: "Save the current unit to pinned work.",
+          mutationType: "pin_recent_work",
+        },
+      ],
+      benchmarkSnapshot: [
+        {
+          workflowKey: "planning",
+          label: "Teacher planning",
+          targetMs: 45000,
+          observedMs: 38000,
+          clickTarget: 3,
+          observedClicks: 2,
+          surface: "teacher_studio",
+          status: "within_budget",
+        },
+      ],
+      performanceBudget: {
+        generatedAt: "2026-03-07T10:00:00Z",
+        budgets: [],
+        regressions: [],
+      },
+      lastSeenAt: "2026-03-07T09:00:00Z",
       coordinatorCards: [],
     },
   }),
@@ -98,11 +145,11 @@ describe("TeacherActionConsole", () => {
     render(<TeacherActionConsole />);
 
     expect(screen.getByRole("heading", { name: "Teacher action console" })).toBeInTheDocument();
-    expect(screen.getByText("Resume systems unit")).toBeInTheDocument();
+    expect(screen.getAllByText("Resume systems unit").length).toBeGreaterThan(0);
     expect(screen.getByText("Validate evidence")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Expanded" }));
 
-    expect(screen.getByText("Click-budget review")).toBeInTheDocument();
+    expect(screen.getByText("Bulk carry forward")).toBeInTheDocument();
   });
 });

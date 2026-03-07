@@ -43,7 +43,20 @@ Rails.application.routes.draw do
         resource :home, only: [ :show ], controller: "home"
         resource :operations, only: [ :show ], controller: "operations"
         resource :rollout, only: [ :show ], controller: "rollout"
+        resource :release_baseline, only: [ :show ], controller: "release_baselines" do
+          post :verify
+          post :certify
+          post :rollback
+        end
         resource :pilot_readiness, only: [ :show ], controller: "pilot_readiness"
+        resources :activity_events, only: [ :index, :create ]
+        resources :workspace_preferences, only: [ :index, :create ]
+        resources :specialist_assignments, only: [ :index, :create ]
+        resources :search, only: [ :index ], controller: "search"
+        resources :document_duplications, only: [ :create ]
+        resources :specialist_multi_attach, only: [ :create ]
+        resources :section_autosaves, only: [ :create ]
+        resources :collaboration_sessions, only: [ :index, :create, :update ]
         resource :pilot_setup, only: [ :show, :update ], controller: "pilot_setups" do
           post :apply_baseline
           post :validate_setup
@@ -68,6 +81,8 @@ Rails.application.routes.draw do
         resource :specialist, only: [ :show ], controller: "specialist"
         resource :guardian, only: [ :show ], controller: "guardian"
         resource :student, only: [ :show ], controller: "student"
+        resources :saved_searches, only: [ :index, :show, :create, :update, :destroy ]
+        resource :communication_preferences, only: [ :show, :update ], controller: "communication_preferences"
         resources :reviews, only: [ :index ]
         resources :evidence_items, only: [ :index, :show, :create, :update ] do
           collection do
@@ -81,6 +96,7 @@ Rails.application.routes.draw do
           end
         end
         resources :learning_stories, only: [ :index, :show, :create, :update ]
+        resources :reports, only: [ :index, :show, :create, :update ]
         resources :publishing_queue_items, only: [ :index, :create, :update ] do
           member do
             post :schedule

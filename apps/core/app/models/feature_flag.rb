@@ -27,6 +27,22 @@ class FeatureFlag < ApplicationRecord
     ]
   ).uniq.freeze
 
+  IB_PHASE8_REQUIRED_FLAGS = (
+    IB_PHASE6_REQUIRED_FLAGS + %w[
+      ib_ga_release_baseline_v1
+      ib_migration_moat_v1
+      ib_reporting_v1
+      ib_realtime_collaboration_v1
+      ib_teacher_speed_phase8_v1
+      ib_coordinator_intelligence_v2
+      ib_family_trust_v1
+      ib_mobile_sync_v1
+      ib_universal_search_v1
+      ib_saved_searches_v1
+      ib_large_school_hardening_v1
+    ]
+  ).uniq.freeze
+
   belongs_to :tenant, optional: true
 
   DEFAULTS = {
@@ -86,6 +102,17 @@ class FeatureFlag < ApplicationRecord
     "ib_dp_ee_slice_v1" => false,
     "ib_dp_tok_slice_v1" => false,
     "ib_dp_cas_slice_v1" => false,
+    "ib_ga_release_baseline_v1" => false,
+    "ib_migration_moat_v1" => false,
+    "ib_reporting_v1" => false,
+    "ib_realtime_collaboration_v1" => false,
+    "ib_teacher_speed_phase8_v1" => false,
+    "ib_coordinator_intelligence_v2" => false,
+    "ib_family_trust_v1" => false,
+    "ib_mobile_sync_v1" => false,
+    "ib_universal_search_v1" => false,
+    "ib_saved_searches_v1" => false,
+    "ib_large_school_hardening_v1" => false,
     "new_gradebook" => false,
     "beta_reports" => false
   }.freeze
@@ -121,5 +148,9 @@ class FeatureFlag < ApplicationRecord
 
   def self.ib_phase6_snapshot(tenant:)
     snapshot(IB_PHASE6_REQUIRED_FLAGS, tenant: tenant)
+  end
+
+  def self.ib_phase8_snapshot(tenant:)
+    snapshot(IB_PHASE8_REQUIRED_FLAGS, tenant: tenant)
   end
 end

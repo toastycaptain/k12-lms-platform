@@ -12,6 +12,19 @@ module Ib
             occurred_at: Time.current.utc.iso8601
           }
           Rails.logger.info("[ib.telemetry] #{payload.to_json}")
+          ActivityEventService.record!(
+            tenant: tenant,
+            user: user,
+            school: school,
+            event_name: event,
+            event_family: metadata[:event_family] || metadata["event_family"],
+            surface: metadata[:surface] || metadata["surface"],
+            programme: metadata[:programme] || metadata["programme"],
+            route_id: metadata[:route_id] || metadata["route_id"],
+            entity_ref: metadata[:entity_ref] || metadata["entity_ref"],
+            document_type: metadata[:document_type] || metadata["document_type"],
+            metadata: metadata
+          )
         end
       end
     end

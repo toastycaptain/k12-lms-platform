@@ -10534,6 +10534,1564 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/GenericResource"
+  "/api/v1/ib/activity_events":
+    get:
+      summary: GET /api/v1/ib/activity_events
+      operationId: get_api_v1_ib_activity_events
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/activity_events
+      operationId: post_api_v1_ib_activity_events
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/analytics":
+    get:
+      summary: GET /api/v1/ib/analytics
+      operationId: get_api_v1_ib_analytics
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_sessions":
+    get:
+      summary: GET /api/v1/ib/collaboration_sessions
+      operationId: get_api_v1_ib_collaboration_sessions
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/collaboration_sessions
+      operationId: post_api_v1_ib_collaboration_sessions
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_sessions/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/collaboration_sessions/{id}
+      operationId: put_api_v1_ib_collaboration_sessions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/collaboration_sessions/{id}
+      operationId: patch_api_v1_ib_collaboration_sessions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/communication_preferences":
+    get:
+      summary: GET /api/v1/ib/communication_preferences
+      operationId: get_api_v1_ib_communication_preferences
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/communication_preferences
+      operationId: put_api_v1_ib_communication_preferences
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/communication_preferences
+      operationId: patch_api_v1_ib_communication_preferences
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/document_collaborators":
+    get:
+      summary: GET /api/v1/ib/document_collaborators
+      operationId: get_api_v1_ib_document_collaborators
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/document_collaborators
+      operationId: post_api_v1_ib_document_collaborators
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/document_collaborators/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    patch:
+      summary: PATCH /api/v1/ib/document_collaborators/{id}
+      operationId: patch_api_v1_ib_document_collaborators_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/document_comments":
+    get:
+      summary: GET /api/v1/ib/document_comments
+      operationId: get_api_v1_ib_document_comments
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/document_comments
+      operationId: post_api_v1_ib_document_comments
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/document_comments/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    patch:
+      summary: PATCH /api/v1/ib/document_comments/{id}
+      operationId: patch_api_v1_ib_document_comments_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/document_duplications":
+    post:
+      summary: POST /api/v1/ib/document_duplications
+      operationId: post_api_v1_ib_document_duplications
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items":
+    get:
+      summary: GET /api/v1/ib/evidence_items
+      operationId: get_api_v1_ib_evidence_items
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/evidence_items
+      operationId: post_api_v1_ib_evidence_items
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/summary":
+    get:
+      summary: GET /api/v1/ib/evidence_items/summary
+      operationId: get_api_v1_ib_evidence_items_summary
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/evidence_items/{id}
+      operationId: get_api_v1_ib_evidence_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/evidence_items/{id}
+      operationId: put_api_v1_ib_evidence_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/evidence_items/{id}
+      operationId: patch_api_v1_ib_evidence_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/{id}/link_story":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/evidence_items/{id}/link_story
+      operationId: post_api_v1_ib_evidence_items_id_link_story
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/{id}/request_reflection":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/evidence_items/{id}/request_reflection
+      operationId: post_api_v1_ib_evidence_items_id_request_reflection
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/{id}/set_visibility":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/evidence_items/{id}/set_visibility
+      operationId: post_api_v1_ib_evidence_items_id_set_visibility
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/evidence_items/{id}/validate_item":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/evidence_items/{id}/validate_item
+      operationId: post_api_v1_ib_evidence_items_id_validate_item
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/guardian":
+    get:
+      summary: GET /api/v1/ib/guardian
+      operationId: get_api_v1_ib_guardian
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/home":
+    get:
+      summary: GET /api/v1/ib/home
+      operationId: get_api_v1_ib_home
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/import_batches":
+    get:
+      summary: GET /api/v1/ib/import_batches
+      operationId: get_api_v1_ib_import_batches
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/import_batches
+      operationId: post_api_v1_ib_import_batches
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/import_batches/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/import_batches/{id}
+      operationId: get_api_v1_ib_import_batches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/import_batches/{id}
+      operationId: put_api_v1_ib_import_batches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/import_batches/{id}
+      operationId: patch_api_v1_ib_import_batches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/import_batches/{id}/dry_run":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/import_batches/{id}/dry_run
+      operationId: post_api_v1_ib_import_batches_id_dry_run
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/import_batches/{id}/execute":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/import_batches/{id}/execute
+      operationId: post_api_v1_ib_import_batches_id_execute
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/import_batches/{id}/rollback":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/import_batches/{id}/rollback
+      operationId: post_api_v1_ib_import_batches_id_rollback
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/job_operations":
+    get:
+      summary: GET /api/v1/ib/job_operations
+      operationId: get_api_v1_ib_job_operations
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/job_operations/replay":
+    post:
+      summary: POST /api/v1/ib/job_operations/replay
+      operationId: post_api_v1_ib_job_operations_replay
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/learning_stories":
+    get:
+      summary: GET /api/v1/ib/learning_stories
+      operationId: get_api_v1_ib_learning_stories
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/learning_stories
+      operationId: post_api_v1_ib_learning_stories
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/learning_stories/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/learning_stories/{id}
+      operationId: get_api_v1_ib_learning_stories_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/learning_stories/{id}
+      operationId: put_api_v1_ib_learning_stories_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/learning_stories/{id}
+      operationId: patch_api_v1_ib_learning_stories_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/operational_records":
+    get:
+      summary: GET /api/v1/ib/operational_records
+      operationId: get_api_v1_ib_operational_records
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/operational_records
+      operationId: post_api_v1_ib_operational_records
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/operational_records/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/operational_records/{id}
+      operationId: get_api_v1_ib_operational_records_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/operational_records/{id}
+      operationId: put_api_v1_ib_operational_records_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/operational_records/{id}
+      operationId: patch_api_v1_ib_operational_records_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/operations":
+    get:
+      summary: GET /api/v1/ib/operations
+      operationId: get_api_v1_ib_operations
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_readiness":
+    get:
+      summary: GET /api/v1/ib/pilot_readiness
+      operationId: get_api_v1_ib_pilot_readiness
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup":
+    get:
+      summary: GET /api/v1/ib/pilot_setup
+      operationId: get_api_v1_ib_pilot_setup
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/pilot_setup
+      operationId: put_api_v1_ib_pilot_setup
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/pilot_setup
+      operationId: patch_api_v1_ib_pilot_setup
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/activate":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/activate
+      operationId: post_api_v1_ib_pilot_setup_activate
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/apply_baseline":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/apply_baseline
+      operationId: post_api_v1_ib_pilot_setup_apply_baseline
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/pause":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/pause
+      operationId: post_api_v1_ib_pilot_setup_pause
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/resume":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/resume
+      operationId: post_api_v1_ib_pilot_setup_resume
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/retire":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/retire
+      operationId: post_api_v1_ib_pilot_setup_retire
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_setup/validate_setup":
+    post:
+      summary: POST /api/v1/ib/pilot_setup/validate_setup
+      operationId: post_api_v1_ib_pilot_setup_validate_setup
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/programme_settings":
+    get:
+      summary: GET /api/v1/ib/programme_settings
+      operationId: get_api_v1_ib_programme_settings
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/programme_settings
+      operationId: post_api_v1_ib_programme_settings
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/programme_settings
+      operationId: patch_api_v1_ib_programme_settings
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/publishing_queue_items":
+    get:
+      summary: GET /api/v1/ib/publishing_queue_items
+      operationId: get_api_v1_ib_publishing_queue_items
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/publishing_queue_items
+      operationId: post_api_v1_ib_publishing_queue_items
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/publishing_queue_items/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/publishing_queue_items/{id}
+      operationId: put_api_v1_ib_publishing_queue_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/publishing_queue_items/{id}
+      operationId: patch_api_v1_ib_publishing_queue_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/publishing_queue_items/{id}/hold":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/publishing_queue_items/{id}/hold
+      operationId: post_api_v1_ib_publishing_queue_items_id_hold
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/publishing_queue_items/{id}/publish":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/publishing_queue_items/{id}/publish
+      operationId: post_api_v1_ib_publishing_queue_items_id_publish
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/publishing_queue_items/{id}/schedule":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/publishing_queue_items/{id}/schedule
+      operationId: post_api_v1_ib_publishing_queue_items_id_schedule
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pyp/programme_of_inquiries":
+    get:
+      summary: GET /api/v1/ib/pyp/programme_of_inquiries
+      operationId: get_api_v1_ib_pyp_programme_of_inquiries
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/pyp/programme_of_inquiries
+      operationId: post_api_v1_ib_pyp_programme_of_inquiries
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pyp/programme_of_inquiries/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/pyp/programme_of_inquiries/{id}
+      operationId: get_api_v1_ib_pyp_programme_of_inquiries_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/pyp/programme_of_inquiries/{id}
+      operationId: put_api_v1_ib_pyp_programme_of_inquiries_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/pyp/programme_of_inquiries/{id}
+      operationId: patch_api_v1_ib_pyp_programme_of_inquiries_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/release_baseline":
+    get:
+      summary: GET /api/v1/ib/release_baseline
+      operationId: get_api_v1_ib_release_baseline
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/release_baseline/certify":
+    post:
+      summary: POST /api/v1/ib/release_baseline/certify
+      operationId: post_api_v1_ib_release_baseline_certify
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/release_baseline/rollback":
+    post:
+      summary: POST /api/v1/ib/release_baseline/rollback
+      operationId: post_api_v1_ib_release_baseline_rollback
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/release_baseline/verify":
+    post:
+      summary: POST /api/v1/ib/release_baseline/verify
+      operationId: post_api_v1_ib_release_baseline_verify
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/reports":
+    get:
+      summary: GET /api/v1/ib/reports
+      operationId: get_api_v1_ib_reports
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/reports
+      operationId: post_api_v1_ib_reports
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/reports/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/reports/{id}
+      operationId: get_api_v1_ib_reports_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/reports/{id}
+      operationId: put_api_v1_ib_reports_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/reports/{id}
+      operationId: patch_api_v1_ib_reports_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/resolve":
+    get:
+      summary: GET /api/v1/ib/resolve
+      operationId: get_api_v1_ib_resolve
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/review_governance":
+    get:
+      summary: GET /api/v1/ib/review_governance
+      operationId: get_api_v1_ib_review_governance
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/reviews":
+    get:
+      summary: GET /api/v1/ib/reviews
+      operationId: get_api_v1_ib_reviews
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/rollout":
+    get:
+      summary: GET /api/v1/ib/rollout
+      operationId: get_api_v1_ib_rollout
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/saved_searches":
+    get:
+      summary: GET /api/v1/ib/saved_searches
+      operationId: get_api_v1_ib_saved_searches
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/saved_searches
+      operationId: post_api_v1_ib_saved_searches
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/saved_searches/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/saved_searches/{id}
+      operationId: get_api_v1_ib_saved_searches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/saved_searches/{id}
+      operationId: put_api_v1_ib_saved_searches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/saved_searches/{id}
+      operationId: patch_api_v1_ib_saved_searches_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      summary: DELETE /api/v1/ib/saved_searches/{id}
+      operationId: delete_api_v1_ib_saved_searches_id
+      tags:
+        - IB
+      responses:
+        '204':
+          description: Successful response
+  "/api/v1/ib/search":
+    get:
+      summary: GET /api/v1/ib/search
+      operationId: get_api_v1_ib_search
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/section_autosaves":
+    post:
+      summary: POST /api/v1/ib/section_autosaves
+      operationId: post_api_v1_ib_section_autosaves
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/specialist":
+    get:
+      summary: GET /api/v1/ib/specialist
+      operationId: get_api_v1_ib_specialist
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/specialist_assignments":
+    get:
+      summary: GET /api/v1/ib/specialist_assignments
+      operationId: get_api_v1_ib_specialist_assignments
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/specialist_assignments
+      operationId: post_api_v1_ib_specialist_assignments
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/specialist_multi_attach":
+    post:
+      summary: POST /api/v1/ib/specialist_multi_attach
+      operationId: post_api_v1_ib_specialist_multi_attach
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_cycles":
+    get:
+      summary: GET /api/v1/ib/standards_cycles
+      operationId: get_api_v1_ib_standards_cycles
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/standards_cycles
+      operationId: post_api_v1_ib_standards_cycles
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_cycles/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/standards_cycles/{id}
+      operationId: get_api_v1_ib_standards_cycles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/standards_cycles/{id}
+      operationId: put_api_v1_ib_standards_cycles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/standards_cycles/{id}
+      operationId: patch_api_v1_ib_standards_cycles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets":
+    get:
+      summary: GET /api/v1/ib/standards_packets
+      operationId: get_api_v1_ib_standards_packets
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/standards_packets
+      operationId: post_api_v1_ib_standards_packets
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/standards_packets/{id}
+      operationId: get_api_v1_ib_standards_packets_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/standards_packets/{id}
+      operationId: put_api_v1_ib_standards_packets_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/standards_packets/{id}
+      operationId: patch_api_v1_ib_standards_packets_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/approve":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/standards_packets/{id}/approve
+      operationId: post_api_v1_ib_standards_packets_id_approve
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/assign_reviewer":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/standards_packets/{id}/assign_reviewer
+      operationId: post_api_v1_ib_standards_packets_id_assign_reviewer
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/comparison":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/standards_packets/{id}/comparison
+      operationId: get_api_v1_ib_standards_packets_id_comparison
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/export":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/standards_packets/{id}/export
+      operationId: post_api_v1_ib_standards_packets_id_export
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/export_preview":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/standards_packets/{id}/export_preview
+      operationId: get_api_v1_ib_standards_packets_id_export_preview
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/standards_packets/{id}/return_packet":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    post:
+      summary: POST /api/v1/ib/standards_packets/{id}/return_packet
+      operationId: post_api_v1_ib_standards_packets_id_return_packet
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/student":
+    get:
+      summary: GET /api/v1/ib/student
+      operationId: get_api_v1_ib_student
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/workspace_preferences":
+    get:
+      summary: GET /api/v1/ib/workspace_preferences
+      operationId: get_api_v1_ib_workspace_preferences
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/workspace_preferences
+      operationId: post_api_v1_ib_workspace_preferences
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
 components:
   parameters:
     id:

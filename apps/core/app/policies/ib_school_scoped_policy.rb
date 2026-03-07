@@ -55,6 +55,8 @@ class IbSchoolScopedPolicy < ApplicationPolicy
   end
 
   def ownerish?
+    return false if record.is_a?(Class)
+
     [ :created_by_id, :author_id, :owner_id, :coordinator_id, :updated_by_id, :user_id ].any? do |field|
       record.respond_to?(field) && record.public_send(field) == user.id
     end ||

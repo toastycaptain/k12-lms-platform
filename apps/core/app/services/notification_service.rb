@@ -92,6 +92,12 @@ class NotificationService
         "Approval update: #{metadata['title'] || title_from(notifiable, fallback: 'Approval request')}"
       when "message_received"
         "New message from #{metadata['sender_name'] || 'a participant'}"
+      when "ib_specialist_handoff"
+        "Specialist handoff updated"
+      when "ib_student_goal_due"
+        "Goal check-in due"
+      when "ib_family_digest"
+        "New family digest"
       else
         event_type.humanize
       end
@@ -105,6 +111,12 @@ class NotificationService
       when "submission_received"
         assignment_title = metadata["assignment_title"]
         assignment_title.present? ? "New work submitted for #{assignment_title}." : nil
+      when "ib_specialist_handoff"
+        metadata["detail"].presence || "A specialist handoff changed state."
+      when "ib_student_goal_due"
+        metadata["detail"].presence || "One of your student goals needs attention."
+      when "ib_family_digest"
+        metadata["detail"].presence || "A new family-ready digest is available."
       else
         nil
       end

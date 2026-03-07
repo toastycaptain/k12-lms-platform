@@ -7,7 +7,18 @@ module Ib
         @actor = actor
       end
 
-      def create!(source_kind:, source_format:, source_filename:, raw_payload:, academic_year: nil, programme: "Mixed", mapping_payload: {})
+      def create!(
+        source_kind:,
+        source_format:,
+        source_filename:,
+        raw_payload:,
+        academic_year: nil,
+        programme: "Mixed",
+        mapping_payload: {},
+        source_system: "generic",
+        import_mode: "draft",
+        coexistence_mode: false
+      )
         parsed = Parser.parse(source_format: source_format, raw_payload: raw_payload)
         sanitized_mapping = mapping_payload.to_h.stringify_keys
 
@@ -19,12 +30,18 @@ module Ib
           status: "staged",
           source_kind: source_kind,
           source_format: source_format,
+          source_system: source_system,
+          import_mode: import_mode,
+          coexistence_mode: coexistence_mode,
           source_filename: source_filename,
           raw_payload: raw_payload,
           scope_metadata: {
             "school_id" => school.id,
             "academic_year_id" => academic_year&.id,
-            "programme" => programme
+            "programme" => programme,
+            "source_system" => source_system,
+            "import_mode" => import_mode,
+            "coexistence_mode" => coexistence_mode
           },
           mapping_payload: sanitized_mapping,
           parser_warnings: parsed[:warnings],
@@ -32,7 +49,11 @@ module Ib
         )
 
         parsed[:rows].each do |row|
-          mapped = SourceMapper.map_row(source_kind: source_kind, payload: row[:payload])
+          mapped = SourceMapper.map_row(
+            source_system: source_system,
+            source_kind: source_kind,
+            payload: row[:payload]
+          )
           batch.rows.create!(
             tenant: tenant,
             row_index: row[:row_index],
@@ -44,7 +65,9 @@ module Ib
               mapping_payload: sanitized_mapping,
             ),
             warnings: Array(row[:warnings]) + Array(mapped[:warnings]),
+            unsupported_fields: Array(mapped[:unsupported_fields]),
             mapping_payload: sanitized_mapping,
+            entity_kind: source_kind,
           )
         end
 
@@ -55,6 +78,7 @@ module Ib
           school: school,
           metadata: {
             batch_id: batch.id,
+            source_system: source_system,
             source_kind: source_kind,
             source_format: source_format,
             row_count: batch.rows.count

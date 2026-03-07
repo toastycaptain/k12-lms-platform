@@ -49,4 +49,8 @@ class User < ApplicationRecord
   def google_connected?
     google_refresh_token.present?
   end
+
+  def full_name
+    [ first_name, last_name ].compact.join(" ").presence
+  end
 end

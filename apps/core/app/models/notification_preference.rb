@@ -14,7 +14,10 @@ class NotificationPreference < ApplicationRecord
     "message_received" => "Message Received",
     "ib_story_published" => "IB Story Published",
     "ib_import_failed" => "IB Import Failed",
-    "ib_readiness_blocker" => "IB Readiness Blocker"
+    "ib_readiness_blocker" => "IB Readiness Blocker",
+    "ib_specialist_handoff" => "IB Specialist Handoff",
+    "ib_student_goal_due" => "IB Student Goal Due",
+    "ib_family_digest" => "IB Family Digest"
   }.freeze
   DEFAULT_FALLBACK = {
     in_app: true,

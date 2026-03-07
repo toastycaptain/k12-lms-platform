@@ -1,5 +1,5 @@
-import { ExceptionReportShell } from "@/features/ib/reports/ExceptionReportShell";
+import { IbReportsWorkspace } from "@/features/ib/reports/IbReportsWorkspace";
 
 export default function ReportsPage() {
-  return <ExceptionReportShell />;
+  return <IbReportsWorkspace />;
 }

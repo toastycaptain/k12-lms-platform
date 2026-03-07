@@ -4,7 +4,14 @@ module Api
       class HomeController < BaseController
         def show
           authorize CurriculumDocument, :index?
-          render json: ::Ib::Home::PayloadBuilder.new(user: Current.user, school: current_school_scope).build
+          builder = ::Ib::Home::PayloadBuilder.new(user: Current.user, school: current_school_scope)
+          payload = builder.build
+          ::Ib::Home::ActionConsoleService.new(
+            user: Current.user,
+            school: current_school_scope,
+            programme: payload[:programme]
+          ).mark_seen!
+          render json: payload
         end
       end
     end

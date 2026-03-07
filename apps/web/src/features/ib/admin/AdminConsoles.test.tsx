@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@k12/ui";
 import { ProgrammeSettingsConsole } from "@/features/ib/admin/ProgrammeSettingsConsole";
 import { RolloutConsole } from "@/features/ib/admin/RolloutConsole";
 import { PilotReadinessConsole } from "@/features/ib/admin/PilotReadinessConsole";
@@ -62,6 +63,10 @@ vi.mock("@/features/ib/admin/OnboardingSupportPanel", () => ({
 }));
 
 describe("IB admin consoles", () => {
+  function renderWithToast(ui: React.ReactNode) {
+    return render(<ToastProvider>{ui}</ToastProvider>);
+  }
+
   beforeEach(() => {
     vi.mocked(useIbProgrammeSettings).mockReturnValue({
       data: [
@@ -187,7 +192,7 @@ describe("IB admin consoles", () => {
   });
 
   it("saves programme settings from the coordinator console", async () => {
-    render(<ProgrammeSettingsConsole />);
+    renderWithToast(<ProgrammeSettingsConsole />);
 
     fireEvent.change(screen.getByLabelText("Approval SLA days"), {
       target: { value: "7" },
@@ -205,7 +210,7 @@ describe("IB admin consoles", () => {
   });
 
   it("renders rollout drift and legacy usage", () => {
-    render(<RolloutConsole />);
+    renderWithToast(<RolloutConsole />);
 
     expect(screen.getByText("Rollout console")).toBeInTheDocument();
     expect(screen.getByText(/Deprecated pack records: 2/)).toBeInTheDocument();
@@ -215,7 +220,7 @@ describe("IB admin consoles", () => {
   });
 
   it("renders readiness issues with fix links", () => {
-    render(<PilotReadinessConsole />);
+    renderWithToast(<PilotReadinessConsole />);
 
     expect(screen.getByText("Pilot readiness")).toBeInTheDocument();
     expect(screen.getByText("MYP settings incomplete")).toBeInTheDocument();
@@ -223,7 +228,7 @@ describe("IB admin consoles", () => {
   });
 
   it("refreshes readiness from the operator console", async () => {
-    render(<PilotReadinessConsole />);
+    renderWithToast(<PilotReadinessConsole />);
 
     fireEvent.click(screen.getByRole("button", { name: "Refresh readiness" }));
 

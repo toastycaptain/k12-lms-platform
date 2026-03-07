@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, EmptyState, TextArea, useToast } from "@k12/ui";
 import { apiFetch, ApiError } from "@/lib/api";
 import { usePlanningContext } from "@/curriculum/contexts/hooks";
@@ -17,6 +17,13 @@ import {
 } from "@/curriculum/runtime/useCurriculumPack";
 import WorkflowActions from "@/curriculum/workflow/WorkflowActions";
 import WorkflowBadge from "@/curriculum/workflow/WorkflowBadge";
+import { syncIbCollaborationSession, useIbCollaborationSessions } from "@/features/ib/data";
+import { DuplicateDocumentDialog } from "@/features/ib/planning/DuplicateDocumentDialog";
+import { SequenceBlockEditor } from "@/features/ib/planning/SequenceBlockEditor";
+import { SequenceBoard, type SequenceBlock } from "@/features/ib/planning/SequenceBoard";
+import { ConflictResolutionDialog } from "@/features/ib/offline/ConflictResolutionDialog";
+import { SaveStatePill } from "@/features/ib/shared/SaveStatePill";
+import { useSectionAutosave } from "@/features/ib/shared/useSectionAutosave";
 
 interface DocumentEditorProps {
   documentId: number;
@@ -37,6 +44,12 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
   const [schemaErrors, setSchemaErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [selectedSequenceBlock, setSelectedSequenceBlock] = useState<SequenceBlock | null>(null);
+  const [restoredDraftApplied, setRestoredDraftApplied] = useState(false);
+  const collaborationSessionKey = useRef(
+    `web-${documentId}-${Math.random().toString(36).slice(2, 10)}`,
+  );
 
   const orderedVersions = useMemo(
     () => [...versions].sort((left, right) => right.version_number - left.version_number),
@@ -54,6 +67,15 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     orderedVersions[0] ||
     document?.current_version ||
     null;
+  const ibCollaborationEnabled = Boolean(
+    document &&
+    (document.document_type?.startsWith("ib_") ||
+      document.pack_key?.startsWith("ib_") ||
+      document.pack_key?.startsWith("ib.")),
+  );
+  const { data: collaboration } = useIbCollaborationSessions(
+    ibCollaborationEnabled ? (document?.id ?? null) : null,
+  );
 
   useEffect(() => {
     setTitle(document?.title || "");
@@ -67,6 +89,8 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     setDraftContent(nextContent as Record<string, unknown>);
     setFallbackJson(JSON.stringify(nextContent, null, 2));
     setSchemaErrors({});
+    setSelectedSequenceBlock(null);
+    setRestoredDraftApplied(false);
   }, [activeVersion?.id, activeVersion?.content]);
 
   const schemaDefinition = useMemo(() => {
@@ -89,6 +113,79 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
       document.schema_key,
     );
   }, [document, runtime]);
+
+  const activeContent =
+    activeVersion?.content && typeof activeVersion.content === "object"
+      ? (activeVersion.content as Record<string, unknown>)
+      : {};
+
+  const autosaveContent = useMemo(() => {
+    if (schemaDefinition) {
+      return draftContent;
+    }
+
+    try {
+      const parsed = JSON.parse(fallbackJson);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : { value: parsed };
+    } catch {
+      return draftContent;
+    }
+  }, [draftContent, fallbackJson, schemaDefinition]);
+
+  const isDirty = useMemo(() => {
+    const titleChanged = title.trim() !== (document?.title || "");
+    const contentChanged = JSON.stringify(autosaveContent) !== JSON.stringify(activeContent);
+    return titleChanged || contentChanged;
+  }, [activeContent, autosaveContent, document?.title, title]);
+
+  const autosave = useSectionAutosave({
+    documentId: document?.id ?? null,
+    title,
+    content: autosaveContent,
+    baseVersionId: activeVersion?.id ?? null,
+    enabled: Boolean(document && isDirty),
+  });
+
+  useEffect(() => {
+    if (!autosave.restoredDraft || restoredDraftApplied) {
+      return;
+    }
+
+    setDraftContent(autosave.restoredDraft);
+    setFallbackJson(JSON.stringify(autosave.restoredDraft, null, 2));
+    setRestoredDraftApplied(true);
+  }, [autosave.restoredDraft, restoredDraftApplied]);
+
+  useEffect(() => {
+    if (!ibCollaborationEnabled || !document?.id) {
+      return;
+    }
+
+    const syncSession = async (status: "active" | "ended") => {
+      try {
+        await syncIbCollaborationSession(document.id, {
+          session_key: collaborationSessionKey.current,
+          scope_type: "document",
+          scope_key: "root",
+          role: "editor",
+          device_label: "web",
+          status,
+        });
+      } catch {
+        // Presence should never block the editor itself.
+      }
+    };
+
+    void syncSession("active");
+    const handle = window.setInterval(() => void syncSession("active"), 12_000);
+
+    return () => {
+      window.clearInterval(handle);
+      void syncSession("ended");
+    };
+  }, [document?.id, ibCollaborationEnabled]);
 
   const documentTypeLabel = document
     ? runtime?.documentTypes[document.document_type]?.label ||
@@ -178,13 +275,43 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
             />
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <WorkflowBadge state={document.workflow?.state || document.status} />
+              <SaveStatePill state={autosave.state} />
               {document.pack_key && document.pack_version && (
                 <span>
                   {document.pack_key}@{document.pack_version}
                 </span>
               )}
               <span>Schema {document.schema_key}</span>
+              {ibCollaborationEnabled ? (
+                <>
+                  <span>
+                    {collaboration?.activeSessions.length || 1} live editor
+                    {(collaboration?.activeSessions.length || 1) === 1 ? "" : "s"}
+                  </span>
+                  {collaboration?.conflictRisk ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-800">
+                      Conflict watch
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-800">
+                      Presence synced
+                    </span>
+                  )}
+                </>
+              ) : null}
             </div>
+            {ibCollaborationEnabled && collaboration?.activeSessions.length ? (
+              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                {collaboration.activeSessions.slice(0, 4).map((session) => (
+                  <span
+                    key={session.id}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1"
+                  >
+                    User #{session.userId} • {session.role} • {session.status}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {orderedVersions.length > 1 && (
@@ -205,12 +332,25 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
               events={document.workflow?.available_events || []}
               onTransitionComplete={refreshDocument}
             />
+            <Button variant="secondary" onClick={() => setDuplicateOpen(true)}>
+              Duplicate
+            </Button>
             <Button onClick={() => void saveVersion()} disabled={saving}>
               {saving ? "Saving..." : "Save new version"}
             </Button>
           </div>
         </div>
         {saveError && <p className="mt-3 text-sm text-red-600">{saveError}</p>}
+        {autosave.queuedCount > 0 ? (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-sky-50 px-3 py-2 text-sm text-sky-900">
+            <span>
+              {autosave.queuedCount} edit{autosave.queuedCount === 1 ? "" : "s"} queued for sync.
+            </span>
+            <Button variant="secondary" onClick={() => void autosave.flushQueue()}>
+              Retry sync
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
@@ -239,6 +379,21 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
               />
             </div>
           )}
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,1fr)]">
+            <div className="space-y-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Sequence board</h3>
+                  <p className="text-sm text-gray-500">
+                    Ordered experiences and reusable blocks stay close to the main document instead
+                    of hiding in a separate planning tracker.
+                  </p>
+                </div>
+                <SequenceBoard content={autosaveContent} onSelect={setSelectedSequenceBlock} />
+              </div>
+            </div>
+            <SequenceBlockEditor block={selectedSequenceBlock} />
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -251,6 +406,22 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
           )}
         </div>
       </div>
+
+      <DuplicateDocumentDialog
+        open={duplicateOpen}
+        onClose={() => setDuplicateOpen(false)}
+        sourceId={document.id}
+        sourceType="curriculum_document"
+      />
+      <ConflictResolutionDialog
+        open={autosave.state === "conflict"}
+        onClose={() => {
+          setDraftContent(activeContent);
+          setFallbackJson(JSON.stringify(activeContent, null, 2));
+          autosave.clearConflict();
+        }}
+        onKeepLocal={autosave.clearConflict}
+      />
     </div>
   );
 }

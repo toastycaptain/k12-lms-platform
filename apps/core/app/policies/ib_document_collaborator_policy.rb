@@ -2,6 +2,8 @@
 
 class IbDocumentCollaboratorPolicy < IbSchoolScopedPolicy
   def show?
+    return privileged_user? || user.has_role?(:teacher) if record.is_a?(Class)
+
     CurriculumDocumentPolicy.new(user, curriculum_document).show?
   end
 

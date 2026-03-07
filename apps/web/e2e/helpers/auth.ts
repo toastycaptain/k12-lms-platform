@@ -54,6 +54,10 @@ export async function loginAsTeacher(page: Page): Promise<void> {
   await loginAsRole(page, "teacher", E2E_FIXTURES.teacherEmail);
 }
 
+export async function loginAsSpecialist(page: Page): Promise<void> {
+  await loginAsRole(page, "teacher", E2E_FIXTURES.specialistEmail);
+}
+
 export async function loginAsStudent(page: Page): Promise<void> {
   await loginAsRole(page, "student", E2E_FIXTURES.studentEmail);
 }

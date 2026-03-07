@@ -9,7 +9,8 @@ module Ib
       end
 
       def build
-        {
+        Rails.cache.fetch(cache_key, expires_in: 2.minutes) do
+          {
           programme: inferred_programme,
           school_label: school&.name || "All schools",
           coordinator_mode: coordinator_mode?,
@@ -21,15 +22,20 @@ module Ib
           projects_core_follow_up: projects_core_follow_up,
           quick_actions: quick_actions,
           coordinator_cards: coordinator_cards
-        }
+          }.merge(console_extras)
+        end
       end
 
       private
 
       attr_reader :user, :school
 
+      def cache_key
+        [ "ib-home", user.tenant_id, user.id, school&.id, inferred_programme, current_documents.maximum(:updated_at)&.to_i ]
+      end
+
       def current_documents
-        scope = CurriculumDocument.includes(:current_version).where(tenant_id: user.tenant_id)
+        scope = CurriculumDocument.includes(:current_version, :tenant).where(tenant_id: user.tenant_id)
         scope = scope.where(school_id: school.id) if school
         scope.order(updated_at: :desc).limit(12)
       end
@@ -171,12 +177,20 @@ module Ib
         [
           item(title: "Open evidence inbox", detail: "Validate evidence and request reflections.", href: "/ib/evidence", entity_ref: "route:/ib/evidence", action_type: "resume_work", programme: "Mixed", priority_score: 65, status_tone: "accent"),
           item(title: "Open publishing queue", detail: "Preview, schedule, or hold family-ready stories.", href: "/ib/families/publishing", entity_ref: "route:/ib/families/publishing", action_type: "needs_publish_decision", programme: "Mixed", priority_score: 62, status_tone: "success"),
-          item(title: "Open review queue", detail: "Handle approvals, returns, and moderation.", href: "/ib/review", entity_ref: "route:/ib/review", action_type: "needs_review", programme: "Mixed", priority_score: 63, status_tone: "warm")
+          item(title: "Open review queue", detail: "Handle approvals, returns, and moderation.", href: "/ib/review", entity_ref: "route:/ib/review", action_type: "needs_review", programme: "Mixed", priority_score: 63, status_tone: "warm"),
+          item(title: "Duplicate a unit", detail: "Start copy or carry-forward in two steps.", href: "/ib/home#duplicate-document", entity_ref: "route:/ib/home#duplicate-document", action_type: "duplicate_document", programme: "Mixed", priority_score: 61, status_tone: "accent"),
+          item(title: "Search IB work", detail: "Find documents, evidence, stories, and milestones fast.", href: "/ib/home#search", entity_ref: "route:/ib/home#search", action_type: "search", programme: "Mixed", priority_score: 60, status_tone: "default")
         ]
       end
 
       def coordinator_cards
         Operations::PayloadBuilder.new(user: user, school: school).build.fetch(:priority_exceptions)
+      end
+
+      def console_extras
+        ActionConsoleService.new(user: user, school: school, programme: inferred_programme).build.merge(
+          performance_budget: Ib::Support::PerformanceBudgetService.new(tenant: user.tenant, school: school).build
+        )
       end
 
       def item(title:, detail:, href:, entity_ref:, action_type:, programme:, priority_score:, status_tone:, changed_since_last_seen: false)

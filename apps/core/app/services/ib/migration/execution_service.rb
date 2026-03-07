@@ -31,7 +31,9 @@ module Ib
               skipped_refs: skipped_refs,
               created_count: created_refs.length,
               updated_count: updated_refs.length,
-              skipped_count: skipped_refs.length
+              skipped_count: skipped_refs.length,
+              import_mode: batch.import_mode,
+              coexistence_mode: batch.coexistence_mode
             },
           )
         end
@@ -97,7 +99,7 @@ module Ib
             tenant_id: batch.tenant_id,
             school_id: batch.school_id,
             title: "Imported Programme of Inquiry",
-            status: "draft",
+            status: batch.import_mode == "live" && !batch.coexistence_mode ? "published" : "draft",
             created_by_id: actor.id,
           )
           entry = PypProgrammeOfInquiryEntry
@@ -113,8 +115,13 @@ module Ib
             year_level: payload["year_level"],
             theme: payload["theme"],
             central_idea: payload["central_idea"],
-            review_state: payload["review_state"] || entry.review_state || "draft",
+            review_state: batch.import_mode == "live" && !batch.coexistence_mode ? "published" : (payload["review_state"] || entry.review_state || "draft"),
             coherence_signal: entry.coherence_signal || "healthy",
+            metadata: (entry.metadata || {}).merge(
+              "import_batch_id" => batch.id,
+              "source_system" => batch.source_system,
+              "coexistence_mode" => batch.coexistence_mode
+            ),
           )
           entry.save!
           ref = "PypProgrammeOfInquiryEntry:#{entry.id}"
@@ -136,6 +143,7 @@ module Ib
             schema_key: payload["schema_key"],
             initial_content: payload["content"].is_a?(Hash) ? payload["content"] : {},
           )
+          document.update!(status: "draft") if batch.import_mode == "draft" && document.status != "draft"
           if action == "update"
             document.create_version!(
               title: payload["title"],
@@ -166,8 +174,15 @@ module Ib
             next_action: payload["next_action"],
             route_hint: payload["route_hint"],
             owner_id: record.owner_id || actor.id,
-            metadata: (record.metadata || {}).merge("import_batch_id" => batch.id, "import_actor_id" => actor.id),
+            metadata: (record.metadata || {}).merge(
+              "import_batch_id" => batch.id,
+              "import_actor_id" => actor.id,
+              "source_system" => batch.source_system,
+              "coexistence_mode" => batch.coexistence_mode,
+              "draft_import" => batch.import_mode == "draft"
+            ),
           )
+          record.status = "draft" if batch.import_mode == "draft"
           record.save!
           ref = "IbOperationalRecord:#{record.id}"
           row.update!(status: "executed", execution_payload: { entity_ref: ref, action: action }, target_entity_ref: ref)

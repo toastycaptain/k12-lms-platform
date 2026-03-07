@@ -12,6 +12,7 @@ class IbLearningStory < ApplicationRecord
   has_many :evidence_links, class_name: "IbLearningStoryEvidenceItem", dependent: :destroy
   has_many :evidence_items, through: :evidence_links, source: :ib_evidence_item
   has_many :publishing_queue_items, class_name: "IbPublishingQueueItem", dependent: :destroy
+  has_many :translations, class_name: "IbLearningStoryTranslation", dependent: :destroy
 
   validates :title, presence: true
   validates :state, inclusion: { in: STATE_TYPES }

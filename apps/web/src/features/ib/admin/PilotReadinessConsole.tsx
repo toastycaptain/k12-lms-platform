@@ -16,6 +16,7 @@ const STATUS_TONE = {
 
 const SECTION_OWNER: Record<string, string> = {
   pack_and_flags: "support",
+  release_baseline: "support",
   pilot_setup: "school_admin",
   programme_settings: "coordinator",
   route_readiness: "support",

@@ -41,6 +41,13 @@ namespace :e2e do
       last_name: "Teacher",
       role: :teacher,
     )
+    specialist = ensure_user!(
+      tenant: tenant,
+      email: "specialist@e2e.local",
+      first_name: "E2E",
+      last_name: "Specialist",
+      role: :teacher,
+    )
     student = ensure_user!(
       tenant: tenant,
       email: "student@e2e.local",
@@ -84,6 +91,9 @@ namespace :e2e do
     end
 
     Enrollment.find_or_create_by!(tenant: tenant, section: section, user: teacher) do |record|
+      record.role = "teacher"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: section, user: specialist) do |record|
       record.role = "teacher"
     end
     Enrollment.find_or_create_by!(tenant: tenant, section: section, user: student) do |record|
@@ -257,6 +267,7 @@ namespace :e2e do
       record.metadata = { "linked_story_count" => 0 }
     end
     evidence_item.update!(visibility: "family_ready")
+    evidence_item.update!(contributor_type: "specialist")
 
     story = IbLearningStory.find_or_create_by!(
       tenant: tenant,
@@ -278,6 +289,78 @@ namespace :e2e do
     story.update!(state: "published", published_at: story.published_at || Time.zone.now)
     IbLearningStoryEvidenceItem.find_or_create_by!(tenant: tenant, ib_learning_story: story, ib_evidence_item: evidence_item)
     evidence_item.update!(metadata: evidence_item.metadata.merge("linked_story_count" => 1))
+
+    collaborator = IbDocumentCollaborator.find_or_create_by!(
+      tenant: tenant,
+      curriculum_document: pyp_document,
+      user: specialist,
+      role: "specialist_contributor"
+    ) do |record|
+      record.assigned_by = teacher
+      record.status = "active"
+      record.contribution_mode = "rapid_attach"
+      record.metadata = {
+        "detail" => "Add one transdisciplinary specialist note before publish.",
+        "handoff_state" => "awaiting_response"
+      }
+    end
+    collaborator.update!(
+      assigned_by: teacher,
+      status: "active",
+      contribution_mode: "rapid_attach",
+      metadata: collaborator.metadata.merge(
+        "detail" => "Add one transdisciplinary specialist note before publish.",
+        "handoff_state" => "awaiting_response"
+      )
+    )
+
+    specialist_handoff = IbOperationalRecord.find_or_create_by!(
+      tenant: tenant,
+      school: planning_context.school,
+      title: "E2E Specialist handoff"
+    ) do |record|
+      record.planning_context = planning_context
+      record.curriculum_document = pyp_document
+      record.owner = specialist
+      record.programme = "PYP"
+      record.record_family = "specialist"
+      record.subtype = "handoff"
+      record.status = "awaiting_response"
+      record.priority = "normal"
+      record.risk_level = "watch"
+      record.due_on = 2.days.from_now.to_date
+      record.summary = "Seeded specialist response item for the weekly planner."
+      record.next_action = "Confirm the field-note handoff before the next class."
+      record.route_hint = "/ib/specialist"
+      record.metadata = { "handoff_state" => "awaiting_response" }
+    end
+    specialist_handoff.update!(
+      planning_context: planning_context,
+      curriculum_document: pyp_document,
+      owner: specialist,
+      programme: "PYP",
+      record_family: "specialist",
+      subtype: "handoff",
+      status: "awaiting_response",
+      priority: "normal",
+      risk_level: "watch",
+      due_on: specialist_handoff.due_on || 2.days.from_now.to_date,
+      next_action: "Confirm the field-note handoff before the next class.",
+      route_hint: "/ib/specialist",
+      metadata: specialist_handoff.metadata.merge("handoff_state" => "awaiting_response")
+    )
+
+    IbSpecialistLibraryItem.find_or_create_by!(
+      tenant: tenant,
+      school: planning_context.school,
+      created_by: specialist,
+      title: "E2E provocation prompt bank"
+    ) do |record|
+      record.programme = "PYP"
+      record.summary = "Reusable specialist prompts for quick attach and cross-grade reuse."
+      record.tags = ["provocation", "specialist", "reuse"]
+      record.metadata = {}
+    end
 
     publishing_queue_item = IbPublishingQueueItem.find_or_create_by!(
       tenant: tenant,
@@ -376,6 +459,7 @@ namespace :e2e do
     puts "E2E fixtures ready for tenant '#{tenant.slug}'."
     puts "  Admin:   #{admin.email}"
     puts "  Teacher: #{teacher.email}"
+    puts "  Specialist: #{specialist.email}"
     puts "  Student: #{student.email}"
     puts "  Guardian: #{guardian.email}"
   ensure

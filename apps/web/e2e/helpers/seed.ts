@@ -10,6 +10,7 @@ export const E2E_FIXTURES = {
   courseName: "E2E Biology 101",
   adminEmail: "admin@e2e.local",
   teacherEmail: "teacher@e2e.local",
+  specialistEmail: "specialist@e2e.local",
   studentEmail: "student@e2e.local",
   guardianEmail: "guardian@e2e.local",
 };

@@ -99,6 +99,25 @@ export interface IbAnalyticsPayload {
   generatedAt: string;
 }
 
+export interface IbReleaseBaselinePayload {
+  id: number;
+  releaseChannel: string;
+  status: string;
+  packKey: string;
+  packVersion: string;
+  ciStatus: string;
+  migrationStatus: string;
+  checklist: Record<
+    string,
+    { label?: string; status: string; detail: string; remediation: string }
+  >;
+  blockers: Array<{ key: string; detail: string; remediation: string }>;
+  verifiedAt?: string | null;
+  certifiedAt?: string | null;
+  rolledBackAt?: string | null;
+  generatedAt: string;
+}
+
 export function useIbPilotSetup(programme = "Mixed") {
   const response = useSchoolSWR<Record<string, unknown>>(
     `/api/v1/ib/pilot_setup?programme=${encodeURIComponent(programme)}`,
@@ -269,6 +288,24 @@ export async function validateIbPilotSetup(programme: string) {
       method: "POST",
     },
   );
+}
+
+export async function verifyIbReleaseBaseline() {
+  return apiFetch<IbReleaseBaselinePayload>("/api/v1/ib/release_baseline/verify", {
+    method: "POST",
+  });
+}
+
+export async function certifyIbReleaseBaseline() {
+  return apiFetch<IbReleaseBaselinePayload>("/api/v1/ib/release_baseline/certify", {
+    method: "POST",
+  });
+}
+
+export async function rollbackIbReleaseBaseline() {
+  return apiFetch<IbReleaseBaselinePayload>("/api/v1/ib/release_baseline/rollback", {
+    method: "POST",
+  });
 }
 
 export async function activateIbPilotSetup(programme: string) {

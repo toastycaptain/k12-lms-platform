@@ -7,7 +7,8 @@ module Ib
       end
 
       def build
-        {
+        Rails.cache.fetch(cache_key, expires_in: 2.minutes) do
+          {
           summary_metrics: summary_metrics,
           priority_exceptions: priority_exceptions,
           queues: queues,
@@ -15,12 +16,17 @@ module Ib
           drilldowns: drilldowns,
           thresholds_applied: thresholds,
           generated_at: Time.current.iso8601
-        }
+          }.merge(extra_payload)
+        end
       end
 
       private
 
       attr_reader :user, :school
+
+      def cache_key
+        [ "ib-operations", user.tenant_id, school&.id, scoped_records.maximum(:updated_at)&.to_i, scoped_documents.maximum(:updated_at)&.to_i ]
+      end
 
       def scoped_documents
         scope = CurriculumDocument.where(tenant_id: user.tenant_id)
@@ -59,11 +65,13 @@ module Ib
       end
 
       def summary_metrics
+        specialist = Operations::SpecialistMetricsService.new(tenant: user.tenant, school: school).build
         [
           metric("Support hotspots", priority_exceptions.length, "Current filtered exceptions", "accent"),
           metric("Approvals waiting", scoped_documents.where(status: "pending_approval").count, "Review or moderation needed", "warm"),
           metric("Publishing cadence", scoped_stories.where.not(state: "published").count, "Stories still moving through the queue", "success"),
-          metric("Standards gaps", scoped_packets.where.not(export_status: "exported").count, "Evidence packets still incomplete", "accent")
+          metric("Standards gaps", scoped_packets.where.not(export_status: "exported").count, "Evidence packets still incomplete", "accent"),
+          metric("Specialist gaps", specialist[:unassigned_units], "Units without explicit specialist coverage", specialist[:unassigned_units].positive? ? "warm" : "success")
         ]
       end
 
@@ -215,6 +223,44 @@ module Ib
         return "DP" if type.start_with?("ib_dp") || schema.include?("ib.dp")
 
         "Mixed"
+      end
+
+      def extra_payload
+        {
+          data_mart: Operations::DataMartBuilder.new(tenant: user.tenant, school: school).build,
+          programme_health_summary: programme_health_summary,
+          pyp_intelligence: Ib::Pyp::PoiIntelligenceService.new(tenant: user.tenant, school: school).build,
+          myp_intelligence: Ib::Myp::CoverageIntelligenceService.new(tenant: user.tenant, school: school).build,
+          dp_risk_summary: Ib::Dp::RiskModelService.new(tenant: user.tenant, school: school).build,
+          continuum_explorer: Ib::Continuum::ProgressionService.new(tenant: user.tenant, school: school).build,
+          bottlenecks: Ib::Governance::QueueIntelligenceService.new(tenant: user.tenant, school: school).build,
+          recommendations: Operations::RecommendationService.new(tenant: user.tenant, school: school).build,
+          standards_insights: standards_insights,
+          shareable_view: Operations::ExportService.new(user: user, school: school).build_shareable_summary
+        }
+      end
+
+      def programme_health_summary
+        {
+          pyp_watch_count: poi_entries.where(coherence_signal: %w[watch risk]).count,
+          myp_watch_count: scoped_documents.where(document_type: "ib_myp_unit").count,
+          dp_risk_count: scoped_records.where(programme: "DP", risk_level: "risk").count,
+          specialist_gap_count: Operations::SpecialistMetricsService.new(tenant: user.tenant, school: school).build[:unassigned_units]
+        }
+      end
+
+      def standards_insights
+        scoped_packets.order(updated_at: :desc).limit(6).map do |packet|
+          {
+            id: packet.id,
+            title: packet.title,
+            evidence_quality: packet.evidence_strength,
+            review_state: packet.review_state,
+            export_status: packet.export_status,
+            weak_reason: packet.export_status == "not_ready" ? "Needs more approved evidence." : "Ready to export.",
+            href: "/ib/standards-practices"
+          }
+        end
       end
     end
   end

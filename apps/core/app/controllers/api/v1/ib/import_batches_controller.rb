@@ -25,8 +25,20 @@ module Api
             academic_year: academic_year,
             programme: batch_params[:programme].presence || "Mixed",
             mapping_payload: batch_params[:mapping_payload] || {},
+            source_system: batch_params[:source_system].presence || "generic",
+            import_mode: batch_params[:import_mode].presence || "draft",
+            coexistence_mode: ActiveModel::Type::Boolean.new.cast(batch_params[:coexistence_mode]),
           )
-          audit_event("ib.import.batch.created", auditable: batch, metadata: { source_kind: batch.source_kind, source_format: batch.source_format })
+          audit_event(
+            "ib.import.batch.created",
+            auditable: batch,
+            metadata: {
+              source_kind: batch.source_kind,
+              source_system: batch.source_system,
+              source_format: batch.source_format,
+              import_mode: batch.import_mode
+            }
+          )
           render json: serialize_batch(batch), status: :created
         end
 
@@ -73,7 +85,18 @@ module Api
         end
 
         def batch_params
-          params.require(:ib_import_batch).permit(:programme, :source_kind, :source_format, :source_filename, :raw_payload, :academic_year_id, mapping_payload: {})
+          params.require(:ib_import_batch).permit(
+            :programme,
+            :source_kind,
+            :source_format,
+            :source_filename,
+            :raw_payload,
+            :academic_year_id,
+            :source_system,
+            :import_mode,
+            :coexistence_mode,
+            mapping_payload: {}
+          )
         end
 
         def serialize_batch(batch)
@@ -83,15 +106,22 @@ module Api
             status: batch.status,
             source_kind: batch.source_kind,
             source_format: batch.source_format,
+            source_system: batch.source_system,
+            import_mode: batch.import_mode,
+            coexistence_mode: batch.coexistence_mode,
+            source_contract_version: batch.source_contract_version,
             source_filename: batch.source_filename,
             source_checksum: batch.source_checksum,
             parser_warnings: batch.parser_warnings,
             mapping_payload: batch.mapping_payload,
             validation_summary: batch.validation_summary,
+            preview_summary: batch.preview_summary,
             dry_run_summary: batch.dry_run_summary,
             execution_summary: batch.execution_summary,
             rollback_summary: batch.rollback_summary,
+            rollback_capabilities: batch.rollback_capabilities,
             error_message: batch.error_message,
+            preview_generated_at: batch.preview_generated_at&.utc&.iso8601,
             last_dry_run_at: batch.last_dry_run_at&.utc&.iso8601,
             executed_at: batch.executed_at&.utc&.iso8601,
             rows: batch.rows.order(:row_index).map do |row|
@@ -107,8 +137,13 @@ module Api
                 warnings: row.warnings,
                 errors: row.error_messages,
                 conflict_payload: row.conflict_payload,
+                resolution_payload: row.resolution_payload,
                 execution_payload: row.execution_payload,
-                target_entity_ref: row.target_entity_ref
+                target_entity_ref: row.target_entity_ref,
+                entity_kind: row.entity_kind,
+                data_loss_risk: row.data_loss_risk,
+                duplicate_candidate_ref: row.duplicate_candidate_ref,
+                unsupported_fields: row.unsupported_fields
               }
             end,
             created_at: batch.created_at.utc.iso8601,

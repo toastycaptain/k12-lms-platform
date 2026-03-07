@@ -4,15 +4,17 @@ module Ib
       PACK_KEY = "ib_continuum_v1".freeze
       CURRENT_PACK_VERSION = "2026.2".freeze
 
-      def initialize(tenant:, school: nil)
+      def initialize(tenant:, school: nil, include_release_baseline: true)
         @tenant = tenant
         @school = school
+        @include_release_baseline = include_release_baseline
       end
 
       def build
         {
           active_pack: active_pack,
           feature_flags: feature_flags,
+          release_baseline: release_baseline,
           pilot_baseline: pilot_baseline,
           pilot_setup: pilot_setup,
           route_readiness: route_readiness,
@@ -26,7 +28,7 @@ module Ib
 
       private
 
-      attr_reader :tenant, :school
+      attr_reader :tenant, :school, :include_release_baseline
 
       def ib_documents
         scope = CurriculumDocument.where(tenant_id: tenant.id, pack_key: PACK_KEY)
@@ -52,11 +54,24 @@ module Ib
       end
 
       def feature_flags
-        snapshot = FeatureFlag.ib_phase6_snapshot(tenant: tenant)
+        catalog = FlagCatalogService.new(tenant: tenant)
+        snapshot = FeatureFlag.ib_phase8_snapshot(tenant: tenant)
         {
           required: snapshot.map { |key, enabled| { key: key, enabled: enabled } },
-          healthy: snapshot.values.all?
+          healthy: snapshot.values.all?,
+          bundles: catalog.bundles,
+          inventory: catalog.inventory,
+          kill_switches: catalog.kill_switches
         }
+      end
+
+      def release_baseline
+        return nil unless include_release_baseline
+
+        ReleaseBaselineService.new(
+          tenant: tenant,
+          school: school
+        ).build.except(:rollout, :readiness)
       end
 
       def pilot_baseline

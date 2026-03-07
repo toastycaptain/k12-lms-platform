@@ -13,6 +13,8 @@ vi.mock("@/features/ib/data", () => ({
           supportPrompt: "Ask about one system they improved.",
           cadence: "weekly_digest",
           state: "published",
+          translationState: "ready_for_review",
+          availableLocales: ["en", "es"],
         },
       ],
       currentUnits: [
@@ -55,8 +57,93 @@ vi.mock("@/features/ib/data", () => ({
         highlightCount: 1,
         supportPrompts: 1,
       },
+      visibilityPolicy: {
+        storyStates: ["scheduled", "published"],
+        evidenceVisibility: ["guardian_visible"],
+        noiseBudget: { routine_digest_per_week: 2 },
+        moderationPolicy: {},
+      },
+      currentUnitWindows: [
+        {
+          id: 6,
+          title: "How the world works",
+          href: "/ib/pyp/units/unit-42",
+          summary: { how_to_help: "Ask what system changed this week." },
+        },
+      ],
+      studentOptions: [{ id: 10, label: "Ava Peterson", relationship: "parent" }],
+      interactions: {
+        acknowledgements: [],
+        responses: [],
+      },
+      digestStrategy: {
+        cadenceOptions: ["weekly_digest", "fortnightly"],
+        currentPreferences: {},
+        urgentCount: 0,
+        routineStoryCount: 1,
+      },
+      deliveryReceipts: [
+        {
+          id: "IbReport:8",
+          state: "delivered",
+          deliverableType: "IbReport",
+          deliverableId: 8,
+          readAt: null,
+          acknowledgedAt: null,
+        },
+      ],
+      releasedReports: [
+        {
+          id: 8,
+          title: "PYP narrative report",
+          summary: "A calm summary for families.",
+          reportFamily: "pyp_narrative",
+          programme: "PYP",
+          href: "/ib/reports#report-8",
+          releasedAt: "2026-03-03T12:00:00Z",
+        },
+      ],
+      familyCharter: {
+        principle: "Calm updates",
+      },
+      howToHelp: [
+        {
+          id: 7,
+          title: "At-home prompt",
+          prompt: "Ask what changed in today’s learning and why.",
+        },
+      ],
+      preferences: {
+        ib_story_published: { email_frequency: "weekly_digest" },
+      },
+      communicationPreferences: {
+        locale: "en",
+        digestCadence: "weekly_digest",
+        quietHoursStart: "20:00",
+        quietHoursEnd: "07:00",
+        quietHoursTimezone: "UTC",
+        deliveryRules: {},
+      },
     },
+    mutate: vi.fn(),
   }),
+  useIbCommunicationPreference: () => ({
+    data: {
+      id: 1,
+      audience: "guardian",
+      locale: "en",
+      digestCadence: "weekly_digest",
+      quietHoursStart: "20:00",
+      quietHoursEnd: "07:00",
+      quietHoursTimezone: "UTC",
+      deliveryRules: {},
+      metadata: {},
+      updatedAt: "2026-03-05T12:00:00Z",
+    },
+    mutate: vi.fn(),
+  }),
+  updateIbCommunicationPreference: vi.fn(async () => ({})),
+  updateIbReport: vi.fn(async () => ({})),
 }));
 
 describe("GuardianExperience", () => {
@@ -78,5 +165,7 @@ describe("GuardianExperience", () => {
     expect(screen.getAllByText("Stories this week").length).toBeGreaterThan(0);
     expect(screen.getByText("Calendar digest")).toBeInTheDocument();
     expect(screen.getByText(/Only the dates families need for support/i)).toBeInTheDocument();
+    expect(screen.getByText("Released reports")).toBeInTheDocument();
+    expect(screen.getByText("Communication preferences")).toBeInTheDocument();
   });
 });

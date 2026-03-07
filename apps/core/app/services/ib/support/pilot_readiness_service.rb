@@ -7,10 +7,15 @@ module Ib
       end
 
       def build
-        rollout = Ib::Governance::RolloutConsoleService.new(tenant: tenant, school: school).build
+        rollout = Ib::Governance::RolloutConsoleService.new(
+          tenant: tenant,
+          school: school,
+          include_release_baseline: false
+        ).build
         review = Ib::Governance::ReviewGovernanceService.new(tenant: tenant, school: school).build
         sections = [
           section_for_pack(rollout),
+          section_for_release_baseline(rollout),
           section_for_setup(rollout),
           section_for_settings(rollout),
           section_for_routes(rollout),
@@ -90,6 +95,28 @@ module Ib
               href: step[:action_href] || "/ib/rollout"
             )
           end
+        }
+      end
+
+      def section_for_release_baseline(rollout)
+        baseline = rollout[:release_baseline] || {}
+        blockers = Array(baseline[:blockers])
+        {
+          key: "release_baseline",
+          title: "Release baseline",
+          status: blockers.any? ? "yellow" : "green",
+          summary: blockers.any? ? "GA candidate baseline still has explicit blockers." : "GA candidate baseline is machine-checked and currently clear.",
+          issues: blockers.map { |item| item[:detail] || item["detail"] },
+          rules: [
+            rule(
+              id: "release_baseline.machine_checked",
+              severity: blockers.any? ? "warning" : "info",
+              status: blockers.any? ? "fail" : "pass",
+              detail: "Release baseline should stay verified before widening rollout bundles.",
+              remediation: blockers.any? ? Array(blockers).first&.dig(:remediation) || "Open the rollout console and resolve baseline blockers." : "No action required.",
+              href: "/ib/rollout"
+            )
+          ]
         }
       end
 

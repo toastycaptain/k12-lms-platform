@@ -1,9 +1,9 @@
 class IbDocumentCollaborator < ApplicationRecord
   include TenantScoped
 
-  ROLE_TYPES = %w[owner co_planner specialist_contributor reviewer advisor].freeze
+  ROLE_TYPES = %w[owner co_planner specialist_contributor specialist_lead reviewer advisor].freeze
   STATUS_TYPES = %w[active requested archived].freeze
-  CONTRIBUTION_MODES = %w[full comment evidence resource support_note].freeze
+  CONTRIBUTION_MODES = %w[full comment evidence resource support_note rapid_attach].freeze
 
   belongs_to :curriculum_document
   belongs_to :user

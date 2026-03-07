@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -10,7 +10,14 @@ import { useUiPreferences } from "@/features/curriculum/runtime/ui-preferences";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
 import SchoolSelector from "@/components/SchoolSelector";
 import TopRightQuickActions from "@/components/TopRightQuickActions";
-import { CommandPalette, DensityToggle, LiveRegion, ThemeToggle } from "@k12/ui";
+import {
+  CommandPalette as BaseCommandPalette,
+  DensityToggle,
+  LiveRegion,
+  ThemeToggle,
+} from "@k12/ui";
+import { CommandPalette as IbCommandPalette } from "@/features/ib/navigation/CommandPalette";
+import { useKeyboardShortcuts } from "@/features/ib/navigation/useKeyboardShortcuts";
 
 function matchesPath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`) || pathname.startsWith(`${href}#`);
@@ -41,18 +48,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     [activeProgramme, isIb, isIbDocumentsOnly, pathname, roles, user?.curriculum_runtime],
   );
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setPaletteOpen(true);
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   const commandItems = useMemo(() => {
     const primaryItems = navigation.primary.map((item) => ({
       id: item.id,
@@ -82,6 +77,32 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     return [...primaryItems, ...childItems, ...quickActions];
   }, [navigation, router]);
+
+  const ibCommandItems = useMemo(
+    () =>
+      commandItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        detail: item.keywords?.[0] || item.group || "IB workspace action",
+        href:
+          navigation.primary.find((primary) => primary.id === item.id)?.href ||
+          navigation.primary
+            .flatMap((primary) => primary.children || [])
+            .find((child) => child.id === item.id)?.href ||
+          navigation.quickActions.find((action) => action.id === item.id)?.href ||
+          navigation.homeHref,
+        programme: activeProgramme || "Mixed",
+      })),
+    [activeProgramme, commandItems, navigation],
+  );
+
+  useKeyboardShortcuts({
+    openPalette: () => setPaletteOpen(true),
+    home: () => router.push("/ib/home"),
+    evidence: () => router.push("/ib/evidence"),
+    publishing: () => router.push("/ib/families/publishing"),
+    review: () => router.push("/ib/review"),
+  });
 
   const currentWorkspaceValue =
     navigation.currentWorkspace?.href ||
@@ -303,11 +324,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <CommandPalette
-        open={paletteOpen}
-        items={commandItems}
-        onClose={() => setPaletteOpen(false)}
-      />
+      {isIb ? (
+        <IbCommandPalette
+          open={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          homeItems={ibCommandItems}
+          recentHistory={[]}
+        />
+      ) : (
+        <BaseCommandPalette
+          open={paletteOpen}
+          items={commandItems}
+          onClose={() => setPaletteOpen(false)}
+        />
+      )}
     </div>
   );
 }

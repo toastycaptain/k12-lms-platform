@@ -4,37 +4,43 @@ module Api
       class SpecialistController < BaseController
         def show
           authorize IbDocumentCollaborator
-          collaborators = policy_scope(IbDocumentCollaborator).active.where(role: [ "specialist_contributor", "co_planner" ]).includes(:curriculum_document)
-          owned = collaborators.select { |item| item.user_id == Current.user.id }
-          contributed = collaborators.reject { |item| item.user_id == Current.user.id }
-          week_items = policy_scope(IbOperationalRecord).where(record_family: "specialist").order(due_on: :asc, updated_at: :desc).limit(5)
+          assignment_payload = ::Ib::Specialist::AssignmentService.new(
+            user: Current.user,
+            school: current_school_scope
+          ).build
 
           render json: {
-            owned_units: owned.map { |item| collaborator_payload(item) },
-            contributed_units: contributed.first(6).map { |item| collaborator_payload(item) },
-            week_items: week_items.map { |record| operational_payload(record) }
+            owned_units: assignment_payload[:owned_work].map { |item| legacy_collaborator_payload(item) },
+            contributed_units: assignment_payload[:requested_contributions].map { |item| legacy_collaborator_payload(item) },
+            week_items: assignment_payload[:pending_responses].map { |item| legacy_operational_payload(item) },
+            requested_contributions: assignment_payload[:requested_contributions],
+            pending_responses: assignment_payload[:pending_responses],
+            evidence_to_sort: assignment_payload[:evidence_to_sort],
+            overload_signals: assignment_payload[:overload_signals],
+            assignment_gaps: assignment_payload[:assignment_gaps],
+            library_items: ::Ib::Specialist::LibraryService.new(user: Current.user, school: current_school_scope).build
           }
         end
 
         private
 
-        def collaborator_payload(item)
+        def legacy_collaborator_payload(item)
           {
-            id: item.id,
-            title: item.curriculum_document&.title || "Document",
-            detail: item.metadata["detail"].presence || "#{item.role.humanize} contribution",
-            href: ::Ib::RouteBuilder.href_for(item.curriculum_document),
-            contribution_mode: item.contribution_mode
+            id: item[:id],
+            title: item[:title],
+            detail: item[:detail],
+            href: item[:href],
+            contribution_mode: item[:contribution_mode]
           }
         end
 
-        def operational_payload(record)
+        def legacy_operational_payload(record)
           {
-            id: record.id,
-            title: record.title,
-            detail: record.next_action.presence || record.summary,
-            due_on: record.due_on,
-            href: ::Ib::RouteBuilder.href_for(record)
+            id: record[:id],
+            title: record[:title],
+            detail: record[:detail],
+            due_on: record[:due_on],
+            href: record[:href]
           }
         end
       end

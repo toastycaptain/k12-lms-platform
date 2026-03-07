@@ -23,6 +23,40 @@ vi.mock("@/features/ib/data", () => ({
           href: "/ib/pyp/units/unit-42",
         },
       ],
+      requestedContributions: [
+        {
+          id: 2,
+          title: "Grade 5 library inquiry support",
+          detail: "Add one contribution note before the next block.",
+          href: "/ib/pyp/units/unit-55",
+          contributionMode: "comment",
+          role: "specialist_contributor",
+          status: "active",
+          handoffState: "awaiting_response",
+        },
+      ],
+      pendingResponses: [
+        {
+          id: 3,
+          title: "Respond to Grade 6 support note",
+          detail: "Teacher is waiting for a next-step suggestion.",
+          dueOn: "2026-03-02",
+          href: "/ib/pyp/units/unit-66",
+          handoffState: "awaiting_response",
+        },
+      ],
+      evidenceToSort: [
+        {
+          id: 4,
+          title: "Library evidence item",
+          detail: "Attach once across related units.",
+          href: "/ib/evidence/items/4",
+          status: "needs_validation",
+        },
+      ],
+      overloadSignals: [],
+      assignmentGaps: [],
+      libraryItems: [],
     },
   }),
 }));

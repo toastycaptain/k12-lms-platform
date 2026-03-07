@@ -1,7 +1,7 @@
 class IbDocumentComment < ApplicationRecord
   include TenantScoped
 
-  COMMENT_TYPES = %w[general field review_note return_note].freeze
+  COMMENT_TYPES = %w[general field review_note return_note support_note task suggestion mention].freeze
   STATUS_TYPES = %w[open resolved reopened].freeze
   VISIBILITY_TYPES = %w[internal coordinator specialist].freeze
 

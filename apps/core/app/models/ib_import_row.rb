@@ -20,5 +20,7 @@ class IbImportRow < ApplicationRecord
     self.error_messages = Array(error_messages)
     self.conflict_payload = {} unless conflict_payload.is_a?(Hash)
     self.execution_payload = {} unless execution_payload.is_a?(Hash)
+    self.unsupported_fields = Array(unsupported_fields)
+    self.resolution_payload = {} unless resolution_payload.is_a?(Hash)
   end
 end
