@@ -1,0 +1,2 @@
+class IbMobileSyncDiagnosticPolicy < IbSchoolScopedPolicy
+end

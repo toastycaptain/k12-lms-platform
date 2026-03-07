@@ -11519,6 +11519,800 @@ paths:
             application/json:
               schema:
                 type: object
+  "/api/v1/ib/pilot_profiles":
+    get:
+      summary: GET /api/v1/ib/pilot_profiles
+      operationId: get_api_v1_ib_pilot_profiles
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/pilot_profiles
+      operationId: post_api_v1_ib_pilot_profiles
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_profiles/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/pilot_profiles/{id}
+      operationId: put_api_v1_ib_pilot_profiles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/pilot_profiles/{id}
+      operationId: patch_api_v1_ib_pilot_profiles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_baseline_snapshots":
+    get:
+      summary: GET /api/v1/ib/pilot_baseline_snapshots
+      operationId: get_api_v1_ib_pilot_baseline_snapshots
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/pilot_baseline_snapshots
+      operationId: post_api_v1_ib_pilot_baseline_snapshots
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_support":
+    get:
+      summary: GET /api/v1/ib/pilot_support
+      operationId: get_api_v1_ib_pilot_support
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_feedback_items":
+    get:
+      summary: GET /api/v1/ib/pilot_feedback_items
+      operationId: get_api_v1_ib_pilot_feedback_items
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/pilot_feedback_items
+      operationId: post_api_v1_ib_pilot_feedback_items
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/pilot_feedback_items/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/pilot_feedback_items/{id}
+      operationId: put_api_v1_ib_pilot_feedback_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/pilot_feedback_items/{id}
+      operationId: patch_api_v1_ib_pilot_feedback_items_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/migration_sessions":
+    get:
+      summary: GET /api/v1/ib/migration_sessions
+      operationId: get_api_v1_ib_migration_sessions
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/migration_sessions
+      operationId: post_api_v1_ib_migration_sessions
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/migration_sessions/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: GET /api/v1/ib/migration_sessions/{id}
+      operationId: get_api_v1_ib_migration_sessions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      summary: PUT /api/v1/ib/migration_sessions/{id}
+      operationId: put_api_v1_ib_migration_sessions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/migration_sessions/{id}
+      operationId: patch_api_v1_ib_migration_sessions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/migration_mapping_templates":
+    get:
+      summary: GET /api/v1/ib/migration_mapping_templates
+      operationId: get_api_v1_ib_migration_mapping_templates
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/migration_mapping_templates
+      operationId: post_api_v1_ib_migration_mapping_templates
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/migration_mapping_templates/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/migration_mapping_templates/{id}
+      operationId: put_api_v1_ib_migration_mapping_templates_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/migration_mapping_templates/{id}
+      operationId: patch_api_v1_ib_migration_mapping_templates_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/report_cycles":
+    get:
+      summary: GET /api/v1/ib/report_cycles
+      operationId: get_api_v1_ib_report_cycles
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/report_cycles
+      operationId: post_api_v1_ib_report_cycles
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/report_cycles/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/report_cycles/{id}
+      operationId: put_api_v1_ib_report_cycles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/report_cycles/{id}
+      operationId: patch_api_v1_ib_report_cycles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/report_templates":
+    get:
+      summary: GET /api/v1/ib/report_templates
+      operationId: get_api_v1_ib_report_templates
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/report_templates
+      operationId: post_api_v1_ib_report_templates
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/report_templates/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/report_templates/{id}
+      operationId: put_api_v1_ib_report_templates_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/report_templates/{id}
+      operationId: patch_api_v1_ib_report_templates_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_workbench":
+    get:
+      summary: GET /api/v1/ib/collaboration_workbench
+      operationId: get_api_v1_ib_collaboration_workbench
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_events":
+    get:
+      summary: GET /api/v1/ib/collaboration_events
+      operationId: get_api_v1_ib_collaboration_events
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/collaboration_events
+      operationId: post_api_v1_ib_collaboration_events
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_tasks":
+    get:
+      summary: GET /api/v1/ib/collaboration_tasks
+      operationId: get_api_v1_ib_collaboration_tasks
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/collaboration_tasks
+      operationId: post_api_v1_ib_collaboration_tasks
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/collaboration_tasks/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/collaboration_tasks/{id}
+      operationId: put_api_v1_ib_collaboration_tasks_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/collaboration_tasks/{id}
+      operationId: patch_api_v1_ib_collaboration_tasks_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/benchmark_snapshots":
+    get:
+      summary: GET /api/v1/ib/benchmark_snapshots
+      operationId: get_api_v1_ib_benchmark_snapshots
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/benchmark_snapshots
+      operationId: post_api_v1_ib_benchmark_snapshots
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/intelligence_metric_definitions":
+    get:
+      summary: GET /api/v1/ib/intelligence_metric_definitions
+      operationId: get_api_v1_ib_intelligence_metric_definitions
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/intelligence_metric_definitions
+      operationId: post_api_v1_ib_intelligence_metric_definitions
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/intelligence_metric_definitions/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/intelligence_metric_definitions/{id}
+      operationId: put_api_v1_ib_intelligence_metric_definitions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/intelligence_metric_definitions/{id}
+      operationId: patch_api_v1_ib_intelligence_metric_definitions_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/trust_policies":
+    get:
+      summary: GET /api/v1/ib/trust_policies
+      operationId: get_api_v1_ib_trust_policies
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/trust_policies
+      operationId: post_api_v1_ib_trust_policies
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/trust_policies/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/trust_policies/{id}
+      operationId: put_api_v1_ib_trust_policies_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/trust_policies/{id}
+      operationId: patch_api_v1_ib_trust_policies_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/mobile_sync_diagnostics":
+    get:
+      summary: GET /api/v1/ib/mobile_sync_diagnostics
+      operationId: get_api_v1_ib_mobile_sync_diagnostics
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/mobile_sync_diagnostics
+      operationId: post_api_v1_ib_mobile_sync_diagnostics
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/mobile_sync_diagnostics/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/mobile_sync_diagnostics/{id}
+      operationId: put_api_v1_ib_mobile_sync_diagnostics_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/mobile_sync_diagnostics/{id}
+      operationId: patch_api_v1_ib_mobile_sync_diagnostics_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/search_profiles":
+    get:
+      summary: GET /api/v1/ib/search_profiles
+      operationId: get_api_v1_ib_search_profiles
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/search_profiles
+      operationId: post_api_v1_ib_search_profiles
+      tags:
+        - IB
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenericResourceInput"
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/search_profiles/{id}":
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      summary: PUT /api/v1/ib/search_profiles/{id}
+      operationId: put_api_v1_ib_search_profiles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      summary: PATCH /api/v1/ib/search_profiles/{id}
+      operationId: patch_api_v1_ib_search_profiles_id
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  "/api/v1/ib/replacement_readiness":
+    get:
+      summary: GET /api/v1/ib/replacement_readiness
+      operationId: get_api_v1_ib_replacement_readiness
+      tags:
+        - IB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: POST /api/v1/ib/replacement_readiness
+      operationId: post_api_v1_ib_replacement_readiness
+      tags:
+        - IB
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
   "/api/v1/ib/release_baseline":
     get:
       summary: GET /api/v1/ib/release_baseline

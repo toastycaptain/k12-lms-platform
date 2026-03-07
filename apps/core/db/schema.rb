@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -640,6 +640,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["user_id"], name: "index_ib_activity_events_on_user_id"
   end
 
+  create_table "ib_benchmark_snapshots", force: :cascade do |t|
+    t.string "benchmark_version", default: "phase9.v1", null: false
+    t.datetime "captured_at", null: false
+    t.bigint "captured_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "ib_pilot_profile_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "metrics", default: {}, null: false
+    t.string "role_scope", default: "teacher", null: false
+    t.bigint "school_id"
+    t.string "status", default: "baseline", null: false
+    t.bigint "tenant_id", null: false
+    t.jsonb "thresholds", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.string "workflow_family", default: "planning", null: false
+    t.index ["captured_by_id"], name: "index_ib_benchmark_snapshots_on_captured_by_id"
+    t.index ["ib_pilot_profile_id"], name: "index_ib_benchmark_snapshots_on_ib_pilot_profile_id"
+    t.index ["school_id"], name: "index_ib_benchmark_snapshots_on_school_id"
+    t.index ["tenant_id", "school_id", "benchmark_version"], name: "idx_ib_benchmark_snapshots_scope"
+    t.index ["tenant_id"], name: "index_ib_benchmark_snapshots_on_tenant_id"
+  end
+
+  create_table "ib_collaboration_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "curriculum_document_id"
+    t.boolean "durable", default: false, null: false
+    t.string "event_name", null: false
+    t.bigint "ib_collaboration_session_id"
+    t.datetime "occurred_at", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "route_id"
+    t.bigint "school_id"
+    t.string "scope_key", null: false
+    t.string "section_key"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["curriculum_document_id"], name: "index_ib_collaboration_events_on_curriculum_document_id"
+    t.index ["ib_collaboration_session_id"], name: "index_ib_collaboration_events_on_ib_collaboration_session_id"
+    t.index ["school_id"], name: "index_ib_collaboration_events_on_school_id"
+    t.index ["tenant_id", "curriculum_document_id", "occurred_at"], name: "idx_ib_collaboration_events_document"
+    t.index ["tenant_id"], name: "index_ib_collaboration_events_on_tenant_id"
+    t.index ["user_id"], name: "index_ib_collaboration_events_on_user_id"
+  end
+
   create_table "ib_collaboration_sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "curriculum_document_id", null: false
@@ -662,6 +707,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["tenant_id", "user_id", "session_key"], name: "idx_ib_collaboration_sessions_unique", unique: true
     t.index ["tenant_id"], name: "index_ib_collaboration_sessions_on_tenant_id"
     t.index ["user_id"], name: "index_ib_collaboration_sessions_on_user_id"
+  end
+
+  create_table "ib_collaboration_tasks", force: :cascade do |t|
+    t.bigint "assigned_to_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "curriculum_document_id"
+    t.text "detail"
+    t.date "due_on"
+    t.jsonb "mention_payload", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "priority", default: "medium", null: false
+    t.bigint "school_id"
+    t.string "section_key"
+    t.string "status", default: "open", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_to_id"], name: "index_ib_collaboration_tasks_on_assigned_to_id"
+    t.index ["created_by_id"], name: "index_ib_collaboration_tasks_on_created_by_id"
+    t.index ["curriculum_document_id"], name: "index_ib_collaboration_tasks_on_curriculum_document_id"
+    t.index ["school_id"], name: "index_ib_collaboration_tasks_on_school_id"
+    t.index ["tenant_id", "school_id", "status"], name: "idx_ib_collaboration_tasks_scope"
+    t.index ["tenant_id"], name: "index_ib_collaboration_tasks_on_tenant_id"
   end
 
   create_table "ib_communication_preferences", force: :cascade do |t|
@@ -848,6 +917,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["tenant_id"], name: "index_ib_import_rows_on_tenant_id"
   end
 
+  create_table "ib_intelligence_metric_definitions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "definition"
+    t.string "key", null: false
+    t.string "label", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "metric_family", default: "programme_health", null: false
+    t.bigint "school_id"
+    t.jsonb "source_of_truth", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.jsonb "threshold_config", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.string "version", default: "phase9.v1", null: false
+    t.index ["created_by_id"], name: "index_ib_intelligence_metric_definitions_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_intelligence_metric_definitions_on_school_id"
+    t.index ["tenant_id", "key", "version"], name: "idx_ib_intelligence_metrics_lookup", unique: true
+    t.index ["tenant_id"], name: "index_ib_intelligence_metric_definitions_on_tenant_id"
+  end
+
   create_table "ib_learning_stories", force: :cascade do |t|
     t.string "audience", default: "families", null: false
     t.string "cadence", default: "weekly_digest", null: false
@@ -918,6 +1008,75 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["translated_by_id"], name: "index_ib_learning_story_translations_on_translated_by_id"
   end
 
+  create_table "ib_migration_mapping_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.jsonb "field_mappings", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name", null: false
+    t.string "programme", default: "Mixed", null: false
+    t.jsonb "role_mapping_rules", default: {}, null: false
+    t.bigint "school_id"
+    t.boolean "shared", default: false, null: false
+    t.string "source_system", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.jsonb "transform_library", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_migration_mapping_templates_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_migration_mapping_templates_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_migration_mapping_templates_on_tenant_id"
+  end
+
+  create_table "ib_migration_sessions", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.string "cutover_state", default: "disconnected", null: false
+    t.jsonb "dry_run_summary", default: {}, null: false
+    t.bigint "ib_import_batch_id"
+    t.bigint "ib_pilot_profile_id"
+    t.bigint "initiated_by_id"
+    t.jsonb "mapping_summary", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "reconciliation_summary", default: {}, null: false
+    t.jsonb "rollback_summary", default: {}, null: false
+    t.bigint "school_id"
+    t.string "session_key", null: false
+    t.jsonb "source_inventory", default: {}, null: false
+    t.string "source_system", null: false
+    t.string "status", default: "disconnected", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_ib_migration_sessions_on_academic_year_id"
+    t.index ["ib_import_batch_id"], name: "index_ib_migration_sessions_on_ib_import_batch_id"
+    t.index ["ib_pilot_profile_id"], name: "index_ib_migration_sessions_on_ib_pilot_profile_id"
+    t.index ["initiated_by_id"], name: "index_ib_migration_sessions_on_initiated_by_id"
+    t.index ["school_id"], name: "index_ib_migration_sessions_on_school_id"
+    t.index ["tenant_id", "school_id", "session_key"], name: "idx_ib_migration_sessions_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_migration_sessions_on_tenant_id"
+  end
+
+  create_table "ib_mobile_sync_diagnostics", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "device_class", default: "phone", null: false
+    t.jsonb "diagnostics", default: {}, null: false
+    t.jsonb "failure_payload", default: {}, null: false
+    t.datetime "last_synced_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "queue_depth", default: 0, null: false
+    t.bigint "school_id"
+    t.string "status", default: "healthy", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.string "workflow_key", null: false
+    t.index ["school_id"], name: "index_ib_mobile_sync_diagnostics_on_school_id"
+    t.index ["tenant_id", "school_id", "workflow_key"], name: "idx_ib_mobile_sync_diagnostics_scope"
+    t.index ["tenant_id"], name: "index_ib_mobile_sync_diagnostics_on_tenant_id"
+    t.index ["user_id"], name: "index_ib_mobile_sync_diagnostics_on_user_id"
+  end
+
   create_table "ib_operational_checkpoints", force: :cascade do |t|
     t.datetime "completed_at"
     t.datetime "created_at", null: false
@@ -967,6 +1126,75 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["school_id"], name: "index_ib_operational_records_on_school_id"
     t.index ["student_id"], name: "index_ib_operational_records_on_student_id"
     t.index ["tenant_id"], name: "index_ib_operational_records_on_tenant_id"
+  end
+
+  create_table "ib_pilot_baseline_snapshots", force: :cascade do |t|
+    t.jsonb "benchmark_payload", default: {}, null: false
+    t.datetime "captured_at", null: false
+    t.bigint "captured_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "ib_pilot_profile_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "metric_payload", default: {}, null: false
+    t.bigint "school_id"
+    t.string "status", default: "captured", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["captured_by_id"], name: "index_ib_pilot_baseline_snapshots_on_captured_by_id"
+    t.index ["ib_pilot_profile_id"], name: "index_ib_pilot_baseline_snapshots_on_ib_pilot_profile_id"
+    t.index ["school_id"], name: "index_ib_pilot_baseline_snapshots_on_school_id"
+    t.index ["tenant_id", "ib_pilot_profile_id", "captured_at"], name: "idx_ib_pilot_baselines_lookup"
+    t.index ["tenant_id"], name: "index_ib_pilot_baseline_snapshots_on_tenant_id"
+  end
+
+  create_table "ib_pilot_feedback_items", force: :cascade do |t|
+    t.string "category", default: "general", null: false
+    t.datetime "created_at", null: false
+    t.text "detail"
+    t.bigint "ib_pilot_profile_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "role_scope", default: "teacher", null: false
+    t.jsonb "routing_payload", default: {}, null: false
+    t.bigint "school_id"
+    t.string "sentiment", default: "neutral", null: false
+    t.string "status", default: "new", null: false
+    t.string "surface", default: "unknown", null: false
+    t.jsonb "tags", default: [], null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["ib_pilot_profile_id"], name: "index_ib_pilot_feedback_items_on_ib_pilot_profile_id"
+    t.index ["school_id"], name: "index_ib_pilot_feedback_items_on_school_id"
+    t.index ["tenant_id", "status", "category"], name: "idx_ib_pilot_feedback_triage"
+    t.index ["tenant_id"], name: "index_ib_pilot_feedback_items_on_tenant_id"
+    t.index ["user_id"], name: "index_ib_pilot_feedback_items_on_user_id"
+  end
+
+  create_table "ib_pilot_profiles", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.string "archetype_key", null: false
+    t.jsonb "baseline_summary", default: {}, null: false
+    t.string "cohort_key", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.date "go_live_target_on"
+    t.string "launch_window"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name", null: false
+    t.string "programme_scope", default: "Mixed", null: false
+    t.jsonb "readiness_summary", default: {}, null: false
+    t.jsonb "role_success_metrics", default: {}, null: false
+    t.jsonb "rollout_bundle", default: {}, null: false
+    t.bigint "school_id"
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_ib_pilot_profiles_on_academic_year_id"
+    t.index ["created_by_id"], name: "index_ib_pilot_profiles_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_pilot_profiles_on_school_id"
+    t.index ["tenant_id", "school_id", "cohort_key"], name: "idx_ib_pilot_profiles_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_pilot_profiles_on_tenant_id"
   end
 
   create_table "ib_pilot_setups", force: :cascade do |t|
@@ -1117,6 +1345,54 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["tenant_id"], name: "index_ib_release_baselines_on_tenant_id"
   end
 
+  create_table "ib_replacement_readiness_snapshots", force: :cascade do |t|
+    t.datetime "archived_at"
+    t.bigint "captured_by_id"
+    t.datetime "created_at", null: false
+    t.jsonb "export_payload", default: {}, null: false
+    t.jsonb "gap_summary", default: {}, null: false
+    t.datetime "generated_at", null: false
+    t.bigint "ib_pilot_profile_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "readiness_summary", default: {}, null: false
+    t.bigint "school_id"
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["captured_by_id"], name: "index_ib_replacement_readiness_snapshots_on_captured_by_id"
+    t.index ["ib_pilot_profile_id"], name: "idx_on_ib_pilot_profile_id_d9acd6b47e"
+    t.index ["school_id"], name: "index_ib_replacement_readiness_snapshots_on_school_id"
+    t.index ["tenant_id", "school_id", "generated_at"], name: "idx_ib_replacement_readiness_scope"
+    t.index ["tenant_id"], name: "index_ib_replacement_readiness_snapshots_on_tenant_id"
+  end
+
+  create_table "ib_report_cycles", force: :cascade do |t|
+    t.bigint "academic_year_id"
+    t.jsonb "approval_summary", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "cycle_key", null: false
+    t.jsonb "delivery_window", default: {}, null: false
+    t.date "due_on"
+    t.date "ends_on"
+    t.jsonb "localization_settings", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "metrics", default: {}, null: false
+    t.bigint "owner_id"
+    t.string "programme", default: "Mixed", null: false
+    t.bigint "school_id"
+    t.date "starts_on"
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["academic_year_id"], name: "index_ib_report_cycles_on_academic_year_id"
+    t.index ["created_by_id"], name: "index_ib_report_cycles_on_created_by_id"
+    t.index ["owner_id"], name: "index_ib_report_cycles_on_owner_id"
+    t.index ["school_id"], name: "index_ib_report_cycles_on_school_id"
+    t.index ["tenant_id", "school_id", "cycle_key"], name: "idx_ib_report_cycles_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_report_cycles_on_tenant_id"
+  end
+
   create_table "ib_report_deliveries", force: :cascade do |t|
     t.datetime "acknowledged_at"
     t.string "audience_role", default: "guardian", null: false
@@ -1141,6 +1417,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["recipient_id"], name: "index_ib_report_deliveries_on_recipient_id"
     t.index ["school_id"], name: "index_ib_report_deliveries_on_school_id"
     t.index ["tenant_id"], name: "index_ib_report_deliveries_on_tenant_id"
+  end
+
+  create_table "ib_report_templates", force: :cascade do |t|
+    t.string "audience", default: "internal", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "family", default: "conference_packet", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name", null: false
+    t.string "programme", default: "Mixed", null: false
+    t.string "schema_version", default: "phase9.v1", null: false
+    t.bigint "school_id"
+    t.jsonb "section_definitions", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.jsonb "translation_rules", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_report_templates_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_report_templates_on_school_id"
+    t.index ["tenant_id"], name: "index_ib_report_templates_on_tenant_id"
   end
 
   create_table "ib_report_versions", force: :cascade do |t|
@@ -1169,7 +1465,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.string "audience", default: "internal", null: false
     t.bigint "author_id"
     t.datetime "created_at", null: false
+    t.bigint "ib_report_cycle_id"
+    t.bigint "ib_report_template_id"
     t.datetime "last_rendered_at"
+    t.string "localized_locale"
     t.jsonb "metadata", default: {}, null: false
     t.string "programme", default: "Mixed", null: false
     t.jsonb "proofing_summary", default: {}, null: false
@@ -1185,6 +1484,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.datetime "updated_at", null: false
     t.index ["academic_year_id"], name: "index_ib_reports_on_academic_year_id"
     t.index ["author_id"], name: "index_ib_reports_on_author_id"
+    t.index ["ib_report_cycle_id"], name: "index_ib_reports_on_ib_report_cycle_id"
+    t.index ["ib_report_template_id"], name: "index_ib_reports_on_ib_report_template_id"
     t.index ["school_id"], name: "index_ib_reports_on_school_id"
     t.index ["student_id"], name: "index_ib_reports_on_student_id"
     t.index ["tenant_id", "school_id", "programme", "report_family"], name: "idx_ib_reports_scope_family"
@@ -1211,6 +1512,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["tenant_id", "user_id", "scope_key"], name: "idx_ib_saved_searches_scope"
     t.index ["tenant_id"], name: "index_ib_saved_searches_on_tenant_id"
     t.index ["user_id"], name: "index_ib_saved_searches_on_user_id"
+  end
+
+  create_table "ib_search_profiles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.jsonb "facet_config", default: {}, null: false
+    t.string "key", null: false
+    t.integer "latency_budget_ms", default: 800, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "ranking_rules", default: {}, null: false
+    t.bigint "school_id"
+    t.jsonb "scope_rules", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_search_profiles_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_search_profiles_on_school_id"
+    t.index ["tenant_id", "school_id", "key"], name: "idx_ib_search_profiles_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_search_profiles_on_tenant_id"
   end
 
   create_table "ib_specialist_library_items", force: :cascade do |t|
@@ -1307,6 +1627,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
     t.index ["reviewer_id"], name: "index_ib_standards_packets_on_reviewer_id"
     t.index ["school_id"], name: "index_ib_standards_packets_on_school_id"
     t.index ["tenant_id"], name: "index_ib_standards_packets_on_tenant_id"
+  end
+
+  create_table "ib_trust_policies", force: :cascade do |t|
+    t.string "approval_mode", default: "teacher_reviewed", null: false
+    t.string "audience", default: "guardian", null: false
+    t.string "cadence_mode", default: "weekly_digest", null: false
+    t.string "content_type", default: "story", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "delivery_mode", default: "digest", null: false
+    t.jsonb "localization_rules", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "policy_rules", default: {}, null: false
+    t.jsonb "privacy_rules", default: {}, null: false
+    t.bigint "school_id"
+    t.string "status", default: "active", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_ib_trust_policies_on_created_by_id"
+    t.index ["school_id"], name: "index_ib_trust_policies_on_school_id"
+    t.index ["tenant_id", "school_id", "audience", "content_type"], name: "idx_ib_trust_policies_scope", unique: true
+    t.index ["tenant_id"], name: "index_ib_trust_policies_on_tenant_id"
   end
 
   create_table "ib_user_workspace_preferences", force: :cascade do |t|
@@ -2236,10 +2578,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_activity_events", "schools"
   add_foreign_key "ib_activity_events", "tenants"
   add_foreign_key "ib_activity_events", "users"
+  add_foreign_key "ib_benchmark_snapshots", "ib_pilot_profiles"
+  add_foreign_key "ib_benchmark_snapshots", "schools"
+  add_foreign_key "ib_benchmark_snapshots", "tenants"
+  add_foreign_key "ib_benchmark_snapshots", "users", column: "captured_by_id"
+  add_foreign_key "ib_collaboration_events", "curriculum_documents"
+  add_foreign_key "ib_collaboration_events", "ib_collaboration_sessions"
+  add_foreign_key "ib_collaboration_events", "schools"
+  add_foreign_key "ib_collaboration_events", "tenants"
+  add_foreign_key "ib_collaboration_events", "users"
   add_foreign_key "ib_collaboration_sessions", "curriculum_documents"
   add_foreign_key "ib_collaboration_sessions", "schools"
   add_foreign_key "ib_collaboration_sessions", "tenants"
   add_foreign_key "ib_collaboration_sessions", "users"
+  add_foreign_key "ib_collaboration_tasks", "curriculum_documents"
+  add_foreign_key "ib_collaboration_tasks", "schools"
+  add_foreign_key "ib_collaboration_tasks", "tenants"
+  add_foreign_key "ib_collaboration_tasks", "users", column: "assigned_to_id"
+  add_foreign_key "ib_collaboration_tasks", "users", column: "created_by_id"
   add_foreign_key "ib_communication_preferences", "schools"
   add_foreign_key "ib_communication_preferences", "tenants"
   add_foreign_key "ib_communication_preferences", "users"
@@ -2269,6 +2625,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_import_batches", "users", column: "initiated_by_id"
   add_foreign_key "ib_import_rows", "ib_import_batches"
   add_foreign_key "ib_import_rows", "tenants"
+  add_foreign_key "ib_intelligence_metric_definitions", "schools"
+  add_foreign_key "ib_intelligence_metric_definitions", "tenants"
+  add_foreign_key "ib_intelligence_metric_definitions", "users", column: "created_by_id"
   add_foreign_key "ib_learning_stories", "curriculum_documents"
   add_foreign_key "ib_learning_stories", "planning_contexts"
   add_foreign_key "ib_learning_stories", "schools"
@@ -2282,6 +2641,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_learning_story_translations", "ib_learning_stories"
   add_foreign_key "ib_learning_story_translations", "tenants"
   add_foreign_key "ib_learning_story_translations", "users", column: "translated_by_id"
+  add_foreign_key "ib_migration_mapping_templates", "schools"
+  add_foreign_key "ib_migration_mapping_templates", "tenants"
+  add_foreign_key "ib_migration_mapping_templates", "users", column: "created_by_id"
+  add_foreign_key "ib_migration_sessions", "academic_years"
+  add_foreign_key "ib_migration_sessions", "ib_import_batches"
+  add_foreign_key "ib_migration_sessions", "ib_pilot_profiles"
+  add_foreign_key "ib_migration_sessions", "schools"
+  add_foreign_key "ib_migration_sessions", "tenants"
+  add_foreign_key "ib_migration_sessions", "users", column: "initiated_by_id"
+  add_foreign_key "ib_mobile_sync_diagnostics", "schools"
+  add_foreign_key "ib_mobile_sync_diagnostics", "tenants"
+  add_foreign_key "ib_mobile_sync_diagnostics", "users"
   add_foreign_key "ib_operational_checkpoints", "ib_operational_records"
   add_foreign_key "ib_operational_checkpoints", "tenants"
   add_foreign_key "ib_operational_checkpoints", "users", column: "reviewer_id"
@@ -2292,6 +2663,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_operational_records", "users", column: "advisor_id"
   add_foreign_key "ib_operational_records", "users", column: "owner_id"
   add_foreign_key "ib_operational_records", "users", column: "student_id"
+  add_foreign_key "ib_pilot_baseline_snapshots", "ib_pilot_profiles"
+  add_foreign_key "ib_pilot_baseline_snapshots", "schools"
+  add_foreign_key "ib_pilot_baseline_snapshots", "tenants"
+  add_foreign_key "ib_pilot_baseline_snapshots", "users", column: "captured_by_id"
+  add_foreign_key "ib_pilot_feedback_items", "ib_pilot_profiles"
+  add_foreign_key "ib_pilot_feedback_items", "schools"
+  add_foreign_key "ib_pilot_feedback_items", "tenants"
+  add_foreign_key "ib_pilot_feedback_items", "users"
+  add_foreign_key "ib_pilot_profiles", "academic_years"
+  add_foreign_key "ib_pilot_profiles", "schools"
+  add_foreign_key "ib_pilot_profiles", "tenants"
+  add_foreign_key "ib_pilot_profiles", "users", column: "created_by_id"
   add_foreign_key "ib_pilot_setups", "schools"
   add_foreign_key "ib_pilot_setups", "tenants"
   add_foreign_key "ib_pilot_setups", "users", column: "created_by_id"
@@ -2320,15 +2703,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_release_baselines", "tenants"
   add_foreign_key "ib_release_baselines", "users", column: "certified_by_id"
   add_foreign_key "ib_release_baselines", "users", column: "created_by_id"
+  add_foreign_key "ib_replacement_readiness_snapshots", "ib_pilot_profiles"
+  add_foreign_key "ib_replacement_readiness_snapshots", "schools"
+  add_foreign_key "ib_replacement_readiness_snapshots", "tenants"
+  add_foreign_key "ib_replacement_readiness_snapshots", "users", column: "captured_by_id"
+  add_foreign_key "ib_report_cycles", "academic_years"
+  add_foreign_key "ib_report_cycles", "schools"
+  add_foreign_key "ib_report_cycles", "tenants"
+  add_foreign_key "ib_report_cycles", "users", column: "created_by_id"
+  add_foreign_key "ib_report_cycles", "users", column: "owner_id"
   add_foreign_key "ib_report_deliveries", "ib_report_versions"
   add_foreign_key "ib_report_deliveries", "ib_reports"
   add_foreign_key "ib_report_deliveries", "schools"
   add_foreign_key "ib_report_deliveries", "tenants"
   add_foreign_key "ib_report_deliveries", "users", column: "recipient_id"
+  add_foreign_key "ib_report_templates", "schools"
+  add_foreign_key "ib_report_templates", "tenants"
+  add_foreign_key "ib_report_templates", "users", column: "created_by_id"
   add_foreign_key "ib_report_versions", "ib_reports"
   add_foreign_key "ib_report_versions", "tenants"
   add_foreign_key "ib_report_versions", "users", column: "signed_off_by_id"
   add_foreign_key "ib_reports", "academic_years"
+  add_foreign_key "ib_reports", "ib_report_cycles"
+  add_foreign_key "ib_reports", "ib_report_templates"
   add_foreign_key "ib_reports", "schools"
   add_foreign_key "ib_reports", "tenants"
   add_foreign_key "ib_reports", "users", column: "author_id"
@@ -2336,6 +2733,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_saved_searches", "schools"
   add_foreign_key "ib_saved_searches", "tenants"
   add_foreign_key "ib_saved_searches", "users"
+  add_foreign_key "ib_search_profiles", "schools"
+  add_foreign_key "ib_search_profiles", "tenants"
+  add_foreign_key "ib_search_profiles", "users", column: "created_by_id"
   add_foreign_key "ib_specialist_library_items", "schools"
   add_foreign_key "ib_specialist_library_items", "tenants"
   add_foreign_key "ib_specialist_library_items", "users", column: "created_by_id"
@@ -2355,6 +2755,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_120100) do
   add_foreign_key "ib_standards_packets", "tenants"
   add_foreign_key "ib_standards_packets", "users", column: "owner_id"
   add_foreign_key "ib_standards_packets", "users", column: "reviewer_id"
+  add_foreign_key "ib_trust_policies", "schools"
+  add_foreign_key "ib_trust_policies", "tenants"
+  add_foreign_key "ib_trust_policies", "users", column: "created_by_id"
   add_foreign_key "ib_user_workspace_preferences", "schools"
   add_foreign_key "ib_user_workspace_preferences", "tenants"
   add_foreign_key "ib_user_workspace_preferences", "users"

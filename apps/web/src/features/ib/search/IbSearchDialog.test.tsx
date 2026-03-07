@@ -44,6 +44,10 @@ vi.mock("@/features/ib/analytics/emitIbEvent", () => ({
   emitIbEvent: vi.fn(async () => undefined),
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  SearchOpsPanel: () => <div>Search Ops Panel</div>,
+}));
+
 describe("IbSearchDialog", () => {
   beforeEach(() => {
     apiFetchMock.mockResolvedValue({
@@ -67,6 +71,7 @@ describe("IbSearchDialog", () => {
     render(<IbSearchDialog open onClose={() => undefined} />);
 
     expect(screen.getByText("Saved lenses")).toBeInTheDocument();
+    expect(screen.getByText("Search Ops Panel")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: "IA risk lens" })[0]);
     expect(screen.getByDisplayValue("extended essay risk")).toBeInTheDocument();
 

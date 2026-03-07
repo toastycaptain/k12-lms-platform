@@ -1,0 +1,2 @@
+class IbReportCyclePolicy < IbSchoolScopedPolicy
+end

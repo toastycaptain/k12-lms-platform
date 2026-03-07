@@ -1,0 +1,2 @@
+class IbMigrationMappingTemplatePolicy < IbPhase9AdminPolicy
+end

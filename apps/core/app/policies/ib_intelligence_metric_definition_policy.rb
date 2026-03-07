@@ -1,0 +1,2 @@
+class IbIntelligenceMetricDefinitionPolicy < IbSchoolScopedPolicy
+end

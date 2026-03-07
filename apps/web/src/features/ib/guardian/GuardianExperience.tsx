@@ -8,6 +8,7 @@ import { PortfolioHighlights } from "@/features/ib/guardian/PortfolioHighlights"
 import { ProgressSummary } from "@/features/ib/guardian/ProgressSummary";
 import { FamilyHomeV2 } from "@/features/ib/guardian/FamilyHomeV2";
 import { IbSurfaceState } from "@/features/ib/core/IbSurfaceState";
+import { TrustPolicyPanel } from "@/features/ib/phase9/Phase9Panels";
 import { ReleasedReportsPanel } from "@/features/ib/reports/ReleasedReportsPanel";
 import { CommunicationPreferencesPanel } from "@/features/ib/shared/CommunicationPreferencesPanel";
 
@@ -162,6 +163,7 @@ export function GuardianExperience() {
             emptyDescription="Released report history will appear here when teachers or coordinators publish it for families."
             onRefresh={() => mutate()}
           />
+          <TrustPolicyPanel audience="guardian" />
           <CommunicationPreferencesPanel
             audience="guardian"
             fallback={data.communicationPreferences}

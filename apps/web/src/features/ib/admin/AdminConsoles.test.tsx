@@ -62,6 +62,12 @@ vi.mock("@/features/ib/admin/OnboardingSupportPanel", () => ({
   OnboardingSupportPanel: () => <div>Onboarding Support Panel</div>,
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  PilotAdoptionPanel: () => <div>Pilot Adoption Panel</div>,
+  MigrationConfidencePanel: () => <div>Migration Confidence Panel</div>,
+  ReplacementReadinessPanel: () => <div>Replacement Readiness Panel</div>,
+}));
+
 describe("IB admin consoles", () => {
   function renderWithToast(ui: React.ReactNode) {
     return render(<ToastProvider>{ui}</ToastProvider>);
@@ -217,6 +223,8 @@ describe("IB admin consoles", () => {
     expect(screen.getByText(/Legacy document routes: 1/)).toBeInTheDocument();
     expect(screen.getByText("Pilot Setup Wizard")).toBeInTheDocument();
     expect(screen.getByText("Import Operations Console")).toBeInTheDocument();
+    expect(screen.getByText("Pilot Adoption Panel")).toBeInTheDocument();
+    expect(screen.getByText("Replacement Readiness Panel")).toBeInTheDocument();
   });
 
   it("renders readiness issues with fix links", () => {

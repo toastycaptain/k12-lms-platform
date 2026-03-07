@@ -1,0 +1,2 @@
+class IbReplacementReadinessSnapshotPolicy < IbPhase9AdminPolicy
+end

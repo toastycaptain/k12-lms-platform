@@ -1,20 +1,7 @@
-import Link from "next/link";
-import { CommentThread } from "@k12/ui";
+"use client";
 
-const COMMENTS = [
-  {
-    id: "hub-1",
-    author: "Amina Coordinator",
-    body: "Link the specialist contribution directly to the PYP weekly flow so it is visible in the unit studio.",
-    timestamp: "7m ago",
-  },
-  {
-    id: "hub-2",
-    author: "Luis Specialist",
-    body: "Added the museum visit evidence bundle and aligned it to the Grade 4 inquiry sequence.",
-    timestamp: "22m ago",
-  },
-];
+import Link from "next/link";
+import { CollaborationOperationsPanel } from "@/features/ib/phase9/Phase9Panels";
 
 export function CollaborationHub() {
   return (
@@ -49,7 +36,7 @@ export function CollaborationHub() {
         </Link>
       </div>
 
-      <CommentThread comments={COMMENTS} />
+      <CollaborationOperationsPanel />
     </div>
   );
 }

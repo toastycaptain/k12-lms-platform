@@ -1,0 +1,2 @@
+class IbCollaborationEventPolicy < IbSchoolScopedPolicy
+end

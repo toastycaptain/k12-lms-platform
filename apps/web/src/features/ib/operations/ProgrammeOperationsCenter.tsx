@@ -20,6 +20,7 @@ import { PoiOverlapPanel } from "@/features/ib/pyp/PoiOverlapPanel";
 import { CoverageBalanceDashboard } from "@/features/ib/myp/CoverageBalanceDashboard";
 import { RiskSummaryPanel } from "@/features/ib/dp/RiskSummaryPanel";
 import { ProgressionExplorer } from "@/features/ib/coordinator/ProgressionExplorer";
+import { SemanticLayerPanel } from "@/features/ib/phase9/Phase9Panels";
 import { EvidenceGapPanel } from "@/features/ib/standards/EvidenceGapPanel";
 
 export function ProgrammeOperationsCenter({ state = "ready" }: { state?: IbSurfaceStatus }) {
@@ -183,6 +184,7 @@ export function ProgrammeOperationsCenter({ state = "ready" }: { state?: IbSurfa
                 </p>
               </div>
             </WorkspacePanel>
+            <SemanticLayerPanel />
           </div>
         }
       />

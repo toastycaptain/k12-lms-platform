@@ -18,6 +18,7 @@ import { StudentQuickActionsTray } from "@/features/ib/student/StudentQuickActio
 import { NotificationPreferencesSheet } from "@/features/ib/student/NotificationPreferencesSheet";
 import { PortfolioSearchBar } from "@/features/ib/portfolio/PortfolioSearchBar";
 import { CollectionBuilder } from "@/features/ib/portfolio/CollectionBuilder";
+import { TrustPolicyPanel } from "@/features/ib/phase9/Phase9Panels";
 import { ReleasedReportsPanel } from "@/features/ib/reports/ReleasedReportsPanel";
 import { CommunicationPreferencesPanel } from "@/features/ib/shared/CommunicationPreferencesPanel";
 
@@ -192,6 +193,11 @@ export function StudentExperience({ variant }: StudentExperienceProps) {
               receipts={data.deliveryReceipts}
               emptyDescription="Released report history will appear here when advisors or teachers publish it."
               onRefresh={() => mutate()}
+            />
+            <TrustPolicyPanel
+              audience="student"
+              title="Student trust policy"
+              description="Student-facing communication remains calm, explicit, and tied to clear approval rules."
             />
             <CommunicationPreferencesPanel
               audience="student"

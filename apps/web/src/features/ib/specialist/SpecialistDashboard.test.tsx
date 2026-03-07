@@ -61,6 +61,11 @@ vi.mock("@/features/ib/data", () => ({
   }),
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  BenchmarkRefreshPanel: () => <div>Benchmark Refresh Panel</div>,
+  MobileTrustPanel: () => <div>Mobile Trust Panel</div>,
+}));
+
 describe("SpecialistDashboard", () => {
   const originalFetch = globalThis.fetch;
 
@@ -84,5 +89,7 @@ describe("SpecialistDashboard", () => {
     fireEvent.click(within(dialog).getByLabelText("Grade 5 • Changing communities"));
 
     expect(within(dialog).getByText("2 units will receive this contribution.")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Refresh Panel")).toBeInTheDocument();
+    expect(screen.getByText("Mobile Trust Panel")).toBeInTheDocument();
   });
 });

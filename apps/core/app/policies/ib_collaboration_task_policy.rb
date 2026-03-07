@@ -1,0 +1,2 @@
+class IbCollaborationTaskPolicy < IbSchoolScopedPolicy
+end

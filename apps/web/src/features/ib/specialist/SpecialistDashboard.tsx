@@ -17,6 +17,7 @@ import { SpecialistAnalyticsPanel } from "@/features/ib/specialist/SpecialistAna
 import { NotificationPreferencesPanel } from "@/features/ib/specialist/NotificationPreferencesPanel";
 import { SpecialistLibraryPanel } from "@/features/ib/specialist/SpecialistLibraryPanel";
 import { SpecialistMobileCapture } from "@/features/ib/specialist/SpecialistMobileCapture";
+import { BenchmarkRefreshPanel, MobileTrustPanel } from "@/features/ib/phase9/Phase9Panels";
 
 export function SpecialistDashboard({ state = "ready" }: { state?: IbSurfaceStatus }) {
   const { data: payload } = useIbSpecialistPayload();
@@ -178,7 +179,13 @@ export function SpecialistDashboard({ state = "ready" }: { state?: IbSurfaceStat
             overloadSignals={enhancedPayload.overloadSignals}
             assignmentGaps={enhancedPayload.assignmentGaps}
           />
+          <BenchmarkRefreshPanel
+            title="Specialist-speed benchmark refresh"
+            description="Specialist workflows keep their own benchmark snapshot instead of hiding under teacher averages."
+            roleScope="specialist"
+          />
           <SpecialistMobileCapture />
+          <MobileTrustPanel allowAction />
         </div>
       }
     />

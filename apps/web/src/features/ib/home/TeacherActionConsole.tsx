@@ -13,6 +13,7 @@ import { emitIbEvent } from "@/features/ib/analytics/emitIbEvent";
 import { ChangedSinceLastVisit } from "@/features/ib/home/ChangedSinceLastVisit";
 import { PinnedWorkPanel } from "@/features/ib/home/PinnedWorkPanel";
 import { useIbHomePayload, type HomeLinkItem } from "@/features/ib/home/useIbHomePayload";
+import { BenchmarkRefreshPanel } from "@/features/ib/phase9/Phase9Panels";
 import { BulkCarryForwardPanel } from "@/features/ib/planning/BulkCarryForwardPanel";
 import { DuplicateDocumentDialog } from "@/features/ib/planning/DuplicateDocumentDialog";
 import { IbWorkspaceScaffold, WorkspacePanel } from "@/features/ib/shared/IbWorkspaceScaffold";
@@ -345,6 +346,11 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
                 ))}
               </div>
             </WorkspacePanel>
+            <BenchmarkRefreshPanel
+              title="Teacher-speed benchmark refresh"
+              description="Phase 9 protects the teacher workflow sprint with fresh benchmark snapshots and visible regressions."
+              roleScope="teacher"
+            />
             {layout === "focus" ? <BulkCarryForwardPanel items={carryForwardItems} /> : null}
           </div>
         }

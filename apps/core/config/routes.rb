@@ -43,20 +43,35 @@ Rails.application.routes.draw do
         resource :home, only: [ :show ], controller: "home"
         resource :operations, only: [ :show ], controller: "operations"
         resource :rollout, only: [ :show ], controller: "rollout"
+        resources :pilot_profiles, only: [ :index, :create, :update ]
+        resources :pilot_baseline_snapshots, only: [ :index, :create ]
+        resource :pilot_support, only: [ :show ], controller: "pilot_support"
+        resources :pilot_feedback_items, only: [ :index, :create, :update ]
         resource :release_baseline, only: [ :show ], controller: "release_baselines" do
           post :verify
           post :certify
           post :rollback
         end
         resource :pilot_readiness, only: [ :show ], controller: "pilot_readiness"
+        resources :migration_sessions, only: [ :index, :show, :create, :update ]
+        resources :migration_mapping_templates, only: [ :index, :create, :update ]
         resources :activity_events, only: [ :index, :create ]
         resources :workspace_preferences, only: [ :index, :create ]
         resources :specialist_assignments, only: [ :index, :create ]
         resources :search, only: [ :index ], controller: "search"
+        resources :search_profiles, only: [ :index, :create, :update ]
         resources :document_duplications, only: [ :create ]
         resources :specialist_multi_attach, only: [ :create ]
         resources :section_autosaves, only: [ :create ]
         resources :collaboration_sessions, only: [ :index, :create, :update ]
+        resource :collaboration_workbench, only: [ :show ], controller: "collaboration_workbench"
+        resources :collaboration_events, only: [ :index, :create ]
+        resources :collaboration_tasks, only: [ :index, :create, :update ]
+        resources :benchmark_snapshots, only: [ :index, :create ]
+        resources :intelligence_metric_definitions, only: [ :index, :create, :update ]
+        resources :trust_policies, only: [ :index, :create, :update ]
+        resources :mobile_sync_diagnostics, only: [ :index, :create, :update ]
+        resource :replacement_readiness, only: [ :show, :create ], controller: "replacement_readiness"
         resource :pilot_setup, only: [ :show, :update ], controller: "pilot_setups" do
           post :apply_baseline
           post :validate_setup
@@ -97,6 +112,8 @@ Rails.application.routes.draw do
         end
         resources :learning_stories, only: [ :index, :show, :create, :update ]
         resources :reports, only: [ :index, :show, :create, :update ]
+        resources :report_cycles, only: [ :index, :create, :update ]
+        resources :report_templates, only: [ :index, :create, :update ]
         resources :publishing_queue_items, only: [ :index, :create, :update ] do
           member do
             post :schedule

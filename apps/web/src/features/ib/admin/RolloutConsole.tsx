@@ -16,6 +16,11 @@ import { PilotSetupWizard } from "@/features/ib/admin/PilotSetupWizard";
 import { useIbRolloutPayload } from "@/features/ib/data";
 import { IbCoordinatorPageShell, IbPageLoading } from "@/features/ib/layout/IbPageShell";
 import { MobileTriageTray } from "@/features/ib/mobile/MobileTriageTray";
+import {
+  MigrationConfidencePanel,
+  PilotAdoptionPanel,
+  ReplacementReadinessPanel,
+} from "@/features/ib/phase9/Phase9Panels";
 import { IB_CANONICAL_ROUTES } from "@/features/ib/routes/registry";
 import { WorkspacePanel } from "@/features/ib/shared/IbWorkspaceScaffold";
 
@@ -252,6 +257,9 @@ export function RolloutConsole() {
         <JobOperationsConsole />
         <PilotAnalyticsConsole />
         <OnboardingSupportPanel />
+        <PilotAdoptionPanel />
+        <MigrationConfidencePanel />
+        <ReplacementReadinessPanel />
       </div>
     </IbCoordinatorPageShell>
   );

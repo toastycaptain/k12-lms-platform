@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { saveIbSavedSearch, useIbSavedSearches } from "@/features/ib/data";
 import { SearchResultList, type IbSearchResultRow } from "@/features/ib/search/SearchResultList";
 import { emitIbEvent } from "@/features/ib/analytics/emitIbEvent";
+import { SearchOpsPanel } from "@/features/ib/phase9/Phase9Panels";
 
 export function IbSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
@@ -148,6 +149,7 @@ export function IbSearchDialog({ open, onClose }: { open: boolean; onClose: () =
               </div>
             </div>
           ) : null}
+          {query.trim().length < 2 ? <SearchOpsPanel compact /> : null}
           <SearchResultList
             results={visibleResults}
             empty={

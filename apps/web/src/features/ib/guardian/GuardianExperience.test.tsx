@@ -146,6 +146,10 @@ vi.mock("@/features/ib/data", () => ({
   updateIbReport: vi.fn(async () => ({})),
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  TrustPolicyPanel: () => <div>Trust Policy Panel</div>,
+}));
+
 describe("GuardianExperience", () => {
   const originalFetch = globalThis.fetch;
 
@@ -166,6 +170,7 @@ describe("GuardianExperience", () => {
     expect(screen.getByText("Calendar digest")).toBeInTheDocument();
     expect(screen.getByText(/Only the dates families need for support/i)).toBeInTheDocument();
     expect(screen.getByText("Released reports")).toBeInTheDocument();
+    expect(screen.getByText("Trust Policy Panel")).toBeInTheDocument();
     expect(screen.getByText("Communication preferences")).toBeInTheDocument();
   });
 });

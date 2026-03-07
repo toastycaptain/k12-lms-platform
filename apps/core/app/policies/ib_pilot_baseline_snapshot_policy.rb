@@ -1,0 +1,2 @@
+class IbPilotBaselineSnapshotPolicy < IbPhase9AdminPolicy
+end

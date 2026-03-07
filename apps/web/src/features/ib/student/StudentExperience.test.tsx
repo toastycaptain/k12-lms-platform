@@ -169,6 +169,10 @@ vi.mock("@/features/ib/data", () => ({
   updateIbReport: vi.fn(async () => ({})),
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  TrustPolicyPanel: () => <div>Trust Policy Panel</div>,
+}));
+
 describe("StudentExperience", () => {
   it("renders the phase 7 student workflow surfaces", () => {
     render(<StudentExperience variant="dashboard" />);
@@ -178,6 +182,7 @@ describe("StudentExperience", () => {
     expect(screen.getByText("Portfolio search and collections")).toBeInTheDocument();
     expect(screen.getByText("Growth reflection")).toBeInTheDocument();
     expect(screen.getByText("Released reports")).toBeInTheDocument();
+    expect(screen.getByText("Trust Policy Panel")).toBeInTheDocument();
     expect(screen.getByText("Communication preferences")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "evidence" }));

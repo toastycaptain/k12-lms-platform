@@ -129,6 +129,10 @@ vi.mock("@/features/ib/home/useIbHomePayload", () => ({
   }),
 }));
 
+vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
+  BenchmarkRefreshPanel: () => <div>Benchmark Refresh Panel</div>,
+}));
+
 describe("TeacherActionConsole", () => {
   const originalFetch = globalThis.fetch;
 
@@ -151,5 +155,6 @@ describe("TeacherActionConsole", () => {
     fireEvent.click(screen.getByRole("button", { name: "Expanded" }));
 
     expect(screen.getByText("Bulk carry forward")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Refresh Panel")).toBeInTheDocument();
   });
 });

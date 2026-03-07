@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button, EmptyState, SegmentedControl } from "@k12/ui";
 import { createIbReport, updateIbReport, useIbReports } from "@/features/ib/data";
+import { ReportingOperationsPanel } from "@/features/ib/phase9/Phase9Panels";
 import { ExceptionReportShell } from "@/features/ib/reports/ExceptionReportShell";
 import { IbSurfaceState } from "@/features/ib/core/IbSurfaceState";
 import { IbWorkspaceScaffold, WorkspacePanel } from "@/features/ib/shared/IbWorkspaceScaffold";
@@ -272,6 +273,8 @@ export function IbReportsWorkspace() {
               />
             )}
           </WorkspacePanel>
+
+          <ReportingOperationsPanel />
         </div>
       }
       aside={<ExceptionReportShell defaultReport="poi" />}

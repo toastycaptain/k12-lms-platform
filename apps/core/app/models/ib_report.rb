@@ -9,6 +9,8 @@ class IbReport < ApplicationRecord
   belongs_to :academic_year, optional: true
   belongs_to :student, class_name: "User", optional: true
   belongs_to :author, class_name: "User", optional: true
+  belongs_to :ib_report_cycle, optional: true
+  belongs_to :ib_report_template, optional: true
 
   has_many :versions, class_name: "IbReportVersion", dependent: :destroy
   has_many :deliveries, class_name: "IbReportDelivery", dependent: :destroy
