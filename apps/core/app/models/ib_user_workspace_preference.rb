@@ -19,20 +19,49 @@ class IbUserWorkspacePreference < ApplicationRecord
     end
 
     def read_value(user:, school: nil, surface:, context_key:, preference_key:, programme: nil, role: nil)
-      record = find_by(
-        tenant_id: user.tenant_id,
-        user_id: user.id,
-        school_id: school&.id,
-        surface: surface,
-        context_key: context_key,
-        preference_key: preference_key,
-        scope_key: scope_key_for(user: user, school: school, programme: programme, role: role)
-      )
+      record = find_by(preference_lookup_attributes(user:, school:, surface:, context_key:, preference_key:, programme:, role:))
       record&.value || {}
     end
 
     def write_value!(user:, school: nil, surface:, context_key:, preference_key:, value:, metadata: {}, programme: nil, role: nil)
-      record = find_or_initialize_by(
+      lookup_attributes = preference_lookup_attributes(
+        user:,
+        school:,
+        surface:,
+        context_key:,
+        preference_key:,
+        programme:,
+        role:
+      )
+      normalized_value = normalize_value(value)
+      normalized_metadata = metadata.to_h.deep_stringify_keys
+
+      record = new(
+        lookup_attributes.merge(
+          user:,
+          school:,
+          value: normalized_value,
+          metadata: normalized_metadata
+        )
+      )
+      record.validate!
+
+      upsert(
+        lookup_attributes.merge(
+          value: normalized_value,
+          metadata: normalized_metadata
+        ),
+        unique_by: :idx_ib_workspace_preferences_scope,
+        update_only: %i[school_id value metadata]
+      )
+
+      find_by!(lookup_attributes)
+    end
+
+    private
+
+    def preference_lookup_attributes(user:, school:, surface:, context_key:, preference_key:, programme:, role:)
+      {
         tenant_id: user.tenant_id,
         user_id: user.id,
         school_id: school&.id,
@@ -40,14 +69,8 @@ class IbUserWorkspacePreference < ApplicationRecord
         context_key: context_key,
         preference_key: preference_key,
         scope_key: scope_key_for(user: user, school: school, programme: programme, role: role)
-      )
-      record.value = normalize_value(value)
-      record.metadata = metadata.to_h.deep_stringify_keys
-      record.save!
-      record
+      }
     end
-
-    private
 
     def normalize_value(value)
       case value
