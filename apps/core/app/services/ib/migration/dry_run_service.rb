@@ -27,6 +27,18 @@ module Ib
         summary[:would_update] = summary.dig(:object_counts, :update).to_i
         summary[:would_skip] = summary.dig(:object_counts, :skip).to_i
         summary[:blocked] = summary[:row_results].count { |row| row[:blocking] }
+        summary[:entity_graph] = ContractRegistry.shared_import_manifest[:entity_graph]
+        summary[:shadow_mode_plan] = {
+          enabled: batch.coexistence_mode,
+          rollout_mode: ContractRegistry.adapter_protocol_for(source_system: batch.source_system)[:rollout_mode],
+          compares_live_records: true
+        }
+        summary[:delta_rerun_support] = {
+          enabled: ContractRegistry.adapter_protocol_for(source_system: batch.source_system)[:delta_rerun],
+          resume_cursor: batch.resume_cursor,
+          source_checksum: batch.source_checksum
+        }
+        summary[:manual_override_panels] = %w[field_mapping rules_engine conflict_resolution]
 
         batch.update!(
           status: summary[:blocked].positive? ? "blocked" : "ready_for_execute",

@@ -33,7 +33,12 @@ module Ib
           generated_at: Time.current.utc.iso8601,
           lifecycle: CUTOVER_STATES,
           source_contracts: SOURCE_CONTRACTS,
+          adapter_protocols: Curriculum::MigrationConnectorSDK.connectors,
+          shared_import_manifest: Curriculum::MigrationConnectorSDK.shared_manifest,
+          template_generators: Curriculum::MigrationConnectorSDK.template_generators,
+          source_artifact_discovery: Curriculum::MigrationConnectorSDK.source_artifact_discovery,
           inventory_summary: inventory_summary,
+          confidence_summary: confidence_summary,
           sessions: scoped_sessions.order(updated_at: :desc, id: :desc).map { |session| serialize_session(session) },
           mapping_templates: template_scope.order(updated_at: :desc, id: :desc).map { |template| serialize_template(template) }
         }
@@ -106,8 +111,11 @@ module Ib
         {
           source_systems: batch_scope.group(:source_system).count,
           source_kinds: batch_scope.group(:source_kind).count,
+          import_modes: batch_scope.group(:import_mode).count,
           ready_for_execute: batch_scope.where(status: "ready_for_execute").count,
-          completed: batch_scope.where(status: "completed").count
+          completed: batch_scope.where(status: "completed").count,
+          shadow_mode_ready: batch_scope.where(coexistence_mode: true).count,
+          rollbackable_batches: batch_scope.where(status: %w[completed rolled_back]).count
         }
       end
 
@@ -127,6 +135,8 @@ module Ib
       end
 
       def serialize_session(session)
+        import_batch = session.ib_import_batch
+        protocol = Curriculum::MigrationConnectorSDK.connector_for(source_system: session.source_system)
         {
           id: session.id,
           session_key: session.session_key,
@@ -139,6 +149,22 @@ module Ib
           reconciliation_summary: session.reconciliation_summary,
           rollback_summary: session.rollback_summary,
           source_contract: SOURCE_CONTRACTS.fetch(session.source_system, SOURCE_CONTRACTS["toddle"]),
+          source_manifest: import_batch&.preview_summary&.dig("source_artifact_manifest") || {},
+          shadow_mode: {
+            enabled: import_batch&.coexistence_mode || session.cutover_state == "shadow_mode",
+            rollout_mode: protocol[:rollout_mode],
+            ready_for_compare: session.cutover_state.in?(%w[shadow_mode cutover_ready cutover_live])
+          },
+          delta_rerun: {
+            enabled: protocol[:delta_rerun],
+            resume_cursor: import_batch&.resume_cursor,
+            source_checksum: import_batch&.source_checksum
+          },
+          acceptance_summary: {
+            dry_run_complete: session.dry_run_summary.present?,
+            rollback_documented: session.rollback_summary.present? || import_batch&.rollback_capabilities.present?,
+            reconciliation_open_items: session.reconciliation_summary.fetch("open_items", 0)
+          },
           created_at: session.created_at.utc.iso8601,
           updated_at: session.updated_at.utc.iso8601
         }
@@ -155,6 +181,7 @@ module Ib
           field_mappings: template.field_mappings,
           transform_library: template.transform_library,
           role_mapping_rules: template.role_mapping_rules,
+          manual_override_panels: %w[field_mapping rules_engine conflict_resolution],
           updated_at: template.updated_at.utc.iso8601
         }
       end
@@ -185,6 +212,17 @@ module Ib
 
       def normalize_hash(value)
         value.is_a?(Hash) ? value.deep_stringify_keys : {}
+      end
+
+      def confidence_summary
+        sessions = scoped_sessions
+        {
+          total_sessions: sessions.count,
+          cutover_ready: sessions.where(cutover_state: "cutover_ready").count,
+          shadow_mode: sessions.where(cutover_state: "shadow_mode").count,
+          failed: sessions.where(status: "failed").count,
+          rollback_plans: sessions.where.not(rollback_summary: {}).count
+        }
       end
     end
   end

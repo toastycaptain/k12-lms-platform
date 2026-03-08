@@ -56,7 +56,7 @@ describe("MypCoverageOverview", () => {
   it("renders live MYP coverage and project risk rows", () => {
     render(<MypCoverageOverview />);
 
-    expect(screen.getByRole("heading", { name: "MYP coverage" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "MYP coverage" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Individuals and societies")).toBeInTheDocument();
     expect(screen.getByText("Community project")).toBeInTheDocument();
     expect(screen.getByText("Meet the advisor")).toBeInTheDocument();

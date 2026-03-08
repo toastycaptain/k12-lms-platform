@@ -163,7 +163,24 @@ describe("Phase9Panels", () => {
         generatedAt: "2026-03-07T12:00:00Z",
         lifecycle: [{ key: "discovered", label: "Discovered" }],
         sourceContracts: { toddle: { assumptions: ["Narrative-heavy export"] } },
+        adapterProtocols: {
+          toddle: {
+            protocolVersion: "toddle.v2",
+            connector: "toddle_export_adapter",
+            supportedKinds: ["curriculum_document"],
+            artifactDiscovery: ["units_export"],
+            rolloutMode: "shadow_then_cutover",
+            rollbackMode: "created_records_plus_manual_review_for_updates",
+            resumable: true,
+            shadowMode: true,
+            deltaRerun: true,
+          },
+        },
+        sharedImportManifest: { version: "phase10.v1" },
+        templateGenerators: ["toddle_poi_template_generator"],
+        sourceArtifactDiscovery: { toddle: { hints: ["Upload unit exports together."] } },
         inventorySummary: { ready_for_execute: 1 },
+        confidenceSummary: { total_sessions: 1, cutover_ready: 0 },
         sessions: [
           {
             id: 1,
@@ -177,6 +194,10 @@ describe("Phase9Panels", () => {
             reconciliationSummary: {},
             rollbackSummary: {},
             sourceContract: {},
+            sourceManifest: {},
+            shadowMode: {},
+            deltaRerun: {},
+            acceptanceSummary: {},
             createdAt: "2026-03-07T12:00:00Z",
             updatedAt: "2026-03-07T12:00:00Z",
           },
@@ -192,6 +213,7 @@ describe("Phase9Panels", () => {
             fieldMappings: {},
             transformLibrary: {},
             roleMappingRules: {},
+            manualOverridePanels: ["field_mapping"],
             updatedAt: "2026-03-07T12:00:00Z",
           },
         ],
@@ -418,6 +440,34 @@ describe("Phase9Panels", () => {
             updatedAt: "2026-03-07T12:00:00Z",
           },
         ],
+        freshness: {
+          indexStrategy: "database_scoped_search_v3",
+          freshnessTargetMinutes: 5,
+          latencyBudgetMs: 800,
+          backpressureStrategy: "steady",
+          rebuildControls: {},
+          adoptionWindowDays: 14,
+        },
+        adoptionSummary: {
+          searches_last_14_days: 42,
+          zero_result_rate: 0.12,
+          result_opens: 18,
+          saved_searches: 3,
+        },
+        relevanceContract: {
+          ranking_version: "phase10.v1",
+          semantic_mode: "lexical_rank_plus_keyword_graph",
+          synonym_count: 7,
+        },
+        savedLenses: [
+          {
+            id: 9,
+            name: "DP deadlines",
+            query: "programme:DP kind:operational_record risk",
+            lensKey: "coordinator_lens",
+            updatedAt: "2026-03-07T12:00:00Z",
+          },
+        ],
       },
       mutate: vi.fn(async () => undefined),
     } as never);
@@ -474,6 +524,8 @@ describe("Phase9Panels", () => {
     expect(screen.getByText("Collaboration workbench")).toBeInTheDocument();
     expect(screen.getByText("Decision-support semantic layer")).toBeInTheDocument();
     expect(screen.getByText("Search operations")).toBeInTheDocument();
+    expect(screen.getByText("database_scoped_search_v3")).toBeInTheDocument();
+    expect(screen.getByText("DP deadlines")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Add report cycle" }));
     fireEvent.click(screen.getByRole("button", { name: "Create follow-up" }));

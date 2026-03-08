@@ -123,9 +123,89 @@ vi.mock("@/features/ib/home/useIbHomePayload", () => ({
         budgets: [],
         regressions: [],
       },
+      aiAssistance: {
+        providerReady: true,
+        availableCount: 2,
+        reviewRequiredCount: 2,
+        trustAverage: 4.6,
+        estimatedMinutesSaved: 18,
+        tasks: [
+          {
+            taskType: "ib_report_summary",
+            label: "Report summary",
+            workflow: "reporting",
+            outputMode: "field_diff",
+            available: true,
+            reviewRequired: true,
+            humanOnlyBoundaries: ["release", "deliver"],
+            invocationCount: 4,
+            appliedCount: 3,
+            averageTrust: 4.5,
+          },
+        ],
+        benchmarks: [
+          {
+            id: "report-family-clarity",
+            taskType: "ib_report_summary",
+            scenario: "Summaries stay audience-safe.",
+            passCondition: "Grounded and readable.",
+          },
+        ],
+        redTeamScenarios: [
+          {
+            id: "publish-escalation",
+            risk: "Model tries to publish",
+            containment: "Human-only boundaries stay visible.",
+          },
+        ],
+        tenantControls: { pii_redaction: true },
+      },
       lastSeenAt: "2026-03-07T09:00:00Z",
       coordinatorCards: [],
     },
+  }),
+}));
+
+vi.mock("@/features/ib/data", () => ({
+  useIbMobileHub: () => ({
+    data: {
+      generatedAt: "2026-03-07T10:00:00Z",
+      schoolLabel: "Demo School",
+      role: "teacher",
+      primaryActions: [
+        {
+          key: "capture_evidence",
+          label: "Capture evidence",
+          detail: "Upload or note one observation.",
+          href: "/ib/evidence",
+          routeId: "ib.evidence",
+        },
+      ],
+      desktopFirstActions: [],
+      roleInventory: {},
+      deepLinks: [],
+      offlinePolicy: {
+        draftQueueLimit: 40,
+        resumableUploads: true,
+        backgroundSync: "best_effort",
+        attachmentRetry: true,
+        conflictResolution: "explicit_dialog",
+        lowBandwidthMode: true,
+        retryBackoffSeconds: [5, 30, 120],
+      },
+      diagnostics: {
+        trustContract: [],
+        successCriteria: {},
+        diagnosticCount: 0,
+        unhealthyCount: 0,
+      },
+    },
+  }),
+}));
+
+vi.mock("@/features/ib/offline/useIbMutationQueue", () => ({
+  useIbMutationQueue: () => ({
+    queuedCount: 2,
   }),
 }));
 
@@ -148,9 +228,15 @@ describe("TeacherActionConsole", () => {
   it("renders action-oriented teacher cards and layout controls", () => {
     render(<TeacherActionConsole />);
 
-    expect(screen.getByRole("heading", { name: "Teacher action console" })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("heading", { name: "Teacher action console" }).length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText("Resume systems unit").length).toBeGreaterThan(0);
     expect(screen.getByText("Validate evidence")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Capture evidence/i })).toBeInTheDocument();
+    expect(screen.getByText("AI assistance")).toBeInTheDocument();
+    expect(screen.getByText(/Average trust: 4.6/i)).toBeInTheDocument();
+    expect(screen.getByText("Report summary")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Expanded" }));
 

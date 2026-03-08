@@ -21,7 +21,7 @@ const saveIbSavedSearchMock = vi.fn(async (payload: Record<string, unknown>) => 
   return {};
 });
 const mutateSavedSearchesMock = vi.fn(async () => undefined);
-const apiFetchMock = vi.fn<(url: string) => Promise<{ results: Array<Record<string, string>> }>>(
+const apiFetchMock = vi.fn<(url: string) => Promise<Record<string, unknown>>>(
   async (url: string) => {
     void url;
     return { results: [] };
@@ -51,10 +51,51 @@ vi.mock("@/features/ib/phase9/Phase9Panels", () => ({
 describe("IbSearchDialog", () => {
   beforeEach(() => {
     apiFetchMock.mockResolvedValue({
+      grouped_results: [
+        {
+          key: "operational_record",
+          label: "Operational records",
+          count: 1,
+          results: [
+            {
+              title: "Extended essay risk",
+              detail: "DP milestone",
+              preview: "Finish the next draft before the benchmark window closes.",
+              href: "/ib/dp/ee/1",
+              programme: "DP",
+              kind: "operational_record",
+              keywords: ["extended essay", "risk"],
+              matchedTerms: ["extended", "essay"],
+              visibility: "internal",
+            },
+          ],
+        },
+      ],
+      facets: {
+        kind: [{ key: "operational_record", label: "Operational Record", count: 1 }],
+        programme: [{ key: "DP", label: "DP", count: 1 }],
+        status: [{ key: "watch", label: "Watch", count: 1 }],
+        visibility: [{ key: "internal", label: "Internal", count: 1 }],
+      },
+      suggestions: ["extended essay", "deadline risk"],
+      zero_result_help: [],
+      coordinator_lenses: [
+        {
+          key: "dp_deadlines",
+          label: "DP deadlines at risk",
+          query: "programme:DP kind:operational_record risk",
+          detail: "Watch coordinator deadlines.",
+        },
+      ],
+      concept_graph: [{ key: "extended_essay", label: "Extended essay", strength: 3 }],
+      query_language: { applied_filters: {}, tokens: ["extended", "essay", "risk"] },
+      freshness: { index_strategy: "database_scoped_search_v3", backpressure_strategy: "steady" },
+      semantic_pipeline: { fallback_mode: "token_overlap_and_synonyms" },
       results: [
         {
           title: "Extended essay risk",
           detail: "DP milestone",
+          preview: "Finish the next draft before the benchmark window closes.",
           href: "/ib/dp/ee/1",
           programme: "DP",
           kind: "operational_record",
@@ -67,7 +108,7 @@ describe("IbSearchDialog", () => {
     vi.clearAllMocks();
   });
 
-  it("shows saved lenses, executes search, and saves the current query", async () => {
+  it("shows saved lenses, executes search, previews grouped results, and saves the current query", async () => {
     render(<IbSearchDialog open onClose={() => undefined} />);
 
     expect(screen.getByText("Saved lenses")).toBeInTheDocument();
@@ -77,19 +118,112 @@ describe("IbSearchDialog", () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalled();
-      expect(screen.getByText("Extended essay risk")).toBeInTheDocument();
+      expect(screen.getAllByText("Extended essay risk")).toHaveLength(2);
+      expect(screen.getByText("Operational records")).toBeInTheDocument();
+      expect(screen.getByText("Quick preview")).toBeInTheDocument();
+      expect(
+        screen.getAllByText("Finish the next draft before the benchmark window closes."),
+      ).toHaveLength(2);
     });
+
+    fireEvent.click(screen.getByRole("button", { name: "DP deadlines at risk" }));
+    expect(
+      screen.getByDisplayValue("programme:DP kind:operational_record risk"),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Save current search" }));
 
     await waitFor(() => {
       expect(saveIbSavedSearchMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: "extended essay risk",
+          query: "programme:DP kind:operational_record risk",
           lens_key: "quick_search",
         }),
       );
       expect(mutateSavedSearchesMock).toHaveBeenCalled();
+    });
+  });
+
+  it("applies facet filters and surfaces zero-result help", async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({
+        grouped_results: [
+          {
+            key: "operational_record",
+            label: "Operational records",
+            count: 1,
+            results: [
+              {
+                title: "Extended essay risk",
+                detail: "DP milestone",
+                href: "/ib/dp/ee/1",
+                programme: "DP",
+                kind: "operational_record",
+                preview: "Preview",
+                keywords: [],
+                matchedTerms: [],
+              },
+            ],
+          },
+        ],
+        facets: {
+          kind: [{ key: "operational_record", label: "Operational Record", count: 1 }],
+          programme: [{ key: "DP", label: "DP", count: 1 }],
+          status: [{ key: "watch", label: "Watch", count: 1 }],
+          visibility: [],
+        },
+        suggestions: [],
+        zero_result_help: [],
+        coordinator_lenses: [],
+        concept_graph: [],
+        query_language: { applied_filters: {}, tokens: [] },
+        freshness: { index_strategy: "database_scoped_search_v3", backpressure_strategy: "steady" },
+        semantic_pipeline: { fallback_mode: "token_overlap_and_synonyms" },
+        results: [
+          {
+            title: "Extended essay risk",
+            detail: "DP milestone",
+            href: "/ib/dp/ee/1",
+            programme: "DP",
+            kind: "operational_record",
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        grouped_results: [],
+        facets: { kind: [], programme: [], status: [], visibility: [] },
+        suggestions: ["extended essay"],
+        zero_result_help: [
+          {
+            key: "broaden_terms",
+            label: "Broaden the query",
+            detail: "Try fewer words.",
+          },
+        ],
+        coordinator_lenses: [],
+        concept_graph: [],
+        query_language: { applied_filters: { kind: ["operational_record"] }, tokens: [] },
+        freshness: { index_strategy: "database_scoped_search_v3", backpressure_strategy: "steady" },
+        semantic_pipeline: { fallback_mode: "token_overlap_and_synonyms" },
+        results: [],
+      });
+
+    render(<IbSearchDialog open onClose={() => undefined} />);
+    fireEvent.change(screen.getByPlaceholderText(/Search across IB work/i), {
+      target: { value: "essay risk" },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Operational Record (1)" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Operational Record (1)" }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenLastCalledWith(
+        expect.stringContaining("filters%5Bkind%5D%5B%5D=operational_record"),
+      );
+      expect(screen.getByText("Broaden the query")).toBeInTheDocument();
     });
   });
 });

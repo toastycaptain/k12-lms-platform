@@ -137,7 +137,7 @@ describe("IB standards detail routes", () => {
   it("renders cycle detail with canonical packet links", () => {
     render(<StandardsCycleDetail cycleId="9" />);
 
-    expect(screen.getByText("2026 Self-study")).toBeInTheDocument();
+    expect(screen.getAllByText("2026 Self-study").length).toBeGreaterThan(0);
     expect(screen.getByText(/Leadership packet/)).toBeInTheDocument();
     expect(screen.getByText("Open packet")).toBeInTheDocument();
   });

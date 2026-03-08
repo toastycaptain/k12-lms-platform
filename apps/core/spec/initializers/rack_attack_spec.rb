@@ -36,6 +36,15 @@ RSpec.describe "Rack::Attack Rate Limiting", type: :request do
       throttles = Rack::Attack.throttles.keys
       expect(throttles).to include("ai/user")
     end
+
+    it "has collaboration rate limiting" do
+      throttles = Rack::Attack.throttles.keys
+      expect(throttles).to include(
+        "ib/collaboration/heartbeat",
+        "ib/collaboration/events",
+        "ib/collaboration/comments"
+      )
+    end
   end
 
   describe "throttled response" do

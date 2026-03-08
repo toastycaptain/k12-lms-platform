@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_171000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -820,6 +820,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.bigint "created_by_id", null: false
     t.bigint "curriculum_document_id"
     t.bigint "curriculum_document_version_id"
+    t.bigint "ib_operational_record_id"
     t.jsonb "metadata", default: {}, null: false
     t.text "next_action"
     t.bigint "planning_context_id"
@@ -836,6 +837,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["created_by_id"], name: "index_ib_evidence_items_on_created_by_id"
     t.index ["curriculum_document_id"], name: "index_ib_evidence_items_on_curriculum_document_id"
     t.index ["curriculum_document_version_id"], name: "index_ib_evidence_items_on_curriculum_document_version_id"
+    t.index ["ib_operational_record_id"], name: "index_ib_evidence_items_on_ib_operational_record_id"
     t.index ["planning_context_id"], name: "index_ib_evidence_items_on_planning_context_id"
     t.index ["school_id", "created_by_id", "updated_at"], name: "idx_ib_evidence_items_creator_updated"
     t.index ["school_id", "planning_context_id", "updated_at"], name: "idx_ib_evidence_items_context_updated"
@@ -843,6 +845,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["school_id", "programme", "visibility"], name: "idx_ib_evidence_items_programme_visibility"
     t.index ["school_id"], name: "index_ib_evidence_items_on_school_id"
     t.index ["student_id"], name: "index_ib_evidence_items_on_student_id"
+    t.index ["tenant_id", "ib_operational_record_id"], name: "idx_ib_evidence_items_operational_record"
     t.index ["tenant_id"], name: "index_ib_evidence_items_on_tenant_id"
   end
 
@@ -859,12 +862,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.string "import_mode", default: "draft", null: false
     t.bigint "initiated_by_id"
     t.datetime "last_dry_run_at"
+    t.bigint "last_enqueued_job_id"
     t.jsonb "mapping_payload", default: {}, null: false
     t.jsonb "parser_warnings", default: [], null: false
     t.datetime "preview_generated_at"
     t.jsonb "preview_summary", default: {}, null: false
     t.string "programme", default: "Mixed", null: false
     t.text "raw_payload"
+    t.jsonb "recovery_payload", default: {}, null: false
+    t.integer "resume_cursor", default: 0, null: false
     t.jsonb "rollback_capabilities", default: {}, null: false
     t.jsonb "rollback_summary", default: {}, null: false
     t.datetime "rolled_back_at"
@@ -886,6 +892,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["school_id"], name: "index_ib_import_batches_on_school_id"
     t.index ["tenant_id", "school_id", "source_system", "status"], name: "idx_ib_import_batches_source_system"
     t.index ["tenant_id", "school_id", "status"], name: "index_ib_import_batches_on_scope_and_status"
+    t.index ["tenant_id", "status", "resume_cursor"], name: "idx_ib_import_batches_resume"
     t.index ["tenant_id"], name: "index_ib_import_batches_on_tenant_id"
   end
 
@@ -1072,6 +1079,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.bigint "user_id"
     t.string "workflow_key", null: false
     t.index ["school_id"], name: "index_ib_mobile_sync_diagnostics_on_school_id"
+    t.index ["tenant_id", "school_id", "status", "workflow_key"], name: "idx_ib_mobile_sync_diagnostics_health"
     t.index ["tenant_id", "school_id", "workflow_key"], name: "idx_ib_mobile_sync_diagnostics_scope"
     t.index ["tenant_id"], name: "index_ib_mobile_sync_diagnostics_on_tenant_id"
     t.index ["user_id"], name: "index_ib_mobile_sync_diagnostics_on_user_id"
@@ -1094,6 +1102,67 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["ib_operational_record_id"], name: "index_ib_operational_checkpoints_on_ib_operational_record_id"
     t.index ["reviewer_id"], name: "index_ib_operational_checkpoints_on_reviewer_id"
     t.index ["tenant_id"], name: "index_ib_operational_checkpoints_on_tenant_id"
+  end
+
+  create_table "ib_operational_job_events", force: :cascade do |t|
+    t.bigint "actor_id"
+    t.datetime "created_at", null: false
+    t.string "event_type", null: false
+    t.bigint "ib_operational_job_id", null: false
+    t.text "message"
+    t.datetime "occurred_at", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.bigint "school_id"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_ib_operational_job_events_on_actor_id"
+    t.index ["ib_operational_job_id", "occurred_at"], name: "idx_ib_operational_job_events_timeline"
+    t.index ["ib_operational_job_id"], name: "index_ib_operational_job_events_on_ib_operational_job_id"
+    t.index ["school_id"], name: "index_ib_operational_job_events_on_school_id"
+    t.index ["tenant_id", "event_type"], name: "idx_ib_operational_job_events_lookup"
+    t.index ["tenant_id"], name: "index_ib_operational_job_events_on_tenant_id"
+  end
+
+  create_table "ib_operational_jobs", force: :cascade do |t|
+    t.string "active_job_id"
+    t.integer "attempts_count", default: 0, null: false
+    t.datetime "cancelled_at"
+    t.string "correlation_id"
+    t.datetime "created_at", null: false
+    t.datetime "dead_lettered_at"
+    t.datetime "enqueued_at"
+    t.datetime "finished_at"
+    t.string "idempotency_key"
+    t.string "job_class", null: false
+    t.string "last_error_class"
+    t.text "last_error_message"
+    t.integer "max_attempts", default: 1, null: false
+    t.jsonb "metrics", default: {}, null: false
+    t.string "operation_key", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "provider_job_id"
+    t.string "queue_name", null: false
+    t.datetime "recovered_at"
+    t.string "request_id"
+    t.jsonb "retry_policy", default: {}, null: false
+    t.string "runbook_key"
+    t.string "runbook_url"
+    t.bigint "school_id"
+    t.bigint "source_record_id"
+    t.string "source_record_type"
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.bigint "tenant_id", null: false
+    t.integer "timeout_seconds"
+    t.jsonb "trace_context", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["correlation_id"], name: "index_ib_operational_jobs_on_correlation_id"
+    t.index ["school_id"], name: "index_ib_operational_jobs_on_school_id"
+    t.index ["source_record_type", "source_record_id"], name: "idx_ib_operational_jobs_source_record"
+    t.index ["tenant_id", "active_job_id"], name: "idx_ib_operational_jobs_active_ref", unique: true
+    t.index ["tenant_id", "operation_key", "status"], name: "idx_ib_operational_jobs_lookup"
+    t.index ["tenant_id", "provider_job_id"], name: "idx_ib_operational_jobs_provider_ref", unique: true
+    t.index ["tenant_id"], name: "index_ib_operational_jobs_on_tenant_id"
   end
 
   create_table "ib_operational_records", force: :cascade do |t|
@@ -1296,10 +1365,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["school_id", "state"], name: "idx_ib_publishing_queue_state"
     t.index ["school_id", "updated_at"], name: "idx_ib_publishing_queue_items_updated"
     t.index ["school_id"], name: "index_ib_publishing_queue_items_on_school_id"
+    t.index ["tenant_id", "school_id", "state", "scheduled_for"], name: "idx_ib_publishing_queue_items_state"
     t.index ["tenant_id"], name: "index_ib_publishing_queue_items_on_tenant_id"
   end
 
   create_table "ib_reflection_requests", force: :cascade do |t|
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
     t.datetime "created_at", null: false
     t.date "due_on"
     t.bigint "ib_evidence_item_id", null: false
@@ -1312,9 +1384,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.bigint "student_id", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_ib_reflection_requests_on_approved_by_id"
     t.index ["ib_evidence_item_id"], name: "index_ib_reflection_requests_on_ib_evidence_item_id"
     t.index ["requested_by_id"], name: "index_ib_reflection_requests_on_requested_by_id"
     t.index ["student_id"], name: "index_ib_reflection_requests_on_student_id"
+    t.index ["tenant_id", "status", "approved_at"], name: "idx_ib_reflection_requests_mobile_review"
     t.index ["tenant_id"], name: "index_ib_reflection_requests_on_tenant_id"
   end
 
@@ -1395,12 +1469,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
 
   create_table "ib_report_deliveries", force: :cascade do |t|
     t.datetime "acknowledged_at"
+    t.string "artifact_url"
     t.string "audience_role", default: "guardian", null: false
     t.string "channel", default: "web", null: false
     t.datetime "created_at", null: false
     t.datetime "delivered_at"
     t.text "error_message"
     t.datetime "failed_at"
+    t.jsonb "failure_payload", default: {}, null: false
     t.bigint "ib_report_id", null: false
     t.bigint "ib_report_version_id"
     t.string "locale", default: "en", null: false
@@ -1416,6 +1492,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
     t.index ["ib_report_version_id"], name: "index_ib_report_deliveries_on_ib_report_version_id"
     t.index ["recipient_id"], name: "index_ib_report_deliveries_on_recipient_id"
     t.index ["school_id"], name: "index_ib_report_deliveries_on_school_id"
+    t.index ["tenant_id", "status", "channel"], name: "idx_ib_report_deliveries_status"
     t.index ["tenant_id"], name: "index_ib_report_deliveries_on_tenant_id"
   end
 
@@ -2613,6 +2690,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
   add_foreign_key "ib_document_comments", "users", column: "resolved_by_id"
   add_foreign_key "ib_evidence_items", "curriculum_document_versions"
   add_foreign_key "ib_evidence_items", "curriculum_documents"
+  add_foreign_key "ib_evidence_items", "ib_operational_records"
   add_foreign_key "ib_evidence_items", "planning_contexts"
   add_foreign_key "ib_evidence_items", "schools"
   add_foreign_key "ib_evidence_items", "tenants"
@@ -2656,6 +2734,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
   add_foreign_key "ib_operational_checkpoints", "ib_operational_records"
   add_foreign_key "ib_operational_checkpoints", "tenants"
   add_foreign_key "ib_operational_checkpoints", "users", column: "reviewer_id"
+  add_foreign_key "ib_operational_job_events", "ib_operational_jobs"
+  add_foreign_key "ib_operational_job_events", "schools"
+  add_foreign_key "ib_operational_job_events", "tenants"
+  add_foreign_key "ib_operational_job_events", "users", column: "actor_id"
+  add_foreign_key "ib_operational_jobs", "schools"
+  add_foreign_key "ib_operational_jobs", "tenants"
   add_foreign_key "ib_operational_records", "curriculum_documents"
   add_foreign_key "ib_operational_records", "planning_contexts"
   add_foreign_key "ib_operational_records", "schools"
@@ -2697,6 +2781,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_130000) do
   add_foreign_key "ib_publishing_queue_items", "users", column: "created_by_id"
   add_foreign_key "ib_reflection_requests", "ib_evidence_items"
   add_foreign_key "ib_reflection_requests", "tenants"
+  add_foreign_key "ib_reflection_requests", "users", column: "approved_by_id"
   add_foreign_key "ib_reflection_requests", "users", column: "requested_by_id"
   add_foreign_key "ib_reflection_requests", "users", column: "student_id"
   add_foreign_key "ib_release_baselines", "schools"

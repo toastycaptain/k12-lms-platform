@@ -1,7 +1,20 @@
 class AiTaskPolicy < ApplicationRecord
   include TenantScoped
 
-  VALID_TASK_TYPES = %w[lesson_plan unit_plan differentiation assessment rewrite].freeze
+  VALID_TASK_TYPES = %w[
+    lesson_plan
+    unit_plan
+    differentiation
+    assessment
+    rewrite
+    ib_report_summary
+    ib_family_language
+    ib_reflection_summary
+    ib_evidence_gap
+    ib_inquiry_language
+    ib_translation_support
+    ib_proofing
+  ].freeze
 
   belongs_to :ai_provider_config
   belongs_to :created_by, class_name: "User"

@@ -63,6 +63,7 @@ Rails.application.routes.draw do
         resources :document_duplications, only: [ :create ]
         resources :specialist_multi_attach, only: [ :create ]
         resources :section_autosaves, only: [ :create ]
+        resource :mobile_hub, only: [ :show ], controller: "mobile_hub"
         resources :collaboration_sessions, only: [ :index, :create, :update ]
         resource :collaboration_workbench, only: [ :show ], controller: "collaboration_workbench"
         resources :collaboration_events, only: [ :index, :create ]
@@ -89,7 +90,10 @@ Rails.application.routes.draw do
         end
         resource :job_operations, only: [ :show ], controller: "job_operations" do
           post :replay
+          post :cancel
+          post :backfill
         end
+        resource :operational_reliability, only: [ :show ], controller: "operational_reliability"
         resource :analytics, only: [ :show ], controller: "analytics"
         resource :review_governance, only: [ :show ], controller: "review_governance"
         resource :resolve, only: [ :show ], controller: "resolutions"
@@ -110,6 +114,7 @@ Rails.application.routes.draw do
             post :link_story
           end
         end
+        resources :reflection_requests, only: [ :index, :update ]
         resources :learning_stories, only: [ :index, :show, :create, :update ]
         resources :reports, only: [ :index, :show, :create, :update ]
         resources :report_cycles, only: [ :index, :create, :update ]

@@ -26,7 +26,20 @@ interface AiTaskPolicy {
   requires_approval: boolean;
 }
 
-const TASK_TYPES = ["lesson_plan", "unit_plan", "differentiation", "assessment", "rewrite"];
+const TASK_TYPES = [
+  "lesson_plan",
+  "unit_plan",
+  "differentiation",
+  "assessment",
+  "rewrite",
+  "ib_report_summary",
+  "ib_family_language",
+  "ib_reflection_summary",
+  "ib_evidence_gap",
+  "ib_inquiry_language",
+  "ib_translation_support",
+  "ib_proofing",
+];
 const ROLE_OPTIONS = ["admin", "curriculum_lead", "teacher"];
 
 export default function AiPoliciesPage() {

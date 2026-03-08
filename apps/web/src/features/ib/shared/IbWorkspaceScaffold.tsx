@@ -11,6 +11,9 @@ import {
 } from "@k12/ui";
 import { UnifiedTimelinePanel } from "@/features/curriculum/timeline/UnifiedTimelinePanel";
 import { IbContextRail } from "@/features/ib/layout/IbContextRail";
+import { MobileActionDock, type MobileActionDockItem } from "@/features/ib/mobile/MobileActionDock";
+import { MobileCompactShell } from "@/features/ib/mobile/MobileCompactShell";
+import { useMobilePreference } from "@/features/ib/mobile/useMobilePreference";
 import { resolveIbRoute } from "@/features/ib/routes/registry";
 import { reportInteractionMetric } from "@/lib/performance";
 
@@ -51,6 +54,9 @@ interface IbWorkspaceScaffoldProps {
   main: ReactNode;
   aside?: ReactNode;
   timeline?: ActivityTimelineItem[];
+  mobileSummary?: string;
+  mobileActions?: MobileActionDockItem[];
+  mobilePreferenceKey?: string;
 }
 
 function actionableLabel(element: HTMLElement): string | undefined {
@@ -73,11 +79,15 @@ export function IbWorkspaceScaffold({
   main,
   aside,
   timeline = [],
+  mobileSummary,
+  mobileActions = [],
+  mobilePreferenceKey = `ib.mobile.low_bandwidth.${title.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`,
 }: IbWorkspaceScaffoldProps) {
   const pathname = usePathname();
   const mountedAtRef = useRef<number | null>(null);
   const clickDepthRef = useRef(0);
   const firstInteractionTrackedRef = useRef(false);
+  const lowBandwidth = useMobilePreference(mobilePreferenceKey, false);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof performance === "undefined") {
@@ -140,8 +150,10 @@ export function IbWorkspaceScaffold({
     });
   }
 
+  const visibleMetrics = lowBandwidth.value ? metrics.slice(0, 2) : metrics;
+
   const asideContent =
-    aside || timeline.length > 0 ? (
+    !lowBandwidth.value && (aside || timeline.length > 0) ? (
       <div className="space-y-4">
         {aside}
         {timeline.length > 0 ? (
@@ -151,13 +163,33 @@ export function IbWorkspaceScaffold({
     ) : null;
 
   return (
-    <div className="space-y-5" onClickCapture={handleClickCapture}>
-      <IbContextRail />
-      <StickyContextBar title={title} description={description} actions={actions} badges={badges} />
+    <div
+      className={`space-y-5 ${mobileActions.length > 0 ? "pb-36 md:pb-0" : ""}`}
+      onClickCapture={handleClickCapture}
+    >
+      <MobileCompactShell
+        title={title}
+        description={description}
+        badges={badges}
+        summary={mobileSummary}
+        lowBandwidth={lowBandwidth.value}
+        onToggleLowBandwidth={lowBandwidth.toggle}
+      />
+      <div className="hidden md:block">
+        <IbContextRail />
+      </div>
+      <div className="hidden md:block">
+        <StickyContextBar
+          title={title}
+          description={description}
+          actions={actions}
+          badges={badges}
+        />
+      </div>
       {filters ? <FilterBar controls={filters} /> : null}
-      {metrics.length > 0 ? (
+      {visibleMetrics.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {metrics.map((metric) => (
+          {visibleMetrics.map((metric) => (
             <MetricCard
               key={metric.label}
               label={metric.label}
@@ -169,6 +201,7 @@ export function IbWorkspaceScaffold({
         </div>
       ) : null}
       {asideContent ? <SplitPane primary={main} secondary={asideContent} /> : main}
+      <MobileActionDock items={mobileActions} title={`${title} actions`} />
     </div>
   );
 }

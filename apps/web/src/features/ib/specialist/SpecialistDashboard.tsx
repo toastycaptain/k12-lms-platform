@@ -94,6 +94,33 @@ export function SpecialistDashboard({ state = "ready" }: { state?: IbSurfaceStat
           detail: "Save once, reuse across grades and programmes",
         },
       ]}
+      mobileSummary={`${enhancedPayload.pendingResponses.length} handoff response(s), ${enhancedPayload.evidenceToSort.length} evidence item(s) to sort, and ${urgentCount} urgent specialist item(s) are mobile-ready.`}
+      mobileActions={[
+        {
+          id: "specialist-handoff",
+          label: "Open handoff",
+          href: enhancedPayload.pendingResponses[0]?.href || "/ib/specialist",
+          detail: "Answer the next pending specialist request.",
+          onSelect: () => {
+            const item = enhancedPayload.pendingResponses[0];
+            if (item) {
+              openContribution(item.title, item.detail);
+            }
+          },
+        },
+        {
+          id: "sort-evidence",
+          label: "Sort evidence",
+          href: enhancedPayload.evidenceToSort[0]?.href || "/ib/evidence",
+          detail: "Attach or validate the next specialist observation.",
+        },
+        {
+          id: "library",
+          label: "Open library",
+          href: "/ib/specialist",
+          detail: "Reuse a specialist asset across classes.",
+        },
+      ]}
       main={
         <div className="space-y-5">
           <WorkspacePanel

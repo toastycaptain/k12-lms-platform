@@ -32,7 +32,22 @@ module Api
           context["apply"]["applied_to"] = normalize_applied_to(apply_params[:applied_to])
         end
 
+        review_payload = normalized_review_payload
+        if review_payload.present?
+          context["review"] ||= {}
+          context["review"].merge!(review_payload)
+          MetricsService.increment(
+            "ib.ai.reviewed",
+            tags: {
+              task_type: @invocation.task_type,
+              workflow: context["workflow"].to_s,
+              status: review_payload["status"].to_s
+            }
+          ) if ib_ai_task?(@invocation.task_type)
+        end
+
         @invocation.update!(context: context)
+        log_review_event(review_payload) if review_payload.present?
         render json: @invocation
       rescue ActiveRecord::RecordInvalid
         render json: { errors: @invocation.errors.full_messages }, status: :unprocessable_content
@@ -61,11 +76,15 @@ module Api
         }
         MetricsService.increment("ai.invocation.requested", tags: metric_tags)
         template = AiTemplate.find_by!(id: params[:ai_template_id], tenant: Current.tenant) if params[:ai_template_id].present?
-        system_prompt = template&.system_prompt || "You are a helpful K-12 education assistant."
-        messages = build_messages(system_prompt)
         max_tokens = resolved_max_tokens(task_policy)
         temperature = resolved_temperature(task_policy)
-        context_payload = invocation_context(messages: messages, max_tokens: max_tokens, temperature: temperature)
+        messages, context_payload, task_definition = build_invocation_payload(
+          task_type: task_type,
+          template: template,
+          max_tokens: max_tokens,
+          temperature: temperature
+        )
+        return if performed?
 
         invocation = AiInvocation.new(
           tenant: Current.tenant,
@@ -121,8 +140,10 @@ module Api
               completion: usage["completion_tokens"],
               total: usage["total_tokens"]
             },
-            duration: duration
+            duration: duration,
+            response_hash: result
           )
+          MetricsService.increment("ib.ai.completed", tags: metric_tags.merge(workflow: context_payload["workflow"].to_s)) if ib_ai_task?(task_type)
           MetricsService.increment("ai.invocation.completed", tags: metric_tags)
           MetricsService.timing("ai.invocation.duration_ms", duration, tags: metric_tags)
           MetricsService.timing(
@@ -140,8 +161,15 @@ module Api
             provider: result["provider"],
             model: result["model"],
             usage: usage,
-            status: invocation.status
+            status: invocation.status,
+            review_required: context_payload["review_required"],
+            task_definition: task_definition,
+            grounding_refs: context_payload["grounding_refs"],
+            human_only_boundaries: context_payload["human_only_boundaries"],
+            tenant_controls: context_payload["tenant_controls"],
+            quality_track: context_payload["quality_track"]
           }
+          log_generation_event(invocation, task_definition: task_definition, context_payload: context_payload)
         rescue AiGatewayClient::AiGatewayError => e
           MetricsService.increment("ai.invocation.failed", tags: metric_tags.merge(error: e.class.name))
           MetricsService.timing(
@@ -170,7 +198,7 @@ module Api
       end
 
       def apply_params
-        params.permit(:applied_at, applied_to: [ :type, :id ])
+        params.permit(:applied_at, applied_to: [ :type, :id ], review: [ :status, :teacher_trust, :notes, :workflow, :estimated_minutes_saved, { accepted_fields: [], rejected_fields: [] } ])
       end
 
       def normalized_time(raw_value)
@@ -243,9 +271,7 @@ module Api
       end
 
       def normalize_context
-        return {} if params[:context].nil?
-
-        params.permit(context: [ :document_id, :document_title, :document_type, :selection_text, :source, :return_url ]).to_h[:context] || {}
+        normalize_context_for(task_type: params[:task_type].to_s)
       end
 
       def resolve_task_policy(task_type)
@@ -257,23 +283,31 @@ module Api
       end
 
       def ensure_task_policy_access(task_policy)
-        unless role_allowed_for_policy?(task_policy)
-          render json: { error: "Your role is not authorized for this AI task type" }, status: :forbidden
+        if approval_required_for_policy?(task_policy)
+          render json: { error: "This AI action requires approval" }, status: :forbidden
           return false
         end
 
-        if task_policy.requires_approval?
-          render json: { error: "This AI action requires approval" }, status: :forbidden
+        unless role_allowed_for_policy?(task_policy)
+          render json: { error: "Your role is not authorized for this AI task type" }, status: :forbidden
           return false
         end
 
         true
       end
 
-      def role_allowed_for_policy?(task_policy)
-        return true if task_policy.allowed_roles.blank?
+      def approval_required_for_policy?(task_policy)
+        task_policy.requires_approval? && !ib_ai_task?(task_policy.task_type)
+      end
 
-        (task_policy.allowed_roles & current_user_roles).any?
+      def role_allowed_for_policy?(task_policy)
+        allowed_roles = Array(task_policy.allowed_roles).presence
+        if allowed_roles.blank? && ib_ai_task?(task_policy.task_type)
+          allowed_roles = Array(::Ib::Ai::TaskCatalog.definition_for(task_policy.task_type)&.dig(:default_roles))
+        end
+        return true if allowed_roles.blank?
+
+        (allowed_roles & current_user_roles).any?
       end
 
       def current_user_roles
@@ -316,6 +350,101 @@ module Api
 
       def elapsed_ms(started_at)
         ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round(1)
+      end
+
+      def build_invocation_payload(task_type:, template:, max_tokens:, temperature:)
+        if ib_ai_task?(task_type)
+          prepared = ::Ib::Ai::Orchestrator.new(user: Current.user).prepare(
+            task_type: task_type,
+            prompt: params[:prompt],
+            context: normalize_context_for(task_type: task_type),
+            template: template
+          )
+          context_payload = prepared[:context].deep_stringify_keys
+          context_payload["messages"] = prepared[:messages]
+          context_payload["max_tokens"] = max_tokens
+          context_payload["temperature"] = temperature
+          context_payload["return_url"] = params[:return_url] if params[:return_url].present?
+          context_payload["school_id"] ||= Current.school&.id
+          return [ prepared[:messages], context_payload, prepared[:definition] ]
+        end
+
+        system_prompt = template&.system_prompt || "You are a helpful K-12 education assistant."
+        messages = build_messages(system_prompt)
+        [ messages, invocation_context(messages: messages, max_tokens: max_tokens, temperature: temperature), nil ]
+      rescue ::Ib::Ai::GuardrailService::GuardrailViolation => e
+        render json: { error: e.message }, status: :unprocessable_content
+        [ [], {}, nil ]
+      end
+
+      def normalize_context_for(task_type:)
+        return {} if params[:context].nil?
+
+        return raw_context_payload if ib_ai_task?(task_type)
+
+        params.permit(context: [ :document_id, :document_title, :document_type, :selection_text, :source, :return_url ]).to_h[:context] || {}
+      end
+
+      def raw_context_payload
+        value = params[:context]
+        return value.to_unsafe_h if value.respond_to?(:to_unsafe_h)
+        return value.to_h if value.respond_to?(:to_h)
+
+        {}
+      end
+
+      def ib_ai_task?(task_type)
+        ::Ib::Ai::TaskCatalog.ib_task?(task_type)
+      end
+
+      def normalized_review_payload
+        raw = apply_params[:review]
+        payload = raw.respond_to?(:to_h) ? raw.to_h : {}
+        return {} if payload.blank?
+
+        review = {
+          "status" => payload[:status] || payload["status"],
+          "notes" => payload[:notes] || payload["notes"],
+          "workflow" => payload[:workflow] || payload["workflow"],
+          "accepted_fields" => Array(payload[:accepted_fields] || payload["accepted_fields"]).map(&:to_s),
+          "rejected_fields" => Array(payload[:rejected_fields] || payload["rejected_fields"]).map(&:to_s),
+          "reviewed_at" => Time.current.utc.iso8601
+        }.compact
+        trust = payload[:teacher_trust] || payload["teacher_trust"]
+        review["teacher_trust"] = trust.to_f if trust.present?
+        minutes_saved = payload[:estimated_minutes_saved] || payload["estimated_minutes_saved"]
+        review["estimated_minutes_saved"] = minutes_saved.to_i if minutes_saved.present?
+        review
+      end
+
+      def log_generation_event(invocation, task_definition:, context_payload:)
+        return unless ib_ai_task?(invocation.task_type)
+
+        AuditLogger.log(
+          event_type: "ib_ai_invocation_generated",
+          actor: Current.user,
+          auditable: invocation,
+          request: request,
+          metadata: {
+            task_type: invocation.task_type,
+            workflow: context_payload["workflow"],
+            task_label: task_definition&.dig(:label),
+            review_required: context_payload["review_required"],
+            grounding_ref_count: Array(context_payload["grounding_refs"]).length
+          }
+        )
+      end
+
+      def log_review_event(review_payload)
+        return unless ib_ai_task?(@invocation.task_type)
+
+        AuditLogger.log(
+          event_type: "ib_ai_invocation_reviewed",
+          actor: Current.user,
+          auditable: @invocation,
+          request: request,
+          metadata: review_payload.merge("task_type" => @invocation.task_type)
+        )
       end
     end
   end

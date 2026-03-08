@@ -1,0 +1,2 @@
+class IbOperationalJobPolicy < IbPilotSetupPolicy
+end

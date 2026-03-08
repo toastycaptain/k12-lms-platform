@@ -33,10 +33,15 @@ class CurriculumDocumentPolicy < ApplicationPolicy
       end
       return scoped if privileged_user?
 
-      teacher_scope = scoped
+      owned_scope = scoped.where(id: scoped.where(created_by_id: user.id).select(:id))
+      teacher_scope = scoped.where(
+        id: scoped
         .joins(planning_context: { courses: { sections: :enrollments } })
         .where(enrollments: { user_id: user.id, role: "teacher" })
-      scoped.where(created_by_id: user.id).or(teacher_scope).distinct
+        .select(:id)
+      )
+
+      owned_scope.or(teacher_scope).distinct
     end
 
     private

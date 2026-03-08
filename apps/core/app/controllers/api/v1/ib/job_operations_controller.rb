@@ -13,6 +13,18 @@ module Api
           render json: service.build
         end
 
+        def cancel
+          authorize IbOperationalJob, :update?
+          service.cancel!(job_id: params.require(:job_id), reason: params[:reason])
+          render json: service.build
+        end
+
+        def backfill
+          authorize IbOperationalJob, :create?
+          service.backfill!(kind: params.require(:kind))
+          render json: service.build
+        end
+
         private
 
         def service

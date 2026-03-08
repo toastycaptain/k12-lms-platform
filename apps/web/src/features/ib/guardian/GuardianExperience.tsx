@@ -67,6 +67,27 @@ export function GuardianExperience() {
           detail: "Moderated family feedback remains visible",
         },
       ]}
+      mobileSummary={`${data.stories.length} story update(s), ${data.releasedReports.length} released report(s), and ${digestStrategy.urgentCount} urgent family item(s) are available from mobile.`}
+      mobileActions={[
+        {
+          id: "read-story",
+          label: "Read story",
+          href: data.stories[0] ? `/ib/families/stories/${data.stories[0].id}` : "/ib/guardian",
+          detail: data.stories[0]?.title || "Open the latest family-facing story.",
+        },
+        {
+          id: "released-report",
+          label: "Released report",
+          href: data.releasedReports[0]?.href || "/ib/reports",
+          detail: data.releasedReports[0]?.title || "Read the latest released report.",
+        },
+        {
+          id: "current-unit",
+          label: "Current unit",
+          href: firstUnitWindow?.href || "/ib/guardian",
+          detail: firstUnitWindow?.title || "Open the current unit window.",
+        },
+      ]}
       main={
         <div className="space-y-5">
           <FamilyHomeV2

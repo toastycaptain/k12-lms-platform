@@ -9,6 +9,7 @@ class IbEvidenceItem < ApplicationRecord
   belongs_to :planning_context, optional: true
   belongs_to :curriculum_document, optional: true
   belongs_to :curriculum_document_version, optional: true
+  belongs_to :ib_operational_record, optional: true
   belongs_to :student, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User"
 

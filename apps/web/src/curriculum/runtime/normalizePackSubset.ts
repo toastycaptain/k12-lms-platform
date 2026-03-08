@@ -6,6 +6,7 @@ import type {
   PackDocumentSchemaIndexEntry,
   PackDocumentType,
   PackFrameworkBindings,
+  PackCapabilityMap,
   PackRuntimeSubset,
   PackWorkflowDefinition,
 } from "@/curriculum/runtime/types";
@@ -217,6 +218,14 @@ function normalizeFrameworkBindings(value: unknown): PackFrameworkBindings {
   };
 }
 
+function normalizeCapabilityMap(value: unknown): PackCapabilityMap {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as PackCapabilityMap;
+}
+
 export function normalizePackSubset(
   input?: CurriculumPackV1 | Record<string, unknown> | null,
 ): PackRuntimeSubset {
@@ -249,5 +258,8 @@ export function normalizePackSubset(
         : {},
     workflowDefinitions: normalizeWorkflowDefinitions(payload.workflow_definitions),
     frameworkBindings: normalizeFrameworkBindings(payload.framework_bindings),
+    reportBindings: normalizeCapabilityMap(payload.report_bindings),
+    capabilityModules: normalizeCapabilityMap(payload.capability_modules),
+    integrationHints: normalizeCapabilityMap(payload.integration_hints),
   };
 }

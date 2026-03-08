@@ -2,6 +2,32 @@ module Ib
   module Collaboration
     class SessionService
       EXPIRY_WINDOW = 2.minutes
+      CHANNEL_TOPOLOGY = [
+        {
+          key: "document_presence",
+          scope: "curriculum_document",
+          transport: "authenticated_polling",
+          auth: "CurriculumDocumentPolicy#show?"
+        },
+        {
+          key: "section_presence",
+          scope: "section_key",
+          transport: "session_heartbeat",
+          auth: "CurriculumDocumentPolicy#update?"
+        },
+        {
+          key: "durable_change_feed",
+          scope: "collaboration_events",
+          transport: "event_log",
+          auth: "IbCollaborationEventPolicy#index?"
+        }
+      ].freeze
+      CONCURRENCY_POLICY = {
+        optimistic_lock: "base_version_id on section autosave",
+        soft_locks: "active editor heartbeats grouped by scope_key",
+        merge_strategy: "keep section-local patch, surface conflict explicitly, then replay against the latest version",
+        replay_source: "collaboration events + curriculum document versions"
+      }.freeze
 
       def initialize(document:, user:, school: nil)
         @document = document
@@ -65,10 +91,13 @@ module Ib
         {
           document_id: document.id,
           current_session_id: current_session&.id,
+          channel_topology: CHANNEL_TOPOLOGY,
+          concurrency_policy: CONCURRENCY_POLICY,
           active_sessions: sessions.map do |session|
             {
               id: session.id,
               user_id: session.user_id,
+              user_label: session.user&.full_name || session.user&.email || "Unknown",
               role: session.role,
               scope_type: session.scope_type,
               scope_key: session.scope_key,
@@ -76,9 +105,12 @@ module Ib
               device_label: session.device_label,
               last_seen_at: session.last_seen_at.utc.iso8601,
               expires_at: session.expires_at&.utc&.iso8601,
-              editing_same_scope: editing_same_scope?(session)
+              editing_same_scope: editing_same_scope?(session),
+              heartbeat_age_seconds: (Time.current - session.last_seen_at).round,
+              metadata: session.metadata
             }
           end,
+          soft_locks: soft_locks_for(sessions),
           conflict_risk: sessions.group_by(&:scope_key).any? { |_scope_key, rows| rows.count { |row| row.role == "editor" } > 1 },
           updated_at: Time.current.utc.iso8601
         }
@@ -87,6 +119,21 @@ module Ib
       def editing_same_scope?(session)
         other_sessions = IbCollaborationSession.active_now.where(curriculum_document: document, scope_key: session.scope_key).where.not(id: session.id)
         other_sessions.exists?
+      end
+
+      def soft_locks_for(sessions)
+        sessions.group_by(&:scope_key).filter_map do |scope_key, rows|
+          editors = rows.select { |row| row.role == "editor" }
+          next if editors.empty?
+
+          {
+            scope_key: scope_key,
+            owner_user_ids: editors.map(&:user_id),
+            owner_labels: editors.map { |row| row.user&.full_name || row.user&.email || "Unknown" },
+            contested: editors.size > 1,
+            session_ids: editors.map(&:id)
+          }
+        end
       end
 
       def expire_stale_sessions!

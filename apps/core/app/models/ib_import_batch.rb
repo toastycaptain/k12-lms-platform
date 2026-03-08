@@ -46,6 +46,7 @@ class IbImportBatch < ApplicationRecord
     self.rollback_summary = {} unless rollback_summary.is_a?(Hash)
     self.preview_summary = {} unless preview_summary.is_a?(Hash)
     self.rollback_capabilities = {} unless rollback_capabilities.is_a?(Hash)
+    self.recovery_payload = {} unless recovery_payload.is_a?(Hash)
     self.parser_warnings = Array(parser_warnings)
   end
 

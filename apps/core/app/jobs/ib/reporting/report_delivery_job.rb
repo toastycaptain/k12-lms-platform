@@ -2,6 +2,7 @@ module Ib
   module Reporting
     class ReportDeliveryJob < ApplicationJob
       queue_as :ib_exports
+      retry_on StandardError, wait: 30.seconds, attempts: 3
 
       def perform(report_id, actor_id, recipient_id = nil, channel = "pdf", locale = "en", audience_role = "guardian")
         report = IbReport.find(report_id)

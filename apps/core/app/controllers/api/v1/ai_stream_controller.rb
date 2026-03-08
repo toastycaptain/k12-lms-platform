@@ -23,13 +23,13 @@ module Api
         template = resolve_template
         max_tokens = resolved_max_tokens(task_policy)
         temperature = resolved_temperature(task_policy)
-        messages = build_messages(template)
-        invocation_context = {
-          messages: messages,
+        messages, invocation_context, task_definition = build_invocation_payload(
+          task_type: task_type,
+          template: template,
           max_tokens: max_tokens,
-          temperature: temperature,
-          return_url: params[:return_url]
-        }
+          temperature: temperature
+        )
+        return if performed?
 
         invocation = AiInvocation.create!(
           tenant: Current.tenant,
@@ -77,6 +77,11 @@ module Api
             duration: duration,
             response_hash: { content: full_text, usage: stream_usage.presence }
           )
+          log_generation_event(
+            invocation,
+            task_definition: task_definition,
+            context_payload: invocation_context
+          )
 
           response.stream.write("data: #{({ done: true, invocation_id: invocation.id, content: full_text }).to_json}\n\n")
         rescue AiGatewayClient::AiGatewayError => e
@@ -107,13 +112,18 @@ module Api
       end
 
       def ensure_task_policy_access(task_policy)
-        unless task_policy.allowed_roles.blank? || (task_policy.allowed_roles & current_user_roles).any?
-          render json: { error: "Your role is not authorized for this AI task type" }, status: :forbidden
+        if approval_required_for_policy?(task_policy)
+          render json: { error: "This AI action requires approval" }, status: :forbidden
           return false
         end
 
-        if task_policy.requires_approval?
-          render json: { error: "This AI action requires approval" }, status: :forbidden
+        allowed_roles = Array(task_policy.allowed_roles).presence
+        if allowed_roles.blank? && ib_ai_task?(task_policy.task_type)
+          allowed_roles = Array(::Ib::Ai::TaskCatalog.definition_for(task_policy.task_type)&.dig(:default_roles))
+        end
+
+        unless allowed_roles.blank? || (allowed_roles & current_user_roles).any?
+          render json: { error: "Your role is not authorized for this AI task type" }, status: :forbidden
           return false
         end
 
@@ -122,6 +132,10 @@ module Api
 
       def active_provider_config
         AiProviderConfig.find_by(tenant: Current.tenant, status: "active")
+      end
+
+      def approval_required_for_policy?(task_policy)
+        task_policy.requires_approval? && !ib_ai_task?(task_policy.task_type)
       end
 
       def resolved_model(task_policy, provider_config)
@@ -210,6 +224,69 @@ module Api
         end
 
         messages
+      end
+
+      def build_invocation_payload(task_type:, template:, max_tokens:, temperature:)
+        if ib_ai_task?(task_type)
+          prepared = ::Ib::Ai::Orchestrator.new(user: Current.user).prepare(
+            task_type: task_type,
+            prompt: params[:prompt],
+            context: raw_context_payload,
+            template: template
+          )
+          context_payload = prepared[:context].deep_stringify_keys
+          context_payload["messages"] = prepared[:messages]
+          context_payload["max_tokens"] = max_tokens
+          context_payload["temperature"] = temperature
+          context_payload["return_url"] = params[:return_url] if params[:return_url].present?
+          context_payload["school_id"] ||= Current.school&.id
+          return [ prepared[:messages], context_payload, prepared[:definition] ]
+        end
+
+        messages = build_messages(template)
+        [
+          messages,
+          {
+            messages: messages,
+            max_tokens: max_tokens,
+            temperature: temperature,
+            return_url: params[:return_url]
+          }.compact,
+          nil
+        ]
+      rescue ::Ib::Ai::GuardrailService::GuardrailViolation => e
+        render json: { error: e.message }, status: :unprocessable_content
+        [ [], {}, nil ]
+      end
+
+      def raw_context_payload
+        value = params[:context]
+        return value.to_unsafe_h if value.respond_to?(:to_unsafe_h)
+        return value.to_h if value.respond_to?(:to_h)
+
+        {}
+      end
+
+      def ib_ai_task?(task_type)
+        ::Ib::Ai::TaskCatalog.ib_task?(task_type)
+      end
+
+      def log_generation_event(invocation, task_definition:, context_payload:)
+        return unless ib_ai_task?(invocation.task_type)
+
+        AuditLogger.log(
+          event_type: "ib_ai_invocation_generated",
+          actor: Current.user,
+          auditable: invocation,
+          request: request,
+          metadata: {
+            task_type: invocation.task_type,
+            workflow: context_payload["workflow"],
+            task_label: task_definition&.dig(:label),
+            review_required: context_payload["review_required"],
+            grounding_ref_count: Array(context_payload["grounding_refs"]).length
+          }
+        )
       end
     end
   end

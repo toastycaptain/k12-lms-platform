@@ -25,17 +25,19 @@ module Api
 
         def create
           authorize IbEvidenceItem
-          item = IbEvidenceItem.create!(evidence_item_params.merge(
+          item = IbEvidenceItem.create!(evidence_item_attributes.merge(
             tenant: Current.tenant,
-            school_id: current_school_scope&.id || evidence_item_params.fetch(:school_id),
+            school_id: current_school_scope&.id || evidence_item_attributes.fetch(:school_id),
             created_by: Current.user
           ))
+          item.attachments.attach(evidence_item_params[:attachments]) if evidence_item_params[:attachments].present?
           render json: item, status: :created
         end
 
         def update
           authorize @evidence_item
-          @evidence_item.update!(evidence_item_params)
+          @evidence_item.update!(evidence_item_attributes)
+          @evidence_item.attachments.attach(evidence_item_params[:attachments]) if evidence_item_params[:attachments].present?
           render json: @evidence_item
         end
 
@@ -75,7 +77,7 @@ module Api
         private
 
         def set_evidence_item
-          @evidence_item = policy_scope(IbEvidenceItem).find(params[:id])
+          @evidence_item = policy_scope(IbEvidenceItem).with_attached_attachments.find(params[:id])
         end
 
         def evidence_item_params
@@ -84,6 +86,7 @@ module Api
             :planning_context_id,
             :curriculum_document_id,
             :curriculum_document_version_id,
+            :ib_operational_record_id,
             :student_id,
             :programme,
             :status,
@@ -93,12 +96,17 @@ module Api
             :summary,
             :next_action,
             :story_draft,
+            attachments: [],
             metadata: {}
           )
         end
 
+        def evidence_item_attributes
+          evidence_item_params.except(:attachments)
+        end
+
         def filtered_items
-          items = policy_scope(IbEvidenceItem).includes(:story_links).order(updated_at: :desc)
+          items = policy_scope(IbEvidenceItem).with_attached_attachments.includes(:story_links).order(updated_at: :desc)
           items = items.where(programme: params[:programme]) if params[:programme].present?
           items = items.where(status: params[:status]) if params[:status].present?
           items = items.where(visibility: params[:visibility]) if params[:visibility].present?

@@ -4,7 +4,7 @@ module Api
       class CollaborationEventsController < BaseController
         def index
           authorize IbCollaborationEvent
-          events = policy_scope(IbCollaborationEvent).order(occurred_at: :desc, id: :desc)
+          events = policy_scope(IbCollaborationEvent).includes(:user).order(occurred_at: :desc, id: :desc)
           events = events.where(curriculum_document_id: params[:curriculum_document_id]) if params[:curriculum_document_id].present?
           render json: events.limit(25).map { |event| serialize(event) }
         end
@@ -33,7 +33,8 @@ module Api
             section_key: event.section_key,
             durable: event.durable,
             payload: event.payload,
-            occurred_at: event.occurred_at.utc.iso8601
+            occurred_at: event.occurred_at.utc.iso8601,
+            user_label: event.user&.full_name || event.user&.email || "Unknown"
           }
         end
       end

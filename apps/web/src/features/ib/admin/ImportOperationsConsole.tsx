@@ -428,6 +428,48 @@ export function ImportOperationsConsole() {
                   </div>
                 </div>
 
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Adapter</p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      {selectedBatch.sourceSystem} · {selectedBatch.sourceContractVersion || "n/a"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {selectedBatch.importMode} import
+                      {selectedBatch.coexistenceMode ? " with shadow mode" : ""}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Artifacts</p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      {String(
+                        (
+                          selectedBatch.previewSummary.source_artifact_manifest as
+                            | Record<string, unknown>
+                            | undefined
+                        )?.row_count || 0,
+                      )}{" "}
+                      rows discovered
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Resume cursor {String(selectedBatch.resumeCursor || 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Migration safeguards
+                    </p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      Delta rerun:{" "}
+                      {String(selectedBatch.rollbackCapabilities.delta_rerun_supported || false)}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Shadow mode:{" "}
+                      {String(selectedBatch.rollbackCapabilities.shadow_mode_supported || false)}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="mt-4 max-h-[24rem] overflow-auto rounded-[1.25rem] border border-slate-200">
                   <table className="min-w-full divide-y divide-slate-200 text-sm">
                     <thead className="bg-slate-50 text-left text-slate-500">
@@ -436,6 +478,7 @@ export function ImportOperationsConsole() {
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3">Target</th>
                         <th className="px-4 py-3">Warnings / Errors</th>
+                        <th className="px-4 py-3">Risk / Resolution</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -453,6 +496,12 @@ export function ImportOperationsConsole() {
                             {[...row.warnings, ...row.errors].length > 0
                               ? [...row.warnings, ...row.errors].join(" · ")
                               : "No issues"}
+                          </td>
+                          <td className="px-4 py-3 align-top text-slate-700">
+                            {row.dataLossRisk || "low"} ·{" "}
+                            {Object.keys(row.resolutionPayload).length > 0
+                              ? JSON.stringify(row.resolutionPayload)
+                              : "No override"}
                           </td>
                         </tr>
                       ))}

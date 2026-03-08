@@ -346,6 +346,23 @@ export function MigrationConfidencePanel() {
             />
           </div>
 
+          <div className="grid gap-4 xl:grid-cols-2">
+            <DefinitionList
+              title="Confidence summary"
+              rows={Object.entries(data.confidenceSummary).map(([key, value]) => ({
+                key,
+                value: String(value),
+              }))}
+            />
+            <DefinitionList
+              title="Template generators"
+              rows={data.templateGenerators.map((value) => ({
+                key: value,
+                value: "available",
+              }))}
+            />
+          </div>
+
           <VirtualDataGrid
             columns={[
               { key: "source", header: "Source" },
@@ -358,6 +375,21 @@ export function MigrationConfidencePanel() {
               cutover: humanize(session.cutoverState),
               status: session.status,
               session: session.sessionKey,
+            }))}
+          />
+
+          <VirtualDataGrid
+            columns={[
+              { key: "source", header: "Adapter" },
+              { key: "connector", header: "Connector" },
+              { key: "shadow", header: "Shadow mode" },
+              { key: "delta", header: "Delta rerun" },
+            ]}
+            rows={Object.entries(data.adapterProtocols).map(([source, protocol]) => ({
+              source,
+              connector: protocol.connector,
+              shadow: protocol.shadowMode ? "Yes" : "No",
+              delta: protocol.deltaRerun ? "Yes" : "No",
             }))}
           />
 
@@ -1046,6 +1078,24 @@ export function SearchOpsPanel({ compact = false }: { compact?: boolean }) {
           rows={data.resultGroups.map((group) => ({ key: group, value: "Indexed" }))}
         />
       </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <DefinitionList
+          title="Freshness"
+          rows={[
+            { key: "Index strategy", value: data.freshness.indexStrategy },
+            { key: "Latency budget", value: `${data.freshness.latencyBudgetMs} ms` },
+            { key: "Backpressure", value: data.freshness.backpressureStrategy },
+            { key: "Window", value: `${data.freshness.adoptionWindowDays} days` },
+          ]}
+        />
+        <DefinitionList
+          title="Adoption summary"
+          rows={Object.entries(data.adoptionSummary).map(([key, value]) => ({
+            key,
+            value: String(value),
+          }))}
+        />
+      </div>
       <VirtualDataGrid
         columns={[
           { key: "profile", header: "Profile" },
@@ -1058,6 +1108,27 @@ export function SearchOpsPanel({ compact = false }: { compact?: boolean }) {
           latency: `${profile.latencyBudgetMs} ms`,
         }))}
       />
+      {data.savedLenses.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Saved lenses
+          </p>
+          {data.savedLenses.slice(0, compact ? 2 : 4).map((lens) => (
+            <div
+              key={lens.id}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-semibold text-slate-950">{lens.name}</span>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  {lens.lensKey}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">{lens.query}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 

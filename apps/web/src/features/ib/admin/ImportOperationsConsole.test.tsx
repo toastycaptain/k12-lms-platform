@@ -34,7 +34,12 @@ describe("ImportOperationsConsole", () => {
           status: "mapped",
           sourceKind: "curriculum_document",
           sourceFormat: "csv",
+          sourceSystem: "managebac",
+          importMode: "draft",
+          coexistenceMode: true,
           sourceFilename: "pyp-units.csv",
+          sourceContractVersion: "managebac.v2",
+          scopeMetadata: {},
           parserWarnings: ["Duplicate header title was renamed to title__2."],
           mappingPayload: {
             programme: "PYP",
@@ -44,6 +49,11 @@ describe("ImportOperationsConsole", () => {
             route_hint: "/ib/pyp/units/imported",
           },
           validationSummary: {},
+          previewSummary: {
+            source_artifact_manifest: {
+              row_count: 1,
+            },
+          },
           dryRunSummary: {
             would_create: 2,
             would_update: 1,
@@ -54,6 +64,13 @@ describe("ImportOperationsConsole", () => {
             updated_count: 0,
           },
           rollbackSummary: {},
+          rollbackCapabilities: {
+            delta_rerun_supported: true,
+            shadow_mode_supported: true,
+          },
+          recoveryPayload: {},
+          resumeCursor: 0,
+          lastEnqueuedJobId: null,
           rows: [
             {
               id: 1,
@@ -67,8 +84,13 @@ describe("ImportOperationsConsole", () => {
               warnings: [],
               errors: [],
               conflictPayload: {},
+              resolutionPayload: { strategy: "create_new_document" },
               executionPayload: {},
               targetEntityRef: "CurriculumDocument:77",
+              entityKind: "curriculum_document",
+              dataLossRisk: "low",
+              duplicateCandidateRef: null,
+              unsupportedFields: [],
             },
           ],
           createdAt: new Date().toISOString(),
@@ -119,5 +141,18 @@ describe("ImportOperationsConsole", () => {
     await waitFor(() => {
       expect(dryRunIbImportBatch).toHaveBeenCalledWith(44);
     });
+  });
+
+  it("renders phase 10 migration safeguards and adapter details", () => {
+    render(
+      <ToastProvider>
+        <ImportOperationsConsole />
+      </ToastProvider>,
+    );
+
+    expect(screen.getByText("managebac · managebac.v2")).toBeInTheDocument();
+    expect(screen.getByText(/draft import with shadow mode/i)).toBeInTheDocument();
+    expect(screen.getByText(/Delta rerun: true/i)).toBeInTheDocument();
+    expect(screen.getByText(/low · {\"strategy\":\"create_new_document\"}/i)).toBeInTheDocument();
   });
 });

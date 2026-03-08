@@ -13,9 +13,25 @@ module Ib
         updated_refs = []
         skipped_refs = []
         batch.transaction do
-          batch.update!(status: "executing", executed_by: actor)
+          batch.update!(
+            status: "executing",
+            executed_by: actor,
+            resume_cursor: 0,
+            recovery_payload: batch.recovery_payload.merge(
+              "last_started_at" => Time.current.utc.iso8601,
+              "last_actor_id" => actor&.id
+            )
+          )
           batch.rows.where(status: "ready").find_each do |row|
             outcome = execute_row!(row)
+            batch.update!(
+              resume_cursor: row.row_index,
+              recovery_payload: batch.recovery_payload.merge(
+                "last_row_id" => row.id,
+                "last_row_index" => row.row_index,
+                "last_row_status" => row.status
+              )
+            )
             next if outcome.nil?
 
             created_refs << outcome[:entity_ref] if outcome[:action] == "create"
@@ -33,8 +49,13 @@ module Ib
               updated_count: updated_refs.length,
               skipped_count: skipped_refs.length,
               import_mode: batch.import_mode,
-              coexistence_mode: batch.coexistence_mode
+              coexistence_mode: batch.coexistence_mode,
+              resume_cursor: batch.resume_cursor
             },
+            recovery_payload: batch.recovery_payload.merge(
+              "last_completed_at" => Time.current.utc.iso8601,
+              "recoverable" => false
+            )
           )
         end
         Ib::Support::Telemetry.emit(
@@ -50,6 +71,19 @@ module Ib
           },
         )
         batch.execution_summary
+      rescue StandardError => e
+        batch.update!(
+          status: "failed",
+          error_message: e.message,
+          recovery_payload: batch.recovery_payload.merge(
+            "recoverable" => true,
+            "last_failed_at" => Time.current.utc.iso8601,
+            "resume_cursor" => batch.resume_cursor,
+            "error_class" => e.class.name,
+            "error_message" => e.message
+          )
+        )
+        raise
       end
 
       def rollback!

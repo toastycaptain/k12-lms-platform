@@ -1,9 +1,9 @@
 class IbEvidenceItemSerializer < ActiveModel::Serializer
   attributes :id, :tenant_id, :school_id, :planning_context_id, :curriculum_document_id,
-    :curriculum_document_version_id, :student_id, :created_by_id, :programme, :status, :visibility,
-    :contributor_type, :title, :summary, :next_action, :story_draft, :metadata, :created_at, :updated_at,
-    :attachment_urls, :entity_ref, :route_id, :href, :fallback_route_id, :changed_since_last_seen,
-    :linked_story_count
+    :curriculum_document_version_id, :ib_operational_record_id, :student_id, :created_by_id,
+    :programme, :status, :visibility, :contributor_type, :title, :summary, :next_action,
+    :story_draft, :metadata, :created_at, :updated_at, :attachment_urls, :entity_ref, :route_id,
+    :href, :fallback_route_id, :changed_since_last_seen, :linked_story_count
 
   def attachment_urls
     object.attachments.map do |attachment|

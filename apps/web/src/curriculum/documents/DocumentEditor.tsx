@@ -17,11 +17,13 @@ import {
 } from "@/curriculum/runtime/useCurriculumPack";
 import WorkflowActions from "@/curriculum/workflow/WorkflowActions";
 import WorkflowBadge from "@/curriculum/workflow/WorkflowBadge";
+import { IbAiAssistPanel, type IbAiTaskOption } from "@/features/ib/ai/IbAiAssistPanel";
 import { syncIbCollaborationSession, useIbCollaborationSessions } from "@/features/ib/data";
 import { DuplicateDocumentDialog } from "@/features/ib/planning/DuplicateDocumentDialog";
 import { SequenceBlockEditor } from "@/features/ib/planning/SequenceBlockEditor";
 import { SequenceBoard, type SequenceBlock } from "@/features/ib/planning/SequenceBoard";
 import { ConflictResolutionDialog } from "@/features/ib/offline/ConflictResolutionDialog";
+import { saveIbCollaborationEvent } from "@/features/ib/phase9/data";
 import { SaveStatePill } from "@/features/ib/shared/SaveStatePill";
 import { useSectionAutosave } from "@/features/ib/shared/useSectionAutosave";
 
@@ -47,6 +49,10 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [selectedSequenceBlock, setSelectedSequenceBlock] = useState<SequenceBlock | null>(null);
   const [restoredDraftApplied, setRestoredDraftApplied] = useState(false);
+  const [collaborationScopeKey, setCollaborationScopeKey] = useState("root");
+  const [collaborationScopeType, setCollaborationScopeType] = useState<"document" | "section">(
+    "document",
+  );
   const collaborationSessionKey = useRef(
     `web-${documentId}-${Math.random().toString(36).slice(2, 10)}`,
   );
@@ -167,11 +173,16 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
       try {
         await syncIbCollaborationSession(document.id, {
           session_key: collaborationSessionKey.current,
-          scope_type: "document",
-          scope_key: "root",
+          scope_type: collaborationScopeType,
+          scope_key: collaborationScopeKey,
           role: "editor",
           device_label: "web",
           status,
+          metadata: {
+            source: "document_editor",
+            route_id: "ib.document_studio",
+            section_key: collaborationScopeKey,
+          },
         });
       } catch {
         // Presence should never block the editor itself.
@@ -185,12 +196,84 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
       window.clearInterval(handle);
       void syncSession("ended");
     };
-  }, [document?.id, ibCollaborationEnabled]);
+  }, [collaborationScopeKey, collaborationScopeType, document?.id, ibCollaborationEnabled]);
+
+  useEffect(() => {
+    if (selectedSequenceBlock) {
+      setCollaborationScopeType("section");
+      setCollaborationScopeKey(`sequence.${selectedSequenceBlock.id}`);
+      return;
+    }
+
+    setCollaborationScopeType("document");
+    setCollaborationScopeKey("root");
+  }, [selectedSequenceBlock]);
 
   const documentTypeLabel = document
     ? runtime?.documentTypes[document.document_type]?.label ||
       document.document_type.replace(/_/g, " ")
     : "Document";
+  const inquiryTaskOptions = useMemo<IbAiTaskOption[]>(() => {
+    if (!ibCollaborationEnabled || !document) {
+      return [];
+    }
+
+    const fieldDefinitions = [
+      { field: "central_idea", label: "Central idea" },
+      { field: "statement_of_inquiry", label: "Statement of inquiry" },
+      { field: "lines_of_inquiry", label: "Lines of inquiry" },
+      { field: "family_window_summary", label: "Family window summary" },
+    ];
+    const targetFields = fieldDefinitions.map((field) => {
+      const rawValue = draftContent[field.field];
+      const currentValue = Array.isArray(rawValue)
+        ? rawValue.join("\n")
+        : typeof rawValue === "string"
+          ? rawValue
+          : "";
+
+      return { ...field, currentValue };
+    });
+
+    return [
+      {
+        taskType: "ib_inquiry_language",
+        label: "Inquiry language",
+        description: "Strengthen the inquiry wording while keeping the document teacher-owned.",
+        mode: "diff",
+        promptSeed:
+          "Keep the language concise, grounded, and readable for families and coordinators.",
+        targetFields,
+        applyTarget: { type: "CurriculumDocument", id: document.id },
+        context: {
+          workflow: "document_studio",
+          programme: documentTypeLabel,
+          document_id: document.id,
+          document_title: title || document.title,
+          document_type: document.document_type,
+          source_text: targetFields
+            .map((field) => `${field.label}: ${field.currentValue}`)
+            .join("\n"),
+          grounding_refs: targetFields
+            .filter((field) => field.currentValue.trim().length > 0)
+            .map((field) => ({
+              type: "document_field",
+              label: field.label,
+              excerpt: field.currentValue,
+            })),
+          target_fields: targetFields.map(({ field, label }) => ({ field, label })),
+          current_values: Object.fromEntries(
+            targetFields.map((field) => [field.field, field.currentValue]),
+          ),
+        },
+        onApply: async (changes) => {
+          const next = { ...draftContent, ...changes };
+          setDraftContent(next);
+          setFallbackJson(JSON.stringify(next, null, 2));
+        },
+      },
+    ];
+  }, [document, draftContent, documentTypeLabel, ibCollaborationEnabled, title]);
 
   async function refreshDocument(): Promise<void> {
     await Promise.all([mutate(), mutateVersions()]);
@@ -216,6 +299,17 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
           },
         }),
       });
+      if (ibCollaborationEnabled) {
+        void saveIbCollaborationEvent({
+          curriculum_document_id: document.id,
+          event_name: "change_patch",
+          route_id: "ib.document_studio",
+          scope_key: collaborationScopeKey,
+          section_key: collaborationScopeKey,
+          durable: true,
+          payload: { summary: `Saved a new version for ${collaborationScopeKey}` },
+        });
+      }
       addToast("success", "Document saved as a new version.");
       await refreshDocument();
     } catch (error) {
@@ -246,7 +340,25 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      onFocusCapture={(event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+
+        const explicitKey =
+          target.getAttribute("data-section-key") ||
+          target.getAttribute("data-field-path") ||
+          target.getAttribute("name") ||
+          target.id;
+        if (!explicitKey) return;
+
+        const normalizedKey = explicitKey.toString().trim();
+        if (!normalizedKey) return;
+        setCollaborationScopeType("section");
+        setCollaborationScopeKey(normalizedKey.slice(0, 120));
+      }}
+    >
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -397,6 +509,14 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
         </div>
 
         <div className="space-y-4">
+          {inquiryTaskOptions.length > 0 ? (
+            <IbAiAssistPanel
+              title="Inquiry language assist"
+              description="AI can suggest draft wording, but it cannot publish, approve, or replace the document silently."
+              taskOptions={inquiryTaskOptions}
+              compact
+            />
+          ) : null}
           <DocumentRelationships document={document} runtime={runtime} onChange={refreshDocument} />
           {activeVersion?.id && (
             <DocumentAlignments

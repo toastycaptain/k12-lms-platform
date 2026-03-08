@@ -19,5 +19,6 @@ class IbReportDelivery < ApplicationRecord
 
   def normalize_payloads
     self.metadata = {} unless metadata.is_a?(Hash)
+    self.failure_payload = {} unless failure_payload.is_a?(Hash)
   end
 end

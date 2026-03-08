@@ -56,6 +56,22 @@ RSpec.describe "Api::V1::CurriculumProfiles", type: :request do
 
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "returns extracted runtime capability fields for runtime consumers" do
+      mock_session(admin, tenant: tenant)
+
+      get "/api/v1/curriculum_profiles", params: { runtime: true }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include(
+        "report_bindings",
+        "capability_modules",
+        "integration_hints",
+        "workflow_bindings",
+        "document_types"
+      )
+      expect(response.parsed_body["integration_hints"]).to be_a(Hash)
+    end
   end
 
   def create_user_with_role(role_name)

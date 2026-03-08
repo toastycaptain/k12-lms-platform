@@ -29,7 +29,19 @@ class CurriculumPackStore
 
       return nil if payload.nil?
 
-      with_metadata ? payload.deep_dup : payload[:payload].deep_dup
+      if with_metadata
+        MetricsService.increment(
+          "curriculum.pack.metadata_fetch",
+          tags: {
+            key: key.to_s,
+            version: version.to_s.presence || payload.dig(:payload, "versioning", "version").to_s,
+            source: payload[:source].to_s
+          }
+        )
+        return payload.deep_dup
+      end
+
+      payload[:payload].deep_dup
     end
 
     def exists?(tenant:, key:, version: nil)
@@ -81,12 +93,15 @@ class CurriculumPackStore
     def runtime_record_for_release(release)
       validation = CurriculumProfileRegistry.validate_profile_payload(release.payload || {})
       return nil unless validation[:valid]
+      normalized_profile = validation[:normalized_profile]
 
       {
-        payload: validation[:normalized_profile],
+        payload: normalized_profile,
         source: "tenant_release",
         release_id: release.id,
-        release_status: release.status
+        release_status: release.status,
+        capability_schema: Curriculum::PackCapabilitySchema.normalize(pack: normalized_profile, source: "tenant_release"),
+        primitive_inventory: Curriculum::PlatformPrimitiveRegistry.inventory
       }
     end
 
@@ -95,7 +110,9 @@ class CurriculumPackStore
         payload: payload,
         source: source,
         release_id: nil,
-        release_status: nil
+        release_status: nil,
+        capability_schema: Curriculum::PackCapabilitySchema.normalize(pack: payload, source: source),
+        primitive_inventory: Curriculum::PlatformPrimitiveRegistry.inventory
       }
     end
 

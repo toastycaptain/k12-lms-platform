@@ -53,6 +53,10 @@ export interface PackFrameworkBindings {
   node_kinds?: string[];
 }
 
+export interface PackCapabilityMap {
+  [key: string]: unknown;
+}
+
 export interface LegacyPlannerField {
   id: string;
   label?: string;
@@ -96,6 +100,9 @@ export interface CurriculumPackV1 {
   workflow_bindings?: Record<string, string>;
   workflow_definitions?: Record<string, PackWorkflowDefinition>;
   framework_bindings?: PackFrameworkBindings;
+  report_bindings?: PackCapabilityMap;
+  capability_modules?: PackCapabilityMap;
+  integration_hints?: PackCapabilityMap;
 }
 
 export interface PackRuntimeSubset {
@@ -109,4 +116,7 @@ export interface PackRuntimeSubset {
   workflowBindings: Record<string, string>;
   workflowDefinitions: Record<string, PackWorkflowDefinition>;
   frameworkBindings: PackFrameworkBindings;
+  reportBindings: PackCapabilityMap;
+  capabilityModules: PackCapabilityMap;
+  integrationHints: PackCapabilityMap;
 }

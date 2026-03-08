@@ -177,7 +177,7 @@ describe("StudentExperience", () => {
   it("renders the phase 7 student workflow surfaces", () => {
     render(<StudentExperience variant="dashboard" />);
 
-    expect(screen.getByRole("heading", { name: "Student home" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Student home" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Unified learning timeline")).toBeInTheDocument();
     expect(screen.getByText("Portfolio search and collections")).toBeInTheDocument();
     expect(screen.getByText("Growth reflection")).toBeInTheDocument();

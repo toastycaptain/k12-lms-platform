@@ -42,7 +42,8 @@ module Ib
             delivered_at: Time.current,
             metadata: queue_item.metadata.merge(
               "last_publish_token" => idempotency_key,
-              "last_notification_event" => "publish_succeeded"
+              "last_notification_event" => "publish_succeeded",
+              "publishing_contract" => Curriculum::PublishingCapability.contract_for(pack: current_pack_payload)
             )
           )
           queue_item.ib_learning_story.update!(state: "published", published_at: Time.current)
@@ -58,6 +59,24 @@ module Ib
           details: { message: e.message }
         )
         raise
+      end
+
+      def self.enqueue_publish!(queue_item:, actor:)
+        job = DispatchJob.perform_later(queue_item.id, actor&.id)
+        ::Ib::Support::OperationalJobTracker.register_enqueue!(
+          job: job,
+          operation_key: "publishing_dispatch",
+          tenant: queue_item.tenant,
+          school: queue_item.school,
+          actor: actor,
+          source_record: queue_item,
+          payload: {
+            queue_item_id: queue_item.id,
+            learning_story_id: queue_item.ib_learning_story_id
+          },
+          idempotency_key: queue_item.metadata["last_publish_token"] || "#{queue_item.id}:#{queue_item.updated_at.to_i}"
+        )
+        job
       end
 
       private
@@ -77,6 +96,14 @@ module Ib
           queue_item.ib_learning_story_id,
           queue_item.ib_learning_story.updated_at.to_i
         ].join(":")
+      end
+
+      def current_pack_payload
+        @current_pack_payload ||= CurriculumPackStore.fetch(
+          tenant: queue_item.tenant,
+          key: Ib::Governance::RolloutConsoleService::PACK_KEY,
+          version: Ib::Governance::RolloutConsoleService::CURRENT_PACK_VERSION
+        ) || {}
       end
     end
   end

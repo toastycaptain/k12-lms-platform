@@ -14,6 +14,7 @@ module Ib
           recent_history: recent_history,
           quick_mutations: quick_mutations,
           benchmark_snapshot: benchmark_snapshot,
+          ai_assistance: ai_assistance,
           last_seen_at: last_seen_at&.iso8601
         }
       end
@@ -112,6 +113,10 @@ module Ib
       def benchmark_snapshot
         workflow = Ib::Support::WorkflowBenchmarkService.new(tenant: user.tenant, school: school).build[:workflows]
         workflow.first(3)
+      end
+
+      def ai_assistance
+        ::Ib::Ai::PolicyMatrixService.new(user: user, school: school).build
       end
 
       def last_seen_at

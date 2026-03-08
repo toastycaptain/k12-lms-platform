@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FilterBar, VirtualDataGrid } from "@k12/ui";
-import { schedulePublishingQueueItem, useIbPublishingQueue } from "@/features/ib/data";
+import {
+  schedulePublishingQueueItem,
+  updateIbLearningStory,
+  useIbPublishingQueue,
+} from "@/features/ib/data";
+import { IbAiAssistPanel, type IbAiTaskOption } from "@/features/ib/ai/IbAiAssistPanel";
 import { IB_CANONICAL_ROUTES } from "@/features/ib/routes/registry";
 import {
   IbSurfaceState,
@@ -38,6 +43,113 @@ export function PublishingQueue({
 
   const resolvedActiveStoryId = activeStoryId || stories[0]?.id || "";
   const activeStory = stories.find((story) => story.id === resolvedActiveStoryId) ?? null;
+  const aiTasks = useMemo<IbAiTaskOption[]>(
+    () =>
+      activeStory
+        ? [
+            {
+              taskType: "ib_family_language",
+              label: "Family language",
+              description:
+                "Rewrite the story in calmer, clearer family-facing language before scheduling.",
+              mode: "diff",
+              promptSeed: "Keep the story warm, specific, and free of internal jargon.",
+              targetFields: [
+                {
+                  field: "summary",
+                  label: "Story summary",
+                  currentValue: activeStory.summary || "",
+                },
+                {
+                  field: "support_prompt",
+                  label: "Support prompt",
+                  currentValue: activeStory.supportPrompt || "",
+                },
+              ],
+              applyTarget: { type: "IbLearningStory", id: activeStory.id },
+              context: {
+                workflow: "publishing",
+                audience: activeStory.audience,
+                story_title: activeStory.title,
+                story_summary: activeStory.summary,
+                source_text: `${activeStory.summary}\n${activeStory.supportPrompt}`,
+                grounding_refs: [
+                  {
+                    type: "story_summary",
+                    label: "Story summary",
+                    excerpt: activeStory.summary,
+                  },
+                  {
+                    type: "support_prompt",
+                    label: "Support prompt",
+                    excerpt: activeStory.supportPrompt,
+                  },
+                ].filter((ref) => ref.excerpt),
+                target_fields: [
+                  { field: "summary", label: "Story summary" },
+                  { field: "support_prompt", label: "Support prompt" },
+                ],
+                current_values: {
+                  summary: activeStory.summary || "",
+                  support_prompt: activeStory.supportPrompt || "",
+                },
+              },
+              onApply: async (changes) => {
+                await updateIbLearningStory(activeStory.id, {
+                  summary: changes.summary ?? activeStory.summary,
+                  support_prompt: changes.support_prompt ?? activeStory.supportPrompt,
+                });
+                await mutate();
+              },
+            },
+            {
+              taskType: "ib_translation_support",
+              label: "Translation review",
+              description: "Prepare a reviewable translation aid with glossary-sensitive wording.",
+              mode: "analysis",
+              promptSeed: "Surface translation choices that still need teacher review.",
+              context: {
+                workflow: "publishing",
+                locale: "es",
+                story_title: activeStory.title,
+                story_summary: activeStory.summary,
+                source_text: `${activeStory.summary}\n${activeStory.supportPrompt}`,
+                grounding_refs: [
+                  {
+                    type: "story_summary",
+                    label: "Story summary",
+                    excerpt: activeStory.summary,
+                  },
+                ],
+              },
+            },
+            {
+              taskType: "ib_proofing",
+              label: "Proofing",
+              description:
+                "Spot clarity, tone, and missing-context issues before the digest goes out.",
+              mode: "analysis",
+              promptSeed:
+                "Focus on tone, clarity, and the missing context that would confuse a family.",
+              context: {
+                workflow: "publishing",
+                audience: activeStory.audience,
+                story_title: activeStory.title,
+                story_summary: activeStory.summary,
+                source_text: `${activeStory.summary}\n${activeStory.supportPrompt}`,
+                grounding_refs: [
+                  {
+                    type: "story_summary",
+                    label: "Story summary",
+                    excerpt: activeStory.summary,
+                  },
+                ],
+              },
+            },
+          ]
+        : [],
+    [activeStory, mutate],
+  );
 
   if (!data) {
     return <IbSurfaceState status="loading" ready={null} />;
@@ -82,6 +194,39 @@ export function PublishingQueue({
           value: String(changedCount),
           detail: "Updated publishing items since the last queue visit",
           tone: changedCount > 0 ? "warm" : "success",
+        },
+      ]}
+      mobileSummary={`${visibleStories.length} visible story item(s), ${stories.filter((story) => story.state === "ready-for-digest").length} ready for digest, and ${changedCount} changed since the last visit.`}
+      mobileActions={[
+        {
+          id: "preview-story",
+          label: "Preview",
+          href: activeStory?.href || IB_CANONICAL_ROUTES.familiesPublishing,
+          detail: "Open the current family-facing draft.",
+        },
+        {
+          id: "schedule-story",
+          label: "Schedule",
+          href: activeStory?.href || IB_CANONICAL_ROUTES.familiesPublishing,
+          detail: "Queue the selected story for the next digest.",
+          onSelect: () =>
+            void (async () => {
+              if (!activeStory) {
+                return;
+              }
+              const queueItem = data.find((item) => item.story.id === activeStory.id);
+              if (!queueItem) {
+                return;
+              }
+              await schedulePublishingQueueItem(queueItem.id, cadence);
+              await mutate();
+            })(),
+        },
+        {
+          id: "hold-story",
+          label: "Hold",
+          href: IB_CANONICAL_ROUTES.familiesPublishing,
+          detail: "Review items that still need more context before publish.",
         },
       ]}
       main={
@@ -149,6 +294,14 @@ export function PublishingQueue({
       aside={
         <div className="space-y-5">
           <FamilyPreviewPanel story={activeStory} />
+          {aiTasks.length > 0 ? (
+            <IbAiAssistPanel
+              title="AI publishing assist"
+              description="AI can suggest calmer language and review notes, but it cannot publish or schedule on its own."
+              taskOptions={aiTasks}
+              compact
+            />
+          ) : null}
           <DigestScheduler
             cadence={cadence}
             onCadenceChange={setCadence}

@@ -165,7 +165,7 @@ describe("GuardianExperience", () => {
   it("renders calm family-facing cards and digest content", () => {
     render(<GuardianExperience />);
 
-    expect(screen.getByRole("heading", { name: "Family home" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Family home" }).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Stories this week").length).toBeGreaterThan(0);
     expect(screen.getByText("Calendar digest")).toBeInTheDocument();
     expect(screen.getByText(/Only the dates families need for support/i)).toBeInTheDocument();

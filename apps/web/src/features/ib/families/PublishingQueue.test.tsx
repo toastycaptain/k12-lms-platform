@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@k12/ui";
 import { PublishingQueue } from "@/features/ib/families/PublishingQueue";
 
 const { mutateMock, schedulePublishingQueueItemMock } = vi.hoisted(() => ({
@@ -31,6 +32,14 @@ vi.mock("@/features/ib/data", () => ({
 }));
 
 describe("PublishingQueue", () => {
+  function renderWithToast() {
+    return render(
+      <ToastProvider>
+        <PublishingQueue />
+      </ToastProvider>,
+    );
+  }
+
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
@@ -43,7 +52,9 @@ describe("PublishingQueue", () => {
   });
 
   it("updates the active story schedule plan", async () => {
-    render(<PublishingQueue />);
+    renderWithToast();
+
+    expect(screen.getByText("AI publishing assist")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Publish now" }));
     fireEvent.click(screen.getByRole("button", { name: "Save publishing plan" }));

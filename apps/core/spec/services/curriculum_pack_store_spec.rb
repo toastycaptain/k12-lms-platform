@@ -34,6 +34,8 @@ RSpec.describe CurriculumPackStore do
       expect(fetched[:source]).to eq("tenant_release")
       expect(fetched[:release_id]).to eq(release.id)
       expect(fetched.dig(:payload, "terminology", "subject_label")).to eq("Domain")
+      expect(fetched.dig(:capability_schema, :schema_version)).to eq("curriculum_pack_vnext.v1")
+      expect(fetched.dig(:primitive_inventory, :shared)).to be_present
     end
 
     it "treats draft tenant releases as ineligible for exact key/version fetches" do

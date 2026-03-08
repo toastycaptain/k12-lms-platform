@@ -74,6 +74,28 @@ export function ProgrammeOperationsCenter({ state = "ready" }: { state?: IbSurfa
           />
         }
         metrics={payload.summaryMetrics}
+        mobileSummary={`${visibleCards.length} visible exception card(s), ${payload.bottlenecks.slaRows.length} SLA watch row(s), and ${payload.recommendations.length} recommendation(s) are available for quick coordinator triage.`}
+        mobileActions={[
+          {
+            id: "top-exception",
+            label: "Top exception",
+            href: visibleCards[0]?.href || "/ib/operations",
+            detail: visibleCards[0]?.detail || "Open the highest-signal operational issue.",
+          },
+          {
+            id: "review-lane",
+            label: "Review queue",
+            href: "/ib/review",
+            detail: "Handle the next approval or moderation item.",
+          },
+          {
+            id: "share-snapshot",
+            label: "Share snapshot",
+            href: "/ib/operations",
+            detail: "Open the shareable leadership view.",
+            onSelect: () => setShareOpen(true),
+          },
+        ]}
         main={
           <div className="space-y-5">
             <ProgrammeHealthSummary summary={payload.programmeHealthSummary} />

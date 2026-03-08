@@ -8,6 +8,9 @@ module Ib
             tenant_id: tenant&.id,
             user_id: user&.id,
             school_id: school&.id,
+            request_id: Current.request_id,
+            correlation_id: Current.correlation_id,
+            trace_id: Current.trace_id,
             metadata: metadata,
             occurred_at: Time.current.utc.iso8601
           }
@@ -23,7 +26,11 @@ module Ib
             route_id: metadata[:route_id] || metadata["route_id"],
             entity_ref: metadata[:entity_ref] || metadata["entity_ref"],
             document_type: metadata[:document_type] || metadata["document_type"],
-            metadata: metadata
+            metadata: metadata.merge(
+              request_id: Current.request_id,
+              correlation_id: Current.correlation_id,
+              trace_id: Current.trace_id
+            ).compact
           )
         end
       end

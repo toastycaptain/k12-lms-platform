@@ -13,6 +13,7 @@ module Ib
       def build
         {
           active_pack: active_pack,
+          shared_console_contract: Curriculum::GovernanceConsoleRegistry.contract_for(pack: active_pack_payload),
           feature_flags: feature_flags,
           release_baseline: release_baseline,
           pilot_baseline: pilot_baseline,
@@ -51,6 +52,14 @@ module Ib
           using_current_pack: resolved[:profile_key] == PACK_KEY && resolved[:resolved_profile_version] == CURRENT_PACK_VERSION,
           deprecated_record_count: ib_documents.where.not(pack_version: CURRENT_PACK_VERSION).count
         }
+      end
+
+      def active_pack_payload
+        @active_pack_payload ||= CurriculumPackStore.fetch(
+          tenant: tenant,
+          key: active_pack[:key],
+          version: active_pack[:version]
+        ) || {}
       end
 
       def feature_flags

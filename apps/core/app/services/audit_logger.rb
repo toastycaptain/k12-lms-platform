@@ -11,7 +11,10 @@ class AuditLogger
         request_id: request&.request_id,
         ip_address: request&.remote_ip,
         user_agent: request&.user_agent,
-        metadata: normalize_metadata(metadata)
+        metadata: normalize_metadata(metadata).merge(
+          "correlation_id" => Current.correlation_id,
+          "trace_id" => Current.trace_id
+        ).compact
       )
     rescue StandardError => e
       Rails.logger.error("audit_log_failed event_type=#{event_type} error=#{e.class}: #{e.message}")

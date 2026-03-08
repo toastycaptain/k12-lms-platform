@@ -115,7 +115,25 @@ export interface IbMigrationConsolePayload {
   generatedAt: string;
   lifecycle: Array<{ key: string; label: string }>;
   sourceContracts: Record<string, { assumptions: string[] }>;
+  adapterProtocols: Record<
+    string,
+    {
+      protocolVersion: string;
+      connector: string;
+      supportedKinds: string[];
+      artifactDiscovery: string[];
+      rolloutMode: string;
+      rollbackMode: string;
+      resumable: boolean;
+      shadowMode: boolean;
+      deltaRerun: boolean;
+    }
+  >;
+  sharedImportManifest: Record<string, unknown>;
+  templateGenerators: string[];
+  sourceArtifactDiscovery: Record<string, Record<string, unknown>>;
   inventorySummary: Record<string, unknown>;
+  confidenceSummary: Record<string, unknown>;
   sessions: Array<{
     id: number;
     sessionKey: string;
@@ -128,6 +146,10 @@ export interface IbMigrationConsolePayload {
     reconciliationSummary: Record<string, unknown>;
     rollbackSummary: Record<string, unknown>;
     sourceContract: Record<string, unknown>;
+    sourceManifest: Record<string, unknown>;
+    shadowMode: Record<string, unknown>;
+    deltaRerun: Record<string, unknown>;
+    acceptanceSummary: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
   }>;
@@ -141,6 +163,7 @@ export interface IbMigrationConsolePayload {
     fieldMappings: Record<string, unknown>;
     transformLibrary: Record<string, unknown>;
     roleMappingRules: Record<string, unknown>;
+    manualOverridePanels: string[];
     updatedAt: string;
   }>;
 }
@@ -149,6 +172,13 @@ export interface IbReportingOpsPayload {
   generatedAt: string;
   roleMatrix: Record<string, string>;
   lifecycle: string[];
+  canonicalContract: {
+    version: string;
+    families: string[];
+    renderTargets: string[];
+    archivePolicy: string;
+    translationPolicy: string;
+  };
   cycles: Array<{
     id: number;
     programme: string;
@@ -162,6 +192,9 @@ export interface IbReportingOpsPayload {
     approvalSummary: Record<string, unknown>;
     metrics: Record<string, unknown>;
     reportCount: number;
+    releaseGates: Record<string, unknown>;
+    archiveSummary: Record<string, unknown>;
+    analytics: Record<string, unknown>;
     updatedAt: string;
   }>;
   templates: Array<{
@@ -174,9 +207,31 @@ export interface IbReportingOpsPayload {
     schemaVersion: string;
     sectionDefinitions: Record<string, unknown>;
     translationRules: Record<string, unknown>;
+    reportContract: Record<string, unknown>;
     updatedAt: string;
   }>;
   deliverySummary: Record<string, unknown>;
+  proofingQueue: Array<{
+    id: number;
+    title: string;
+    status: string;
+    missingSections: number;
+    overlongItems: number;
+    warnings: string[];
+    href: string;
+  }>;
+  localizationPipeline: Array<{
+    templateId: number;
+    name: string;
+    audience: string;
+    defaultLocale: string;
+    requiredLocales: string[];
+    fallbackLocales: string[];
+    humanReviewRequired: boolean;
+  }>;
+  archiveSummary: Record<string, unknown>;
+  releaseGates: Record<string, unknown>;
+  analyticsSummary: Record<string, unknown>;
 }
 
 export interface IbCollaborationWorkbenchPayload {
@@ -187,10 +242,62 @@ export interface IbCollaborationWorkbenchPayload {
     durableEvents: string[];
     ephemeralEvents: string[];
   };
+  channelTopology: Array<{ key: string; scope: string; transport: string; auth: string }>;
+  concurrencyRules: Record<string, string>;
+  rateLimits: Record<string, number>;
   routeAudit: string[];
   sessionSummary: Record<string, number>;
   eventSummary: Record<string, number>;
   taskSummary: Record<string, number>;
+  softLocks: Array<{
+    scopeKey: string;
+    ownerLabels: string[];
+    contested: boolean;
+    sessionCount: number;
+  }>;
+  suggestions: Array<{
+    id: number;
+    body: string;
+    status: string;
+    anchorPath?: string | null;
+    authorLabel: string;
+    replyCount: number;
+    metadata: Record<string, unknown>;
+    updatedAt: string;
+  }>;
+  commentThreads: Array<{
+    id: number;
+    commentType: string;
+    status: string;
+    body: string;
+    authorLabel: string;
+    anchorPath?: string | null;
+    resolvedAt?: string | null;
+    replyCount: number;
+    replies: Array<{
+      id: number;
+      body: string;
+      commentType: string;
+      status: string;
+      authorLabel: string;
+      createdAt: string;
+    }>;
+  }>;
+  timeline: Array<{
+    id: string;
+    kind: string;
+    title: string;
+    detail: string;
+    occurredAt: string;
+  }>;
+  permissionAudit: {
+    canEdit: boolean;
+    canComment: boolean;
+    canSuggest: boolean;
+    canAssignTasks: boolean;
+    collaboratorRoles: Record<string, number>;
+  };
+  teacherSuccessBenchmarks: Record<string, number>;
   recentEvents: Array<{
     id: number;
     eventName: string;
@@ -303,6 +410,23 @@ export interface IbSearchOpsPayload {
     scopeRules: Record<string, unknown>;
     updatedAt: string;
   }>;
+  freshness: {
+    indexStrategy: string;
+    freshnessTargetMinutes: number;
+    latencyBudgetMs: number;
+    backpressureStrategy: string;
+    rebuildControls: Record<string, unknown>;
+    adoptionWindowDays: number;
+  };
+  adoptionSummary: Record<string, number>;
+  relevanceContract: Record<string, string | number>;
+  savedLenses: Array<{
+    id: number;
+    name: string;
+    query: string;
+    lensKey: string;
+    updatedAt: string;
+  }>;
 }
 
 export interface IbReplacementReadinessPayload {
@@ -404,6 +528,24 @@ function mapPilotSupportPayload(raw: Record<string, unknown>): IbPilotSupportPay
 }
 
 function mapMigrationConsolePayload(raw: Record<string, unknown>): IbMigrationConsolePayload {
+  const adapterProtocols = Object.entries(asRecord(raw.adapter_protocols)).reduce<
+    IbMigrationConsolePayload["adapterProtocols"]
+  >((memo, [key, value]) => {
+    const protocol = asRecord(value);
+    memo[key] = {
+      protocolVersion: String(protocol.protocol_version || "generic.v1"),
+      connector: String(protocol.connector || "flat_file_adapter"),
+      supportedKinds: asStringArray(protocol.supported_kinds),
+      artifactDiscovery: asStringArray(protocol.artifact_discovery),
+      rolloutMode: String(protocol.rollout_mode || "draft_first"),
+      rollbackMode: String(protocol.rollback_mode || "created_records_only"),
+      resumable: Boolean(protocol.resumable),
+      shadowMode: Boolean(protocol.shadow_mode),
+      deltaRerun: Boolean(protocol.delta_rerun),
+    };
+    return memo;
+  }, {});
+
   return {
     generatedAt: String(raw.generated_at || ""),
     lifecycle: asArray(raw.lifecycle).map((item) => ({
@@ -416,7 +558,17 @@ function mapMigrationConsolePayload(raw: Record<string, unknown>): IbMigrationCo
       memo[key] = { assumptions: asStringArray(asRecord(value).assumptions) };
       return memo;
     }, {}),
+    adapterProtocols,
+    sharedImportManifest: asRecord(raw.shared_import_manifest),
+    templateGenerators: asStringArray(raw.template_generators),
+    sourceArtifactDiscovery: Object.entries(asRecord(raw.source_artifact_discovery)).reduce<
+      Record<string, Record<string, unknown>>
+    >((memo, [key, value]) => {
+      memo[key] = asRecord(value);
+      return memo;
+    }, {}),
     inventorySummary: asRecord(raw.inventory_summary),
+    confidenceSummary: asRecord(raw.confidence_summary),
     sessions: asArray(raw.sessions).map((item) => ({
       id: Number(item.id || 0),
       sessionKey: String(item.session_key || ""),
@@ -429,6 +581,10 @@ function mapMigrationConsolePayload(raw: Record<string, unknown>): IbMigrationCo
       reconciliationSummary: asRecord(item.reconciliation_summary),
       rollbackSummary: asRecord(item.rollback_summary),
       sourceContract: asRecord(item.source_contract),
+      sourceManifest: asRecord(item.source_manifest),
+      shadowMode: asRecord(item.shadow_mode),
+      deltaRerun: asRecord(item.delta_rerun),
+      acceptanceSummary: asRecord(item.acceptance_summary),
       createdAt: String(item.created_at || ""),
       updatedAt: String(item.updated_at || ""),
     })),
@@ -442,18 +598,29 @@ function mapMigrationConsolePayload(raw: Record<string, unknown>): IbMigrationCo
       fieldMappings: asRecord(item.field_mappings),
       transformLibrary: asRecord(item.transform_library),
       roleMappingRules: asRecord(item.role_mapping_rules),
+      manualOverridePanels: asStringArray(item.manual_override_panels),
       updatedAt: String(item.updated_at || ""),
     })),
   };
 }
 
 function mapReportingOpsPayload(raw: Record<string, unknown>): IbReportingOpsPayload {
+  const canonicalContract = asRecord(raw.canonical_contract);
   return {
     generatedAt: String(raw.generated_at || ""),
     roleMatrix: Object.fromEntries(
       Object.entries(asRecord(raw.role_matrix)).map(([key, value]) => [key, String(value)]),
     ),
     lifecycle: asStringArray(raw.lifecycle),
+    canonicalContract: {
+      version: String(canonicalContract.version || "phase10.v1"),
+      families: asStringArray(canonicalContract.families),
+      renderTargets: asStringArray(canonicalContract.render_targets),
+      archivePolicy: String(canonicalContract.archive_policy || "versioned_per_release"),
+      translationPolicy: String(
+        canonicalContract.translation_policy || "fallback_with_human_review",
+      ),
+    },
     cycles: asArray(raw.cycles).map((item) => ({
       id: Number(item.id || 0),
       programme: String(item.programme || "Mixed"),
@@ -467,6 +634,9 @@ function mapReportingOpsPayload(raw: Record<string, unknown>): IbReportingOpsPay
       approvalSummary: asRecord(item.approval_summary),
       metrics: asRecord(item.metrics),
       reportCount: Number(item.report_count || 0),
+      releaseGates: asRecord(item.release_gates),
+      archiveSummary: asRecord(item.archive_summary),
+      analytics: asRecord(item.analytics),
       updatedAt: String(item.updated_at || ""),
     })),
     templates: asArray(raw.templates).map((item) => ({
@@ -479,9 +649,31 @@ function mapReportingOpsPayload(raw: Record<string, unknown>): IbReportingOpsPay
       schemaVersion: String(item.schema_version || "phase9.v1"),
       sectionDefinitions: asRecord(item.section_definitions),
       translationRules: asRecord(item.translation_rules),
+      reportContract: asRecord(item.report_contract),
       updatedAt: String(item.updated_at || ""),
     })),
     deliverySummary: asRecord(raw.delivery_summary),
+    proofingQueue: asArray(raw.proofing_queue).map((item) => ({
+      id: Number(item.id || 0),
+      title: String(item.title || "Report"),
+      status: String(item.status || "draft"),
+      missingSections: Number(item.missing_sections || 0),
+      overlongItems: Number(item.overlong_items || 0),
+      warnings: asStringArray(item.warnings),
+      href: String(item.href || "/ib/reports"),
+    })),
+    localizationPipeline: asArray(raw.localization_pipeline).map((item) => ({
+      templateId: Number(item.template_id || 0),
+      name: String(item.name || "Template"),
+      audience: String(item.audience || "internal"),
+      defaultLocale: String(item.default_locale || "en"),
+      requiredLocales: asStringArray(item.required_locales),
+      fallbackLocales: asStringArray(item.fallback_locales),
+      humanReviewRequired: Boolean(item.human_review_required),
+    })),
+    archiveSummary: asRecord(raw.archive_summary),
+    releaseGates: asRecord(raw.release_gates),
+    analyticsSummary: asRecord(raw.analytics_summary),
   };
 }
 
@@ -498,6 +690,18 @@ function mapCollaborationWorkbenchPayload(
       durableEvents: asStringArray(strategy.durable_events),
       ephemeralEvents: asStringArray(strategy.ephemeral_events),
     },
+    channelTopology: asArray(raw.channel_topology).map((item) => ({
+      key: String(item.key || "channel"),
+      scope: String(item.scope || "document"),
+      transport: String(item.transport || "polling"),
+      auth: String(item.auth || "show"),
+    })),
+    concurrencyRules: Object.fromEntries(
+      Object.entries(asRecord(raw.concurrency_rules)).map(([key, value]) => [key, String(value)]),
+    ),
+    rateLimits: Object.fromEntries(
+      Object.entries(asRecord(raw.rate_limits)).map(([key, value]) => [key, Number(value || 0)]),
+    ),
     routeAudit: asStringArray(raw.route_audit),
     sessionSummary: Object.fromEntries(
       Object.entries(asRecord(raw.session_summary)).map(([key, value]) => [
@@ -510,6 +714,64 @@ function mapCollaborationWorkbenchPayload(
     ),
     taskSummary: Object.fromEntries(
       Object.entries(asRecord(raw.task_summary)).map(([key, value]) => [key, Number(value || 0)]),
+    ),
+    softLocks: asArray(raw.soft_locks).map((item) => ({
+      scopeKey: String(item.scope_key || "root"),
+      ownerLabels: asStringArray(item.owner_labels),
+      contested: Boolean(item.contested),
+      sessionCount: Number(item.session_count || 0),
+    })),
+    suggestions: asArray(raw.suggestions).map((item) => ({
+      id: Number(item.id || 0),
+      body: String(item.body || ""),
+      status: String(item.status || "open"),
+      anchorPath: typeof item.anchor_path === "string" ? item.anchor_path : null,
+      authorLabel: String(item.author_label || "Unknown"),
+      replyCount: Number(item.reply_count || 0),
+      metadata: asRecord(item.metadata),
+      updatedAt: String(item.updated_at || ""),
+    })),
+    commentThreads: asArray(raw.comment_threads).map((item) => ({
+      id: Number(item.id || 0),
+      commentType: String(item.comment_type || "general"),
+      status: String(item.status || "open"),
+      body: String(item.body || ""),
+      authorLabel: String(item.author_label || "Unknown"),
+      anchorPath: typeof item.anchor_path === "string" ? item.anchor_path : null,
+      resolvedAt: typeof item.resolved_at === "string" ? item.resolved_at : null,
+      replyCount: Number(item.reply_count || 0),
+      replies: asArray(item.replies).map((reply) => ({
+        id: Number(reply.id || 0),
+        body: String(reply.body || ""),
+        commentType: String(reply.comment_type || "general"),
+        status: String(reply.status || "open"),
+        authorLabel: String(reply.author_label || "Unknown"),
+        createdAt: String(reply.created_at || ""),
+      })),
+    })),
+    timeline: asArray(raw.timeline).map((item) => ({
+      id: String(item.id || "entry"),
+      kind: String(item.kind || "event"),
+      title: String(item.title || "Timeline event"),
+      detail: String(item.detail || ""),
+      occurredAt: String(item.occurred_at || ""),
+    })),
+    permissionAudit: {
+      canEdit: Boolean(asRecord(raw.permission_audit).can_edit),
+      canComment: Boolean(asRecord(raw.permission_audit).can_comment),
+      canSuggest: Boolean(asRecord(raw.permission_audit).can_suggest),
+      canAssignTasks: Boolean(asRecord(raw.permission_audit).can_assign_tasks),
+      collaboratorRoles: Object.fromEntries(
+        Object.entries(asRecord(asRecord(raw.permission_audit).collaborator_roles)).map(
+          ([key, value]) => [key, Number(value || 0)],
+        ),
+      ),
+    },
+    teacherSuccessBenchmarks: Object.fromEntries(
+      Object.entries(asRecord(raw.teacher_success_benchmarks)).map(([key, value]) => [
+        key,
+        Number(value || 0),
+      ]),
     ),
     recentEvents: asArray(raw.recent_events).map((item) => ({
       id: Number(item.id || 0),
@@ -654,6 +916,30 @@ function mapSearchOpsPayload(raw: Record<string, unknown>): IbSearchOpsPayload {
       facetConfig: asRecord(item.facet_config),
       rankingRules: asRecord(item.ranking_rules),
       scopeRules: asRecord(item.scope_rules),
+      updatedAt: String(item.updated_at || ""),
+    })),
+    freshness: {
+      indexStrategy: String(asRecord(raw.freshness).index_strategy || "database_scoped_search_v3"),
+      freshnessTargetMinutes: Number(asRecord(raw.freshness).freshness_target_minutes || 5),
+      latencyBudgetMs: Number(asRecord(raw.freshness).latency_budget_ms || 0),
+      backpressureStrategy: String(asRecord(raw.freshness).backpressure_strategy || "steady"),
+      rebuildControls: asRecord(asRecord(raw.freshness).rebuild_controls),
+      adoptionWindowDays: Number(asRecord(raw.freshness).adoption_window_days || 14),
+    },
+    adoptionSummary: Object.fromEntries(
+      Object.entries(asRecord(raw.adoption_summary)).map(([key, value]) => [
+        key,
+        Number(value || 0),
+      ]),
+    ),
+    relevanceContract: Object.fromEntries(
+      Object.entries(asRecord(raw.relevance_contract)).map(([key, value]) => [key, String(value)]),
+    ),
+    savedLenses: asArray(raw.saved_lenses).map((item) => ({
+      id: Number(item.id || 0),
+      name: String(item.name || "Saved lens"),
+      query: String(item.query || ""),
+      lensKey: String(item.lens_key || "custom"),
       updatedAt: String(item.updated_at || ""),
     })),
   };

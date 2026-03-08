@@ -49,6 +49,13 @@ module Api
         nav = resolved[:navigation] || {}
 
         visible_nav = roles.flat_map { |role| Array(nav[role]) }.uniq
+        MetricsService.increment(
+          "curriculum.pack.runtime_payload.requested",
+          tags: {
+            profile_key: resolved[:profile_key].to_s,
+            profile_version: resolved[:resolved_profile_version].to_s
+          }
+        )
 
         {
           profile_key: resolved[:profile_key],
@@ -64,6 +71,7 @@ module Api
           framework_bindings: resolved[:framework_bindings],
           report_bindings: resolved[:report_bindings],
           capability_modules: resolved[:capability_modules],
+          integration_hints: resolved[:integration_hints],
           selected_from: resolved[:selected_from],
           fallback_reason: resolved[:fallback_reason],
           resolution_trace_id: resolved[:resolution_trace_id]

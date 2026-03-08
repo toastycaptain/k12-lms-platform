@@ -33,7 +33,21 @@ module Ib
             school: packet.school,
             metadata: { packet_id: packet.id, cycle_id: packet.ib_standards_cycle_id }
           )
-          ExportJob.perform_later(export.id)
+          job = ExportJob.perform_later(export.id)
+          ::Ib::Support::OperationalJobTracker.register_enqueue!(
+            job: job,
+            operation_key: "standards_export",
+            tenant: packet.tenant,
+            school: packet.school,
+            actor: initiated_by,
+            source_record: export,
+            payload: {
+              export_id: export.id,
+              packet_id: packet.id,
+              cycle_id: packet.ib_standards_cycle_id
+            },
+            idempotency_key: snapshot_digest
+          )
           export
         end
 

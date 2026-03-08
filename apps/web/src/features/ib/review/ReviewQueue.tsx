@@ -84,6 +84,29 @@ export function ReviewQueue({ state = "ready" }: { state?: IbSurfaceStatus }) {
           tone: changedCount > 0 ? "warm" : "success",
         },
       ]}
+      mobileSummary={`${rows.length} ${lane.replace(/_/g, " ")} item(s) are visible and ${payload?.summaryMetrics?.sla_breaches || 0} item(s) are near SLA breach.`}
+      mobileActions={[
+        {
+          id: "open-first-review",
+          label: "Open first item",
+          href: rows[0]?.href || "/ib/review",
+          detail: rows[0]?.detail || "Jump straight into the next approval.",
+        },
+        {
+          id: "moderation-lane",
+          label: "Moderation",
+          href: "/ib/review",
+          detail: "Review the current moderation lane.",
+          onSelect: () => setLane("moderation"),
+        },
+        {
+          id: "sla-risk",
+          label: "SLA risk",
+          href: "/ib/review",
+          detail: "Focus only on review items nearing escalation.",
+          onSelect: () => setLane("sla_breaches"),
+        },
+      ]}
       main={
         <div className="space-y-5">
           <WorkspacePanel

@@ -218,7 +218,7 @@ describe("IB admin consoles", () => {
   it("renders rollout drift and legacy usage", () => {
     renderWithToast(<RolloutConsole />);
 
-    expect(screen.getByText("Rollout console")).toBeInTheDocument();
+    expect(screen.getAllByText("Rollout console").length).toBeGreaterThan(0);
     expect(screen.getByText(/Deprecated pack records: 2/)).toBeInTheDocument();
     expect(screen.getByText(/Legacy document routes: 1/)).toBeInTheDocument();
     expect(screen.getByText("Pilot Setup Wizard")).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe("IB admin consoles", () => {
   it("renders readiness issues with fix links", () => {
     renderWithToast(<PilotReadinessConsole />);
 
-    expect(screen.getByText("Pilot readiness")).toBeInTheDocument();
+    expect(screen.getAllByText("Pilot readiness").length).toBeGreaterThan(0);
     expect(screen.getByText("MYP settings incomplete")).toBeInTheDocument();
     expect(screen.getAllByText("Open fix surface").length).toBeGreaterThan(0);
   });

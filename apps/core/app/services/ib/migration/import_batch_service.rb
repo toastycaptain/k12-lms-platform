@@ -21,6 +21,14 @@ module Ib
       )
         parsed = Parser.parse(source_format: source_format, raw_payload: raw_payload)
         sanitized_mapping = mapping_payload.to_h.stringify_keys
+        adapter_protocol = ContractRegistry.adapter_protocol_for(source_system: source_system)
+        artifact_manifest = artifact_manifest_for(
+          parsed_rows: parsed[:rows],
+          source_filename: source_filename,
+          source_system: source_system,
+          source_kind: source_kind,
+          source_format: source_format
+        )
 
         batch = IbImportBatch.create!(
           tenant: tenant,
@@ -33,6 +41,7 @@ module Ib
           source_system: source_system,
           import_mode: import_mode,
           coexistence_mode: coexistence_mode,
+          source_contract_version: adapter_protocol[:protocol_version],
           source_filename: source_filename,
           raw_payload: raw_payload,
           scope_metadata: {
@@ -41,10 +50,22 @@ module Ib
             "programme" => programme,
             "source_system" => source_system,
             "import_mode" => import_mode,
-            "coexistence_mode" => coexistence_mode
+            "coexistence_mode" => coexistence_mode,
+            "source_adapter" => adapter_protocol[:connector]
           },
           mapping_payload: sanitized_mapping,
           parser_warnings: parsed[:warnings],
+          preview_summary: {
+            "source_artifact_manifest" => artifact_manifest,
+            "adapter_protocol" => adapter_protocol,
+            "shared_import_manifest" => ContractRegistry.shared_import_manifest
+          },
+          rollback_capabilities: {
+            "reversible" => true,
+            "draft_only_target_model" => true,
+            "shadow_mode_supported" => adapter_protocol[:shadow_mode],
+            "delta_rerun_supported" => adapter_protocol[:delta_rerun]
+          },
           initiated_by: actor,
         )
 
@@ -81,7 +102,8 @@ module Ib
             source_system: source_system,
             source_kind: source_kind,
             source_format: source_format,
-            row_count: batch.rows.count
+            row_count: batch.rows.count,
+            source_contract_version: batch.source_contract_version
           },
         )
 
@@ -118,7 +140,24 @@ module Ib
       def execute!(batch:, async: false)
         if async || batch.rows.count > 50
           batch.update!(status: "executing", executed_by: actor)
-          Ib::Migration::ImportExecutionJob.perform_later(batch.id, actor.id)
+          job = Ib::Migration::ImportExecutionJob.perform_later(batch.id, actor.id)
+          tracked_job = Ib::Support::OperationalJobTracker.register_enqueue!(
+            job: job,
+            operation_key: "import_execute",
+            tenant: batch.tenant,
+            school: batch.school,
+            actor: actor,
+            source_record: batch,
+            payload: {
+              batch_id: batch.id,
+              source_system: batch.source_system,
+              source_kind: batch.source_kind,
+              row_count: batch.rows.count,
+              resume_cursor: batch.resume_cursor
+            },
+            idempotency_key: "#{batch.source_checksum}:#{batch.resume_cursor}"
+          )
+          batch.update!(last_enqueued_job_id: tracked_job.id)
           return { "queued" => true, "batch_id" => batch.id }
         end
 
@@ -132,6 +171,22 @@ module Ib
       private
 
       attr_reader :tenant, :school, :actor
+
+      def artifact_manifest_for(parsed_rows:, source_filename:, source_system:, source_kind:, source_format:)
+        {
+          "source_filename" => source_filename,
+          "source_system" => source_system,
+          "source_kind" => source_kind,
+          "source_format" => source_format,
+          "row_count" => Array(parsed_rows).length,
+          "artifacts" => Array(parsed_rows).group_by { |row| row[:sheet_name] || "source" }.transform_values do |rows|
+            {
+              "row_count" => rows.length,
+              "sample_identifiers" => rows.first(3).map { |row| row[:source_identifier] }
+            }
+          end
+        }
+      end
     end
   end
 end

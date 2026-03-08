@@ -1,0 +1,21 @@
+groups:
+  - name: ib_phase10_reliability
+    rules:
+      - record: ib:queue_latency_seconds:p95
+        expr: histogram_quantile(0.95, sum(rate(job_duration_ms_bucket{queue=~"ib_.*"}[5m])) by (le, queue))
+      - alert: IbDeadLetterBudgetBurn
+        expr: sum(increase(job_failed_total{queue=~"ib_.*",status="dead_letter"}[1h])) > 3
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "IB dead-letter budget exceeded"
+          description: "Operational IB queues exceeded the dead-letter budget in the last hour."
+      - alert: IbQueueLatencyHigh
+        expr: max(sidekiq_queue_latency_seconds{queue=~"ib_.*"}) > 30
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "IB queue latency above school-day threshold"
+          description: "One or more IB queues exceeded 30 seconds of latency."

@@ -1,0 +1,29 @@
+{
+  "title": "IB Phase 10 Reliability",
+  "panels": [
+    {
+      "title": "IB queue depth",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sidekiq_queue_depth{queue=~\"ib_.*\"}", "legendFormat": "{{queue}}" }
+      ]
+    },
+    {
+      "title": "IB queue latency",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sidekiq_queue_latency_seconds{queue=~\"ib_.*\"}", "legendFormat": "{{queue}}" }
+      ]
+    },
+    {
+      "title": "IB dead-letter events",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(increase(job_failed_total{status=\"dead_letter\",queue=~\"ib_.*\"}[24h]))" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s"
+}

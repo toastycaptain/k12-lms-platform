@@ -213,6 +213,9 @@ export interface CurriculumRuntimePayload {
   navigation?: Record<string, string[]>;
   visible_navigation?: string[];
   feature_flags?: Record<string, boolean>;
+  report_bindings?: Record<string, unknown>;
+  capability_modules?: Record<string, unknown>;
+  integration_hints?: Record<string, unknown>;
   pack_payload_source?: "tenant_release" | "system" | "fallback";
   pack_release_id?: number;
 }

@@ -217,6 +217,38 @@ export interface IbGuardianInteraction {
   occurredAt: string;
 }
 
+export interface IbAiAssistanceSummary {
+  providerReady: boolean;
+  availableCount: number;
+  reviewRequiredCount: number;
+  trustAverage: number;
+  estimatedMinutesSaved: number;
+  tasks: Array<{
+    taskType: string;
+    label: string;
+    workflow: string;
+    outputMode: string;
+    available: boolean;
+    reviewRequired: boolean;
+    humanOnlyBoundaries: string[];
+    invocationCount: number;
+    appliedCount: number;
+    averageTrust: number;
+  }>;
+  benchmarks: Array<{
+    id: string;
+    taskType: string;
+    scenario: string;
+    passCondition: string;
+  }>;
+  redTeamScenarios: Array<{
+    id: string;
+    risk: string;
+    containment: string;
+  }>;
+  tenantControls: Record<string, unknown>;
+}
+
 export interface IbHomePayload {
   programme: "PYP" | "MYP" | "DP" | "Mixed";
   schoolLabel: string;
@@ -235,6 +267,7 @@ export interface IbHomePayload {
   quickMutations: IbQuickMutation[];
   benchmarkSnapshot: IbWorkflowBenchmarkRow[];
   performanceBudget: IbPerformanceBudget;
+  aiAssistance: IbAiAssistanceSummary;
   lastSeenAt?: string | null;
 }
 
@@ -330,6 +363,7 @@ export interface IbEvidenceItem extends Record<string, unknown> {
   warnings: string[];
   curriculumDocumentId?: number | null;
   planningContextId?: number | null;
+  operationalRecordId?: number | null;
   studentId?: number | null;
   href: string;
   entityRef?: string;
@@ -338,6 +372,20 @@ export interface IbEvidenceItem extends Record<string, unknown> {
   changedSinceLastSeen?: boolean;
   updatedAt?: string | null;
   linkedStoryCount?: number;
+}
+
+export interface IbReflectionRequestItem extends Record<string, unknown> {
+  id: number;
+  evidenceItemId: number;
+  studentId: number;
+  status: string;
+  prompt: string;
+  responseExcerpt?: string | null;
+  dueOn?: string | null;
+  respondedAt?: string | null;
+  approvedById?: number | null;
+  approvedAt?: string | null;
+  metadata: Record<string, unknown>;
 }
 
 export interface IbLearningStoryItem extends Record<string, unknown> {
@@ -386,12 +434,19 @@ export interface IbCollaborator {
 export interface IbComment {
   id: number;
   authorId: number;
+  authorLabel?: string | null;
   commentType: string;
   status: string;
   visibility: string;
   anchorPath?: string | null;
   body: string;
+  parentCommentId?: number | null;
+  resolvedAt?: string | null;
+  metadata: Record<string, unknown>;
+  replyCount: number;
+  replies: IbComment[];
   createdAt: string;
+  updatedAt?: string | null;
 }
 
 export interface IbOperationalCheckpoint {
@@ -592,6 +647,68 @@ export interface IbGuardianPayload {
     quietHoursEnd: string;
     quietHoursTimezone: string;
     deliveryRules: Record<string, unknown>;
+  };
+}
+
+export interface IbMobileHubPayload {
+  generatedAt: string;
+  schoolLabel: string;
+  role: string;
+  primaryActions: Array<{
+    key: string;
+    label: string;
+    detail: string;
+    href: string;
+    routeId: string;
+  }>;
+  desktopFirstActions: Array<{
+    key: string;
+    label: string;
+    detail: string;
+    href: string;
+    routeId: string;
+  }>;
+  roleInventory: Record<
+    string,
+    {
+      mobileFirst: Array<{
+        key: string;
+        label: string;
+        detail: string;
+        href: string;
+        routeId: string;
+      }>;
+      desktopFirst: Array<{
+        key: string;
+        label: string;
+        detail: string;
+        href: string;
+        routeId: string;
+      }>;
+    }
+  >;
+  deepLinks: Array<{
+    key: string;
+    eventKey: string;
+    href: string;
+    routeId: string;
+    restoreKey: string;
+    mobileRestore: boolean;
+  }>;
+  offlinePolicy: {
+    draftQueueLimit: number;
+    resumableUploads: boolean;
+    backgroundSync: string;
+    attachmentRetry: boolean;
+    conflictResolution: string;
+    lowBandwidthMode: boolean;
+    retryBackoffSeconds: number[];
+  };
+  diagnostics: {
+    trustContract: Array<{ key: string; label: string; desktopFirst: boolean }>;
+    successCriteria: Record<string, string>;
+    diagnosticCount: number;
+    unhealthyCount: number;
   };
 }
 
@@ -874,6 +991,13 @@ export interface IbReportPayload {
   proofingSummary: Record<string, unknown>;
   releasedAt?: string | null;
   lastRenderedAt?: string | null;
+  reportContract: Record<string, unknown>;
+  localization: Record<string, unknown>;
+  releaseWorkflow: Record<string, unknown>;
+  archiveEntry: Record<string, unknown>;
+  analytics: Record<string, unknown>;
+  viewerPermissions: Record<string, unknown>;
+  conferencePacket: Record<string, unknown>;
   currentVersion?: {
     id: number;
     versionNumber: number;
@@ -901,15 +1025,23 @@ export interface IbReportPayload {
     deliveredAt?: string | null;
     readAt?: string | null;
     acknowledgedAt?: string | null;
+    artifactUrl?: string | null;
+    archiveKey?: string | null;
+    feedbackWindow?: string | null;
+    analytics: Record<string, unknown>;
+    proofingState: Record<string, unknown>;
   }>;
 }
 
 export interface IbCollaborationPayload {
   documentId: number;
   currentSessionId?: number | null;
+  channelTopology: Array<{ key: string; scope: string; transport: string; auth: string }>;
+  concurrencyPolicy: Record<string, string>;
   activeSessions: Array<{
     id: number;
     userId: number;
+    userLabel?: string | null;
     role: string;
     scopeType: string;
     scopeKey: string;
@@ -918,6 +1050,15 @@ export interface IbCollaborationPayload {
     lastSeenAt: string;
     expiresAt?: string | null;
     editingSameScope: boolean;
+    heartbeatAgeSeconds: number;
+    metadata: Record<string, unknown>;
+  }>;
+  softLocks: Array<{
+    scopeKey: string;
+    ownerUserIds: number[];
+    ownerLabels: string[];
+    contested: boolean;
+    sessionIds: number[];
   }>;
   conflictRisk: boolean;
   updatedAt: string;
@@ -1014,6 +1155,7 @@ function evidenceContext(item: Record<string, unknown>): string {
     item.programme,
     item.planning_context_id ? `Context ${item.planning_context_id}` : null,
     item.curriculum_document_id ? `Unit ${item.curriculum_document_id}` : null,
+    item.ib_operational_record_id ? `Project ${item.ib_operational_record_id}` : null,
   ].filter(Boolean);
   return bits.length > 0 ? bits.join(" • ") : "Unscoped evidence";
 }
@@ -1035,6 +1177,8 @@ function mapEvidenceItem(item: Record<string, unknown>): IbEvidenceItem {
       typeof item.curriculum_document_id === "number" ? item.curriculum_document_id : null,
     planningContextId:
       typeof item.planning_context_id === "number" ? item.planning_context_id : null,
+    operationalRecordId:
+      typeof item.ib_operational_record_id === "number" ? item.ib_operational_record_id : null,
     studentId: typeof item.student_id === "number" ? item.student_id : null,
     href: String(item.href || IB_CANONICAL_ROUTES.evidenceItem(item.id as string | number)),
     entityRef: typeof item.entity_ref === "string" ? item.entity_ref : undefined,
@@ -1045,6 +1189,69 @@ function mapEvidenceItem(item: Record<string, unknown>): IbEvidenceItem {
     updatedAt: typeof item.updated_at === "string" ? item.updated_at : null,
     linkedStoryCount:
       typeof item.linked_story_count === "number" ? item.linked_story_count : undefined,
+  };
+}
+
+function mapReflectionRequest(item: Record<string, unknown>): IbReflectionRequestItem {
+  return {
+    id: Number(item.id || 0),
+    evidenceItemId: Number(item.ib_evidence_item_id || 0),
+    studentId: Number(item.student_id || 0),
+    status: String(item.status || "requested"),
+    prompt: String(item.prompt || ""),
+    responseExcerpt: typeof item.response_excerpt === "string" ? item.response_excerpt : null,
+    dueOn: typeof item.due_on === "string" ? item.due_on : null,
+    respondedAt: typeof item.responded_at === "string" ? item.responded_at : null,
+    approvedById: typeof item.approved_by_id === "number" ? item.approved_by_id : null,
+    approvedAt: typeof item.approved_at === "string" ? item.approved_at : null,
+    metadata:
+      item.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
+        ? (item.metadata as Record<string, unknown>)
+        : {},
+  };
+}
+
+function mapAiAssistanceSummary(raw: unknown): IbAiAssistanceSummary {
+  const record = asRecord(raw);
+
+  return {
+    providerReady: Boolean(record.provider_ready),
+    availableCount: Number(record.available_count || 0),
+    reviewRequiredCount: Number(record.review_required_count || 0),
+    trustAverage: Number(record.trust_average || 0),
+    estimatedMinutesSaved: Number(record.estimated_minutes_saved || 0),
+    tasks: Array.isArray(record.tasks)
+      ? (record.tasks as Record<string, unknown>[]).map((item) => ({
+          taskType: String(item.task_type || "ib_task"),
+          label: String(item.label || "AI task"),
+          workflow: String(item.workflow || "workflow"),
+          outputMode: String(item.output_mode || "analysis"),
+          available: Boolean(item.available),
+          reviewRequired: Boolean(item.review_required),
+          humanOnlyBoundaries: Array.isArray(item.human_only_boundaries)
+            ? item.human_only_boundaries.map(String)
+            : [],
+          invocationCount: Number(item.invocation_count || 0),
+          appliedCount: Number(item.applied_count || 0),
+          averageTrust: Number(item.average_trust || 0),
+        }))
+      : [],
+    benchmarks: Array.isArray(record.benchmarks)
+      ? (record.benchmarks as Record<string, unknown>[]).map((item) => ({
+          id: String(item.id || "benchmark"),
+          taskType: String(item.task_type || "ib_task"),
+          scenario: String(item.scenario || ""),
+          passCondition: String(item.pass_condition || ""),
+        }))
+      : [],
+    redTeamScenarios: Array.isArray(record.red_team_scenarios)
+      ? (record.red_team_scenarios as Record<string, unknown>[]).map((item) => ({
+          id: String(item.id || "red-team"),
+          risk: String(item.risk || ""),
+          containment: String(item.containment || ""),
+        }))
+      : [],
+    tenantControls: asRecord(record.tenant_controls),
   };
 }
 
@@ -1137,6 +1344,16 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
+function mapMobileHubAction(value: Record<string, unknown>) {
+  return {
+    key: String(value.key || "action"),
+    label: String(value.label || "Action"),
+    detail: String(value.detail || ""),
+    href: String(value.href || IB_CANONICAL_ROUTES.home),
+    routeId: String(value.route_id || "ib.home"),
+  };
+}
+
 function mapStory(item: Record<string, unknown>): IbLearningStoryItem {
   return {
     id: String(item.id),
@@ -1219,8 +1436,101 @@ export function useIbHomePayload() {
               )
             : [],
           performanceBudget: mapPerformanceBudget(raw.performance_budget),
+          aiAssistance: mapAiAssistanceSummary(raw.ai_assistance),
           lastSeenAt: typeof raw.last_seen_at === "string" ? raw.last_seen_at : null,
         } satisfies IbHomePayload)
+      : undefined,
+  };
+}
+
+export function useIbMobileHub() {
+  const response = useSchoolSWR<Record<string, unknown>>("/api/v1/ib/mobile_hub");
+  const raw = response.data;
+
+  return {
+    ...response,
+    data: raw
+      ? ({
+          generatedAt: String(raw.generated_at || ""),
+          schoolLabel: String(raw.school_label || "All schools"),
+          role: String(raw.role || "teacher"),
+          primaryActions: Array.isArray(raw.primary_actions)
+            ? raw.primary_actions.map((item) => mapMobileHubAction(item as Record<string, unknown>))
+            : [],
+          desktopFirstActions: Array.isArray(raw.desktop_first_actions)
+            ? raw.desktop_first_actions.map((item) =>
+                mapMobileHubAction(item as Record<string, unknown>),
+              )
+            : [],
+          roleInventory:
+            raw.role_inventory && typeof raw.role_inventory === "object"
+              ? Object.fromEntries(
+                  Object.entries(raw.role_inventory as Record<string, unknown>).map(
+                    ([role, value]) => {
+                      const record = asRecord(value);
+                      return [
+                        role,
+                        {
+                          mobileFirst: Array.isArray(record.mobile_first)
+                            ? record.mobile_first.map((item) =>
+                                mapMobileHubAction(item as Record<string, unknown>),
+                              )
+                            : [],
+                          desktopFirst: Array.isArray(record.desktop_first)
+                            ? record.desktop_first.map((item) =>
+                                mapMobileHubAction(item as Record<string, unknown>),
+                              )
+                            : [],
+                        },
+                      ];
+                    },
+                  ),
+                )
+              : {},
+          deepLinks: Array.isArray(raw.deep_links)
+            ? raw.deep_links.map((item) => ({
+                key: String((item as Record<string, unknown>).key || "link"),
+                eventKey: String((item as Record<string, unknown>).event_key || "ib.mobile.link"),
+                href: String((item as Record<string, unknown>).href || IB_CANONICAL_ROUTES.home),
+                routeId: String((item as Record<string, unknown>).route_id || "ib.home"),
+                restoreKey: String((item as Record<string, unknown>).restore_key || "home"),
+                mobileRestore: Boolean((item as Record<string, unknown>).mobile_restore),
+              }))
+            : [],
+          offlinePolicy: {
+            draftQueueLimit: Number(asRecord(raw.offline_policy).draft_queue_limit || 0),
+            resumableUploads: Boolean(asRecord(raw.offline_policy).resumable_uploads),
+            backgroundSync: String(asRecord(raw.offline_policy).background_sync || "best_effort"),
+            attachmentRetry: Boolean(asRecord(raw.offline_policy).attachment_retry),
+            conflictResolution: String(
+              asRecord(raw.offline_policy).conflict_resolution || "explicit_dialog",
+            ),
+            lowBandwidthMode: Boolean(asRecord(raw.offline_policy).low_bandwidth_mode),
+            retryBackoffSeconds: Array.isArray(asRecord(raw.offline_policy).retry_backoff_seconds)
+              ? (asRecord(raw.offline_policy).retry_backoff_seconds as unknown[]).map((value) =>
+                  Number(value || 0),
+                )
+              : [],
+          },
+          diagnostics: {
+            trustContract: Array.isArray(asRecord(raw.diagnostics).trust_contract)
+              ? (asRecord(raw.diagnostics).trust_contract as Record<string, unknown>[]).map(
+                  (item) => ({
+                    key: String(item.key || "workflow"),
+                    label: String(item.label || "Workflow"),
+                    desktopFirst: Boolean(item.desktop_first),
+                  }),
+                )
+              : [],
+            successCriteria: Object.fromEntries(
+              Object.entries(asRecord(asRecord(raw.diagnostics).success_criteria)).map(
+                ([key, value]) => [key, String(value)],
+              ),
+            ),
+            diagnosticCount: Number(asRecord(raw.diagnostics).diagnostic_count || 0),
+            unhealthyCount: Number(asRecord(raw.diagnostics).unhealthy_count || 0),
+          },
+        } satisfies IbMobileHubPayload)
       : undefined,
   };
 }
@@ -1425,6 +1735,14 @@ export function useIbEvidenceItems(params: Record<string, string | number | unde
   return { ...response, data: response.data?.map(mapEvidenceItem) };
 }
 
+export function useIbReflectionRequests(params: Record<string, string | number | undefined> = {}) {
+  const query = buildQueryString(params);
+  const response = useSchoolSWR<Record<string, unknown>[]>(
+    `/api/v1/ib/reflection_requests${query}`,
+  );
+  return { ...response, data: response.data?.map(mapReflectionRequest) };
+}
+
 export function useIbLearningStories(params: Record<string, string | number | undefined> = {}) {
   const query = buildQueryString(params);
   const response = useSchoolSWR<Record<string, unknown>[]>(`/api/v1/ib/learning_stories${query}`);
@@ -1463,21 +1781,36 @@ export function useIbDocumentComments(curriculumDocumentId: number | string | nu
   const response = useSchoolSWR<Record<string, unknown>[]>(
     curriculumDocumentId ? `/api/v1/ib/document_comments${query}` : null,
   );
+
+  function mapComment(comment: Record<string, unknown>): IbComment {
+    return {
+      id: Number(comment.id),
+      authorId: Number(comment.author_id),
+      authorLabel: typeof comment.author_label === "string" ? comment.author_label : null,
+      commentType: String(comment.comment_type || "general"),
+      status: String(comment.status || "open"),
+      visibility: String(comment.visibility || "internal"),
+      anchorPath: (comment.anchor_path as string | undefined) || null,
+      body: String(comment.body || ""),
+      parentCommentId:
+        typeof comment.parent_comment_id === "number" ? comment.parent_comment_id : null,
+      resolvedAt: typeof comment.resolved_at === "string" ? comment.resolved_at : null,
+      metadata:
+        comment.metadata && typeof comment.metadata === "object" && !Array.isArray(comment.metadata)
+          ? (comment.metadata as Record<string, unknown>)
+          : {},
+      replyCount: Number(comment.reply_count || 0),
+      replies: Array.isArray(comment.replies)
+        ? (comment.replies as Record<string, unknown>[]).map((reply) => mapComment(reply))
+        : [],
+      createdAt: String(comment.created_at || ""),
+      updatedAt: typeof comment.updated_at === "string" ? comment.updated_at : null,
+    } satisfies IbComment;
+  }
+
   return {
     ...response,
-    data: response.data?.map(
-      (comment) =>
-        ({
-          id: Number(comment.id),
-          authorId: Number(comment.author_id),
-          commentType: String(comment.comment_type || "general"),
-          status: String(comment.status || "open"),
-          visibility: String(comment.visibility || "internal"),
-          anchorPath: (comment.anchor_path as string | undefined) || null,
-          body: String(comment.body || ""),
-          createdAt: String(comment.created_at || ""),
-        }) satisfies IbComment,
-    ),
+    data: response.data?.map((comment) => mapComment(comment)),
   };
 }
 
@@ -2706,10 +3039,28 @@ export function useIbCollaborationSessions(curriculumDocumentId: number | string
           documentId: Number(raw.document_id || 0),
           currentSessionId:
             typeof raw.current_session_id === "number" ? raw.current_session_id : null,
+          channelTopology: Array.isArray(raw.channel_topology)
+            ? (raw.channel_topology as Record<string, unknown>[]).map((row) => ({
+                key: String(row.key || "channel"),
+                scope: String(row.scope || "document"),
+                transport: String(row.transport || "polling"),
+                auth: String(row.auth || "show"),
+              }))
+            : [],
+          concurrencyPolicy: Object.fromEntries(
+            Object.entries(
+              raw.concurrency_policy &&
+                typeof raw.concurrency_policy === "object" &&
+                !Array.isArray(raw.concurrency_policy)
+                ? (raw.concurrency_policy as Record<string, unknown>)
+                : {},
+            ).map(([key, value]) => [key, String(value)]),
+          ),
           activeSessions: Array.isArray(raw.active_sessions)
             ? (raw.active_sessions as Record<string, unknown>[]).map((session) => ({
                 id: Number(session.id || 0),
                 userId: Number(session.user_id || 0),
+                userLabel: typeof session.user_label === "string" ? session.user_label : null,
                 role: String(session.role || "editor"),
                 scopeType: String(session.scope_type || "document"),
                 scopeKey: String(session.scope_key || "root"),
@@ -2718,6 +3069,28 @@ export function useIbCollaborationSessions(curriculumDocumentId: number | string
                 lastSeenAt: String(session.last_seen_at || ""),
                 expiresAt: typeof session.expires_at === "string" ? session.expires_at : null,
                 editingSameScope: Boolean(session.editing_same_scope),
+                heartbeatAgeSeconds: Number(session.heartbeat_age_seconds || 0),
+                metadata:
+                  session.metadata &&
+                  typeof session.metadata === "object" &&
+                  !Array.isArray(session.metadata)
+                    ? (session.metadata as Record<string, unknown>)
+                    : {},
+              }))
+            : [],
+          softLocks: Array.isArray(raw.soft_locks)
+            ? (raw.soft_locks as Record<string, unknown>[]).map((lock) => ({
+                scopeKey: String(lock.scope_key || "root"),
+                ownerUserIds: Array.isArray(lock.owner_user_ids)
+                  ? (lock.owner_user_ids as unknown[]).map((id) => Number(id || 0))
+                  : [],
+                ownerLabels: Array.isArray(lock.owner_labels)
+                  ? (lock.owner_labels as unknown[]).map(String)
+                  : [],
+                contested: Boolean(lock.contested),
+                sessionIds: Array.isArray(lock.session_ids)
+                  ? (lock.session_ids as unknown[]).map((id) => Number(id || 0))
+                  : [],
               }))
             : [],
           conflictRisk: Boolean(raw.conflict_risk),
@@ -2785,6 +3158,13 @@ function mapIbReport(raw: Record<string, unknown>): IbReportPayload {
     proofingSummary: asRecord(raw.proofing_summary),
     releasedAt: typeof raw.released_at === "string" ? raw.released_at : null,
     lastRenderedAt: typeof raw.last_rendered_at === "string" ? raw.last_rendered_at : null,
+    reportContract: asRecord(raw.report_contract),
+    localization: asRecord(raw.localization),
+    releaseWorkflow: asRecord(raw.release_workflow),
+    archiveEntry: asRecord(raw.archive_entry),
+    analytics: asRecord(raw.analytics),
+    viewerPermissions: asRecord(raw.viewer_permissions),
+    conferencePacket: asRecord(raw.conference_packet),
     currentVersion:
       raw.current_version && typeof raw.current_version === "object"
         ? mapVersion(raw.current_version as Record<string, unknown>)
@@ -2803,6 +3183,12 @@ function mapIbReport(raw: Record<string, unknown>): IbReportPayload {
           readAt: typeof delivery.read_at === "string" ? delivery.read_at : null,
           acknowledgedAt:
             typeof delivery.acknowledged_at === "string" ? delivery.acknowledged_at : null,
+          artifactUrl: typeof delivery.artifact_url === "string" ? delivery.artifact_url : null,
+          archiveKey: typeof delivery.archive_key === "string" ? delivery.archive_key : null,
+          feedbackWindow:
+            typeof delivery.feedback_window === "string" ? delivery.feedback_window : null,
+          analytics: asRecord(delivery.analytics),
+          proofingState: asRecord(delivery.proofing_state),
         }))
       : [],
   };
@@ -2951,6 +3337,53 @@ export async function batchApplyEvidenceAction(
   );
 }
 
+export async function createIbEvidenceItem(
+  payload: FormData | Record<string, unknown>,
+): Promise<IbEvidenceItem> {
+  if (typeof FormData !== "undefined" && payload instanceof FormData) {
+    const response = await apiFetch<Record<string, unknown>>("/api/v1/ib/evidence_items", {
+      method: "POST",
+      body: payload,
+    });
+    return mapEvidenceItem(response);
+  }
+
+  const response = await apiFetch<Record<string, unknown>>("/api/v1/ib/evidence_items", {
+    method: "POST",
+    body: JSON.stringify({ ib_evidence_item: payload }),
+  });
+  return mapEvidenceItem(response);
+}
+
+export async function linkIbEvidenceItemToStory(id: number | string, storyId: number) {
+  return apiFetch(`/api/v1/ib/evidence_items/${id}/link_story`, {
+    method: "POST",
+    body: JSON.stringify({ ib_learning_story_id: storyId }),
+  });
+}
+
+export async function updateIbReflectionRequest(
+  id: number,
+  payload: Record<string, unknown>,
+): Promise<IbReflectionRequestItem> {
+  const response = await apiFetch<Record<string, unknown>>(`/api/v1/ib/reflection_requests/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ ib_reflection_request: payload }),
+  });
+  return mapReflectionRequest(response);
+}
+
+export async function updateIbLearningStory(
+  id: number | string,
+  payload: Record<string, unknown>,
+): Promise<IbLearningStoryItem> {
+  const response = await apiFetch<Record<string, unknown>>(`/api/v1/ib/learning_stories/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ ib_learning_story: payload }),
+  });
+  return mapStory(response);
+}
+
 export async function schedulePublishingQueueItem(
   id: number,
   cadence: "weekly" | "twice-weekly" | "publish-now",
@@ -2978,6 +3411,29 @@ export async function updateDocumentComment(id: number, status: string) {
   return apiFetch(`/api/v1/ib/document_comments/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ ib_document_comment: { status } }),
+  });
+}
+
+export async function createIbDocumentComment(
+  curriculumDocumentId: number | string,
+  payload: Record<string, unknown>,
+) {
+  return apiFetch<IbComment>(
+    `/api/v1/ib/document_comments?curriculum_document_id=${encodeURIComponent(String(curriculumDocumentId))}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ ib_document_comment: payload }),
+    },
+  );
+}
+
+export async function updateIbDocumentComment(
+  id: number | string,
+  payload: Record<string, unknown>,
+) {
+  return apiFetch<IbComment>(`/api/v1/ib/document_comments/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ ib_document_comment: payload }),
   });
 }
 

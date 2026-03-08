@@ -182,9 +182,32 @@ class ApplicationController < ActionController::API
   end
 
   def set_request_context
+    trace_context = Ib::Support::TraceContext.build(
+      request_id: request.request_id,
+      correlation_id: request.headers["X-Correlation-ID"],
+      traceparent: request.headers["traceparent"]
+    )
+
     request.env["current_tenant_id"] = Current.tenant&.id
     request.env["current_user_id"] = Current.user&.id
     request.env["current_school_id"] = Current.school&.id
+    Current.request_id = trace_context[:request_id]
+    Current.correlation_id = trace_context[:correlation_id]
+    Current.trace_id = trace_context[:trace_id]
+    Current.span_id = trace_context[:span_id]
+
+    response.headers["X-Correlation-ID"] = trace_context[:correlation_id] if response
+    response.headers["traceparent"] = trace_context[:traceparent] if response
+
+    Sentry.configure_scope do |scope|
+      scope.set_tags(
+        tenant_id: Current.tenant&.id,
+        school_id: Current.school&.id,
+        user_id: Current.user&.id,
+        correlation_id: Current.correlation_id,
+        trace_id: Current.trace_id
+      )
+    end
   end
 
   def tenant_from_session

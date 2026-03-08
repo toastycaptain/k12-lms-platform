@@ -9,10 +9,12 @@ import {
   IbTonePill,
   type IbSurfaceStatus,
 } from "@/features/ib/core/IbSurfaceState";
+import { type IbAiAssistanceSummary, useIbMobileHub } from "@/features/ib/data";
 import { emitIbEvent } from "@/features/ib/analytics/emitIbEvent";
 import { ChangedSinceLastVisit } from "@/features/ib/home/ChangedSinceLastVisit";
 import { PinnedWorkPanel } from "@/features/ib/home/PinnedWorkPanel";
 import { useIbHomePayload, type HomeLinkItem } from "@/features/ib/home/useIbHomePayload";
+import { useIbMutationQueue } from "@/features/ib/offline/useIbMutationQueue";
 import { BenchmarkRefreshPanel } from "@/features/ib/phase9/Phase9Panels";
 import { BulkCarryForwardPanel } from "@/features/ib/planning/BulkCarryForwardPanel";
 import { DuplicateDocumentDialog } from "@/features/ib/planning/DuplicateDocumentDialog";
@@ -147,8 +149,51 @@ function QuickMutationPanel({
   );
 }
 
+function AiTrustPanel({ aiAssistance }: { aiAssistance: IbAiAssistanceSummary }) {
+  const availableTasks = aiAssistance.tasks.filter((task) => task.available).slice(0, 4);
+
+  return (
+    <WorkspacePanel
+      title="AI assistance"
+      description="Assistive AI stays review-first and measurable instead of becoming a hidden automation layer."
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[1.35rem] bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-950">Availability</p>
+          <p className="mt-2">{aiAssistance.availableCount} task(s) enabled for this role.</p>
+          <p className="mt-1">Provider ready: {String(aiAssistance.providerReady)}</p>
+          <p className="mt-1">Review-gated tasks: {aiAssistance.reviewRequiredCount}</p>
+        </div>
+        <div className="rounded-[1.35rem] bg-slate-50 px-4 py-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-950">Trust</p>
+          <p className="mt-2">Average trust: {aiAssistance.trustAverage.toFixed(1)}</p>
+          <p className="mt-1">Minutes saved: {aiAssistance.estimatedMinutesSaved}</p>
+          <p className="mt-1">
+            PII redaction: {String(Boolean(aiAssistance.tenantControls.pii_redaction))}
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 space-y-2">
+        {availableTasks.map((task) => (
+          <div
+            key={task.taskType}
+            className="rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700"
+          >
+            <p className="font-semibold text-slate-950">{task.label}</p>
+            <p className="mt-1">
+              {task.workflow.replace(/_/g, " ")} • {task.outputMode} • {task.invocationCount} run(s)
+            </p>
+          </div>
+        ))}
+      </div>
+    </WorkspacePanel>
+  );
+}
+
 export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceStatus }) {
   const { data: payload } = useIbHomePayload();
+  const { data: mobileHub } = useIbMobileHub();
+  const mutationQueue = useIbMutationQueue();
   const [layout, setLayout] = useState<"focus" | "expanded">("focus");
   const [duplicateSourceId, setDuplicateSourceId] = useState<number | null>(null);
 
@@ -170,6 +215,17 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
     quickMutations = [],
     benchmarkSnapshot = [],
     performanceBudget = { generatedAt: "", budgets: [], regressions: [] },
+    aiAssistance = {
+      providerReady: false,
+      availableCount: 0,
+      reviewRequiredCount: 0,
+      trustAverage: 0,
+      estimatedMinutesSaved: 0,
+      tasks: [],
+      benchmarks: [],
+      redTeamScenarios: [],
+      tenantControls: {},
+    },
     ...basePayload
   } = payload;
   const enhancedPayload = {
@@ -180,6 +236,7 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
     quickMutations,
     benchmarkSnapshot,
     performanceBudget,
+    aiAssistance,
   };
 
   const carryForwardItems = [
@@ -187,6 +244,10 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
     ...enhancedPayload.projectsCoreFollowUp,
     ...enhancedPayload.dueToday,
   ].slice(0, 6);
+  const mobileFallbackItem = enhancedPayload.pinnedItems[0] || enhancedPayload.resumeItems[0];
+  const duplicateRef = mobileFallbackItem?.entityRef?.split(":") || [];
+  const duplicateSource =
+    duplicateRef[0] === "curriculum_document" && duplicateRef[1] ? Number(duplicateRef[1]) : null;
 
   const benchmarkTimeline = enhancedPayload.benchmarkSnapshot.map((workflow) => ({
     id: workflow.workflowKey,
@@ -242,6 +303,32 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
             value: String(enhancedPayload.performanceBudget.regressions.length),
             detail: "Optimization backlog still over budget",
             tone: enhancedPayload.performanceBudget.regressions.length > 0 ? "warm" : "success",
+          },
+        ]}
+        mobileSummary={
+          mobileHub
+            ? `${mobileHub.role} mobile mode has ${mobileHub.primaryActions.length} primary actions, ${mutationQueue.queuedCount} queued sync mutation(s), and ${mobileHub.diagnostics.unhealthyCount} mobile trust warning(s).`
+            : `${mutationQueue.queuedCount} queued sync mutation(s) are waiting to flush.`
+        }
+        mobileActions={[
+          ...(mobileHub?.primaryActions.slice(0, 2).map((action) => ({
+            id: action.key,
+            label: action.label,
+            href: action.href,
+            detail: action.detail,
+          })) || []),
+          {
+            id: "duplicate-document",
+            label: "Duplicate unit",
+            href: mobileFallbackItem?.href || "/ib/home",
+            detail: "Copy the current planning context in two taps.",
+            onSelect: duplicateSource ? () => setDuplicateSourceId(duplicateSource) : undefined,
+          },
+          {
+            id: "search-ib",
+            label: "Search IB work",
+            href: "/ib/home#search",
+            detail: "Jump into any document, queue, or report.",
           },
         ]}
         timeline={benchmarkTimeline}
@@ -319,6 +406,7 @@ export function TeacherActionConsole({ state = "ready" }: { state?: IbSurfaceSta
               fallbackItem={enhancedPayload.pinnedItems[0] || enhancedPayload.resumeItems[0]}
               onDuplicate={setDuplicateSourceId}
             />
+            <AiTrustPanel aiAssistance={enhancedPayload.aiAssistance} />
             <WorkspacePanel
               title="Workflow benchmark snapshot"
               description="The teacher home should make the common IB jobs faster than the old path lengths."

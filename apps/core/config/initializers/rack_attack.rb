@@ -43,6 +43,27 @@ class Rack::Attack
     req.env["rack.session"]&.dig("user_id") || req.ip
   end
 
+  throttle("ib/collaboration/heartbeat", limit: 30, period: 60) do |req|
+    next unless req.path.start_with?("/api/v1/ib/collaboration_sessions")
+    next unless req.post? || req.patch?
+
+    req.env["rack.session"]&.dig("user_id") || req.ip
+  end
+
+  throttle("ib/collaboration/events", limit: 60, period: 60) do |req|
+    next unless req.post?
+    next unless req.path.start_with?("/api/v1/ib/collaboration_events")
+
+    req.env["rack.session"]&.dig("user_id") || req.ip
+  end
+
+  throttle("ib/collaboration/comments", limit: 30, period: 60) do |req|
+    next unless req.path.start_with?("/api/v1/ib/document_comments")
+    next unless req.post? || req.patch?
+
+    req.env["rack.session"]&.dig("user_id") || req.ip
+  end
+
   # Data exports (expensive): 5 per minute per user
   throttle("exports/user", limit: 5, period: 60) do |req|
     next unless req.path.match?(/export|compliance|gradebook.*export/)

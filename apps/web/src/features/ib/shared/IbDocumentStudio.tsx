@@ -1,9 +1,14 @@
 "use client";
 
-import { CommentThread, PresenceStack } from "@k12/ui";
+import { PresenceStack } from "@k12/ui";
 import { useCurriculumDocument } from "@/curriculum/documents/hooks";
 import DocumentEditor from "@/curriculum/documents/DocumentEditor";
-import { useIbDocumentCollaborators, useIbDocumentComments } from "@/features/ib/data";
+import {
+  useIbCollaborationSessions,
+  useIbDocumentCollaborators,
+  useIbDocumentComments,
+} from "@/features/ib/data";
+import { LiveCollaborationPanel } from "@/features/ib/collaboration/LiveCollaborationPanel";
 import { IbSurfaceState } from "@/features/ib/core/IbSurfaceState";
 import { IbWorkspaceScaffold, WorkspacePanel } from "@/features/ib/shared/IbWorkspaceScaffold";
 
@@ -26,6 +31,9 @@ export function IbDocumentStudio({
   );
   const { data: comments = [] } = useIbDocumentComments(Number.isNaN(numericId) ? null : numericId);
   const { data: collaborators = [] } = useIbDocumentCollaborators(
+    Number.isNaN(numericId) ? null : numericId,
+  );
+  const { data: collaboration } = useIbCollaborationSessions(
     Number.isNaN(numericId) ? null : numericId,
   );
 
@@ -61,10 +69,17 @@ export function IbDocumentStudio({
       }
       actions={
         <PresenceStack
-          people={collaborators.slice(0, 5).map((collaborator) => ({
-            id: String(collaborator.id),
-            name: `${collaborator.role.replace(/_/g, " ")} #${collaborator.userId}`,
-          }))}
+          people={
+            collaboration?.activeSessions.length
+              ? collaboration.activeSessions.slice(0, 5).map((session) => ({
+                  id: String(session.id),
+                  name: session.userLabel || `User #${session.userId}`,
+                }))
+              : collaborators.slice(0, 5).map((collaborator) => ({
+                  id: String(collaborator.id),
+                  name: `${collaborator.role.replace(/_/g, " ")} #${collaborator.userId}`,
+                }))
+          }
         />
       }
       metrics={[
@@ -87,6 +102,12 @@ export function IbDocumentStudio({
           tone: "warm",
         },
         {
+          label: "Live editors",
+          value: String(collaboration?.activeSessions.length || 0),
+          detail: collaboration?.conflictRisk ? "Conflict watch is active" : "Presence is healthy",
+          tone: collaboration?.conflictRisk ? "warm" : "success",
+        },
+        {
           label: "Collaborators",
           value: String(collaborators.length),
           detail: "Shared ownership is visible in-context",
@@ -95,21 +116,7 @@ export function IbDocumentStudio({
       main={<DocumentEditor documentId={document.id} />}
       aside={
         <div className="space-y-5">
-          <WorkspacePanel
-            title="Collaboration"
-            description="Comments and collaborator roles stay attached to the live record."
-          >
-            <CommentThread
-              comments={comments.slice(0, 6).map((comment) => ({
-                id: String(comment.id),
-                author: `User #${comment.authorId}`,
-                body: comment.body,
-                timestamp: comment.createdAt
-                  ? new Date(comment.createdAt).toLocaleString()
-                  : "Just now",
-              }))}
-            />
-          </WorkspacePanel>
+          <LiveCollaborationPanel documentId={document.id} scopeKey="root" />
           <WorkspacePanel
             title="Contributor roles"
             description="Ownership, specialist input, review, and advisor roles remain explicit."

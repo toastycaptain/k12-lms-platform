@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { normalizePackSubset } from "@/curriculum/runtime/normalizePackSubset";
+import { summarizePackCapabilities } from "@/curriculum/runtime/packCapabilities";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useToast } from "@k12/ui";
 
@@ -137,6 +139,14 @@ export default function AdminCurriculumProfilesPage() {
   const profileDetailsByKey = useMemo(() => {
     const map = new Map<string, CurriculumProfile>();
     profiles.forEach((profile) => map.set(profile.key, profile));
+    return map;
+  }, [profiles]);
+
+  const profileCapabilitySummaryByKey = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof summarizePackCapabilities>>();
+    profiles.forEach((profile) => {
+      map.set(profile.key, summarizePackCapabilities(normalizePackSubset(profile)));
+    });
     return map;
   }, [profiles]);
 
@@ -617,6 +627,7 @@ export default function AdminCurriculumProfilesPage() {
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   {availablePacks.map((pack) => {
                     const legacyProfile = profileDetailsByKey.get(pack.key);
+                    const capabilitySummary = profileCapabilitySummaryByKey.get(pack.key);
 
                     return (
                       <article
@@ -637,6 +648,30 @@ export default function AdminCurriculumProfilesPage() {
                           {pack.pack_status && <span>Status: {pack.pack_status}</span>}
                           {pack.compatibility && <span>Compatibility: {pack.compatibility}</span>}
                         </div>
+                        {capabilitySummary ? (
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
+                            <span className="rounded-full bg-white px-2 py-1">
+                              Templates {capabilitySummary.documentTemplateCount}
+                            </span>
+                            <span className="rounded-full bg-white px-2 py-1">
+                              Workflows {capabilitySummary.workflowTemplateCount}
+                            </span>
+                            <span className="rounded-full bg-white px-2 py-1">
+                              Reports {capabilitySummary.reportFamilyCount}
+                            </span>
+                            <span className="rounded-full bg-white px-2 py-1">
+                              Modules {capabilitySummary.capabilityModuleKeys.length}
+                            </span>
+                            <span className="rounded-full bg-white px-2 py-1">
+                              Integrations {capabilitySummary.integrationHintKeys.length}
+                            </span>
+                          </div>
+                        ) : null}
+                        {capabilitySummary?.capabilityModuleKeys.length ? (
+                          <p className="mt-2 text-xs text-gray-500">
+                            Enabled modules: {capabilitySummary.capabilityModuleKeys.join(", ")}
+                          </p>
+                        ) : null}
                         {legacyProfile?.jurisdiction && (
                           <p className="mt-2 text-xs text-gray-500">
                             Jurisdiction: {legacyProfile.jurisdiction}
