@@ -1,0 +1,11 @@
+{
+  "taskId": 610,
+  "suiteId": "ai-family-translation-proofing",
+  "title": "Ai Assist Family Summary Translation And Proofing",
+  "suiteType": "ai",
+  "scenarioIds": [
+    "518-pyp-homeroom-family-story-publishing",
+    "593-guardian-multilingual-and-calm-communication"
+  ],
+  "aiWorkflow": "family_translation"
+}

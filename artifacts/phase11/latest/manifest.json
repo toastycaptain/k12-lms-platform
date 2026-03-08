@@ -1,0 +1,42 @@
+{
+  "runId": "sample-phase11-20260308T000000Z",
+  "createdAt": "2026-03-08T02:13:46.935Z",
+  "environment": "local",
+  "gitSha": "1623cdd",
+  "suiteIds": [
+    "daily-operations",
+    "weekly-operations",
+    "term-operations",
+    "annual-operations",
+    "monte-carlo-school-year",
+    "load-evidence-publishing",
+    "load-reporting-search-queue",
+    "load-realtime-collaboration",
+    "scale-large-school",
+    "ux-click-depth-time-on-task",
+    "ux-heavy-days",
+    "competitive-parity",
+    "user-recovery-and-supportability",
+    "ai-statement-summary-review",
+    "ai-family-translation-proofing",
+    "ai-coverage-gap-risk-suggestions",
+    "codex-review-loop"
+  ],
+  "scenarioCount": 81,
+  "roleCount": 16,
+  "programmeKeys": [
+    "PYP",
+    "MYP",
+    "DP",
+    "Mixed",
+    "Guardian"
+  ],
+  "artifactModel": [
+    "manifest.json",
+    "events.ndjson",
+    "summary.json",
+    "summary.md",
+    "failure-packets",
+    "recommendations"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "packetId": "failure-ai-family-translation-proofing",
+  "suiteId": "ai-family-translation-proofing",
+  "severity": "medium",
+  "category": "ai_guardrail_gap",
+  "suspectedArea": "Keep family-facing AI suggestions gated behind explicit calm-mode proofing and locale-specific human review.",
+  "evidence": {
+    "suiteId": "ai-family-translation-proofing",
+    "scenarioIds": [
+      "518-pyp-homeroom-family-story-publishing",
+      "593-guardian-multilingual-and-calm-communication"
+    ],
+    "summaryPath": "summaries/task-610.md",
+    "metricsPath": "summary.json"
+  }
+}

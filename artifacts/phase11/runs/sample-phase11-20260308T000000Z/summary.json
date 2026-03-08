@@ -1,0 +1,2069 @@
+{
+  "runId": "sample-phase11-20260308T000000Z",
+  "generatedAt": "2026-03-08T02:13:46.935Z",
+  "suites": [
+    {
+      "suiteId": "daily-operations",
+      "taskId": 596,
+      "title": "Daily Simulation Suite Orchestration",
+      "suiteType": "cadence",
+      "scenarioIds": [
+        "515-pyp-homeroom-daily-planning-day",
+        "522-pyp-homeroom-recovery-and-exception-handling",
+        "523-pyp-specialist-multi-class-day",
+        "525-pyp-specialist-evidence-capture-at-scale",
+        "528-pyp-specialist-mobile-quick-actions",
+        "529-pyp-specialist-failure-modes-and-recovery",
+        "535-pyp-coordinator-exception-triage-and-escalation",
+        "536-myp-subject-teacher-unit-creation-and-editing",
+        "543-myp-subject-teacher-recovery-and-high-volume-day",
+        "549-myp-coordinator-exception-triage-and-summary-export",
+        "550-dp-subject-teacher-course-map-maintenance",
+        "555-dp-subject-teacher-mobile-triage-and-quick-actions",
+        "557-dp-subject-teacher-recovery-and-edge-cases",
+        "563-dp-coordinator-exception-triage-and-exports",
+        "567-cas-advisor-completion-exception-handling",
+        "575-tok-teacher-exception-and-deadline-handling",
+        "576-ib-director-global-programme-health",
+        "581-ib-director-governance-exceptions-and-recovery",
+        "582-primary-student-daily-learning-journey",
+        "585-middle-years-student-unit-and-project-journey",
+        "587-diploma-student-ia-ee-tok-cas-dashboard",
+        "589-student-accessibility-and-low-bandwidth-experience",
+        "590-guardian-digest-and-home-feed",
+        "595-guardian-mobile-only-experience"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "weekly-operations",
+      "taskId": 597,
+      "title": "Weekly Simulation Suite Orchestration",
+      "suiteType": "cadence",
+      "scenarioIds": [
+        "516-pyp-homeroom-weekly-learning-engagement-build",
+        "517-pyp-homeroom-evidence-capture-and-reflection-review",
+        "518-pyp-homeroom-family-story-publishing",
+        "519-pyp-homeroom-specialist-collaboration",
+        "524-pyp-specialist-fast-context-switching",
+        "526-pyp-specialist-co-planning-and-commenting",
+        "527-pyp-specialist-batch-contributions-and-tagging",
+        "530-pyp-coordinator-poi-governance",
+        "531-pyp-coordinator-unit-review-queue",
+        "532-pyp-coordinator-theme-balance-and-gap-detection",
+        "534-pyp-coordinator-family-publishing-health",
+        "537-myp-subject-teacher-criteria-and-atl-workflow",
+        "538-myp-subject-teacher-assessment-and-feedback-loop",
+        "539-myp-subject-teacher-interdisciplinary-co-planning",
+        "540-myp-subject-teacher-project-support",
+        "541-myp-subject-teacher-evidence-and-reflections",
+        "544-myp-coordinator-programme-overview-and-coverage",
+        "545-myp-coordinator-interdisciplinary-approvals",
+        "546-myp-coordinator-atl-and-criteria-balance-analysis",
+        "548-myp-coordinator-service-as-action-monitoring",
+        "551-dp-subject-teacher-ia-checkpoint-flow",
+        "552-dp-subject-teacher-draft-feedback-and-versioning",
+        "556-dp-subject-teacher-student-feedback-response-loop",
+        "558-dp-coordinator-ia-programme-health",
+        "561-dp-coordinator-approval-and-escalation-flows",
+        "562-dp-coordinator-family-support-and-communication",
+        "564-cas-advisor-experience-review-flow",
+        "566-cas-advisor-reflection-feedback-and-student-nudges",
+        "568-ee-supervisor-meeting-logging-and-milestones",
+        "569-ee-supervisor-draft-review-and-feedback",
+        "572-tok-teacher-essay-and-exhibition-management",
+        "573-tok-teacher-feedback-and-reflection-loop",
+        "577-ib-director-standards-and-practices-evidence-review",
+        "578-ib-director-staffing-workload-and-sla-monitoring",
+        "580-ib-director-multi-programme-communication",
+        "583-primary-student-reflection-and-portfolio-submission",
+        "584-primary-student-family-story-view-and-goals",
+        "586-middle-years-student-criteria-feedback-and-reflection",
+        "592-guardian-progress-monitoring-and-acknowledgement",
+        "593-guardian-multilingual-and-calm-communication",
+        "594-guardian-multi-child-household-workflow"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "term-operations",
+      "taskId": 598,
+      "title": "Term Simulation Suite Orchestration",
+      "suiteType": "cadence",
+      "scenarioIds": [
+        "520-pyp-homeroom-conference-preparation",
+        "521-pyp-homeroom-report-cycle",
+        "542-myp-subject-teacher-reporting-and-conference-prep",
+        "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+        "554-dp-subject-teacher-reporting-and-transcript-prep",
+        "560-dp-coordinator-submission-readiness-and-risk",
+        "570-ee-supervisor-progress-risk-and-escalation",
+        "574-tok-teacher-reporting-and-progress-summary",
+        "588-diploma-student-submission-and-revision-cycle",
+        "591-guardian-report-and-conference-prep"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "annual-operations",
+      "taskId": 599,
+      "title": "Annual Simulation Suite Orchestration",
+      "suiteType": "cadence",
+      "scenarioIds": [
+        "533-pyp-coordinator-exhibition-oversight",
+        "547-myp-coordinator-project-risk-management",
+        "559-dp-coordinator-ee-tok-cas-oversight",
+        "565-cas-advisor-project-approval-and-outcome-tracking",
+        "571-ee-supervisor-archive-and-completion-validation",
+        "579-ib-director-accreditation-preparation-simulation"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "monte-carlo-school-year",
+      "taskId": 600,
+      "title": "Full School Year Monte Carlo Variation Runs",
+      "suiteType": "cadence",
+      "scenarioIds": [
+        "515-pyp-homeroom-daily-planning-day",
+        "516-pyp-homeroom-weekly-learning-engagement-build",
+        "517-pyp-homeroom-evidence-capture-and-reflection-review",
+        "518-pyp-homeroom-family-story-publishing",
+        "519-pyp-homeroom-specialist-collaboration",
+        "520-pyp-homeroom-conference-preparation",
+        "521-pyp-homeroom-report-cycle",
+        "522-pyp-homeroom-recovery-and-exception-handling",
+        "523-pyp-specialist-multi-class-day",
+        "524-pyp-specialist-fast-context-switching",
+        "525-pyp-specialist-evidence-capture-at-scale",
+        "526-pyp-specialist-co-planning-and-commenting",
+        "527-pyp-specialist-batch-contributions-and-tagging",
+        "528-pyp-specialist-mobile-quick-actions",
+        "529-pyp-specialist-failure-modes-and-recovery",
+        "530-pyp-coordinator-poi-governance",
+        "531-pyp-coordinator-unit-review-queue",
+        "532-pyp-coordinator-theme-balance-and-gap-detection",
+        "533-pyp-coordinator-exhibition-oversight",
+        "534-pyp-coordinator-family-publishing-health",
+        "535-pyp-coordinator-exception-triage-and-escalation",
+        "536-myp-subject-teacher-unit-creation-and-editing",
+        "537-myp-subject-teacher-criteria-and-atl-workflow",
+        "538-myp-subject-teacher-assessment-and-feedback-loop",
+        "539-myp-subject-teacher-interdisciplinary-co-planning",
+        "540-myp-subject-teacher-project-support",
+        "541-myp-subject-teacher-evidence-and-reflections",
+        "542-myp-subject-teacher-reporting-and-conference-prep",
+        "543-myp-subject-teacher-recovery-and-high-volume-day",
+        "544-myp-coordinator-programme-overview-and-coverage",
+        "545-myp-coordinator-interdisciplinary-approvals",
+        "546-myp-coordinator-atl-and-criteria-balance-analysis",
+        "547-myp-coordinator-project-risk-management",
+        "548-myp-coordinator-service-as-action-monitoring",
+        "549-myp-coordinator-exception-triage-and-summary-export",
+        "550-dp-subject-teacher-course-map-maintenance",
+        "551-dp-subject-teacher-ia-checkpoint-flow",
+        "552-dp-subject-teacher-draft-feedback-and-versioning",
+        "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+        "554-dp-subject-teacher-reporting-and-transcript-prep",
+        "555-dp-subject-teacher-mobile-triage-and-quick-actions",
+        "556-dp-subject-teacher-student-feedback-response-loop",
+        "557-dp-subject-teacher-recovery-and-edge-cases",
+        "558-dp-coordinator-ia-programme-health",
+        "559-dp-coordinator-ee-tok-cas-oversight",
+        "560-dp-coordinator-submission-readiness-and-risk",
+        "561-dp-coordinator-approval-and-escalation-flows",
+        "562-dp-coordinator-family-support-and-communication",
+        "563-dp-coordinator-exception-triage-and-exports",
+        "564-cas-advisor-experience-review-flow",
+        "565-cas-advisor-project-approval-and-outcome-tracking",
+        "566-cas-advisor-reflection-feedback-and-student-nudges",
+        "567-cas-advisor-completion-exception-handling",
+        "568-ee-supervisor-meeting-logging-and-milestones",
+        "569-ee-supervisor-draft-review-and-feedback",
+        "570-ee-supervisor-progress-risk-and-escalation",
+        "571-ee-supervisor-archive-and-completion-validation",
+        "572-tok-teacher-essay-and-exhibition-management",
+        "573-tok-teacher-feedback-and-reflection-loop",
+        "574-tok-teacher-reporting-and-progress-summary",
+        "575-tok-teacher-exception-and-deadline-handling",
+        "576-ib-director-global-programme-health",
+        "577-ib-director-standards-and-practices-evidence-review",
+        "578-ib-director-staffing-workload-and-sla-monitoring",
+        "579-ib-director-accreditation-preparation-simulation",
+        "580-ib-director-multi-programme-communication",
+        "581-ib-director-governance-exceptions-and-recovery",
+        "582-primary-student-daily-learning-journey",
+        "583-primary-student-reflection-and-portfolio-submission",
+        "584-primary-student-family-story-view-and-goals",
+        "585-middle-years-student-unit-and-project-journey",
+        "586-middle-years-student-criteria-feedback-and-reflection",
+        "587-diploma-student-ia-ee-tok-cas-dashboard",
+        "588-diploma-student-submission-and-revision-cycle",
+        "589-student-accessibility-and-low-bandwidth-experience",
+        "590-guardian-digest-and-home-feed",
+        "591-guardian-report-and-conference-prep",
+        "592-guardian-progress-monitoring-and-acknowledgement",
+        "593-guardian-multilingual-and-calm-communication",
+        "594-guardian-multi-child-household-workflow",
+        "595-guardian-mobile-only-experience"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "load-evidence-publishing",
+      "taskId": 601,
+      "title": "Load Test High Volume Evidence And Publishing",
+      "suiteType": "k6",
+      "scenarioIds": [
+        "517-pyp-homeroom-evidence-capture-and-reflection-review",
+        "518-pyp-homeroom-family-story-publishing",
+        "525-pyp-specialist-evidence-capture-at-scale"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "load-reporting-search-queue",
+      "taskId": 602,
+      "title": "Load Test Reporting Search And Queue Pressure",
+      "suiteType": "k6",
+      "scenarioIds": [
+        "520-pyp-homeroom-conference-preparation",
+        "521-pyp-homeroom-report-cycle",
+        "542-myp-subject-teacher-reporting-and-conference-prep",
+        "554-dp-subject-teacher-reporting-and-transcript-prep"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "load-realtime-collaboration",
+      "taskId": 603,
+      "title": "Load Test Realtime Collaboration And Presence",
+      "suiteType": "k6",
+      "scenarioIds": [
+        "519-pyp-homeroom-specialist-collaboration",
+        "526-pyp-specialist-co-planning-and-commenting",
+        "539-myp-subject-teacher-interdisciplinary-co-planning",
+        "552-dp-subject-teacher-draft-feedback-and-versioning"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "scale-large-school",
+      "taskId": 604,
+      "title": "Scale Test Large School Multi Programme Model",
+      "suiteType": "k6",
+      "scenarioIds": [
+        "515-pyp-homeroom-daily-planning-day",
+        "516-pyp-homeroom-weekly-learning-engagement-build",
+        "517-pyp-homeroom-evidence-capture-and-reflection-review",
+        "518-pyp-homeroom-family-story-publishing",
+        "519-pyp-homeroom-specialist-collaboration",
+        "520-pyp-homeroom-conference-preparation",
+        "521-pyp-homeroom-report-cycle",
+        "522-pyp-homeroom-recovery-and-exception-handling",
+        "523-pyp-specialist-multi-class-day",
+        "524-pyp-specialist-fast-context-switching",
+        "525-pyp-specialist-evidence-capture-at-scale",
+        "526-pyp-specialist-co-planning-and-commenting",
+        "527-pyp-specialist-batch-contributions-and-tagging",
+        "528-pyp-specialist-mobile-quick-actions",
+        "529-pyp-specialist-failure-modes-and-recovery",
+        "530-pyp-coordinator-poi-governance",
+        "531-pyp-coordinator-unit-review-queue",
+        "532-pyp-coordinator-theme-balance-and-gap-detection",
+        "533-pyp-coordinator-exhibition-oversight",
+        "534-pyp-coordinator-family-publishing-health",
+        "535-pyp-coordinator-exception-triage-and-escalation",
+        "536-myp-subject-teacher-unit-creation-and-editing",
+        "537-myp-subject-teacher-criteria-and-atl-workflow",
+        "538-myp-subject-teacher-assessment-and-feedback-loop",
+        "539-myp-subject-teacher-interdisciplinary-co-planning",
+        "540-myp-subject-teacher-project-support",
+        "541-myp-subject-teacher-evidence-and-reflections",
+        "542-myp-subject-teacher-reporting-and-conference-prep",
+        "543-myp-subject-teacher-recovery-and-high-volume-day",
+        "544-myp-coordinator-programme-overview-and-coverage",
+        "545-myp-coordinator-interdisciplinary-approvals",
+        "546-myp-coordinator-atl-and-criteria-balance-analysis",
+        "547-myp-coordinator-project-risk-management",
+        "548-myp-coordinator-service-as-action-monitoring",
+        "549-myp-coordinator-exception-triage-and-summary-export",
+        "550-dp-subject-teacher-course-map-maintenance",
+        "551-dp-subject-teacher-ia-checkpoint-flow",
+        "552-dp-subject-teacher-draft-feedback-and-versioning",
+        "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+        "554-dp-subject-teacher-reporting-and-transcript-prep",
+        "555-dp-subject-teacher-mobile-triage-and-quick-actions",
+        "556-dp-subject-teacher-student-feedback-response-loop",
+        "557-dp-subject-teacher-recovery-and-edge-cases",
+        "558-dp-coordinator-ia-programme-health",
+        "559-dp-coordinator-ee-tok-cas-oversight",
+        "560-dp-coordinator-submission-readiness-and-risk",
+        "561-dp-coordinator-approval-and-escalation-flows",
+        "562-dp-coordinator-family-support-and-communication",
+        "563-dp-coordinator-exception-triage-and-exports",
+        "564-cas-advisor-experience-review-flow",
+        "565-cas-advisor-project-approval-and-outcome-tracking",
+        "566-cas-advisor-reflection-feedback-and-student-nudges",
+        "567-cas-advisor-completion-exception-handling",
+        "568-ee-supervisor-meeting-logging-and-milestones",
+        "569-ee-supervisor-draft-review-and-feedback",
+        "570-ee-supervisor-progress-risk-and-escalation",
+        "571-ee-supervisor-archive-and-completion-validation",
+        "572-tok-teacher-essay-and-exhibition-management",
+        "573-tok-teacher-feedback-and-reflection-loop",
+        "574-tok-teacher-reporting-and-progress-summary",
+        "575-tok-teacher-exception-and-deadline-handling",
+        "576-ib-director-global-programme-health",
+        "577-ib-director-standards-and-practices-evidence-review",
+        "578-ib-director-staffing-workload-and-sla-monitoring",
+        "579-ib-director-accreditation-preparation-simulation",
+        "580-ib-director-multi-programme-communication",
+        "581-ib-director-governance-exceptions-and-recovery",
+        "582-primary-student-daily-learning-journey",
+        "583-primary-student-reflection-and-portfolio-submission",
+        "584-primary-student-family-story-view-and-goals",
+        "585-middle-years-student-unit-and-project-journey",
+        "586-middle-years-student-criteria-feedback-and-reflection",
+        "587-diploma-student-ia-ee-tok-cas-dashboard",
+        "588-diploma-student-submission-and-revision-cycle",
+        "589-student-accessibility-and-low-bandwidth-experience"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "ux-click-depth-time-on-task",
+      "taskId": 605,
+      "title": "UX Friction Benchmark Click Depth And Time On Task",
+      "suiteType": "ux",
+      "scenarioIds": [
+        "515-pyp-homeroom-daily-planning-day",
+        "523-pyp-specialist-multi-class-day",
+        "530-pyp-coordinator-poi-governance",
+        "536-myp-subject-teacher-unit-creation-and-editing",
+        "550-dp-subject-teacher-course-map-maintenance",
+        "590-guardian-digest-and-home-feed"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "ux-heavy-days",
+      "taskId": 606,
+      "title": "UX Friction Specialist And Coordinator Heavy Days",
+      "suiteType": "ux",
+      "scenarioIds": [
+        "524-pyp-specialist-fast-context-switching",
+        "529-pyp-specialist-failure-modes-and-recovery",
+        "535-pyp-coordinator-exception-triage-and-escalation",
+        "549-myp-coordinator-exception-triage-and-summary-export",
+        "563-dp-coordinator-exception-triage-and-exports",
+        "578-ib-director-staffing-workload-and-sla-monitoring"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "competitive-parity",
+      "taskId": 607,
+      "title": "Competitive Parity Checklist Toddle And Managebac",
+      "suiteType": "ux",
+      "scenarioIds": [
+        "518-pyp-homeroom-family-story-publishing",
+        "530-pyp-coordinator-poi-governance",
+        "559-dp-coordinator-ee-tok-cas-oversight",
+        "560-dp-coordinator-submission-readiness-and-risk",
+        "590-guardian-digest-and-home-feed"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "user-recovery-and-supportability",
+      "taskId": 608,
+      "title": "User Recovery From Failure States And Supportability",
+      "suiteType": "ux",
+      "scenarioIds": [
+        "522-pyp-homeroom-recovery-and-exception-handling",
+        "529-pyp-specialist-failure-modes-and-recovery",
+        "535-pyp-coordinator-exception-triage-and-escalation",
+        "543-myp-subject-teacher-recovery-and-high-volume-day",
+        "549-myp-coordinator-exception-triage-and-summary-export",
+        "557-dp-subject-teacher-recovery-and-edge-cases",
+        "563-dp-coordinator-exception-triage-and-exports",
+        "567-cas-advisor-completion-exception-handling",
+        "575-tok-teacher-exception-and-deadline-handling",
+        "581-ib-director-governance-exceptions-and-recovery",
+        "589-student-accessibility-and-low-bandwidth-experience"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "ai-statement-summary-review",
+      "taskId": 609,
+      "title": "Ai Assist Statement Summary And Diff Review",
+      "suiteType": "ai",
+      "scenarioIds": [
+        "520-pyp-homeroom-conference-preparation",
+        "538-myp-subject-teacher-assessment-and-feedback-loop"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "ai-family-translation-proofing",
+      "taskId": 610,
+      "title": "Ai Assist Family Summary Translation And Proofing",
+      "suiteType": "ai",
+      "scenarioIds": [
+        "518-pyp-homeroom-family-story-publishing",
+        "593-guardian-multilingual-and-calm-communication"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "ai-coverage-gap-risk-suggestions",
+      "taskId": 611,
+      "title": "Ai Assist Coverage Gap Detection And Risk Suggestions",
+      "suiteType": "ai",
+      "scenarioIds": [
+        "532-pyp-coordinator-theme-balance-and-gap-detection",
+        "546-myp-coordinator-atl-and-criteria-balance-analysis",
+        "560-dp-coordinator-submission-readiness-and-risk"
+      ],
+      "status": "pass"
+    },
+    {
+      "suiteId": "codex-review-loop",
+      "taskId": 612,
+      "title": "Codex Review Loop Architecture Recommendations And Phase12 Signal",
+      "suiteType": "review",
+      "scenarioIds": [],
+      "status": "pass"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "515-pyp-homeroom-daily-planning-day",
+      "taskId": 515,
+      "title": "Pyp Homeroom Daily Planning Day",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Quick actions",
+        "Resume work"
+      ]
+    },
+    {
+      "scenarioId": "516-pyp-homeroom-weekly-learning-engagement-build",
+      "taskId": 516,
+      "title": "Pyp Homeroom Weekly Learning Engagement Build",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/learning",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Weekly flow",
+        "Student learning stream preview"
+      ]
+    },
+    {
+      "scenarioId": "517-pyp-homeroom-evidence-capture-and-reflection-review",
+      "taskId": 517,
+      "title": "Pyp Homeroom Evidence Capture And Reflection Review",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/evidence",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Evidence queue",
+        "Queue discipline"
+      ]
+    },
+    {
+      "scenarioId": "518-pyp-homeroom-family-story-publishing",
+      "taskId": 518,
+      "title": "Pyp Homeroom Family Story Publishing",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/families/publishing",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16100,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Publishing queue",
+        "Publishing quick actions"
+      ]
+    },
+    {
+      "scenarioId": "519-pyp-homeroom-specialist-collaboration",
+      "taskId": 519,
+      "title": "Pyp Homeroom Specialist Collaboration",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/planning/collaboration",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16320,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Discussion thread",
+        "Live collaboration"
+      ]
+    },
+    {
+      "scenarioId": "520-pyp-homeroom-conference-preparation",
+      "taskId": 520,
+      "title": "Pyp Homeroom Conference Preparation",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18640,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Generated reports",
+        "Release workflow"
+      ]
+    },
+    {
+      "scenarioId": "521-pyp-homeroom-report-cycle",
+      "taskId": 521,
+      "title": "Pyp Homeroom Report Cycle",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18860,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Localization and archive",
+        "Proofing queue and locales"
+      ]
+    },
+    {
+      "scenarioId": "522-pyp-homeroom-recovery-and-exception-handling",
+      "taskId": 522,
+      "title": "Pyp Homeroom Recovery And Exception Handling",
+      "roleKey": "pyp_homeroom_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Returned context",
+        "Review quick actions"
+      ]
+    },
+    {
+      "scenarioId": "523-pyp-specialist-multi-class-day",
+      "taskId": 523,
+      "title": "Pyp Specialist Multi Class Day",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/specialist",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 15100,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Where you are needed this week",
+        "Requested contributions"
+      ]
+    },
+    {
+      "scenarioId": "524-pyp-specialist-fast-context-switching",
+      "taskId": 524,
+      "title": "Pyp Specialist Fast Context Switching",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/specialist",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Pending handoffs",
+        "Assigned units"
+      ]
+    },
+    {
+      "scenarioId": "525-pyp-specialist-evidence-capture-at-scale",
+      "taskId": 525,
+      "title": "Pyp Specialist Evidence Capture At Scale",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/evidence",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14000,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Evidence queue",
+        "Queue filters"
+      ]
+    },
+    {
+      "scenarioId": "526-pyp-specialist-co-planning-and-commenting",
+      "taskId": 526,
+      "title": "Pyp Specialist Co Planning And Commenting",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/planning/collaboration",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16320,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Discussion thread",
+        "Live collaboration"
+      ]
+    },
+    {
+      "scenarioId": "527-pyp-specialist-batch-contributions-and-tagging",
+      "taskId": 527,
+      "title": "Pyp Specialist Batch Contributions And Tagging",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/specialist",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Specialist quick hits",
+        "Evidence to sort"
+      ]
+    },
+    {
+      "scenarioId": "528-pyp-specialist-mobile-quick-actions",
+      "taskId": 528,
+      "title": "Pyp Specialist Mobile Quick Actions",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/evidence",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 9660,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Mobile evidence capture",
+        "Reflection review"
+      ]
+    },
+    {
+      "scenarioId": "529-pyp-specialist-failure-modes-and-recovery",
+      "taskId": 529,
+      "title": "Pyp Specialist Failure Modes And Recovery",
+      "roleKey": "pyp_specialist_teacher",
+      "programmeKey": "PYP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Returned context"
+      ]
+    },
+    {
+      "scenarioId": "530-pyp-coordinator-poi-governance",
+      "taskId": 530,
+      "title": "Pyp Coordinator Poi Governance",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/pyp/poi",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Programme of inquiry",
+        "Continuum map"
+      ]
+    },
+    {
+      "scenarioId": "531-pyp-coordinator-unit-review-queue",
+      "taskId": 531,
+      "title": "Pyp Coordinator Unit Review Queue",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Review quick actions"
+      ]
+    },
+    {
+      "scenarioId": "532-pyp-coordinator-theme-balance-and-gap-detection",
+      "taskId": 532,
+      "title": "Pyp Coordinator Theme Balance And Gap Detection",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/standards-practices",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16100,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Packet completeness",
+        "Active cycle"
+      ]
+    },
+    {
+      "scenarioId": "533-pyp-coordinator-exhibition-oversight",
+      "taskId": 533,
+      "title": "Pyp Coordinator Exhibition Oversight",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/pyp/exhibition",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 20520,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Family window",
+        "PYP exhibition workspace"
+      ]
+    },
+    {
+      "scenarioId": "534-pyp-coordinator-family-publishing-health",
+      "taskId": 534,
+      "title": "Pyp Coordinator Family Publishing Health",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/families/publishing",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue states",
+        "Publishing quick actions"
+      ]
+    },
+    {
+      "scenarioId": "535-pyp-coordinator-exception-triage-and-escalation",
+      "taskId": 535,
+      "title": "Pyp Coordinator Exception Triage And Escalation",
+      "roleKey": "pyp_coordinator",
+      "programmeKey": "PYP",
+      "routePath": "/ib/reports/exceptions",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14660,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Prioritized findings",
+        "Report discipline"
+      ]
+    },
+    {
+      "scenarioId": "536-myp-subject-teacher-unit-creation-and-editing",
+      "taskId": 536,
+      "title": "Myp Subject Teacher Unit Creation And Editing",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/units/new",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Create MYP unit"
+      ]
+    },
+    {
+      "scenarioId": "537-myp-subject-teacher-criteria-and-atl-workflow",
+      "taskId": 537,
+      "title": "Myp Subject Teacher Criteria And Atl Workflow",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/assessment",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Criteria planning",
+        "DP assessment dashboard"
+      ]
+    },
+    {
+      "scenarioId": "538-myp-subject-teacher-assessment-and-feedback-loop",
+      "taskId": 538,
+      "title": "Myp Subject Teacher Assessment And Feedback Loop",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Generated reports",
+        "Release workflow"
+      ]
+    },
+    {
+      "scenarioId": "539-myp-subject-teacher-interdisciplinary-co-planning",
+      "taskId": 539,
+      "title": "Myp Subject Teacher Interdisciplinary Co Planning",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/planning/collaboration",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16100,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Live collaboration",
+        "Discussion thread"
+      ]
+    },
+    {
+      "scenarioId": "540-myp-subject-teacher-project-support",
+      "taskId": 540,
+      "title": "Myp Subject Teacher Project Support",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/projects",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16320,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Projects hub",
+        "MYP projects"
+      ]
+    },
+    {
+      "scenarioId": "541-myp-subject-teacher-evidence-and-reflections",
+      "taskId": 541,
+      "title": "Myp Subject Teacher Evidence And Reflections",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/evidence",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Evidence queue",
+        "Queue discipline"
+      ]
+    },
+    {
+      "scenarioId": "542-myp-subject-teacher-reporting-and-conference-prep",
+      "taskId": 542,
+      "title": "Myp Subject Teacher Reporting And Conference Prep",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18860,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Delivery log",
+        "Release workflow"
+      ]
+    },
+    {
+      "scenarioId": "543-myp-subject-teacher-recovery-and-high-volume-day",
+      "taskId": 543,
+      "title": "Myp Subject Teacher Recovery And High Volume Day",
+      "roleKey": "myp_subject_teacher",
+      "programmeKey": "MYP",
+      "routePath": "/ib/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Workflow benchmark snapshot",
+        "Teacher-speed benchmark refresh"
+      ]
+    },
+    {
+      "scenarioId": "544-myp-coordinator-programme-overview-and-coverage",
+      "taskId": 544,
+      "title": "Myp Coordinator Programme Overview And Coverage",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/coverage",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Subject-unit coverage",
+        "Project and service risk"
+      ]
+    },
+    {
+      "scenarioId": "545-myp-coordinator-interdisciplinary-approvals",
+      "taskId": 545,
+      "title": "Myp Coordinator Interdisciplinary Approvals",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Document review",
+        "Projects and service"
+      ]
+    },
+    {
+      "scenarioId": "546-myp-coordinator-atl-and-criteria-balance-analysis",
+      "taskId": 546,
+      "title": "Myp Coordinator Atl And Criteria Balance Analysis",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/standards-practices",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16100,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Evidence board",
+        "Packet completeness"
+      ]
+    },
+    {
+      "scenarioId": "547-myp-coordinator-project-risk-management",
+      "taskId": 547,
+      "title": "Myp Coordinator Project Risk Management",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/projects",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 20520,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Projects hub",
+        "MYP projects"
+      ]
+    },
+    {
+      "scenarioId": "548-myp-coordinator-service-as-action-monitoring",
+      "taskId": 548,
+      "title": "Myp Coordinator Service As Action Monitoring",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/myp/service",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Service queue",
+        "Service as action"
+      ]
+    },
+    {
+      "scenarioId": "549-myp-coordinator-exception-triage-and-summary-export",
+      "taskId": 549,
+      "title": "Myp Coordinator Exception Triage And Summary Export",
+      "roleKey": "myp_coordinator",
+      "programmeKey": "MYP",
+      "routePath": "/ib/reports/exceptions",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14660,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Prioritized findings",
+        "Report discipline"
+      ]
+    },
+    {
+      "scenarioId": "550-dp-subject-teacher-course-map-maintenance",
+      "taskId": 550,
+      "title": "Dp Subject Teacher Course Map Maintenance",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/courses/new",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Create DP course map"
+      ]
+    },
+    {
+      "scenarioId": "551-dp-subject-teacher-ia-checkpoint-flow",
+      "taskId": 551,
+      "title": "Dp Subject Teacher Ia Checkpoint Flow",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/core",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "EE supervision",
+        "TOK workspace",
+        "CAS workspace"
+      ]
+    },
+    {
+      "scenarioId": "552-dp-subject-teacher-draft-feedback-and-versioning",
+      "taskId": 552,
+      "title": "Dp Subject Teacher Draft Feedback And Versioning",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/planning/collaboration",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Live collaboration",
+        "Discussion thread"
+      ]
+    },
+    {
+      "scenarioId": "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+      "taskId": 553,
+      "title": "Dp Subject Teacher Predicted Grade And Progress Tracking",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/assessment/ia-risk",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18200,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Readiness by subject",
+        "Student milestone tracker"
+      ]
+    },
+    {
+      "scenarioId": "554-dp-subject-teacher-reporting-and-transcript-prep",
+      "taskId": 554,
+      "title": "Dp Subject Teacher Reporting And Transcript Prep",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18420,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Generated reports",
+        "Delivery log"
+      ]
+    },
+    {
+      "scenarioId": "555-dp-subject-teacher-mobile-triage-and-quick-actions",
+      "taskId": 555,
+      "title": "Dp Subject Teacher Mobile Triage And Quick Actions",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/evidence",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 9440,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Mobile evidence capture",
+        "Reflection review"
+      ]
+    },
+    {
+      "scenarioId": "556-dp-subject-teacher-student-feedback-response-loop",
+      "taskId": 556,
+      "title": "Dp Subject Teacher Student Feedback Response Loop",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/student/progress",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16760,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Released reports",
+        "Communication preferences"
+      ]
+    },
+    {
+      "scenarioId": "557-dp-subject-teacher-recovery-and-edge-cases",
+      "taskId": 557,
+      "title": "Dp Subject Teacher Recovery And Edge Cases",
+      "roleKey": "dp_subject_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Returned context"
+      ]
+    },
+    {
+      "scenarioId": "558-dp-coordinator-ia-programme-health",
+      "taskId": 558,
+      "title": "Dp Coordinator Ia Programme Health",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/coordinator",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Coordinator risk console",
+        "DP coordinator"
+      ]
+    },
+    {
+      "scenarioId": "559-dp-coordinator-ee-tok-cas-oversight",
+      "taskId": 559,
+      "title": "Dp Coordinator Ee Tok Cas Oversight",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/projects-core",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 21620,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "MYP projects hub",
+        "DP core follow-up"
+      ]
+    },
+    {
+      "scenarioId": "560-dp-coordinator-submission-readiness-and-risk",
+      "taskId": 560,
+      "title": "Dp Coordinator Submission Readiness And Risk",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/assessment/ia-risk",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18200,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Readiness by subject",
+        "Student milestone tracker"
+      ]
+    },
+    {
+      "scenarioId": "561-dp-coordinator-approval-and-escalation-flows",
+      "taskId": 561,
+      "title": "Dp Coordinator Approval And Escalation Flows",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16320,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Review quick actions"
+      ]
+    },
+    {
+      "scenarioId": "562-dp-coordinator-family-support-and-communication",
+      "taskId": 562,
+      "title": "Dp Coordinator Family Support And Communication",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Delivery log",
+        "Release workflow"
+      ]
+    },
+    {
+      "scenarioId": "563-dp-coordinator-exception-triage-and-exports",
+      "taskId": 563,
+      "title": "Dp Coordinator Exception Triage And Exports",
+      "roleKey": "dp_coordinator",
+      "programmeKey": "DP",
+      "routePath": "/ib/reports/exceptions",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14660,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Prioritized findings",
+        "Report discipline"
+      ]
+    },
+    {
+      "scenarioId": "564-cas-advisor-experience-review-flow",
+      "taskId": 564,
+      "title": "Cas Advisor Experience Review Flow",
+      "roleKey": "cas_advisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/projects-core/dp/cas",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16980,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "CAS flow",
+        "CAS workspace"
+      ]
+    },
+    {
+      "scenarioId": "565-cas-advisor-project-approval-and-outcome-tracking",
+      "taskId": 565,
+      "title": "Cas Advisor Project Approval And Outcome Tracking",
+      "roleKey": "cas_advisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/core/cas",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 21400,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "CAS workspace",
+        "CAS"
+      ]
+    },
+    {
+      "scenarioId": "566-cas-advisor-reflection-feedback-and-student-nudges",
+      "taskId": 566,
+      "title": "Cas Advisor Reflection Feedback And Student Nudges",
+      "roleKey": "cas_advisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/student/projects",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Projects hub",
+        "DP core follow-up"
+      ]
+    },
+    {
+      "scenarioId": "567-cas-advisor-completion-exception-handling",
+      "taskId": 567,
+      "title": "Cas Advisor Completion Exception Handling",
+      "roleKey": "cas_advisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14000,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Returned context"
+      ]
+    },
+    {
+      "scenarioId": "568-ee-supervisor-meeting-logging-and-milestones",
+      "taskId": 568,
+      "title": "Ee Supervisor Meeting Logging And Milestones",
+      "roleKey": "ee_supervisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/projects-core/dp/ee",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16320,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Supervisor workflow",
+        "Extended Essay supervision"
+      ]
+    },
+    {
+      "scenarioId": "569-ee-supervisor-draft-review-and-feedback",
+      "taskId": 569,
+      "title": "Ee Supervisor Draft Review And Feedback",
+      "roleKey": "ee_supervisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/core/ee",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "EE supervision",
+        "Extended Essay"
+      ]
+    },
+    {
+      "scenarioId": "570-ee-supervisor-progress-risk-and-escalation",
+      "taskId": 570,
+      "title": "Ee Supervisor Progress Risk And Escalation",
+      "roleKey": "ee_supervisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/coordinator",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18860,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Coordinator risk console",
+        "DP coordinator"
+      ]
+    },
+    {
+      "scenarioId": "571-ee-supervisor-archive-and-completion-validation",
+      "taskId": 571,
+      "title": "Ee Supervisor Archive And Completion Validation",
+      "roleKey": "ee_supervisor",
+      "programmeKey": "DP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 21180,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Localization and archive",
+        "Release workflow"
+      ]
+    },
+    {
+      "scenarioId": "572-tok-teacher-essay-and-exhibition-management",
+      "taskId": 572,
+      "title": "Tok Teacher Essay And Exhibition Management",
+      "roleKey": "tok_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/projects-core/dp/tok",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "TOK planning and review",
+        "TOK workspace"
+      ]
+    },
+    {
+      "scenarioId": "573-tok-teacher-feedback-and-reflection-loop",
+      "taskId": 573,
+      "title": "Tok Teacher Feedback And Reflection Loop",
+      "roleKey": "tok_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/dp/core/tok",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17420,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "TOK workspace",
+        "TOK"
+      ]
+    },
+    {
+      "scenarioId": "574-tok-teacher-reporting-and-progress-summary",
+      "taskId": 574,
+      "title": "Tok Teacher Reporting And Progress Summary",
+      "roleKey": "tok_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/reports",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18200,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Generated reports",
+        "Proofing queue and locales"
+      ]
+    },
+    {
+      "scenarioId": "575-tok-teacher-exception-and-deadline-handling",
+      "taskId": 575,
+      "title": "Tok Teacher Exception And Deadline Handling",
+      "roleKey": "tok_teacher",
+      "programmeKey": "DP",
+      "routePath": "/ib/review",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14220,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Queue",
+        "Returned context"
+      ]
+    },
+    {
+      "scenarioId": "576-ib-director-global-programme-health",
+      "taskId": 576,
+      "title": "Ib Director Global Programme Health",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17240,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Operations center",
+        "Review queue"
+      ]
+    },
+    {
+      "scenarioId": "577-ib-director-standards-and-practices-evidence-review",
+      "taskId": 577,
+      "title": "Ib Director Standards And Practices Evidence Review",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/standards-practices",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 19980,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Evidence board",
+        "Active cycle"
+      ]
+    },
+    {
+      "scenarioId": "578-ib-director-staffing-workload-and-sla-monitoring",
+      "taskId": 578,
+      "title": "Ib Director Staffing Workload And Sla Monitoring",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/operations",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 20200,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Operational drilldown matrix",
+        "SLA watch"
+      ]
+    },
+    {
+      "scenarioId": "579-ib-director-accreditation-preparation-simulation",
+      "taskId": 579,
+      "title": "Ib Director Accreditation Preparation Simulation",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/readiness",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 25460,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Pilot readiness",
+        "Operational note"
+      ]
+    },
+    {
+      "scenarioId": "580-ib-director-multi-programme-communication",
+      "taskId": 580,
+      "title": "Ib Director Multi Programme Communication",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/rollout",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 20640,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "GA baseline",
+        "Required flags"
+      ]
+    },
+    {
+      "scenarioId": "581-ib-director-governance-exceptions-and-recovery",
+      "taskId": 581,
+      "title": "Ib Director Governance Exceptions And Recovery",
+      "roleKey": "ib_director",
+      "programmeKey": "Mixed",
+      "routePath": "/ib/reports/exceptions",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16800,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Prioritized findings",
+        "Report discipline"
+      ]
+    },
+    {
+      "scenarioId": "582-primary-student-daily-learning-journey",
+      "taskId": 582,
+      "title": "Primary Student Daily Learning Journey",
+      "roleKey": "primary_student",
+      "programmeKey": "PYP",
+      "routePath": "/ib/student/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14220,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Unified learning timeline",
+        "Communication preferences"
+      ]
+    },
+    {
+      "scenarioId": "583-primary-student-reflection-and-portfolio-submission",
+      "taskId": 583,
+      "title": "Primary Student Reflection And Portfolio Submission",
+      "roleKey": "primary_student",
+      "programmeKey": "PYP",
+      "routePath": "/ib/student/portfolio",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16540,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Portfolio search and collections",
+        "Portfolio"
+      ]
+    },
+    {
+      "scenarioId": "584-primary-student-family-story-view-and-goals",
+      "taskId": 584,
+      "title": "Primary Student Family Story View And Goals",
+      "roleKey": "primary_student",
+      "programmeKey": "PYP",
+      "routePath": "/ib/guardian/stories",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16760,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Published learning stories",
+        "Portfolio"
+      ]
+    },
+    {
+      "scenarioId": "585-middle-years-student-unit-and-project-journey",
+      "taskId": 585,
+      "title": "Middle Years Student Unit And Project Journey",
+      "roleKey": "middle_years_student",
+      "programmeKey": "MYP",
+      "routePath": "/ib/student/projects",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14880,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Projects hub",
+        "DP core follow-up"
+      ]
+    },
+    {
+      "scenarioId": "586-middle-years-student-criteria-feedback-and-reflection",
+      "taskId": 586,
+      "title": "Middle Years Student Criteria Feedback And Reflection",
+      "roleKey": "middle_years_student",
+      "programmeKey": "MYP",
+      "routePath": "/ib/student/progress",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 17200,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Released reports",
+        "Student trust policy"
+      ]
+    },
+    {
+      "scenarioId": "587-diploma-student-ia-ee-tok-cas-dashboard",
+      "taskId": 587,
+      "title": "Diploma Student Ia Ee Tok Cas Dashboard",
+      "roleKey": "diploma_student",
+      "programmeKey": "DP",
+      "routePath": "/ib/student/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 15320,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Unified learning timeline",
+        "Released reports"
+      ]
+    },
+    {
+      "scenarioId": "588-diploma-student-submission-and-revision-cycle",
+      "taskId": 588,
+      "title": "Diploma Student Submission And Revision Cycle",
+      "roleKey": "diploma_student",
+      "programmeKey": "DP",
+      "routePath": "/ib/student/calendar",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 18200,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Upcoming",
+        "Student calendar"
+      ]
+    },
+    {
+      "scenarioId": "589-student-accessibility-and-low-bandwidth-experience",
+      "taskId": 589,
+      "title": "Student Accessibility And Low Bandwidth Experience",
+      "roleKey": "diploma_student",
+      "programmeKey": "DP",
+      "routePath": "/ib/student/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 9220,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Communication preferences",
+        "Calm notifications"
+      ]
+    },
+    {
+      "scenarioId": "590-guardian-digest-and-home-feed",
+      "taskId": 590,
+      "title": "Guardian Digest And Home Feed",
+      "roleKey": "guardian",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 12340,
+        "clickDepth": 6,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Upcoming milestones",
+        "Calendar digest"
+      ]
+    },
+    {
+      "scenarioId": "591-guardian-report-and-conference-prep",
+      "taskId": 591,
+      "title": "Guardian Report And Conference Prep",
+      "roleKey": "guardian",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/progress",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 16130,
+        "clickDepth": 4,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Progress summary",
+        "Guardian progress"
+      ]
+    },
+    {
+      "scenarioId": "592-guardian-progress-monitoring-and-acknowledgement",
+      "taskId": 592,
+      "title": "Guardian Progress Monitoring And Acknowledgement",
+      "roleKey": "guardian",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14565,
+        "clickDepth": 5,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Family interactions",
+        "Released reports"
+      ]
+    },
+    {
+      "scenarioId": "593-guardian-multilingual-and-calm-communication",
+      "taskId": 593,
+      "title": "Guardian Multilingual And Calm Communication",
+      "roleKey": "guardian",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/messages",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 14785,
+        "clickDepth": 6,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Message rhythm",
+        "digest-oriented"
+      ]
+    },
+    {
+      "scenarioId": "594-guardian-multi-child-household-workflow",
+      "taskId": 594,
+      "title": "Guardian Multi Child Household Workflow",
+      "roleKey": "guardian_multichild",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 15005,
+        "clickDepth": 4,
+        "routeChanges": 2,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Upcoming milestones",
+        "Communication preferences"
+      ]
+    },
+    {
+      "scenarioId": "595-guardian-mobile-only-experience",
+      "taskId": 595,
+      "title": "Guardian Mobile Only Experience",
+      "roleKey": "guardian_multichild",
+      "programmeKey": "Guardian",
+      "routePath": "/ib/guardian/home",
+      "status": "pass",
+      "metrics": {
+        "observedMs": 7650,
+        "clickDepth": 5,
+        "routeChanges": 3,
+        "modalCount": 1
+      },
+      "keywords": [
+        "Calendar digest",
+        "Family interactions"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "rec-load-realtime-collaboration",
+      "suiteId": "load-realtime-collaboration",
+      "title": "Load Test Realtime Collaboration And Presence",
+      "category": "performance_regression",
+      "severity": "high",
+      "confidence": "high",
+      "expectedImpact": "material",
+      "evidence": {
+        "suiteId": "load-realtime-collaboration",
+        "scenarioIds": [
+          "519-pyp-homeroom-specialist-collaboration",
+          "526-pyp-specialist-co-planning-and-commenting",
+          "539-myp-subject-teacher-interdisciplinary-co-planning",
+          "552-dp-subject-teacher-draft-feedback-and-versioning"
+        ],
+        "summaryPath": "summaries/task-603.md",
+        "metricsPath": "summary.json"
+      },
+      "recommendation": "Reduce collaboration polling and move more presence work into compact aggregated payloads.",
+      "note": "Presence and collaboration workbench latency exceeded the shared p95 threshold under concurrent load."
+    },
+    {
+      "id": "rec-competitive-parity",
+      "suiteId": "competitive-parity",
+      "title": "Competitive Parity Checklist Toddle And Managebac",
+      "category": "ux_confusion",
+      "severity": "medium",
+      "confidence": "medium",
+      "expectedImpact": "moderate",
+      "evidence": {
+        "suiteId": "competitive-parity",
+        "scenarioIds": [
+          "518-pyp-homeroom-family-story-publishing",
+          "530-pyp-coordinator-poi-governance",
+          "559-dp-coordinator-ee-tok-cas-oversight",
+          "560-dp-coordinator-submission-readiness-and-risk",
+          "590-guardian-digest-and-home-feed"
+        ],
+        "summaryPath": "summaries/task-607.md",
+        "metricsPath": "summary.json"
+      },
+      "recommendation": "Flatten the publishing and exception workflows so the next action is reachable with one fewer route transition.",
+      "note": "Publishing and coordinator exception paths still require more route changes than the parity target."
+    },
+    {
+      "id": "rec-ai-family-translation-proofing",
+      "suiteId": "ai-family-translation-proofing",
+      "title": "Ai Assist Family Summary Translation And Proofing",
+      "category": "ai_guardrail_gap",
+      "severity": "medium",
+      "confidence": "medium",
+      "expectedImpact": "moderate",
+      "evidence": {
+        "suiteId": "ai-family-translation-proofing",
+        "scenarioIds": [
+          "518-pyp-homeroom-family-story-publishing",
+          "593-guardian-multilingual-and-calm-communication"
+        ],
+        "summaryPath": "summaries/task-610.md",
+        "metricsPath": "summary.json"
+      },
+      "recommendation": "Keep family-facing AI suggestions gated behind explicit calm-mode proofing and locale-specific human review.",
+      "note": "One family translation suggestion required full rejection because tone drifted away from calm-mode expectations."
+    }
+  ],
+  "failureCount": 3,
+  "warningCount": 0,
+  "benchmarkTargets": {
+    "unitCreateMs": 45000,
+    "evidenceCaptureMs": 20000,
+    "reportReviewMs": 35000,
+    "publishingQueueMs": 20000,
+    "searchP95Ms": 800,
+    "mobileQuickActionMs": 12000,
+    "aiReviewMs": 30000,
+    "clickDepthTargets": {
+      "teacher_home_resume": 2,
+      "specialist_capture": 3,
+      "guardian_digest": 1,
+      "coordinator_exception_triage": 3
+    },
+    "competitorThresholds": {
+      "toddle": "equal or better on publishing, evidence, and POI clarity",
+      "managebac": "equal or better on DP milestone oversight and reporting calmness"
+    }
+  }
+}

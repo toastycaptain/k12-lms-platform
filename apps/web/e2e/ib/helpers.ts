@@ -8,7 +8,13 @@ export async function gotoAndMeasure(
   maxMs = 12_000,
 ): Promise<number> {
   const startedAt = Date.now();
-  await page.goto(path);
+  try {
+    await page.goto(path, { waitUntil: "commit" });
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("ERR_ABORTED")) {
+      throw error;
+    }
+  }
   await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   const durationMs = Date.now() - startedAt;
 

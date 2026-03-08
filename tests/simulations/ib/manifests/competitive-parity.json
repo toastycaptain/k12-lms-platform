@@ -1,0 +1,17 @@
+{
+  "taskId": 607,
+  "suiteId": "competitive-parity",
+  "title": "Competitive Parity Checklist Toddle And Managebac",
+  "suiteType": "ux",
+  "scenarioIds": [
+    "518-pyp-homeroom-family-story-publishing",
+    "530-pyp-coordinator-poi-governance",
+    "559-dp-coordinator-ee-tok-cas-oversight",
+    "560-dp-coordinator-submission-readiness-and-risk",
+    "590-guardian-digest-and-home-feed"
+  ],
+  "parityTargets": [
+    "toddle",
+    "managebac"
+  ]
+}

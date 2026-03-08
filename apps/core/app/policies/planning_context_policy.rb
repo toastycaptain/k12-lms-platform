@@ -29,10 +29,11 @@ class PlanningContextPolicy < ApplicationPolicy
       end
       return scoped if privileged_user?
 
-      teacher_scope = scoped
-        .joins(planning_context_courses: { course: { sections: :enrollments } })
-        .where(enrollments: { user_id: user.id, role: "teacher" })
-      scoped.where(created_by_id: user.id).or(teacher_scope).distinct
+      joined_scope = scoped.left_outer_joins(planning_context_courses: { course: { sections: :enrollments } })
+      joined_scope
+        .where(created_by_id: user.id)
+        .or(joined_scope.where(enrollments: { user_id: user.id, role: "teacher" }))
+        .distinct
     end
 
     private

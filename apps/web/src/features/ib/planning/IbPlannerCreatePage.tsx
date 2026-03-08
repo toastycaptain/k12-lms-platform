@@ -11,7 +11,7 @@ import type { CurriculumDocument } from "@/curriculum/documents/types";
 interface IbPlannerCreatePageProps {
   title: string;
   description: string;
-  routeBuilder: (documentId: number) => string;
+  routeTemplate: string;
   preferredDocumentType: string;
   fallbackDocumentType: string;
   preferredSchemaKey: string;
@@ -21,7 +21,7 @@ interface IbPlannerCreatePageProps {
 export function IbPlannerCreatePage({
   title,
   description,
-  routeBuilder,
+  routeTemplate,
   preferredDocumentType,
   fallbackDocumentType,
   preferredSchemaKey,
@@ -77,7 +77,7 @@ export function IbPlannerCreatePage({
           },
         }),
       });
-      router.push(routeBuilder(document.id));
+      router.push(routeTemplate.replace(":id", String(document.id)));
     } catch {
       setError("Unable to create the IB planning record.");
     } finally {

@@ -2,7 +2,10 @@
   "name": "k12-lms-platform",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "phase11:build": "node tools/simulation/phase11/build-phase11.mjs",
+    "phase11:audit": "node tools/simulation/phase11/audit-phase11.mjs",
+    "phase11:test": "node --test tools/simulation/phase11/*.test.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7",

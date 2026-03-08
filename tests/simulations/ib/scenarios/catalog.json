@@ -1,0 +1,3156 @@
+[
+  {
+    "taskId": 515,
+    "scenarioId": "515-pyp-homeroom-daily-planning-day",
+    "title": "Pyp Homeroom Daily Planning Day",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/home",
+    "heading": "Teacher action console",
+    "keywords": [
+      "Quick actions",
+      "Resume work"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": "teacher_home_resume",
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Quick actions"
+      },
+      {
+        "type": "text",
+        "value": "Resume work"
+      }
+    ]
+  },
+  {
+    "taskId": 516,
+    "scenarioId": "516-pyp-homeroom-weekly-learning-engagement-build",
+    "title": "Pyp Homeroom Weekly Learning Engagement Build",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/learning",
+    "heading": "Learning workspace",
+    "keywords": [
+      "Weekly flow",
+      "Student learning stream preview"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Weekly flow"
+      },
+      {
+        "type": "text",
+        "value": "Student learning stream preview"
+      }
+    ]
+  },
+  {
+    "taskId": 517,
+    "scenarioId": "517-pyp-homeroom-evidence-capture-and-reflection-review",
+    "title": "Pyp Homeroom Evidence Capture And Reflection Review",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/evidence",
+    "heading": "Evidence inbox",
+    "keywords": [
+      "Evidence queue",
+      "Queue discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Evidence queue"
+      },
+      {
+        "type": "text",
+        "value": "Queue discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 518,
+    "scenarioId": "518-pyp-homeroom-family-story-publishing",
+    "title": "Pyp Homeroom Family Story Publishing",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/families/publishing",
+    "heading": "Family publishing queue",
+    "keywords": [
+      "Publishing queue",
+      "Publishing quick actions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Publishing queue"
+      },
+      {
+        "type": "text",
+        "value": "Publishing quick actions"
+      }
+    ]
+  },
+  {
+    "taskId": 519,
+    "scenarioId": "519-pyp-homeroom-specialist-collaboration",
+    "title": "Pyp Homeroom Specialist Collaboration",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/planning/collaboration",
+    "heading": "Live collaboration",
+    "keywords": [
+      "Discussion thread",
+      "Live collaboration"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Discussion thread"
+      },
+      {
+        "type": "text",
+        "value": "Live collaboration"
+      }
+    ]
+  },
+  {
+    "taskId": 520,
+    "scenarioId": "520-pyp-homeroom-conference-preparation",
+    "title": "Pyp Homeroom Conference Preparation",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "term",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Generated reports",
+      "Release workflow"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Generated reports"
+      },
+      {
+        "type": "text",
+        "value": "Release workflow"
+      }
+    ]
+  },
+  {
+    "taskId": 521,
+    "scenarioId": "521-pyp-homeroom-report-cycle",
+    "title": "Pyp Homeroom Report Cycle",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "term",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Localization and archive",
+      "Proofing queue and locales"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Localization and archive"
+      },
+      {
+        "type": "text",
+        "value": "Proofing queue and locales"
+      }
+    ]
+  },
+  {
+    "taskId": 522,
+    "scenarioId": "522-pyp-homeroom-recovery-and-exception-handling",
+    "title": "Pyp Homeroom Recovery And Exception Handling",
+    "roleKey": "pyp_homeroom_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Returned context",
+      "Review quick actions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_homeroom_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Returned context"
+      },
+      {
+        "type": "text",
+        "value": "Review quick actions"
+      }
+    ]
+  },
+  {
+    "taskId": 523,
+    "scenarioId": "523-pyp-specialist-multi-class-day",
+    "title": "Pyp Specialist Multi Class Day",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/specialist",
+    "heading": "Specialist dashboard",
+    "keywords": [
+      "Where you are needed this week",
+      "Requested contributions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Where you are needed this week"
+      },
+      {
+        "type": "text",
+        "value": "Requested contributions"
+      }
+    ]
+  },
+  {
+    "taskId": 524,
+    "scenarioId": "524-pyp-specialist-fast-context-switching",
+    "title": "Pyp Specialist Fast Context Switching",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/specialist",
+    "heading": "Specialist dashboard",
+    "keywords": [
+      "Pending handoffs",
+      "Assigned units"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Pending handoffs"
+      },
+      {
+        "type": "text",
+        "value": "Assigned units"
+      }
+    ]
+  },
+  {
+    "taskId": 525,
+    "scenarioId": "525-pyp-specialist-evidence-capture-at-scale",
+    "title": "Pyp Specialist Evidence Capture At Scale",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/evidence",
+    "heading": "Evidence inbox",
+    "keywords": [
+      "Evidence queue",
+      "Queue filters"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": "specialist_capture",
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Evidence queue"
+      },
+      {
+        "type": "text",
+        "value": "Queue filters"
+      }
+    ]
+  },
+  {
+    "taskId": 526,
+    "scenarioId": "526-pyp-specialist-co-planning-and-commenting",
+    "title": "Pyp Specialist Co Planning And Commenting",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/planning/collaboration",
+    "heading": "Live collaboration",
+    "keywords": [
+      "Discussion thread",
+      "Live collaboration"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Discussion thread"
+      },
+      {
+        "type": "text",
+        "value": "Live collaboration"
+      }
+    ]
+  },
+  {
+    "taskId": 527,
+    "scenarioId": "527-pyp-specialist-batch-contributions-and-tagging",
+    "title": "Pyp Specialist Batch Contributions And Tagging",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/specialist",
+    "heading": "Specialist dashboard",
+    "keywords": [
+      "Specialist quick hits",
+      "Evidence to sort"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Specialist quick hits"
+      },
+      {
+        "type": "text",
+        "value": "Evidence to sort"
+      }
+    ]
+  },
+  {
+    "taskId": 528,
+    "scenarioId": "528-pyp-specialist-mobile-quick-actions",
+    "title": "Pyp Specialist Mobile Quick Actions",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/evidence",
+    "heading": "Evidence inbox",
+    "keywords": [
+      "Mobile evidence capture",
+      "Reflection review"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": true,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Mobile evidence capture"
+      },
+      {
+        "type": "text",
+        "value": "Reflection review"
+      }
+    ]
+  },
+  {
+    "taskId": 529,
+    "scenarioId": "529-pyp-specialist-failure-modes-and-recovery",
+    "title": "Pyp Specialist Failure Modes And Recovery",
+    "roleKey": "pyp_specialist_teacher",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Returned context"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_specialist_teacher",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Returned context"
+      }
+    ]
+  },
+  {
+    "taskId": 530,
+    "scenarioId": "530-pyp-coordinator-poi-governance",
+    "title": "Pyp Coordinator Poi Governance",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/pyp/poi",
+    "heading": "Programme of inquiry",
+    "keywords": [
+      "Programme of inquiry",
+      "Continuum map"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Programme of inquiry"
+      },
+      {
+        "type": "text",
+        "value": "Continuum map"
+      }
+    ]
+  },
+  {
+    "taskId": 531,
+    "scenarioId": "531-pyp-coordinator-unit-review-queue",
+    "title": "Pyp Coordinator Unit Review Queue",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Review quick actions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Review quick actions"
+      }
+    ]
+  },
+  {
+    "taskId": 532,
+    "scenarioId": "532-pyp-coordinator-theme-balance-and-gap-detection",
+    "title": "Pyp Coordinator Theme Balance And Gap Detection",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/standards-practices",
+    "heading": "Standards and Practices evidence center",
+    "keywords": [
+      "Packet completeness",
+      "Active cycle"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Packet completeness"
+      },
+      {
+        "type": "text",
+        "value": "Active cycle"
+      }
+    ]
+  },
+  {
+    "taskId": 533,
+    "scenarioId": "533-pyp-coordinator-exhibition-oversight",
+    "title": "Pyp Coordinator Exhibition Oversight",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "annual",
+    "routePath": "/ib/pyp/exhibition",
+    "heading": "PYP exhibition workspace",
+    "keywords": [
+      "Family window",
+      "PYP exhibition workspace"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Family window"
+      },
+      {
+        "type": "text",
+        "value": "PYP exhibition workspace"
+      }
+    ]
+  },
+  {
+    "taskId": 534,
+    "scenarioId": "534-pyp-coordinator-family-publishing-health",
+    "title": "Pyp Coordinator Family Publishing Health",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/families/publishing",
+    "heading": "Family publishing queue",
+    "keywords": [
+      "Queue states",
+      "Publishing quick actions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue states"
+      },
+      {
+        "type": "text",
+        "value": "Publishing quick actions"
+      }
+    ]
+  },
+  {
+    "taskId": 535,
+    "scenarioId": "535-pyp-coordinator-exception-triage-and-escalation",
+    "title": "Pyp Coordinator Exception Triage And Escalation",
+    "roleKey": "pyp_coordinator",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/reports/exceptions",
+    "heading": "Exception reports",
+    "keywords": [
+      "Prioritized findings",
+      "Report discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "pyp_coordinator",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": "coordinator_exception_triage",
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Prioritized findings"
+      },
+      {
+        "type": "text",
+        "value": "Report discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 536,
+    "scenarioId": "536-myp-subject-teacher-unit-creation-and-editing",
+    "title": "Myp Subject Teacher Unit Creation And Editing",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "daily",
+    "routePath": "/ib/myp/units/new",
+    "heading": "Create MYP unit",
+    "keywords": [
+      "Create MYP unit"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Create MYP unit"
+      }
+    ]
+  },
+  {
+    "taskId": 537,
+    "scenarioId": "537-myp-subject-teacher-criteria-and-atl-workflow",
+    "title": "Myp Subject Teacher Criteria And Atl Workflow",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/assessment",
+    "heading": "Assessment workspace",
+    "keywords": [
+      "Criteria planning",
+      "DP assessment dashboard"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Criteria planning"
+      },
+      {
+        "type": "text",
+        "value": "DP assessment dashboard"
+      }
+    ]
+  },
+  {
+    "taskId": 538,
+    "scenarioId": "538-myp-subject-teacher-assessment-and-feedback-loop",
+    "title": "Myp Subject Teacher Assessment And Feedback Loop",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Generated reports",
+      "Release workflow"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Generated reports"
+      },
+      {
+        "type": "text",
+        "value": "Release workflow"
+      }
+    ]
+  },
+  {
+    "taskId": 539,
+    "scenarioId": "539-myp-subject-teacher-interdisciplinary-co-planning",
+    "title": "Myp Subject Teacher Interdisciplinary Co Planning",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/planning/collaboration",
+    "heading": "Live collaboration",
+    "keywords": [
+      "Live collaboration",
+      "Discussion thread"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Live collaboration"
+      },
+      {
+        "type": "text",
+        "value": "Discussion thread"
+      }
+    ]
+  },
+  {
+    "taskId": 540,
+    "scenarioId": "540-myp-subject-teacher-project-support",
+    "title": "Myp Subject Teacher Project Support",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/myp/projects",
+    "heading": "MYP projects",
+    "keywords": [
+      "Projects hub",
+      "MYP projects"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Projects hub"
+      },
+      {
+        "type": "text",
+        "value": "MYP projects"
+      }
+    ]
+  },
+  {
+    "taskId": 541,
+    "scenarioId": "541-myp-subject-teacher-evidence-and-reflections",
+    "title": "Myp Subject Teacher Evidence And Reflections",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/evidence",
+    "heading": "Evidence inbox",
+    "keywords": [
+      "Evidence queue",
+      "Queue discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Evidence queue"
+      },
+      {
+        "type": "text",
+        "value": "Queue discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 542,
+    "scenarioId": "542-myp-subject-teacher-reporting-and-conference-prep",
+    "title": "Myp Subject Teacher Reporting And Conference Prep",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "term",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Delivery log",
+      "Release workflow"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Delivery log"
+      },
+      {
+        "type": "text",
+        "value": "Release workflow"
+      }
+    ]
+  },
+  {
+    "taskId": 543,
+    "scenarioId": "543-myp-subject-teacher-recovery-and-high-volume-day",
+    "title": "Myp Subject Teacher Recovery And High Volume Day",
+    "roleKey": "myp_subject_teacher",
+    "programmeKey": "MYP",
+    "cadence": "daily",
+    "routePath": "/ib/home",
+    "heading": "Teacher action console",
+    "keywords": [
+      "Workflow benchmark snapshot",
+      "Teacher-speed benchmark refresh"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_subject_teacher",
+      "myp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Workflow benchmark snapshot"
+      },
+      {
+        "type": "text",
+        "value": "Teacher-speed benchmark refresh"
+      }
+    ]
+  },
+  {
+    "taskId": 544,
+    "scenarioId": "544-myp-coordinator-programme-overview-and-coverage",
+    "title": "Myp Coordinator Programme Overview And Coverage",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/myp/coverage",
+    "heading": "MYP coverage",
+    "keywords": [
+      "Subject-unit coverage",
+      "Project and service risk"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Subject-unit coverage"
+      },
+      {
+        "type": "text",
+        "value": "Project and service risk"
+      }
+    ]
+  },
+  {
+    "taskId": 545,
+    "scenarioId": "545-myp-coordinator-interdisciplinary-approvals",
+    "title": "Myp Coordinator Interdisciplinary Approvals",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/myp/review",
+    "heading": "MYP review",
+    "keywords": [
+      "Document review",
+      "Projects and service"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Document review"
+      },
+      {
+        "type": "text",
+        "value": "Projects and service"
+      }
+    ]
+  },
+  {
+    "taskId": 546,
+    "scenarioId": "546-myp-coordinator-atl-and-criteria-balance-analysis",
+    "title": "Myp Coordinator Atl And Criteria Balance Analysis",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/standards-practices",
+    "heading": "Standards and Practices evidence center",
+    "keywords": [
+      "Evidence board",
+      "Packet completeness"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Evidence board"
+      },
+      {
+        "type": "text",
+        "value": "Packet completeness"
+      }
+    ]
+  },
+  {
+    "taskId": 547,
+    "scenarioId": "547-myp-coordinator-project-risk-management",
+    "title": "Myp Coordinator Project Risk Management",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "annual",
+    "routePath": "/ib/myp/projects",
+    "heading": "MYP projects",
+    "keywords": [
+      "Projects hub",
+      "MYP projects"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Projects hub"
+      },
+      {
+        "type": "text",
+        "value": "MYP projects"
+      }
+    ]
+  },
+  {
+    "taskId": 548,
+    "scenarioId": "548-myp-coordinator-service-as-action-monitoring",
+    "title": "Myp Coordinator Service As Action Monitoring",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/myp/service",
+    "heading": "Service as action",
+    "keywords": [
+      "Service queue",
+      "Service as action"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Service queue"
+      },
+      {
+        "type": "text",
+        "value": "Service as action"
+      }
+    ]
+  },
+  {
+    "taskId": 549,
+    "scenarioId": "549-myp-coordinator-exception-triage-and-summary-export",
+    "title": "Myp Coordinator Exception Triage And Summary Export",
+    "roleKey": "myp_coordinator",
+    "programmeKey": "MYP",
+    "cadence": "daily",
+    "routePath": "/ib/reports/exceptions",
+    "heading": "Exception reports",
+    "keywords": [
+      "Prioritized findings",
+      "Report discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "myp_coordinator",
+      "myp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Prioritized findings"
+      },
+      {
+        "type": "text",
+        "value": "Report discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 550,
+    "scenarioId": "550-dp-subject-teacher-course-map-maintenance",
+    "title": "Dp Subject Teacher Course Map Maintenance",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/dp/courses/new",
+    "heading": "Create DP course map",
+    "keywords": [
+      "Create DP course map"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Create DP course map"
+      }
+    ]
+  },
+  {
+    "taskId": 551,
+    "scenarioId": "551-dp-subject-teacher-ia-checkpoint-flow",
+    "title": "Dp Subject Teacher Ia Checkpoint Flow",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/dp/core",
+    "heading": "DP core overview",
+    "keywords": [
+      "EE supervision",
+      "TOK workspace",
+      "CAS workspace"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "EE supervision"
+      },
+      {
+        "type": "text",
+        "value": "TOK workspace"
+      },
+      {
+        "type": "text",
+        "value": "CAS workspace"
+      }
+    ]
+  },
+  {
+    "taskId": 552,
+    "scenarioId": "552-dp-subject-teacher-draft-feedback-and-versioning",
+    "title": "Dp Subject Teacher Draft Feedback And Versioning",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/planning/collaboration",
+    "heading": "Live collaboration",
+    "keywords": [
+      "Live collaboration",
+      "Discussion thread"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Live collaboration"
+      },
+      {
+        "type": "text",
+        "value": "Discussion thread"
+      }
+    ]
+  },
+  {
+    "taskId": 553,
+    "scenarioId": "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+    "title": "Dp Subject Teacher Predicted Grade And Progress Tracking",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/dp/assessment/ia-risk",
+    "heading": "DP IA risk",
+    "keywords": [
+      "Readiness by subject",
+      "Student milestone tracker"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Readiness by subject"
+      },
+      {
+        "type": "text",
+        "value": "Student milestone tracker"
+      }
+    ]
+  },
+  {
+    "taskId": 554,
+    "scenarioId": "554-dp-subject-teacher-reporting-and-transcript-prep",
+    "title": "Dp Subject Teacher Reporting And Transcript Prep",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Generated reports",
+      "Delivery log"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Generated reports"
+      },
+      {
+        "type": "text",
+        "value": "Delivery log"
+      }
+    ]
+  },
+  {
+    "taskId": 555,
+    "scenarioId": "555-dp-subject-teacher-mobile-triage-and-quick-actions",
+    "title": "Dp Subject Teacher Mobile Triage And Quick Actions",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/evidence",
+    "heading": "Evidence inbox",
+    "keywords": [
+      "Mobile evidence capture",
+      "Reflection review"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "daily"
+    ],
+    "mobile": true,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": "mobileQuickActionMs",
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Mobile evidence capture"
+      },
+      {
+        "type": "text",
+        "value": "Reflection review"
+      }
+    ]
+  },
+  {
+    "taskId": 556,
+    "scenarioId": "556-dp-subject-teacher-student-feedback-response-loop",
+    "title": "Dp Subject Teacher Student Feedback Response Loop",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/student/progress",
+    "heading": "Progress",
+    "keywords": [
+      "Released reports",
+      "Communication preferences"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Released reports"
+      },
+      {
+        "type": "text",
+        "value": "Communication preferences"
+      }
+    ]
+  },
+  {
+    "taskId": 557,
+    "scenarioId": "557-dp-subject-teacher-recovery-and-edge-cases",
+    "title": "Dp Subject Teacher Recovery And Edge Cases",
+    "roleKey": "dp_subject_teacher",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Returned context"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_subject_teacher",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Returned context"
+      }
+    ]
+  },
+  {
+    "taskId": 558,
+    "scenarioId": "558-dp-coordinator-ia-programme-health",
+    "title": "Dp Coordinator Ia Programme Health",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/dp/coordinator",
+    "heading": "DP coordinator",
+    "keywords": [
+      "Coordinator risk console",
+      "DP coordinator"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Coordinator risk console"
+      },
+      {
+        "type": "text",
+        "value": "DP coordinator"
+      }
+    ]
+  },
+  {
+    "taskId": 559,
+    "scenarioId": "559-dp-coordinator-ee-tok-cas-oversight",
+    "title": "Dp Coordinator Ee Tok Cas Oversight",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "annual",
+    "routePath": "/ib/projects-core",
+    "heading": "Projects and core",
+    "keywords": [
+      "MYP projects hub",
+      "DP core follow-up"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "MYP projects hub"
+      },
+      {
+        "type": "text",
+        "value": "DP core follow-up"
+      }
+    ]
+  },
+  {
+    "taskId": 560,
+    "scenarioId": "560-dp-coordinator-submission-readiness-and-risk",
+    "title": "Dp Coordinator Submission Readiness And Risk",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/dp/assessment/ia-risk",
+    "heading": "DP IA risk",
+    "keywords": [
+      "Readiness by subject",
+      "Student milestone tracker"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Readiness by subject"
+      },
+      {
+        "type": "text",
+        "value": "Student milestone tracker"
+      }
+    ]
+  },
+  {
+    "taskId": 561,
+    "scenarioId": "561-dp-coordinator-approval-and-escalation-flows",
+    "title": "Dp Coordinator Approval And Escalation Flows",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Review quick actions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Review quick actions"
+      }
+    ]
+  },
+  {
+    "taskId": 562,
+    "scenarioId": "562-dp-coordinator-family-support-and-communication",
+    "title": "Dp Coordinator Family Support And Communication",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Delivery log",
+      "Release workflow"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Delivery log"
+      },
+      {
+        "type": "text",
+        "value": "Release workflow"
+      }
+    ]
+  },
+  {
+    "taskId": 563,
+    "scenarioId": "563-dp-coordinator-exception-triage-and-exports",
+    "title": "Dp Coordinator Exception Triage And Exports",
+    "roleKey": "dp_coordinator",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/reports/exceptions",
+    "heading": "Exception reports",
+    "keywords": [
+      "Prioritized findings",
+      "Report discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "dp_coordinator",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Prioritized findings"
+      },
+      {
+        "type": "text",
+        "value": "Report discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 564,
+    "scenarioId": "564-cas-advisor-experience-review-flow",
+    "title": "Cas Advisor Experience Review Flow",
+    "roleKey": "cas_advisor",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/projects-core/dp/cas",
+    "heading": "CAS workspace",
+    "keywords": [
+      "CAS flow",
+      "CAS workspace"
+    ],
+    "surface": "browser",
+    "tags": [
+      "cas_advisor",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "CAS flow"
+      },
+      {
+        "type": "text",
+        "value": "CAS workspace"
+      }
+    ]
+  },
+  {
+    "taskId": 565,
+    "scenarioId": "565-cas-advisor-project-approval-and-outcome-tracking",
+    "title": "Cas Advisor Project Approval And Outcome Tracking",
+    "roleKey": "cas_advisor",
+    "programmeKey": "DP",
+    "cadence": "annual",
+    "routePath": "/ib/dp/core/cas",
+    "heading": "CAS",
+    "keywords": [
+      "CAS workspace",
+      "CAS"
+    ],
+    "surface": "browser",
+    "tags": [
+      "cas_advisor",
+      "dp",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "CAS workspace"
+      },
+      {
+        "type": "text",
+        "value": "CAS"
+      }
+    ]
+  },
+  {
+    "taskId": 566,
+    "scenarioId": "566-cas-advisor-reflection-feedback-and-student-nudges",
+    "title": "Cas Advisor Reflection Feedback And Student Nudges",
+    "roleKey": "cas_advisor",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/student/projects",
+    "heading": "Student projects and core",
+    "keywords": [
+      "Projects hub",
+      "DP core follow-up"
+    ],
+    "surface": "browser",
+    "tags": [
+      "cas_advisor",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Projects hub"
+      },
+      {
+        "type": "text",
+        "value": "DP core follow-up"
+      }
+    ]
+  },
+  {
+    "taskId": 567,
+    "scenarioId": "567-cas-advisor-completion-exception-handling",
+    "title": "Cas Advisor Completion Exception Handling",
+    "roleKey": "cas_advisor",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Returned context"
+    ],
+    "surface": "browser",
+    "tags": [
+      "cas_advisor",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Returned context"
+      }
+    ]
+  },
+  {
+    "taskId": 568,
+    "scenarioId": "568-ee-supervisor-meeting-logging-and-milestones",
+    "title": "Ee Supervisor Meeting Logging And Milestones",
+    "roleKey": "ee_supervisor",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/projects-core/dp/ee",
+    "heading": "Extended Essay supervision",
+    "keywords": [
+      "Supervisor workflow",
+      "Extended Essay supervision"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ee_supervisor",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Supervisor workflow"
+      },
+      {
+        "type": "text",
+        "value": "Extended Essay supervision"
+      }
+    ]
+  },
+  {
+    "taskId": 569,
+    "scenarioId": "569-ee-supervisor-draft-review-and-feedback",
+    "title": "Ee Supervisor Draft Review And Feedback",
+    "roleKey": "ee_supervisor",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/dp/core/ee",
+    "heading": "Extended Essay",
+    "keywords": [
+      "EE supervision",
+      "Extended Essay"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ee_supervisor",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "EE supervision"
+      },
+      {
+        "type": "text",
+        "value": "Extended Essay"
+      }
+    ]
+  },
+  {
+    "taskId": 570,
+    "scenarioId": "570-ee-supervisor-progress-risk-and-escalation",
+    "title": "Ee Supervisor Progress Risk And Escalation",
+    "roleKey": "ee_supervisor",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/dp/coordinator",
+    "heading": "DP coordinator",
+    "keywords": [
+      "Coordinator risk console",
+      "DP coordinator"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ee_supervisor",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Coordinator risk console"
+      },
+      {
+        "type": "text",
+        "value": "DP coordinator"
+      }
+    ]
+  },
+  {
+    "taskId": 571,
+    "scenarioId": "571-ee-supervisor-archive-and-completion-validation",
+    "title": "Ee Supervisor Archive And Completion Validation",
+    "roleKey": "ee_supervisor",
+    "programmeKey": "DP",
+    "cadence": "annual",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Localization and archive",
+      "Release workflow"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ee_supervisor",
+      "dp",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Localization and archive"
+      },
+      {
+        "type": "text",
+        "value": "Release workflow"
+      }
+    ]
+  },
+  {
+    "taskId": 572,
+    "scenarioId": "572-tok-teacher-essay-and-exhibition-management",
+    "title": "Tok Teacher Essay And Exhibition Management",
+    "roleKey": "tok_teacher",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/projects-core/dp/tok",
+    "heading": "TOK workspace",
+    "keywords": [
+      "TOK planning and review",
+      "TOK workspace"
+    ],
+    "surface": "browser",
+    "tags": [
+      "tok_teacher",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "TOK planning and review"
+      },
+      {
+        "type": "text",
+        "value": "TOK workspace"
+      }
+    ]
+  },
+  {
+    "taskId": 573,
+    "scenarioId": "573-tok-teacher-feedback-and-reflection-loop",
+    "title": "Tok Teacher Feedback And Reflection Loop",
+    "roleKey": "tok_teacher",
+    "programmeKey": "DP",
+    "cadence": "weekly",
+    "routePath": "/ib/dp/core/tok",
+    "heading": "TOK",
+    "keywords": [
+      "TOK workspace",
+      "TOK"
+    ],
+    "surface": "browser",
+    "tags": [
+      "tok_teacher",
+      "dp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "TOK workspace"
+      },
+      {
+        "type": "text",
+        "value": "TOK"
+      }
+    ]
+  },
+  {
+    "taskId": 574,
+    "scenarioId": "574-tok-teacher-reporting-and-progress-summary",
+    "title": "Tok Teacher Reporting And Progress Summary",
+    "roleKey": "tok_teacher",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/reports",
+    "heading": "IB reports",
+    "keywords": [
+      "Generated reports",
+      "Proofing queue and locales"
+    ],
+    "surface": "browser",
+    "tags": [
+      "tok_teacher",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Generated reports"
+      },
+      {
+        "type": "text",
+        "value": "Proofing queue and locales"
+      }
+    ]
+  },
+  {
+    "taskId": 575,
+    "scenarioId": "575-tok-teacher-exception-and-deadline-handling",
+    "title": "Tok Teacher Exception And Deadline Handling",
+    "roleKey": "tok_teacher",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/review",
+    "heading": "Approval and review queue",
+    "keywords": [
+      "Queue",
+      "Returned context"
+    ],
+    "surface": "browser",
+    "tags": [
+      "tok_teacher",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Queue"
+      },
+      {
+        "type": "text",
+        "value": "Returned context"
+      }
+    ]
+  },
+  {
+    "taskId": 576,
+    "scenarioId": "576-ib-director-global-programme-health",
+    "title": "Ib Director Global Programme Health",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "daily",
+    "routePath": "/ib/home",
+    "heading": "Coordinator overview",
+    "keywords": [
+      "Operations center",
+      "Review queue"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Operations center"
+      },
+      {
+        "type": "text",
+        "value": "Review queue"
+      }
+    ]
+  },
+  {
+    "taskId": 577,
+    "scenarioId": "577-ib-director-standards-and-practices-evidence-review",
+    "title": "Ib Director Standards And Practices Evidence Review",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "weekly",
+    "routePath": "/ib/standards-practices",
+    "heading": "Standards and Practices evidence center",
+    "keywords": [
+      "Evidence board",
+      "Active cycle"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Evidence board"
+      },
+      {
+        "type": "text",
+        "value": "Active cycle"
+      }
+    ]
+  },
+  {
+    "taskId": 578,
+    "scenarioId": "578-ib-director-staffing-workload-and-sla-monitoring",
+    "title": "Ib Director Staffing Workload And Sla Monitoring",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "weekly",
+    "routePath": "/ib/operations",
+    "heading": "Programme operations center",
+    "keywords": [
+      "Operational drilldown matrix",
+      "SLA watch"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Operational drilldown matrix"
+      },
+      {
+        "type": "text",
+        "value": "SLA watch"
+      }
+    ]
+  },
+  {
+    "taskId": 579,
+    "scenarioId": "579-ib-director-accreditation-preparation-simulation",
+    "title": "Ib Director Accreditation Preparation Simulation",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "annual",
+    "routePath": "/ib/readiness",
+    "heading": "Pilot readiness",
+    "keywords": [
+      "Pilot readiness",
+      "Operational note"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "annual"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Pilot readiness"
+      },
+      {
+        "type": "text",
+        "value": "Operational note"
+      }
+    ]
+  },
+  {
+    "taskId": 580,
+    "scenarioId": "580-ib-director-multi-programme-communication",
+    "title": "Ib Director Multi Programme Communication",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "weekly",
+    "routePath": "/ib/rollout",
+    "heading": "Rollout console",
+    "keywords": [
+      "GA baseline",
+      "Required flags"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "GA baseline"
+      },
+      {
+        "type": "text",
+        "value": "Required flags"
+      }
+    ]
+  },
+  {
+    "taskId": 581,
+    "scenarioId": "581-ib-director-governance-exceptions-and-recovery",
+    "title": "Ib Director Governance Exceptions And Recovery",
+    "roleKey": "ib_director",
+    "programmeKey": "Mixed",
+    "cadence": "daily",
+    "routePath": "/ib/reports/exceptions",
+    "heading": "Exception reports",
+    "keywords": [
+      "Prioritized findings",
+      "Report discipline"
+    ],
+    "surface": "browser",
+    "tags": [
+      "ib_director",
+      "mixed",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Prioritized findings"
+      },
+      {
+        "type": "text",
+        "value": "Report discipline"
+      }
+    ]
+  },
+  {
+    "taskId": 582,
+    "scenarioId": "582-primary-student-daily-learning-journey",
+    "title": "Primary Student Daily Learning Journey",
+    "roleKey": "primary_student",
+    "programmeKey": "PYP",
+    "cadence": "daily",
+    "routePath": "/ib/student/home",
+    "heading": "Student home",
+    "keywords": [
+      "Unified learning timeline",
+      "Communication preferences"
+    ],
+    "surface": "browser",
+    "tags": [
+      "primary_student",
+      "pyp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Unified learning timeline"
+      },
+      {
+        "type": "text",
+        "value": "Communication preferences"
+      }
+    ]
+  },
+  {
+    "taskId": 583,
+    "scenarioId": "583-primary-student-reflection-and-portfolio-submission",
+    "title": "Primary Student Reflection And Portfolio Submission",
+    "roleKey": "primary_student",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/student/portfolio",
+    "heading": "Portfolio",
+    "keywords": [
+      "Portfolio search and collections",
+      "Portfolio"
+    ],
+    "surface": "browser",
+    "tags": [
+      "primary_student",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Portfolio search and collections"
+      },
+      {
+        "type": "text",
+        "value": "Portfolio"
+      }
+    ]
+  },
+  {
+    "taskId": 584,
+    "scenarioId": "584-primary-student-family-story-view-and-goals",
+    "title": "Primary Student Family Story View And Goals",
+    "roleKey": "primary_student",
+    "programmeKey": "PYP",
+    "cadence": "weekly",
+    "routePath": "/ib/guardian/stories",
+    "heading": "Published learning stories",
+    "keywords": [
+      "Published learning stories",
+      "Portfolio"
+    ],
+    "surface": "browser",
+    "tags": [
+      "primary_student",
+      "pyp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Published learning stories"
+      },
+      {
+        "type": "text",
+        "value": "Portfolio"
+      }
+    ]
+  },
+  {
+    "taskId": 585,
+    "scenarioId": "585-middle-years-student-unit-and-project-journey",
+    "title": "Middle Years Student Unit And Project Journey",
+    "roleKey": "middle_years_student",
+    "programmeKey": "MYP",
+    "cadence": "daily",
+    "routePath": "/ib/student/projects",
+    "heading": "Student projects and core",
+    "keywords": [
+      "Projects hub",
+      "DP core follow-up"
+    ],
+    "surface": "browser",
+    "tags": [
+      "middle_years_student",
+      "myp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Projects hub"
+      },
+      {
+        "type": "text",
+        "value": "DP core follow-up"
+      }
+    ]
+  },
+  {
+    "taskId": 586,
+    "scenarioId": "586-middle-years-student-criteria-feedback-and-reflection",
+    "title": "Middle Years Student Criteria Feedback And Reflection",
+    "roleKey": "middle_years_student",
+    "programmeKey": "MYP",
+    "cadence": "weekly",
+    "routePath": "/ib/student/progress",
+    "heading": "Progress",
+    "keywords": [
+      "Released reports",
+      "Student trust policy"
+    ],
+    "surface": "browser",
+    "tags": [
+      "middle_years_student",
+      "myp",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Released reports"
+      },
+      {
+        "type": "text",
+        "value": "Student trust policy"
+      }
+    ]
+  },
+  {
+    "taskId": 587,
+    "scenarioId": "587-diploma-student-ia-ee-tok-cas-dashboard",
+    "title": "Diploma Student Ia Ee Tok Cas Dashboard",
+    "roleKey": "diploma_student",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/student/home",
+    "heading": "Student home",
+    "keywords": [
+      "Unified learning timeline",
+      "Released reports"
+    ],
+    "surface": "browser",
+    "tags": [
+      "diploma_student",
+      "dp",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Unified learning timeline"
+      },
+      {
+        "type": "text",
+        "value": "Released reports"
+      }
+    ]
+  },
+  {
+    "taskId": 588,
+    "scenarioId": "588-diploma-student-submission-and-revision-cycle",
+    "title": "Diploma Student Submission And Revision Cycle",
+    "roleKey": "diploma_student",
+    "programmeKey": "DP",
+    "cadence": "term",
+    "routePath": "/ib/student/calendar",
+    "heading": "Student calendar",
+    "keywords": [
+      "Upcoming",
+      "Student calendar"
+    ],
+    "surface": "browser",
+    "tags": [
+      "diploma_student",
+      "dp",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Upcoming"
+      },
+      {
+        "type": "text",
+        "value": "Student calendar"
+      }
+    ]
+  },
+  {
+    "taskId": 589,
+    "scenarioId": "589-student-accessibility-and-low-bandwidth-experience",
+    "title": "Student Accessibility And Low Bandwidth Experience",
+    "roleKey": "diploma_student",
+    "programmeKey": "DP",
+    "cadence": "daily",
+    "routePath": "/ib/student/home",
+    "heading": "Student home",
+    "keywords": [
+      "Communication preferences",
+      "Calm notifications"
+    ],
+    "surface": "browser",
+    "tags": [
+      "diploma_student",
+      "dp",
+      "daily"
+    ],
+    "mobile": true,
+    "aiAssisted": false,
+    "recoveryFocus": true,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Communication preferences"
+      },
+      {
+        "type": "text",
+        "value": "Calm notifications"
+      }
+    ]
+  },
+  {
+    "taskId": 590,
+    "scenarioId": "590-guardian-digest-and-home-feed",
+    "title": "Guardian Digest And Home Feed",
+    "roleKey": "guardian",
+    "programmeKey": "Guardian",
+    "cadence": "daily",
+    "routePath": "/ib/guardian/home",
+    "heading": "Family home",
+    "keywords": [
+      "Upcoming milestones",
+      "Calendar digest"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian",
+      "guardian",
+      "daily"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": "guardian_digest",
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Upcoming milestones"
+      },
+      {
+        "type": "text",
+        "value": "Calendar digest"
+      }
+    ]
+  },
+  {
+    "taskId": 591,
+    "scenarioId": "591-guardian-report-and-conference-prep",
+    "title": "Guardian Report And Conference Prep",
+    "roleKey": "guardian",
+    "programmeKey": "Guardian",
+    "cadence": "term",
+    "routePath": "/ib/guardian/progress",
+    "heading": "Guardian progress",
+    "keywords": [
+      "Progress summary",
+      "Guardian progress"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian",
+      "guardian",
+      "term"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Progress summary"
+      },
+      {
+        "type": "text",
+        "value": "Guardian progress"
+      }
+    ]
+  },
+  {
+    "taskId": 592,
+    "scenarioId": "592-guardian-progress-monitoring-and-acknowledgement",
+    "title": "Guardian Progress Monitoring And Acknowledgement",
+    "roleKey": "guardian",
+    "programmeKey": "Guardian",
+    "cadence": "weekly",
+    "routePath": "/ib/guardian/home",
+    "heading": "Family home",
+    "keywords": [
+      "Family interactions",
+      "Released reports"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian",
+      "guardian",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Family interactions"
+      },
+      {
+        "type": "text",
+        "value": "Released reports"
+      }
+    ]
+  },
+  {
+    "taskId": 593,
+    "scenarioId": "593-guardian-multilingual-and-calm-communication",
+    "title": "Guardian Multilingual And Calm Communication",
+    "roleKey": "guardian",
+    "programmeKey": "Guardian",
+    "cadence": "weekly",
+    "routePath": "/ib/guardian/messages",
+    "heading": "Guardian messages",
+    "keywords": [
+      "Message rhythm",
+      "digest-oriented"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian",
+      "guardian",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Message rhythm"
+      },
+      {
+        "type": "text",
+        "value": "digest-oriented"
+      }
+    ]
+  },
+  {
+    "taskId": 594,
+    "scenarioId": "594-guardian-multi-child-household-workflow",
+    "title": "Guardian Multi Child Household Workflow",
+    "roleKey": "guardian_multichild",
+    "programmeKey": "Guardian",
+    "cadence": "weekly",
+    "routePath": "/ib/guardian/home",
+    "heading": "Family home",
+    "keywords": [
+      "Upcoming milestones",
+      "Communication preferences"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian_multichild",
+      "guardian",
+      "weekly"
+    ],
+    "mobile": false,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Upcoming milestones"
+      },
+      {
+        "type": "text",
+        "value": "Communication preferences"
+      }
+    ]
+  },
+  {
+    "taskId": 595,
+    "scenarioId": "595-guardian-mobile-only-experience",
+    "title": "Guardian Mobile Only Experience",
+    "roleKey": "guardian_multichild",
+    "programmeKey": "Guardian",
+    "cadence": "daily",
+    "routePath": "/ib/guardian/home",
+    "heading": "Family home",
+    "keywords": [
+      "Calendar digest",
+      "Family interactions"
+    ],
+    "surface": "browser",
+    "tags": [
+      "guardian_multichild",
+      "guardian",
+      "daily"
+    ],
+    "mobile": true,
+    "aiAssisted": false,
+    "recoveryFocus": false,
+    "benchmarkKey": null,
+    "frictionBudget": {
+      "clicks": 4,
+      "routeChanges": 2,
+      "modals": 1
+    },
+    "checkpoints": [
+      {
+        "type": "text",
+        "value": "Calendar digest"
+      },
+      {
+        "type": "text",
+        "value": "Family interactions"
+      }
+    ]
+  }
+]

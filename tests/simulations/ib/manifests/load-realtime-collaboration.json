@@ -1,0 +1,17 @@
+{
+  "taskId": 603,
+  "suiteId": "load-realtime-collaboration",
+  "title": "Load Test Realtime Collaboration And Presence",
+  "suiteType": "k6",
+  "script": "tests/performance/ib/realtime-collaboration.js",
+  "scenarioIds": [
+    "519-pyp-homeroom-specialist-collaboration",
+    "526-pyp-specialist-co-planning-and-commenting",
+    "539-myp-subject-teacher-interdisciplinary-co-planning",
+    "552-dp-subject-teacher-draft-feedback-and-versioning"
+  ],
+  "thresholds": {
+    "http_req_failed": "rate<0.03",
+    "http_req_duration_p95": "p(95)<1100"
+  }
+}

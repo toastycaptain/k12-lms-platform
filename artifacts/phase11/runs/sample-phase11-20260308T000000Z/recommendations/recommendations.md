@@ -1,0 +1,3 @@
+- rec-load-realtime-collaboration: Reduce collaboration polling and move more presence work into compact aggregated payloads.
+- rec-competitive-parity: Flatten the publishing and exception workflows so the next action is reachable with one fewer route transition.
+- rec-ai-family-translation-proofing: Keep family-facing AI suggestions gated behind explicit calm-mode proofing and locale-specific human review.

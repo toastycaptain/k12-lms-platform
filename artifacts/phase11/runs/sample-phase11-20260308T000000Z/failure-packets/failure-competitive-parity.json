@@ -1,0 +1,19 @@
+{
+  "packetId": "failure-competitive-parity",
+  "suiteId": "competitive-parity",
+  "severity": "medium",
+  "category": "ux_confusion",
+  "suspectedArea": "Flatten the publishing and exception workflows so the next action is reachable with one fewer route transition.",
+  "evidence": {
+    "suiteId": "competitive-parity",
+    "scenarioIds": [
+      "518-pyp-homeroom-family-story-publishing",
+      "530-pyp-coordinator-poi-governance",
+      "559-dp-coordinator-ee-tok-cas-oversight",
+      "560-dp-coordinator-submission-readiness-and-risk",
+      "590-guardian-digest-and-home-feed"
+    ],
+    "summaryPath": "summaries/task-607.md",
+    "metricsPath": "summary.json"
+  }
+}

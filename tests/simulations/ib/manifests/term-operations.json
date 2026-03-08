@@ -1,0 +1,21 @@
+{
+  "taskId": 598,
+  "suiteId": "term-operations",
+  "title": "Term Simulation Suite Orchestration",
+  "suiteType": "cadence",
+  "scenarioIds": [
+    "520-pyp-homeroom-conference-preparation",
+    "521-pyp-homeroom-report-cycle",
+    "542-myp-subject-teacher-reporting-and-conference-prep",
+    "553-dp-subject-teacher-predicted-grade-and-progress-tracking",
+    "554-dp-subject-teacher-reporting-and-transcript-prep",
+    "560-dp-coordinator-submission-readiness-and-risk",
+    "570-ee-supervisor-progress-risk-and-escalation",
+    "574-tok-teacher-reporting-and-progress-summary",
+    "588-diploma-student-submission-and-revision-cycle",
+    "591-guardian-report-and-conference-prep"
+  ],
+  "executionMode": "playwright",
+  "parallelism": 1,
+  "sharedStateRule": "term reporting and milestone state advanced in phases"
+}

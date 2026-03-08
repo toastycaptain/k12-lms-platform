@@ -1,0 +1,14 @@
+{
+  "taskId": 612,
+  "suiteId": "codex-review-loop",
+  "title": "Codex Review Loop Architecture Recommendations And Phase12 Signal",
+  "suiteType": "review",
+  "inputs": [
+    "summary.json",
+    "events.ndjson",
+    "failure-packets",
+    "recommendations",
+    "load",
+    "server/telemetry.json"
+  ]
+}

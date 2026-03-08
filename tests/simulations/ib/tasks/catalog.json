@@ -1,0 +1,1178 @@
+[
+  {
+    "id": 0,
+    "file": "00_IB_PHASE11_MASTER_EXECUTION.md",
+    "slug": "IB_PHASE11_MASTER_EXECUTION",
+    "title": "Ib Phase11 Master Execution",
+    "group": "phase11",
+    "sourcePath": "spec/ib-phase11-codex-tasks/00_IB_PHASE11_MASTER_EXECUTION.md"
+  },
+  {
+    "id": 469,
+    "file": "469_SIMULATION_PROGRAM_CHARTER_AND_SUCCESS_CRITERIA.md",
+    "slug": "SIMULATION_PROGRAM_CHARTER_AND_SUCCESS_CRITERIA",
+    "title": "Simulation Program Charter And Success Criteria",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/469_SIMULATION_PROGRAM_CHARTER_AND_SUCCESS_CRITERIA.md"
+  },
+  {
+    "id": 470,
+    "file": "470_TOOLCHAIN_DECISIONS_AND_EXECUTION_STRATEGY.md",
+    "slug": "TOOLCHAIN_DECISIONS_AND_EXECUTION_STRATEGY",
+    "title": "Toolchain Decisions And Execution Strategy",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/470_TOOLCHAIN_DECISIONS_AND_EXECUTION_STRATEGY.md"
+  },
+  {
+    "id": 471,
+    "file": "471_REPO_STRUCTURE_FOR_ROLE_SIMULATION.md",
+    "slug": "REPO_STRUCTURE_FOR_ROLE_SIMULATION",
+    "title": "Repo Structure For Role Simulation",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/471_REPO_STRUCTURE_FOR_ROLE_SIMULATION.md"
+  },
+  {
+    "id": 472,
+    "file": "472_SHARED_SIMULATION_CONVENTIONS_AND_TEST_NAMING.md",
+    "slug": "SHARED_SIMULATION_CONVENTIONS_AND_TEST_NAMING",
+    "title": "Shared Simulation Conventions And Test Naming",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/472_SHARED_SIMULATION_CONVENTIONS_AND_TEST_NAMING.md"
+  },
+  {
+    "id": 473,
+    "file": "473_ROLE_TAXONOMY_AND_PERMISSION_MATRIX.md",
+    "slug": "ROLE_TAXONOMY_AND_PERMISSION_MATRIX",
+    "title": "Role Taxonomy And Permission Matrix",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/473_ROLE_TAXONOMY_AND_PERMISSION_MATRIX.md"
+  },
+  {
+    "id": 474,
+    "file": "474_ACADEMIC_CALENDAR_AND_SCHOOL_TIMETABLE_MODELING.md",
+    "slug": "ACADEMIC_CALENDAR_AND_SCHOOL_TIMETABLE_MODELING",
+    "title": "Academic Calendar And School Timetable Modeling",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/474_ACADEMIC_CALENDAR_AND_SCHOOL_TIMETABLE_MODELING.md"
+  },
+  {
+    "id": 475,
+    "file": "475_IB_PROGRAMME_YEAR_AND_SECTION_MODELING.md",
+    "slug": "IB_PROGRAMME_YEAR_AND_SECTION_MODELING",
+    "title": "Ib Programme Year And Section Modeling",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/475_IB_PROGRAMME_YEAR_AND_SECTION_MODELING.md"
+  },
+  {
+    "id": 476,
+    "file": "476_SIMULATION_ENVIRONMENT_PROFILES_LOCAL_CI_STAGING.md",
+    "slug": "SIMULATION_ENVIRONMENT_PROFILES_LOCAL_CI_STAGING",
+    "title": "Simulation Environment Profiles Local Ci Staging",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/476_SIMULATION_ENVIRONMENT_PROFILES_LOCAL_CI_STAGING.md"
+  },
+  {
+    "id": 477,
+    "file": "477_TEST_DATA_PRIVACY_AND_SEED_SANITIZATION.md",
+    "slug": "TEST_DATA_PRIVACY_AND_SEED_SANITIZATION",
+    "title": "Test Data Privacy And Seed Sanitization",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/477_TEST_DATA_PRIVACY_AND_SEED_SANITIZATION.md"
+  },
+  {
+    "id": 478,
+    "file": "478_BASELINE_BENCHMARK_SLOS_AND_COMPETITIVE_THRESHOLDS.md",
+    "slug": "BASELINE_BENCHMARK_SLOS_AND_COMPETITIVE_THRESHOLDS",
+    "title": "Baseline Benchmark Slos And Competitive Thresholds",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/478_BASELINE_BENCHMARK_SLOS_AND_COMPETITIVE_THRESHOLDS.md"
+  },
+  {
+    "id": 479,
+    "file": "479_FAILURE_CLASSIFICATION_AND_TRIAGE_TAXONOMY.md",
+    "slug": "FAILURE_CLASSIFICATION_AND_TRIAGE_TAXONOMY",
+    "title": "Failure Classification And Triage Taxonomy",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/479_FAILURE_CLASSIFICATION_AND_TRIAGE_TAXONOMY.md"
+  },
+  {
+    "id": 480,
+    "file": "480_PHASE11_CHANGE_MANAGEMENT_AND_COMMIT_DISCIPLINE.md",
+    "slug": "PHASE11_CHANGE_MANAGEMENT_AND_COMMIT_DISCIPLINE",
+    "title": "Phase11 Change Management And Commit Discipline",
+    "group": "foundations",
+    "sourcePath": "spec/ib-phase11-codex-tasks/480_PHASE11_CHANGE_MANAGEMENT_AND_COMMIT_DISCIPLINE.md"
+  },
+  {
+    "id": 481,
+    "file": "481_SCHOOL_SEED_FACTORY_FOUNDATIONS.md",
+    "slug": "SCHOOL_SEED_FACTORY_FOUNDATIONS",
+    "title": "School Seed Factory Foundations",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/481_SCHOOL_SEED_FACTORY_FOUNDATIONS.md"
+  },
+  {
+    "id": 482,
+    "file": "482_PYP_SEED_SCENARIOS.md",
+    "slug": "PYP_SEED_SCENARIOS",
+    "title": "Pyp Seed Scenarios",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/482_PYP_SEED_SCENARIOS.md"
+  },
+  {
+    "id": 483,
+    "file": "483_MYP_SEED_SCENARIOS.md",
+    "slug": "MYP_SEED_SCENARIOS",
+    "title": "Myp Seed Scenarios",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/483_MYP_SEED_SCENARIOS.md"
+  },
+  {
+    "id": 484,
+    "file": "484_DP_SEED_SCENARIOS.md",
+    "slug": "DP_SEED_SCENARIOS",
+    "title": "Dp Seed Scenarios",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/484_DP_SEED_SCENARIOS.md"
+  },
+  {
+    "id": 485,
+    "file": "485_USER_PERSONA_FIXTURES_TEACHER_SPECIALIST_COORDINATOR.md",
+    "slug": "USER_PERSONA_FIXTURES_TEACHER_SPECIALIST_COORDINATOR",
+    "title": "User Persona Fixtures Teacher Specialist Coordinator",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/485_USER_PERSONA_FIXTURES_TEACHER_SPECIALIST_COORDINATOR.md"
+  },
+  {
+    "id": 486,
+    "file": "486_USER_PERSONA_FIXTURES_STUDENT_GUARDIAN_ADMIN.md",
+    "slug": "USER_PERSONA_FIXTURES_STUDENT_GUARDIAN_ADMIN",
+    "title": "User Persona Fixtures Student Guardian Admin",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/486_USER_PERSONA_FIXTURES_STUDENT_GUARDIAN_ADMIN.md"
+  },
+  {
+    "id": 487,
+    "file": "487_EVIDENCE_AND_LEARNING_STORY_FIXTURE_FACTORY.md",
+    "slug": "EVIDENCE_AND_LEARNING_STORY_FIXTURE_FACTORY",
+    "title": "Evidence And Learning Story Fixture Factory",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/487_EVIDENCE_AND_LEARNING_STORY_FIXTURE_FACTORY.md"
+  },
+  {
+    "id": 488,
+    "file": "488_REPORTING_AND_CONFERENCE_FIXTURE_FACTORY.md",
+    "slug": "REPORTING_AND_CONFERENCE_FIXTURE_FACTORY",
+    "title": "Reporting And Conference Fixture Factory",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/488_REPORTING_AND_CONFERENCE_FIXTURE_FACTORY.md"
+  },
+  {
+    "id": 489,
+    "file": "489_OPERATIONAL_RECORDS_AND_QUEUE_FIXTURE_FACTORY.md",
+    "slug": "OPERATIONAL_RECORDS_AND_QUEUE_FIXTURE_FACTORY",
+    "title": "Operational Records And Queue Fixture Factory",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/489_OPERATIONAL_RECORDS_AND_QUEUE_FIXTURE_FACTORY.md"
+  },
+  {
+    "id": 490,
+    "file": "490_MIGRATION_FIXTURE_FACTORY_TODDLE.md",
+    "slug": "MIGRATION_FIXTURE_FACTORY_TODDLE",
+    "title": "Migration Fixture Factory Toddle",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/490_MIGRATION_FIXTURE_FACTORY_TODDLE.md"
+  },
+  {
+    "id": 491,
+    "file": "491_MIGRATION_FIXTURE_FACTORY_MANAGEBAC.md",
+    "slug": "MIGRATION_FIXTURE_FACTORY_MANAGEBAC",
+    "title": "Migration Fixture Factory Managebac",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/491_MIGRATION_FIXTURE_FACTORY_MANAGEBAC.md"
+  },
+  {
+    "id": 492,
+    "file": "492_SEARCH_PERFORMANCE_AND_BULK_ARTIFACT_FIXTURE_FACTORY.md",
+    "slug": "SEARCH_PERFORMANCE_AND_BULK_ARTIFACT_FIXTURE_FACTORY",
+    "title": "Search Performance And Bulk Artifact Fixture Factory",
+    "group": "fixtures",
+    "sourcePath": "spec/ib-phase11-codex-tasks/492_SEARCH_PERFORMANCE_AND_BULK_ARTIFACT_FIXTURE_FACTORY.md"
+  },
+  {
+    "id": 493,
+    "file": "493_PLAYWRIGHT_HARNESS_BOOTSTRAP.md",
+    "slug": "PLAYWRIGHT_HARNESS_BOOTSTRAP",
+    "title": "Playwright Harness Bootstrap",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/493_PLAYWRIGHT_HARNESS_BOOTSTRAP.md"
+  },
+  {
+    "id": 494,
+    "file": "494_PLAYWRIGHT_ROLE_SESSION_HELPERS.md",
+    "slug": "PLAYWRIGHT_ROLE_SESSION_HELPERS",
+    "title": "Playwright Role Session Helpers",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/494_PLAYWRIGHT_ROLE_SESSION_HELPERS.md"
+  },
+  {
+    "id": 495,
+    "file": "495_API_CLIENT_AND_DATA_SETUP_HELPERS.md",
+    "slug": "API_CLIENT_AND_DATA_SETUP_HELPERS",
+    "title": "Api Client And Data Setup Helpers",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/495_API_CLIENT_AND_DATA_SETUP_HELPERS.md"
+  },
+  {
+    "id": 496,
+    "file": "496_MULTI_ROLE_ORCHESTRATION_HELPERS.md",
+    "slug": "MULTI_ROLE_ORCHESTRATION_HELPERS",
+    "title": "Multi Role Orchestration Helpers",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/496_MULTI_ROLE_ORCHESTRATION_HELPERS.md"
+  },
+  {
+    "id": 497,
+    "file": "497_TIME_TRAVEL_AND_CALENDAR_ADVANCE_UTILITIES.md",
+    "slug": "TIME_TRAVEL_AND_CALENDAR_ADVANCE_UTILITIES",
+    "title": "Time Travel And Calendar Advance Utilities",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/497_TIME_TRAVEL_AND_CALENDAR_ADVANCE_UTILITIES.md"
+  },
+  {
+    "id": 498,
+    "file": "498_NOTIFICATION_AND_DIGEST_INTERCEPTORS.md",
+    "slug": "NOTIFICATION_AND_DIGEST_INTERCEPTORS",
+    "title": "Notification And Digest Interceptors",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/498_NOTIFICATION_AND_DIGEST_INTERCEPTORS.md"
+  },
+  {
+    "id": 499,
+    "file": "499_OFFLINE_AND_NETWORK_THROTTLING_UTILITIES.md",
+    "slug": "OFFLINE_AND_NETWORK_THROTTLING_UTILITIES",
+    "title": "Offline And Network Throttling Utilities",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/499_OFFLINE_AND_NETWORK_THROTTLING_UTILITIES.md"
+  },
+  {
+    "id": 500,
+    "file": "500_ARTIFACT_CAPTURE_SCREENSHOT_TRACE_VIDEO.md",
+    "slug": "ARTIFACT_CAPTURE_SCREENSHOT_TRACE_VIDEO",
+    "title": "Artifact Capture Screenshot Trace Video",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/500_ARTIFACT_CAPTURE_SCREENSHOT_TRACE_VIDEO.md"
+  },
+  {
+    "id": 501,
+    "file": "501_K6_HARNESS_BOOTSTRAP.md",
+    "slug": "K6_HARNESS_BOOTSTRAP",
+    "title": "K6 Harness Bootstrap",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/501_K6_HARNESS_BOOTSTRAP.md"
+  },
+  {
+    "id": 502,
+    "file": "502_SHARED_SCENARIO_MANIFEST_RUNNER.md",
+    "slug": "SHARED_SCENARIO_MANIFEST_RUNNER",
+    "title": "Shared Scenario Manifest Runner",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/502_SHARED_SCENARIO_MANIFEST_RUNNER.md"
+  },
+  {
+    "id": 503,
+    "file": "503_RETRY_IDEMPOTENCY_AND_ISOLATION_RULES.md",
+    "slug": "RETRY_IDEMPOTENCY_AND_ISOLATION_RULES",
+    "title": "Retry Idempotency And Isolation Rules",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/503_RETRY_IDEMPOTENCY_AND_ISOLATION_RULES.md"
+  },
+  {
+    "id": 504,
+    "file": "504_SIMULATION_TAGGING_FILTERING_AND_TEST_SELECTION.md",
+    "slug": "SIMULATION_TAGGING_FILTERING_AND_TEST_SELECTION",
+    "title": "Simulation Tagging Filtering And Test Selection",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/504_SIMULATION_TAGGING_FILTERING_AND_TEST_SELECTION.md"
+  },
+  {
+    "id": 505,
+    "file": "505_PARALLELIZATION_STRATEGY_AND_WORKER_ALLOCATION.md",
+    "slug": "PARALLELIZATION_STRATEGY_AND_WORKER_ALLOCATION",
+    "title": "Parallelization Strategy And Worker Allocation",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/505_PARALLELIZATION_STRATEGY_AND_WORKER_ALLOCATION.md"
+  },
+  {
+    "id": 506,
+    "file": "506_SIMULATION_RUNBOOK_GENERATION_AND_AUTOMATION.md",
+    "slug": "SIMULATION_RUNBOOK_GENERATION_AND_AUTOMATION",
+    "title": "Simulation Runbook Generation And Automation",
+    "group": "engine",
+    "sourcePath": "spec/ib-phase11-codex-tasks/506_SIMULATION_RUNBOOK_GENERATION_AND_AUTOMATION.md"
+  },
+  {
+    "id": 507,
+    "file": "507_STRUCTURED_LOG_SCHEMA_AND_EVENT_STREAM.md",
+    "slug": "STRUCTURED_LOG_SCHEMA_AND_EVENT_STREAM",
+    "title": "Structured Log Schema And Event Stream",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/507_STRUCTURED_LOG_SCHEMA_AND_EVENT_STREAM.md"
+  },
+  {
+    "id": 508,
+    "file": "508_ROLE_ACTION_LOGGING_INSTRUMENTATION.md",
+    "slug": "ROLE_ACTION_LOGGING_INSTRUMENTATION",
+    "title": "Role Action Logging Instrumentation",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/508_ROLE_ACTION_LOGGING_INSTRUMENTATION.md"
+  },
+  {
+    "id": 509,
+    "file": "509_SERVER_SIDE_TELEMETRY_CAPTURE_FOR_SIMULATIONS.md",
+    "slug": "SERVER_SIDE_TELEMETRY_CAPTURE_FOR_SIMULATIONS",
+    "title": "Server Side Telemetry Capture For Simulations",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/509_SERVER_SIDE_TELEMETRY_CAPTURE_FOR_SIMULATIONS.md"
+  },
+  {
+    "id": 510,
+    "file": "510_CLIENT_SIDE_PERFORMANCE_MARKS_AND_WEB_VITALS_CAPTURE.md",
+    "slug": "CLIENT_SIDE_PERFORMANCE_MARKS_AND_WEB_VITALS_CAPTURE",
+    "title": "Client Side Performance Marks And Web Vitals Capture",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/510_CLIENT_SIDE_PERFORMANCE_MARKS_AND_WEB_VITALS_CAPTURE.md"
+  },
+  {
+    "id": 511,
+    "file": "511_METRIC_AGGREGATION_PIPELINE_AND_RESULT_STORE.md",
+    "slug": "METRIC_AGGREGATION_PIPELINE_AND_RESULT_STORE",
+    "title": "Metric Aggregation Pipeline And Result Store",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/511_METRIC_AGGREGATION_PIPELINE_AND_RESULT_STORE.md"
+  },
+  {
+    "id": 512,
+    "file": "512_DASHBOARD_SUMMARY_ARTIFACTS_AND_HTML_REPORTS.md",
+    "slug": "DASHBOARD_SUMMARY_ARTIFACTS_AND_HTML_REPORTS",
+    "title": "Dashboard Summary Artifacts And Html Reports",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/512_DASHBOARD_SUMMARY_ARTIFACTS_AND_HTML_REPORTS.md"
+  },
+  {
+    "id": 513,
+    "file": "513_FAILURE_PACKET_BUNDLING_FOR_CODEX_REVIEW.md",
+    "slug": "FAILURE_PACKET_BUNDLING_FOR_CODEX_REVIEW",
+    "title": "Failure Packet Bundling For Codex Review",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/513_FAILURE_PACKET_BUNDLING_FOR_CODEX_REVIEW.md"
+  },
+  {
+    "id": 514,
+    "file": "514_AUTOMATED_ANOMALY_DETECTION_AND_RECOMMENDATION_SUMMARIES.md",
+    "slug": "AUTOMATED_ANOMALY_DETECTION_AND_RECOMMENDATION_SUMMARIES",
+    "title": "Automated Anomaly Detection And Recommendation Summaries",
+    "group": "logging",
+    "sourcePath": "spec/ib-phase11-codex-tasks/514_AUTOMATED_ANOMALY_DETECTION_AND_RECOMMENDATION_SUMMARIES.md"
+  },
+  {
+    "id": 515,
+    "file": "515_PYP_HOMEROOM_DAILY_PLANNING_DAY.md",
+    "slug": "PYP_HOMEROOM_DAILY_PLANNING_DAY",
+    "title": "Pyp Homeroom Daily Planning Day",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/515_PYP_HOMEROOM_DAILY_PLANNING_DAY.md"
+  },
+  {
+    "id": 516,
+    "file": "516_PYP_HOMEROOM_WEEKLY_LEARNING_ENGAGEMENT_BUILD.md",
+    "slug": "PYP_HOMEROOM_WEEKLY_LEARNING_ENGAGEMENT_BUILD",
+    "title": "Pyp Homeroom Weekly Learning Engagement Build",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/516_PYP_HOMEROOM_WEEKLY_LEARNING_ENGAGEMENT_BUILD.md"
+  },
+  {
+    "id": 517,
+    "file": "517_PYP_HOMEROOM_EVIDENCE_CAPTURE_AND_REFLECTION_REVIEW.md",
+    "slug": "PYP_HOMEROOM_EVIDENCE_CAPTURE_AND_REFLECTION_REVIEW",
+    "title": "Pyp Homeroom Evidence Capture And Reflection Review",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/517_PYP_HOMEROOM_EVIDENCE_CAPTURE_AND_REFLECTION_REVIEW.md"
+  },
+  {
+    "id": 518,
+    "file": "518_PYP_HOMEROOM_FAMILY_STORY_PUBLISHING.md",
+    "slug": "PYP_HOMEROOM_FAMILY_STORY_PUBLISHING",
+    "title": "Pyp Homeroom Family Story Publishing",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/518_PYP_HOMEROOM_FAMILY_STORY_PUBLISHING.md"
+  },
+  {
+    "id": 519,
+    "file": "519_PYP_HOMEROOM_SPECIALIST_COLLABORATION.md",
+    "slug": "PYP_HOMEROOM_SPECIALIST_COLLABORATION",
+    "title": "Pyp Homeroom Specialist Collaboration",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/519_PYP_HOMEROOM_SPECIALIST_COLLABORATION.md"
+  },
+  {
+    "id": 520,
+    "file": "520_PYP_HOMEROOM_CONFERENCE_PREPARATION.md",
+    "slug": "PYP_HOMEROOM_CONFERENCE_PREPARATION",
+    "title": "Pyp Homeroom Conference Preparation",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/520_PYP_HOMEROOM_CONFERENCE_PREPARATION.md"
+  },
+  {
+    "id": 521,
+    "file": "521_PYP_HOMEROOM_REPORT_CYCLE.md",
+    "slug": "PYP_HOMEROOM_REPORT_CYCLE",
+    "title": "Pyp Homeroom Report Cycle",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/521_PYP_HOMEROOM_REPORT_CYCLE.md"
+  },
+  {
+    "id": 522,
+    "file": "522_PYP_HOMEROOM_RECOVERY_AND_EXCEPTION_HANDLING.md",
+    "slug": "PYP_HOMEROOM_RECOVERY_AND_EXCEPTION_HANDLING",
+    "title": "Pyp Homeroom Recovery And Exception Handling",
+    "group": "pyp_homeroom",
+    "sourcePath": "spec/ib-phase11-codex-tasks/522_PYP_HOMEROOM_RECOVERY_AND_EXCEPTION_HANDLING.md"
+  },
+  {
+    "id": 523,
+    "file": "523_PYP_SPECIALIST_MULTI_CLASS_DAY.md",
+    "slug": "PYP_SPECIALIST_MULTI_CLASS_DAY",
+    "title": "Pyp Specialist Multi Class Day",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/523_PYP_SPECIALIST_MULTI_CLASS_DAY.md"
+  },
+  {
+    "id": 524,
+    "file": "524_PYP_SPECIALIST_FAST_CONTEXT_SWITCHING.md",
+    "slug": "PYP_SPECIALIST_FAST_CONTEXT_SWITCHING",
+    "title": "Pyp Specialist Fast Context Switching",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/524_PYP_SPECIALIST_FAST_CONTEXT_SWITCHING.md"
+  },
+  {
+    "id": 525,
+    "file": "525_PYP_SPECIALIST_EVIDENCE_CAPTURE_AT_SCALE.md",
+    "slug": "PYP_SPECIALIST_EVIDENCE_CAPTURE_AT_SCALE",
+    "title": "Pyp Specialist Evidence Capture At Scale",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/525_PYP_SPECIALIST_EVIDENCE_CAPTURE_AT_SCALE.md"
+  },
+  {
+    "id": 526,
+    "file": "526_PYP_SPECIALIST_CO_PLANNING_AND_COMMENTING.md",
+    "slug": "PYP_SPECIALIST_CO_PLANNING_AND_COMMENTING",
+    "title": "Pyp Specialist Co Planning And Commenting",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/526_PYP_SPECIALIST_CO_PLANNING_AND_COMMENTING.md"
+  },
+  {
+    "id": 527,
+    "file": "527_PYP_SPECIALIST_BATCH_CONTRIBUTIONS_AND_TAGGING.md",
+    "slug": "PYP_SPECIALIST_BATCH_CONTRIBUTIONS_AND_TAGGING",
+    "title": "Pyp Specialist Batch Contributions And Tagging",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/527_PYP_SPECIALIST_BATCH_CONTRIBUTIONS_AND_TAGGING.md"
+  },
+  {
+    "id": 528,
+    "file": "528_PYP_SPECIALIST_MOBILE_QUICK_ACTIONS.md",
+    "slug": "PYP_SPECIALIST_MOBILE_QUICK_ACTIONS",
+    "title": "Pyp Specialist Mobile Quick Actions",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/528_PYP_SPECIALIST_MOBILE_QUICK_ACTIONS.md"
+  },
+  {
+    "id": 529,
+    "file": "529_PYP_SPECIALIST_FAILURE_MODES_AND_RECOVERY.md",
+    "slug": "PYP_SPECIALIST_FAILURE_MODES_AND_RECOVERY",
+    "title": "Pyp Specialist Failure Modes And Recovery",
+    "group": "pyp_specialist",
+    "sourcePath": "spec/ib-phase11-codex-tasks/529_PYP_SPECIALIST_FAILURE_MODES_AND_RECOVERY.md"
+  },
+  {
+    "id": 530,
+    "file": "530_PYP_COORDINATOR_POI_GOVERNANCE.md",
+    "slug": "PYP_COORDINATOR_POI_GOVERNANCE",
+    "title": "Pyp Coordinator Poi Governance",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/530_PYP_COORDINATOR_POI_GOVERNANCE.md"
+  },
+  {
+    "id": 531,
+    "file": "531_PYP_COORDINATOR_UNIT_REVIEW_QUEUE.md",
+    "slug": "PYP_COORDINATOR_UNIT_REVIEW_QUEUE",
+    "title": "Pyp Coordinator Unit Review Queue",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/531_PYP_COORDINATOR_UNIT_REVIEW_QUEUE.md"
+  },
+  {
+    "id": 532,
+    "file": "532_PYP_COORDINATOR_THEME_BALANCE_AND_GAP_DETECTION.md",
+    "slug": "PYP_COORDINATOR_THEME_BALANCE_AND_GAP_DETECTION",
+    "title": "Pyp Coordinator Theme Balance And Gap Detection",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/532_PYP_COORDINATOR_THEME_BALANCE_AND_GAP_DETECTION.md"
+  },
+  {
+    "id": 533,
+    "file": "533_PYP_COORDINATOR_EXHIBITION_OVERSIGHT.md",
+    "slug": "PYP_COORDINATOR_EXHIBITION_OVERSIGHT",
+    "title": "Pyp Coordinator Exhibition Oversight",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/533_PYP_COORDINATOR_EXHIBITION_OVERSIGHT.md"
+  },
+  {
+    "id": 534,
+    "file": "534_PYP_COORDINATOR_FAMILY_PUBLISHING_HEALTH.md",
+    "slug": "PYP_COORDINATOR_FAMILY_PUBLISHING_HEALTH",
+    "title": "Pyp Coordinator Family Publishing Health",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/534_PYP_COORDINATOR_FAMILY_PUBLISHING_HEALTH.md"
+  },
+  {
+    "id": 535,
+    "file": "535_PYP_COORDINATOR_EXCEPTION_TRIAGE_AND_ESCALATION.md",
+    "slug": "PYP_COORDINATOR_EXCEPTION_TRIAGE_AND_ESCALATION",
+    "title": "Pyp Coordinator Exception Triage And Escalation",
+    "group": "pyp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/535_PYP_COORDINATOR_EXCEPTION_TRIAGE_AND_ESCALATION.md"
+  },
+  {
+    "id": 536,
+    "file": "536_MYP_SUBJECT_TEACHER_UNIT_CREATION_AND_EDITING.md",
+    "slug": "MYP_SUBJECT_TEACHER_UNIT_CREATION_AND_EDITING",
+    "title": "Myp Subject Teacher Unit Creation And Editing",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/536_MYP_SUBJECT_TEACHER_UNIT_CREATION_AND_EDITING.md"
+  },
+  {
+    "id": 537,
+    "file": "537_MYP_SUBJECT_TEACHER_CRITERIA_AND_ATL_WORKFLOW.md",
+    "slug": "MYP_SUBJECT_TEACHER_CRITERIA_AND_ATL_WORKFLOW",
+    "title": "Myp Subject Teacher Criteria And Atl Workflow",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/537_MYP_SUBJECT_TEACHER_CRITERIA_AND_ATL_WORKFLOW.md"
+  },
+  {
+    "id": 538,
+    "file": "538_MYP_SUBJECT_TEACHER_ASSESSMENT_AND_FEEDBACK_LOOP.md",
+    "slug": "MYP_SUBJECT_TEACHER_ASSESSMENT_AND_FEEDBACK_LOOP",
+    "title": "Myp Subject Teacher Assessment And Feedback Loop",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/538_MYP_SUBJECT_TEACHER_ASSESSMENT_AND_FEEDBACK_LOOP.md"
+  },
+  {
+    "id": 539,
+    "file": "539_MYP_SUBJECT_TEACHER_INTERDISCIPLINARY_CO_PLANNING.md",
+    "slug": "MYP_SUBJECT_TEACHER_INTERDISCIPLINARY_CO_PLANNING",
+    "title": "Myp Subject Teacher Interdisciplinary Co Planning",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/539_MYP_SUBJECT_TEACHER_INTERDISCIPLINARY_CO_PLANNING.md"
+  },
+  {
+    "id": 540,
+    "file": "540_MYP_SUBJECT_TEACHER_PROJECT_SUPPORT.md",
+    "slug": "MYP_SUBJECT_TEACHER_PROJECT_SUPPORT",
+    "title": "Myp Subject Teacher Project Support",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/540_MYP_SUBJECT_TEACHER_PROJECT_SUPPORT.md"
+  },
+  {
+    "id": 541,
+    "file": "541_MYP_SUBJECT_TEACHER_EVIDENCE_AND_REFLECTIONS.md",
+    "slug": "MYP_SUBJECT_TEACHER_EVIDENCE_AND_REFLECTIONS",
+    "title": "Myp Subject Teacher Evidence And Reflections",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/541_MYP_SUBJECT_TEACHER_EVIDENCE_AND_REFLECTIONS.md"
+  },
+  {
+    "id": 542,
+    "file": "542_MYP_SUBJECT_TEACHER_REPORTING_AND_CONFERENCE_PREP.md",
+    "slug": "MYP_SUBJECT_TEACHER_REPORTING_AND_CONFERENCE_PREP",
+    "title": "Myp Subject Teacher Reporting And Conference Prep",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/542_MYP_SUBJECT_TEACHER_REPORTING_AND_CONFERENCE_PREP.md"
+  },
+  {
+    "id": 543,
+    "file": "543_MYP_SUBJECT_TEACHER_RECOVERY_AND_HIGH_VOLUME_DAY.md",
+    "slug": "MYP_SUBJECT_TEACHER_RECOVERY_AND_HIGH_VOLUME_DAY",
+    "title": "Myp Subject Teacher Recovery And High Volume Day",
+    "group": "myp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/543_MYP_SUBJECT_TEACHER_RECOVERY_AND_HIGH_VOLUME_DAY.md"
+  },
+  {
+    "id": 544,
+    "file": "544_MYP_COORDINATOR_PROGRAMME_OVERVIEW_AND_COVERAGE.md",
+    "slug": "MYP_COORDINATOR_PROGRAMME_OVERVIEW_AND_COVERAGE",
+    "title": "Myp Coordinator Programme Overview And Coverage",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/544_MYP_COORDINATOR_PROGRAMME_OVERVIEW_AND_COVERAGE.md"
+  },
+  {
+    "id": 545,
+    "file": "545_MYP_COORDINATOR_INTERDISCIPLINARY_APPROVALS.md",
+    "slug": "MYP_COORDINATOR_INTERDISCIPLINARY_APPROVALS",
+    "title": "Myp Coordinator Interdisciplinary Approvals",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/545_MYP_COORDINATOR_INTERDISCIPLINARY_APPROVALS.md"
+  },
+  {
+    "id": 546,
+    "file": "546_MYP_COORDINATOR_ATL_AND_CRITERIA_BALANCE_ANALYSIS.md",
+    "slug": "MYP_COORDINATOR_ATL_AND_CRITERIA_BALANCE_ANALYSIS",
+    "title": "Myp Coordinator Atl And Criteria Balance Analysis",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/546_MYP_COORDINATOR_ATL_AND_CRITERIA_BALANCE_ANALYSIS.md"
+  },
+  {
+    "id": 547,
+    "file": "547_MYP_COORDINATOR_PROJECT_RISK_MANAGEMENT.md",
+    "slug": "MYP_COORDINATOR_PROJECT_RISK_MANAGEMENT",
+    "title": "Myp Coordinator Project Risk Management",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/547_MYP_COORDINATOR_PROJECT_RISK_MANAGEMENT.md"
+  },
+  {
+    "id": 548,
+    "file": "548_MYP_COORDINATOR_SERVICE_AS_ACTION_MONITORING.md",
+    "slug": "MYP_COORDINATOR_SERVICE_AS_ACTION_MONITORING",
+    "title": "Myp Coordinator Service As Action Monitoring",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/548_MYP_COORDINATOR_SERVICE_AS_ACTION_MONITORING.md"
+  },
+  {
+    "id": 549,
+    "file": "549_MYP_COORDINATOR_EXCEPTION_TRIAGE_AND_SUMMARY_EXPORT.md",
+    "slug": "MYP_COORDINATOR_EXCEPTION_TRIAGE_AND_SUMMARY_EXPORT",
+    "title": "Myp Coordinator Exception Triage And Summary Export",
+    "group": "myp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/549_MYP_COORDINATOR_EXCEPTION_TRIAGE_AND_SUMMARY_EXPORT.md"
+  },
+  {
+    "id": 550,
+    "file": "550_DP_SUBJECT_TEACHER_COURSE_MAP_MAINTENANCE.md",
+    "slug": "DP_SUBJECT_TEACHER_COURSE_MAP_MAINTENANCE",
+    "title": "Dp Subject Teacher Course Map Maintenance",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/550_DP_SUBJECT_TEACHER_COURSE_MAP_MAINTENANCE.md"
+  },
+  {
+    "id": 551,
+    "file": "551_DP_SUBJECT_TEACHER_IA_CHECKPOINT_FLOW.md",
+    "slug": "DP_SUBJECT_TEACHER_IA_CHECKPOINT_FLOW",
+    "title": "Dp Subject Teacher Ia Checkpoint Flow",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/551_DP_SUBJECT_TEACHER_IA_CHECKPOINT_FLOW.md"
+  },
+  {
+    "id": 552,
+    "file": "552_DP_SUBJECT_TEACHER_DRAFT_FEEDBACK_AND_VERSIONING.md",
+    "slug": "DP_SUBJECT_TEACHER_DRAFT_FEEDBACK_AND_VERSIONING",
+    "title": "Dp Subject Teacher Draft Feedback And Versioning",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/552_DP_SUBJECT_TEACHER_DRAFT_FEEDBACK_AND_VERSIONING.md"
+  },
+  {
+    "id": 553,
+    "file": "553_DP_SUBJECT_TEACHER_PREDICTED_GRADE_AND_PROGRESS_TRACKING.md",
+    "slug": "DP_SUBJECT_TEACHER_PREDICTED_GRADE_AND_PROGRESS_TRACKING",
+    "title": "Dp Subject Teacher Predicted Grade And Progress Tracking",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/553_DP_SUBJECT_TEACHER_PREDICTED_GRADE_AND_PROGRESS_TRACKING.md"
+  },
+  {
+    "id": 554,
+    "file": "554_DP_SUBJECT_TEACHER_REPORTING_AND_TRANSCRIPT_PREP.md",
+    "slug": "DP_SUBJECT_TEACHER_REPORTING_AND_TRANSCRIPT_PREP",
+    "title": "Dp Subject Teacher Reporting And Transcript Prep",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/554_DP_SUBJECT_TEACHER_REPORTING_AND_TRANSCRIPT_PREP.md"
+  },
+  {
+    "id": 555,
+    "file": "555_DP_SUBJECT_TEACHER_MOBILE_TRIAGE_AND_QUICK_ACTIONS.md",
+    "slug": "DP_SUBJECT_TEACHER_MOBILE_TRIAGE_AND_QUICK_ACTIONS",
+    "title": "Dp Subject Teacher Mobile Triage And Quick Actions",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/555_DP_SUBJECT_TEACHER_MOBILE_TRIAGE_AND_QUICK_ACTIONS.md"
+  },
+  {
+    "id": 556,
+    "file": "556_DP_SUBJECT_TEACHER_STUDENT_FEEDBACK_RESPONSE_LOOP.md",
+    "slug": "DP_SUBJECT_TEACHER_STUDENT_FEEDBACK_RESPONSE_LOOP",
+    "title": "Dp Subject Teacher Student Feedback Response Loop",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/556_DP_SUBJECT_TEACHER_STUDENT_FEEDBACK_RESPONSE_LOOP.md"
+  },
+  {
+    "id": 557,
+    "file": "557_DP_SUBJECT_TEACHER_RECOVERY_AND_EDGE_CASES.md",
+    "slug": "DP_SUBJECT_TEACHER_RECOVERY_AND_EDGE_CASES",
+    "title": "Dp Subject Teacher Recovery And Edge Cases",
+    "group": "dp_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/557_DP_SUBJECT_TEACHER_RECOVERY_AND_EDGE_CASES.md"
+  },
+  {
+    "id": 558,
+    "file": "558_DP_COORDINATOR_IA_PROGRAMME_HEALTH.md",
+    "slug": "DP_COORDINATOR_IA_PROGRAMME_HEALTH",
+    "title": "Dp Coordinator Ia Programme Health",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/558_DP_COORDINATOR_IA_PROGRAMME_HEALTH.md"
+  },
+  {
+    "id": 559,
+    "file": "559_DP_COORDINATOR_EE_TOK_CAS_OVERSIGHT.md",
+    "slug": "DP_COORDINATOR_EE_TOK_CAS_OVERSIGHT",
+    "title": "Dp Coordinator Ee Tok Cas Oversight",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/559_DP_COORDINATOR_EE_TOK_CAS_OVERSIGHT.md"
+  },
+  {
+    "id": 560,
+    "file": "560_DP_COORDINATOR_SUBMISSION_READINESS_AND_RISK.md",
+    "slug": "DP_COORDINATOR_SUBMISSION_READINESS_AND_RISK",
+    "title": "Dp Coordinator Submission Readiness And Risk",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/560_DP_COORDINATOR_SUBMISSION_READINESS_AND_RISK.md"
+  },
+  {
+    "id": 561,
+    "file": "561_DP_COORDINATOR_APPROVAL_AND_ESCALATION_FLOWS.md",
+    "slug": "DP_COORDINATOR_APPROVAL_AND_ESCALATION_FLOWS",
+    "title": "Dp Coordinator Approval And Escalation Flows",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/561_DP_COORDINATOR_APPROVAL_AND_ESCALATION_FLOWS.md"
+  },
+  {
+    "id": 562,
+    "file": "562_DP_COORDINATOR_FAMILY_SUPPORT_AND_COMMUNICATION.md",
+    "slug": "DP_COORDINATOR_FAMILY_SUPPORT_AND_COMMUNICATION",
+    "title": "Dp Coordinator Family Support And Communication",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/562_DP_COORDINATOR_FAMILY_SUPPORT_AND_COMMUNICATION.md"
+  },
+  {
+    "id": 563,
+    "file": "563_DP_COORDINATOR_EXCEPTION_TRIAGE_AND_EXPORTS.md",
+    "slug": "DP_COORDINATOR_EXCEPTION_TRIAGE_AND_EXPORTS",
+    "title": "Dp Coordinator Exception Triage And Exports",
+    "group": "dp_coordinator",
+    "sourcePath": "spec/ib-phase11-codex-tasks/563_DP_COORDINATOR_EXCEPTION_TRIAGE_AND_EXPORTS.md"
+  },
+  {
+    "id": 564,
+    "file": "564_CAS_ADVISOR_EXPERIENCE_REVIEW_FLOW.md",
+    "slug": "CAS_ADVISOR_EXPERIENCE_REVIEW_FLOW",
+    "title": "Cas Advisor Experience Review Flow",
+    "group": "cas_advisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/564_CAS_ADVISOR_EXPERIENCE_REVIEW_FLOW.md"
+  },
+  {
+    "id": 565,
+    "file": "565_CAS_ADVISOR_PROJECT_APPROVAL_AND_OUTCOME_TRACKING.md",
+    "slug": "CAS_ADVISOR_PROJECT_APPROVAL_AND_OUTCOME_TRACKING",
+    "title": "Cas Advisor Project Approval And Outcome Tracking",
+    "group": "cas_advisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/565_CAS_ADVISOR_PROJECT_APPROVAL_AND_OUTCOME_TRACKING.md"
+  },
+  {
+    "id": 566,
+    "file": "566_CAS_ADVISOR_REFLECTION_FEEDBACK_AND_STUDENT_NUDGES.md",
+    "slug": "CAS_ADVISOR_REFLECTION_FEEDBACK_AND_STUDENT_NUDGES",
+    "title": "Cas Advisor Reflection Feedback And Student Nudges",
+    "group": "cas_advisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/566_CAS_ADVISOR_REFLECTION_FEEDBACK_AND_STUDENT_NUDGES.md"
+  },
+  {
+    "id": 567,
+    "file": "567_CAS_ADVISOR_COMPLETION_EXCEPTION_HANDLING.md",
+    "slug": "CAS_ADVISOR_COMPLETION_EXCEPTION_HANDLING",
+    "title": "Cas Advisor Completion Exception Handling",
+    "group": "cas_advisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/567_CAS_ADVISOR_COMPLETION_EXCEPTION_HANDLING.md"
+  },
+  {
+    "id": 568,
+    "file": "568_EE_SUPERVISOR_MEETING_LOGGING_AND_MILESTONES.md",
+    "slug": "EE_SUPERVISOR_MEETING_LOGGING_AND_MILESTONES",
+    "title": "Ee Supervisor Meeting Logging And Milestones",
+    "group": "ee_supervisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/568_EE_SUPERVISOR_MEETING_LOGGING_AND_MILESTONES.md"
+  },
+  {
+    "id": 569,
+    "file": "569_EE_SUPERVISOR_DRAFT_REVIEW_AND_FEEDBACK.md",
+    "slug": "EE_SUPERVISOR_DRAFT_REVIEW_AND_FEEDBACK",
+    "title": "Ee Supervisor Draft Review And Feedback",
+    "group": "ee_supervisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/569_EE_SUPERVISOR_DRAFT_REVIEW_AND_FEEDBACK.md"
+  },
+  {
+    "id": 570,
+    "file": "570_EE_SUPERVISOR_PROGRESS_RISK_AND_ESCALATION.md",
+    "slug": "EE_SUPERVISOR_PROGRESS_RISK_AND_ESCALATION",
+    "title": "Ee Supervisor Progress Risk And Escalation",
+    "group": "ee_supervisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/570_EE_SUPERVISOR_PROGRESS_RISK_AND_ESCALATION.md"
+  },
+  {
+    "id": 571,
+    "file": "571_EE_SUPERVISOR_ARCHIVE_AND_COMPLETION_VALIDATION.md",
+    "slug": "EE_SUPERVISOR_ARCHIVE_AND_COMPLETION_VALIDATION",
+    "title": "Ee Supervisor Archive And Completion Validation",
+    "group": "ee_supervisor",
+    "sourcePath": "spec/ib-phase11-codex-tasks/571_EE_SUPERVISOR_ARCHIVE_AND_COMPLETION_VALIDATION.md"
+  },
+  {
+    "id": 572,
+    "file": "572_TOK_TEACHER_ESSAY_AND_EXHIBITION_MANAGEMENT.md",
+    "slug": "TOK_TEACHER_ESSAY_AND_EXHIBITION_MANAGEMENT",
+    "title": "Tok Teacher Essay And Exhibition Management",
+    "group": "tok_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/572_TOK_TEACHER_ESSAY_AND_EXHIBITION_MANAGEMENT.md"
+  },
+  {
+    "id": 573,
+    "file": "573_TOK_TEACHER_FEEDBACK_AND_REFLECTION_LOOP.md",
+    "slug": "TOK_TEACHER_FEEDBACK_AND_REFLECTION_LOOP",
+    "title": "Tok Teacher Feedback And Reflection Loop",
+    "group": "tok_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/573_TOK_TEACHER_FEEDBACK_AND_REFLECTION_LOOP.md"
+  },
+  {
+    "id": 574,
+    "file": "574_TOK_TEACHER_REPORTING_AND_PROGRESS_SUMMARY.md",
+    "slug": "TOK_TEACHER_REPORTING_AND_PROGRESS_SUMMARY",
+    "title": "Tok Teacher Reporting And Progress Summary",
+    "group": "tok_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/574_TOK_TEACHER_REPORTING_AND_PROGRESS_SUMMARY.md"
+  },
+  {
+    "id": 575,
+    "file": "575_TOK_TEACHER_EXCEPTION_AND_DEADLINE_HANDLING.md",
+    "slug": "TOK_TEACHER_EXCEPTION_AND_DEADLINE_HANDLING",
+    "title": "Tok Teacher Exception And Deadline Handling",
+    "group": "tok_teacher",
+    "sourcePath": "spec/ib-phase11-codex-tasks/575_TOK_TEACHER_EXCEPTION_AND_DEADLINE_HANDLING.md"
+  },
+  {
+    "id": 576,
+    "file": "576_IB_DIRECTOR_GLOBAL_PROGRAMME_HEALTH.md",
+    "slug": "IB_DIRECTOR_GLOBAL_PROGRAMME_HEALTH",
+    "title": "Ib Director Global Programme Health",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/576_IB_DIRECTOR_GLOBAL_PROGRAMME_HEALTH.md"
+  },
+  {
+    "id": 577,
+    "file": "577_IB_DIRECTOR_STANDARDS_AND_PRACTICES_EVIDENCE_REVIEW.md",
+    "slug": "IB_DIRECTOR_STANDARDS_AND_PRACTICES_EVIDENCE_REVIEW",
+    "title": "Ib Director Standards And Practices Evidence Review",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/577_IB_DIRECTOR_STANDARDS_AND_PRACTICES_EVIDENCE_REVIEW.md"
+  },
+  {
+    "id": 578,
+    "file": "578_IB_DIRECTOR_STAFFING_WORKLOAD_AND_SLA_MONITORING.md",
+    "slug": "IB_DIRECTOR_STAFFING_WORKLOAD_AND_SLA_MONITORING",
+    "title": "Ib Director Staffing Workload And Sla Monitoring",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/578_IB_DIRECTOR_STAFFING_WORKLOAD_AND_SLA_MONITORING.md"
+  },
+  {
+    "id": 579,
+    "file": "579_IB_DIRECTOR_ACCREDITATION_PREPARATION_SIMULATION.md",
+    "slug": "IB_DIRECTOR_ACCREDITATION_PREPARATION_SIMULATION",
+    "title": "Ib Director Accreditation Preparation Simulation",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/579_IB_DIRECTOR_ACCREDITATION_PREPARATION_SIMULATION.md"
+  },
+  {
+    "id": 580,
+    "file": "580_IB_DIRECTOR_MULTI_PROGRAMME_COMMUNICATION.md",
+    "slug": "IB_DIRECTOR_MULTI_PROGRAMME_COMMUNICATION",
+    "title": "Ib Director Multi Programme Communication",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/580_IB_DIRECTOR_MULTI_PROGRAMME_COMMUNICATION.md"
+  },
+  {
+    "id": 581,
+    "file": "581_IB_DIRECTOR_GOVERNANCE_EXCEPTIONS_AND_RECOVERY.md",
+    "slug": "IB_DIRECTOR_GOVERNANCE_EXCEPTIONS_AND_RECOVERY",
+    "title": "Ib Director Governance Exceptions And Recovery",
+    "group": "ib_director",
+    "sourcePath": "spec/ib-phase11-codex-tasks/581_IB_DIRECTOR_GOVERNANCE_EXCEPTIONS_AND_RECOVERY.md"
+  },
+  {
+    "id": 582,
+    "file": "582_PRIMARY_STUDENT_DAILY_LEARNING_JOURNEY.md",
+    "slug": "PRIMARY_STUDENT_DAILY_LEARNING_JOURNEY",
+    "title": "Primary Student Daily Learning Journey",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/582_PRIMARY_STUDENT_DAILY_LEARNING_JOURNEY.md"
+  },
+  {
+    "id": 583,
+    "file": "583_PRIMARY_STUDENT_REFLECTION_AND_PORTFOLIO_SUBMISSION.md",
+    "slug": "PRIMARY_STUDENT_REFLECTION_AND_PORTFOLIO_SUBMISSION",
+    "title": "Primary Student Reflection And Portfolio Submission",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/583_PRIMARY_STUDENT_REFLECTION_AND_PORTFOLIO_SUBMISSION.md"
+  },
+  {
+    "id": 584,
+    "file": "584_PRIMARY_STUDENT_FAMILY_STORY_VIEW_AND_GOALS.md",
+    "slug": "PRIMARY_STUDENT_FAMILY_STORY_VIEW_AND_GOALS",
+    "title": "Primary Student Family Story View And Goals",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/584_PRIMARY_STUDENT_FAMILY_STORY_VIEW_AND_GOALS.md"
+  },
+  {
+    "id": 585,
+    "file": "585_MIDDLE_YEARS_STUDENT_UNIT_AND_PROJECT_JOURNEY.md",
+    "slug": "MIDDLE_YEARS_STUDENT_UNIT_AND_PROJECT_JOURNEY",
+    "title": "Middle Years Student Unit And Project Journey",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/585_MIDDLE_YEARS_STUDENT_UNIT_AND_PROJECT_JOURNEY.md"
+  },
+  {
+    "id": 586,
+    "file": "586_MIDDLE_YEARS_STUDENT_CRITERIA_FEEDBACK_AND_REFLECTION.md",
+    "slug": "MIDDLE_YEARS_STUDENT_CRITERIA_FEEDBACK_AND_REFLECTION",
+    "title": "Middle Years Student Criteria Feedback And Reflection",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/586_MIDDLE_YEARS_STUDENT_CRITERIA_FEEDBACK_AND_REFLECTION.md"
+  },
+  {
+    "id": 587,
+    "file": "587_DIPLOMA_STUDENT_IA_EE_TOK_CAS_DASHBOARD.md",
+    "slug": "DIPLOMA_STUDENT_IA_EE_TOK_CAS_DASHBOARD",
+    "title": "Diploma Student Ia Ee Tok Cas Dashboard",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/587_DIPLOMA_STUDENT_IA_EE_TOK_CAS_DASHBOARD.md"
+  },
+  {
+    "id": 588,
+    "file": "588_DIPLOMA_STUDENT_SUBMISSION_AND_REVISION_CYCLE.md",
+    "slug": "DIPLOMA_STUDENT_SUBMISSION_AND_REVISION_CYCLE",
+    "title": "Diploma Student Submission And Revision Cycle",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/588_DIPLOMA_STUDENT_SUBMISSION_AND_REVISION_CYCLE.md"
+  },
+  {
+    "id": 589,
+    "file": "589_STUDENT_ACCESSIBILITY_AND_LOW_BANDWIDTH_EXPERIENCE.md",
+    "slug": "STUDENT_ACCESSIBILITY_AND_LOW_BANDWIDTH_EXPERIENCE",
+    "title": "Student Accessibility And Low Bandwidth Experience",
+    "group": "student",
+    "sourcePath": "spec/ib-phase11-codex-tasks/589_STUDENT_ACCESSIBILITY_AND_LOW_BANDWIDTH_EXPERIENCE.md"
+  },
+  {
+    "id": 590,
+    "file": "590_GUARDIAN_DIGEST_AND_HOME_FEED.md",
+    "slug": "GUARDIAN_DIGEST_AND_HOME_FEED",
+    "title": "Guardian Digest And Home Feed",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/590_GUARDIAN_DIGEST_AND_HOME_FEED.md"
+  },
+  {
+    "id": 591,
+    "file": "591_GUARDIAN_REPORT_AND_CONFERENCE_PREP.md",
+    "slug": "GUARDIAN_REPORT_AND_CONFERENCE_PREP",
+    "title": "Guardian Report And Conference Prep",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/591_GUARDIAN_REPORT_AND_CONFERENCE_PREP.md"
+  },
+  {
+    "id": 592,
+    "file": "592_GUARDIAN_PROGRESS_MONITORING_AND_ACKNOWLEDGEMENT.md",
+    "slug": "GUARDIAN_PROGRESS_MONITORING_AND_ACKNOWLEDGEMENT",
+    "title": "Guardian Progress Monitoring And Acknowledgement",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/592_GUARDIAN_PROGRESS_MONITORING_AND_ACKNOWLEDGEMENT.md"
+  },
+  {
+    "id": 593,
+    "file": "593_GUARDIAN_MULTILINGUAL_AND_CALM_COMMUNICATION.md",
+    "slug": "GUARDIAN_MULTILINGUAL_AND_CALM_COMMUNICATION",
+    "title": "Guardian Multilingual And Calm Communication",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/593_GUARDIAN_MULTILINGUAL_AND_CALM_COMMUNICATION.md"
+  },
+  {
+    "id": 594,
+    "file": "594_GUARDIAN_MULTI_CHILD_HOUSEHOLD_WORKFLOW.md",
+    "slug": "GUARDIAN_MULTI_CHILD_HOUSEHOLD_WORKFLOW",
+    "title": "Guardian Multi Child Household Workflow",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/594_GUARDIAN_MULTI_CHILD_HOUSEHOLD_WORKFLOW.md"
+  },
+  {
+    "id": 595,
+    "file": "595_GUARDIAN_MOBILE_ONLY_EXPERIENCE.md",
+    "slug": "GUARDIAN_MOBILE_ONLY_EXPERIENCE",
+    "title": "Guardian Mobile Only Experience",
+    "group": "guardian",
+    "sourcePath": "spec/ib-phase11-codex-tasks/595_GUARDIAN_MOBILE_ONLY_EXPERIENCE.md"
+  },
+  {
+    "id": 596,
+    "file": "596_DAILY_SIMULATION_SUITE_ORCHESTRATION.md",
+    "slug": "DAILY_SIMULATION_SUITE_ORCHESTRATION",
+    "title": "Daily Simulation Suite Orchestration",
+    "group": "cadence",
+    "sourcePath": "spec/ib-phase11-codex-tasks/596_DAILY_SIMULATION_SUITE_ORCHESTRATION.md"
+  },
+  {
+    "id": 597,
+    "file": "597_WEEKLY_SIMULATION_SUITE_ORCHESTRATION.md",
+    "slug": "WEEKLY_SIMULATION_SUITE_ORCHESTRATION",
+    "title": "Weekly Simulation Suite Orchestration",
+    "group": "cadence",
+    "sourcePath": "spec/ib-phase11-codex-tasks/597_WEEKLY_SIMULATION_SUITE_ORCHESTRATION.md"
+  },
+  {
+    "id": 598,
+    "file": "598_TERM_SIMULATION_SUITE_ORCHESTRATION.md",
+    "slug": "TERM_SIMULATION_SUITE_ORCHESTRATION",
+    "title": "Term Simulation Suite Orchestration",
+    "group": "cadence",
+    "sourcePath": "spec/ib-phase11-codex-tasks/598_TERM_SIMULATION_SUITE_ORCHESTRATION.md"
+  },
+  {
+    "id": 599,
+    "file": "599_ANNUAL_SIMULATION_SUITE_ORCHESTRATION.md",
+    "slug": "ANNUAL_SIMULATION_SUITE_ORCHESTRATION",
+    "title": "Annual Simulation Suite Orchestration",
+    "group": "cadence",
+    "sourcePath": "spec/ib-phase11-codex-tasks/599_ANNUAL_SIMULATION_SUITE_ORCHESTRATION.md"
+  },
+  {
+    "id": 600,
+    "file": "600_FULL_SCHOOL_YEAR_MONTE_CARLO_VARIATION_RUNS.md",
+    "slug": "FULL_SCHOOL_YEAR_MONTE_CARLO_VARIATION_RUNS",
+    "title": "Full School Year Monte Carlo Variation Runs",
+    "group": "cadence",
+    "sourcePath": "spec/ib-phase11-codex-tasks/600_FULL_SCHOOL_YEAR_MONTE_CARLO_VARIATION_RUNS.md"
+  },
+  {
+    "id": 601,
+    "file": "601_LOAD_TEST_HIGH_VOLUME_EVIDENCE_AND_PUBLISHING.md",
+    "slug": "LOAD_TEST_HIGH_VOLUME_EVIDENCE_AND_PUBLISHING",
+    "title": "Load Test High Volume Evidence And Publishing",
+    "group": "load_scale",
+    "sourcePath": "spec/ib-phase11-codex-tasks/601_LOAD_TEST_HIGH_VOLUME_EVIDENCE_AND_PUBLISHING.md"
+  },
+  {
+    "id": 602,
+    "file": "602_LOAD_TEST_REPORTING_SEARCH_AND_QUEUE_PRESSURE.md",
+    "slug": "LOAD_TEST_REPORTING_SEARCH_AND_QUEUE_PRESSURE",
+    "title": "Load Test Reporting Search And Queue Pressure",
+    "group": "load_scale",
+    "sourcePath": "spec/ib-phase11-codex-tasks/602_LOAD_TEST_REPORTING_SEARCH_AND_QUEUE_PRESSURE.md"
+  },
+  {
+    "id": 603,
+    "file": "603_LOAD_TEST_REALTIME_COLLABORATION_AND_PRESENCE.md",
+    "slug": "LOAD_TEST_REALTIME_COLLABORATION_AND_PRESENCE",
+    "title": "Load Test Realtime Collaboration And Presence",
+    "group": "load_scale",
+    "sourcePath": "spec/ib-phase11-codex-tasks/603_LOAD_TEST_REALTIME_COLLABORATION_AND_PRESENCE.md"
+  },
+  {
+    "id": 604,
+    "file": "604_SCALE_TEST_LARGE_SCHOOL_MULTI_PROGRAMME_MODEL.md",
+    "slug": "SCALE_TEST_LARGE_SCHOOL_MULTI_PROGRAMME_MODEL",
+    "title": "Scale Test Large School Multi Programme Model",
+    "group": "load_scale",
+    "sourcePath": "spec/ib-phase11-codex-tasks/604_SCALE_TEST_LARGE_SCHOOL_MULTI_PROGRAMME_MODEL.md"
+  },
+  {
+    "id": 605,
+    "file": "605_UX_FRICTION_BENCHMARK_CLICK_DEPTH_AND_TIME_ON_TASK.md",
+    "slug": "UX_FRICTION_BENCHMARK_CLICK_DEPTH_AND_TIME_ON_TASK",
+    "title": "Ux Friction Benchmark Click Depth And Time On Task",
+    "group": "ux_recovery",
+    "sourcePath": "spec/ib-phase11-codex-tasks/605_UX_FRICTION_BENCHMARK_CLICK_DEPTH_AND_TIME_ON_TASK.md"
+  },
+  {
+    "id": 606,
+    "file": "606_UX_FRICTION_SPECIALIST_AND_COORDINATOR_HEAVY_DAYS.md",
+    "slug": "UX_FRICTION_SPECIALIST_AND_COORDINATOR_HEAVY_DAYS",
+    "title": "Ux Friction Specialist And Coordinator Heavy Days",
+    "group": "ux_recovery",
+    "sourcePath": "spec/ib-phase11-codex-tasks/606_UX_FRICTION_SPECIALIST_AND_COORDINATOR_HEAVY_DAYS.md"
+  },
+  {
+    "id": 607,
+    "file": "607_COMPETITIVE_PARITY_CHECKLIST_TODDLE_AND_MANAGEBAC.md",
+    "slug": "COMPETITIVE_PARITY_CHECKLIST_TODDLE_AND_MANAGEBAC",
+    "title": "Competitive Parity Checklist Toddle And Managebac",
+    "group": "ux_recovery",
+    "sourcePath": "spec/ib-phase11-codex-tasks/607_COMPETITIVE_PARITY_CHECKLIST_TODDLE_AND_MANAGEBAC.md"
+  },
+  {
+    "id": 608,
+    "file": "608_USER_RECOVERY_FROM_FAILURE_STATES_AND_SUPPORTABILITY.md",
+    "slug": "USER_RECOVERY_FROM_FAILURE_STATES_AND_SUPPORTABILITY",
+    "title": "User Recovery From Failure States And Supportability",
+    "group": "ux_recovery",
+    "sourcePath": "spec/ib-phase11-codex-tasks/608_USER_RECOVERY_FROM_FAILURE_STATES_AND_SUPPORTABILITY.md"
+  },
+  {
+    "id": 609,
+    "file": "609_AI_ASSIST_STATEMENT_SUMMARY_AND_DIFF_REVIEW.md",
+    "slug": "AI_ASSIST_STATEMENT_SUMMARY_AND_DIFF_REVIEW",
+    "title": "Ai Assist Statement Summary And Diff Review",
+    "group": "ai",
+    "sourcePath": "spec/ib-phase11-codex-tasks/609_AI_ASSIST_STATEMENT_SUMMARY_AND_DIFF_REVIEW.md"
+  },
+  {
+    "id": 610,
+    "file": "610_AI_ASSIST_FAMILY_SUMMARY_TRANSLATION_AND_PROOFING.md",
+    "slug": "AI_ASSIST_FAMILY_SUMMARY_TRANSLATION_AND_PROOFING",
+    "title": "Ai Assist Family Summary Translation And Proofing",
+    "group": "ai",
+    "sourcePath": "spec/ib-phase11-codex-tasks/610_AI_ASSIST_FAMILY_SUMMARY_TRANSLATION_AND_PROOFING.md"
+  },
+  {
+    "id": 611,
+    "file": "611_AI_ASSIST_COVERAGE_GAP_DETECTION_AND_RISK_SUGGESTIONS.md",
+    "slug": "AI_ASSIST_COVERAGE_GAP_DETECTION_AND_RISK_SUGGESTIONS",
+    "title": "Ai Assist Coverage Gap Detection And Risk Suggestions",
+    "group": "ai",
+    "sourcePath": "spec/ib-phase11-codex-tasks/611_AI_ASSIST_COVERAGE_GAP_DETECTION_AND_RISK_SUGGESTIONS.md"
+  },
+  {
+    "id": 612,
+    "file": "612_CODEX_REVIEW_LOOP_ARCHITECTURE_RECOMMENDATIONS_AND_PHASE12_SIGNAL.md",
+    "slug": "CODEX_REVIEW_LOOP_ARCHITECTURE_RECOMMENDATIONS_AND_PHASE12_SIGNAL",
+    "title": "Codex Review Loop Architecture Recommendations And Phase12 Signal",
+    "group": "review_loop",
+    "sourcePath": "spec/ib-phase11-codex-tasks/612_CODEX_REVIEW_LOOP_ARCHITECTURE_RECOMMENDATIONS_AND_PHASE12_SIGNAL.md"
+  },
+  {
+    "id": 613,
+    "file": "613_COVERAGE_MATRIX_AND_POST_PHASE11_SIGNAL.md",
+    "slug": "COVERAGE_MATRIX_AND_POST_PHASE11_SIGNAL",
+    "title": "Coverage Matrix And Post Phase11 Signal",
+    "group": "audit",
+    "sourcePath": "spec/ib-phase11-codex-tasks/613_COVERAGE_MATRIX_AND_POST_PHASE11_SIGNAL.md"
+  },
+  {
+    "id": 614,
+    "file": "614_CODEX_ORCHESTRATION_PROMPT.md",
+    "slug": "CODEX_ORCHESTRATION_PROMPT",
+    "title": "Codex Orchestration Prompt",
+    "group": "phase11",
+    "sourcePath": "spec/ib-phase11-codex-tasks/614_CODEX_ORCHESTRATION_PROMPT.md"
+  }
+]

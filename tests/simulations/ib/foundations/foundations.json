@@ -1,0 +1,217 @@
+{
+  "charter": {
+    "inScope": [
+      "role-based browser simulations",
+      "deterministic seed fixtures",
+      "cadence suites",
+      "load and UX benchmarks",
+      "AI assistance validation",
+      "Codex-readable artifacts"
+    ],
+    "outOfScope": [
+      "shipping Phase 12 optimizations",
+      "replacing the agreed Playwright plus k6 toolchain",
+      "using production or real student data"
+    ],
+    "successCriteria": {
+      "roleCoverageCount": 16,
+      "cadenceSuites": [
+        "daily",
+        "weekly",
+        "term",
+        "annual",
+        "monte_carlo"
+      ],
+      "requiredOutputs": [
+        "manifest.json",
+        "events.ndjson",
+        "summary.json",
+        "summary.md",
+        "failure-packets",
+        "recommendations"
+      ]
+    }
+  },
+  "naming": {
+    "runIdPattern": "phase11-<suite>-<yyyymmddThhmmssZ>",
+    "scenarioIdPattern": "<taskId>-<slug>",
+    "artifactKeyPattern": "<runId>/<scenarioId>/<artifactKind>",
+    "taskSummaryPattern": "task-<taskId>.md"
+  },
+  "academicCalendar": {
+    "timezone": "America/Chicago",
+    "schoolYear": "2025-2026",
+    "terms": [
+      {
+        "key": "term1",
+        "label": "Fall Term",
+        "startsOn": "2025-08-18",
+        "endsOn": "2025-12-19"
+      },
+      {
+        "key": "term2",
+        "label": "Spring Term",
+        "startsOn": "2026-01-06",
+        "endsOn": "2026-06-05"
+      }
+    ],
+    "milestones": [
+      {
+        "key": "pyp_exhibition",
+        "window": "2026-04-06/2026-04-24"
+      },
+      {
+        "key": "myp_projects",
+        "window": "2026-03-02/2026-05-15"
+      },
+      {
+        "key": "dp_submission",
+        "window": "2026-02-09/2026-04-30"
+      }
+    ],
+    "timetable": {
+      "homeroom": [
+        "08:00 planning",
+        "09:00 inquiry",
+        "11:00 evidence",
+        "14:00 reflection"
+      ],
+      "specialist": [
+        "08:15 class A",
+        "09:10 class B",
+        "10:45 triage",
+        "13:30 handoff"
+      ],
+      "coordinator": [
+        "08:00 dashboard",
+        "10:30 review",
+        "13:00 POI or coverage",
+        "15:00 escalation"
+      ]
+    }
+  },
+  "yearSectionModel": {
+    "pyp": [
+      "K",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "myp": [
+      "Year 1",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "dp": [
+      "Year 1",
+      "Year 2"
+    ],
+    "crossProgrammeLinks": [
+      "guardian households",
+      "school-wide calendar",
+      "reporting cycles"
+    ]
+  },
+  "environments": {
+    "local": {
+      "headless": false,
+      "seedVolume": "minimal",
+      "browserWorkers": 1,
+      "k6Scale": "reduced",
+      "runtimeBudgetMinutes": 20
+    },
+    "ci": {
+      "headless": true,
+      "seedVolume": "representative",
+      "browserWorkers": 2,
+      "k6Scale": "smoke",
+      "runtimeBudgetMinutes": 25
+    },
+    "staging": {
+      "headless": true,
+      "seedVolume": "large",
+      "browserWorkers": 4,
+      "k6Scale": "representative",
+      "runtimeBudgetMinutes": 45
+    }
+  },
+  "privacy": {
+    "syntheticOnly": true,
+    "reservedEmailDomains": [
+      "@e2e.local",
+      "@phase11.local"
+    ],
+    "redactions": [
+      "email",
+      "phone",
+      "household address",
+      "free-text PII"
+    ],
+    "screenshotPolicy": "failure-only by default, sanitized summaries always retained"
+  },
+  "benchmarks": {
+    "unitCreateMs": 45000,
+    "evidenceCaptureMs": 20000,
+    "reportReviewMs": 35000,
+    "publishingQueueMs": 20000,
+    "searchP95Ms": 800,
+    "mobileQuickActionMs": 12000,
+    "aiReviewMs": 30000,
+    "clickDepthTargets": {
+      "teacher_home_resume": 2,
+      "specialist_capture": 3,
+      "guardian_digest": 1,
+      "coordinator_exception_triage": 3
+    },
+    "competitorThresholds": {
+      "toddle": "equal or better on publishing, evidence, and POI clarity",
+      "managebac": "equal or better on DP milestone oversight and reporting calmness"
+    }
+  },
+  "failureTaxonomy": [
+    {
+      "key": "functional_breakage",
+      "severity": "critical",
+      "description": "User cannot complete the workflow."
+    },
+    {
+      "key": "permission_mismatch",
+      "severity": "high",
+      "description": "Role fit or access boundary is wrong."
+    },
+    {
+      "key": "performance_regression",
+      "severity": "high",
+      "description": "Workflow exceeds stated speed budget."
+    },
+    {
+      "key": "data_integrity_gap",
+      "severity": "high",
+      "description": "State or counts become inconsistent."
+    },
+    {
+      "key": "ux_confusion",
+      "severity": "medium",
+      "description": "The route works but causes avoidable hesitation."
+    },
+    {
+      "key": "resilience_gap",
+      "severity": "medium",
+      "description": "Recovery from offline or retry conditions is weak."
+    },
+    {
+      "key": "ai_guardrail_gap",
+      "severity": "medium",
+      "description": "AI suggestion path is insufficiently reviewable."
+    }
+  ],
+  "changeManagement": {
+    "branchConvention": "phase11/<stream>",
+    "commitDiscipline": "small grouped commits by task family; generated artifacts rebuilt in the same change",
+    "retention": "latest plus run-specific durable samples are committed only as reference artifacts"
+  }
+}

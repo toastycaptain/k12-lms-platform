@@ -1,0 +1,24 @@
+{
+  "taskId": 608,
+  "suiteId": "user-recovery-and-supportability",
+  "title": "User Recovery From Failure States And Supportability",
+  "suiteType": "ux",
+  "scenarioIds": [
+    "522-pyp-homeroom-recovery-and-exception-handling",
+    "529-pyp-specialist-failure-modes-and-recovery",
+    "535-pyp-coordinator-exception-triage-and-escalation",
+    "543-myp-subject-teacher-recovery-and-high-volume-day",
+    "549-myp-coordinator-exception-triage-and-summary-export",
+    "557-dp-subject-teacher-recovery-and-edge-cases",
+    "563-dp-coordinator-exception-triage-and-exports",
+    "567-cas-advisor-completion-exception-handling",
+    "575-tok-teacher-exception-and-deadline-handling",
+    "581-ib-director-governance-exceptions-and-recovery",
+    "589-student-accessibility-and-low-bandwidth-experience"
+  ],
+  "metrics": [
+    "recoveries",
+    "support_steps",
+    "user_confidence_delta"
+  ]
+}

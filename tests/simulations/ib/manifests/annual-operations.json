@@ -1,0 +1,17 @@
+{
+  "taskId": 599,
+  "suiteId": "annual-operations",
+  "title": "Annual Simulation Suite Orchestration",
+  "suiteType": "cadence",
+  "scenarioIds": [
+    "533-pyp-coordinator-exhibition-oversight",
+    "547-myp-coordinator-project-risk-management",
+    "559-dp-coordinator-ee-tok-cas-oversight",
+    "565-cas-advisor-project-approval-and-outcome-tracking",
+    "571-ee-supervisor-archive-and-completion-validation",
+    "579-ib-director-accreditation-preparation-simulation"
+  ],
+  "executionMode": "playwright",
+  "parallelism": 1,
+  "sharedStateRule": "annual milestone windows sequenced by simulated calendar"
+}

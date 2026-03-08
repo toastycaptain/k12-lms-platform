@@ -1,0 +1,67 @@
+[
+  {
+    "id": "rec-load-realtime-collaboration",
+    "suiteId": "load-realtime-collaboration",
+    "title": "Load Test Realtime Collaboration And Presence",
+    "category": "performance_regression",
+    "severity": "high",
+    "confidence": "high",
+    "expectedImpact": "material",
+    "evidence": {
+      "suiteId": "load-realtime-collaboration",
+      "scenarioIds": [
+        "519-pyp-homeroom-specialist-collaboration",
+        "526-pyp-specialist-co-planning-and-commenting",
+        "539-myp-subject-teacher-interdisciplinary-co-planning",
+        "552-dp-subject-teacher-draft-feedback-and-versioning"
+      ],
+      "summaryPath": "summaries/task-603.md",
+      "metricsPath": "summary.json"
+    },
+    "recommendation": "Reduce collaboration polling and move more presence work into compact aggregated payloads.",
+    "note": "Presence and collaboration workbench latency exceeded the shared p95 threshold under concurrent load."
+  },
+  {
+    "id": "rec-competitive-parity",
+    "suiteId": "competitive-parity",
+    "title": "Competitive Parity Checklist Toddle And Managebac",
+    "category": "ux_confusion",
+    "severity": "medium",
+    "confidence": "medium",
+    "expectedImpact": "moderate",
+    "evidence": {
+      "suiteId": "competitive-parity",
+      "scenarioIds": [
+        "518-pyp-homeroom-family-story-publishing",
+        "530-pyp-coordinator-poi-governance",
+        "559-dp-coordinator-ee-tok-cas-oversight",
+        "560-dp-coordinator-submission-readiness-and-risk",
+        "590-guardian-digest-and-home-feed"
+      ],
+      "summaryPath": "summaries/task-607.md",
+      "metricsPath": "summary.json"
+    },
+    "recommendation": "Flatten the publishing and exception workflows so the next action is reachable with one fewer route transition.",
+    "note": "Publishing and coordinator exception paths still require more route changes than the parity target."
+  },
+  {
+    "id": "rec-ai-family-translation-proofing",
+    "suiteId": "ai-family-translation-proofing",
+    "title": "Ai Assist Family Summary Translation And Proofing",
+    "category": "ai_guardrail_gap",
+    "severity": "medium",
+    "confidence": "medium",
+    "expectedImpact": "moderate",
+    "evidence": {
+      "suiteId": "ai-family-translation-proofing",
+      "scenarioIds": [
+        "518-pyp-homeroom-family-story-publishing",
+        "593-guardian-multilingual-and-calm-communication"
+      ],
+      "summaryPath": "summaries/task-610.md",
+      "metricsPath": "summary.json"
+    },
+    "recommendation": "Keep family-facing AI suggestions gated behind explicit calm-mode proofing and locale-specific human review.",
+    "note": "One family translation suggestion required full rejection because tone drifted away from calm-mode expectations."
+  }
+]

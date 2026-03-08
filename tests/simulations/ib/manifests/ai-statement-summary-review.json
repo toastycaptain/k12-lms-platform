@@ -1,0 +1,11 @@
+{
+  "taskId": 609,
+  "suiteId": "ai-statement-summary-review",
+  "title": "Ai Assist Statement Summary And Diff Review",
+  "suiteType": "ai",
+  "scenarioIds": [
+    "520-pyp-homeroom-conference-preparation",
+    "538-myp-subject-teacher-assessment-and-feedback-loop"
+  ],
+  "aiWorkflow": "statement_summary"
+}

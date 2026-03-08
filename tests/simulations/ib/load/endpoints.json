@@ -1,0 +1,56 @@
+[
+  {
+    "name": "home",
+    "path": "/api/v1/ib/home",
+    "method": "GET",
+    "roleKey": "pyp_homeroom_teacher"
+  },
+  {
+    "name": "evidence_items",
+    "path": "/api/v1/ib/evidence_items",
+    "method": "GET",
+    "roleKey": "pyp_specialist_teacher"
+  },
+  {
+    "name": "publishing_queue",
+    "path": "/api/v1/ib/publishing_queue_items",
+    "method": "GET",
+    "roleKey": "pyp_homeroom_teacher"
+  },
+  {
+    "name": "reports",
+    "path": "/api/v1/ib/reports",
+    "method": "GET",
+    "roleKey": "dp_subject_teacher"
+  },
+  {
+    "name": "search",
+    "path": "/api/v1/ib/search?q=reflection",
+    "method": "GET",
+    "roleKey": "ib_director"
+  },
+  {
+    "name": "operations",
+    "path": "/api/v1/ib/operations",
+    "method": "GET",
+    "roleKey": "ib_director"
+  },
+  {
+    "name": "collaboration_workbench",
+    "path": "/api/v1/ib/collaboration_workbench",
+    "method": "GET",
+    "roleKey": "myp_subject_teacher"
+  },
+  {
+    "name": "guardian_home",
+    "path": "/api/v1/ib/guardian",
+    "method": "GET",
+    "roleKey": "guardian"
+  },
+  {
+    "name": "student_home",
+    "path": "/api/v1/ib/student",
+    "method": "GET",
+    "roleKey": "diploma_student"
+  }
+]

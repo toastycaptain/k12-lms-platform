@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { loginAsStudent, loginAsTeacher, signOutTestSession } from "./helpers/auth";
 import { cleanupTestData, E2E_FIXTURES, seedTestData } from "./helpers/seed";
 
-const apiBaseUrl = process.env.E2E_API_BASE_URL || "http://localhost:4000";
+const apiBaseUrl =
+  process.env.E2E_API_BASE_URL || `http://localhost:${process.env.E2E_API_PORT || "4200"}`;
 
 interface CourseRow {
   id: number;

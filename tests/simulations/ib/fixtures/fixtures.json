@@ -1,0 +1,187 @@
+{
+  "schoolProfiles": {
+    "minimal": {
+      "label": "Single-school deterministic IB slice",
+      "programmes": [
+        "PYP",
+        "MYP",
+        "DP"
+      ],
+      "users": 16,
+      "planningContexts": 6,
+      "evidenceItems": 24,
+      "reports": 8,
+      "queueItems": 10
+    },
+    "representative": {
+      "label": "Representative pilot school",
+      "programmes": [
+        "PYP",
+        "MYP",
+        "DP"
+      ],
+      "users": 64,
+      "planningContexts": 18,
+      "evidenceItems": 200,
+      "reports": 48,
+      "queueItems": 72
+    },
+    "large": {
+      "label": "Large multi-programme scale school",
+      "programmes": [
+        "PYP",
+        "MYP",
+        "DP"
+      ],
+      "users": 240,
+      "planningContexts": 42,
+      "evidenceItems": 2000,
+      "reports": 380,
+      "queueItems": 420
+    }
+  },
+  "programmeSeeds": {
+    "pyp": {
+      "units": [
+        "Water systems",
+        "Identity and expression",
+        "How the world works"
+      ],
+      "poiThemes": 6,
+      "exhibitionWindows": 1,
+      "familyStories": 18
+    },
+    "myp": {
+      "units": [
+        "Sustainable design",
+        "Patterns and change",
+        "Power and systems"
+      ],
+      "interdisciplinaryUnits": 2,
+      "serviceEntries": 12,
+      "projectRecords": 10
+    },
+    "dp": {
+      "courseMaps": [
+        "Biology",
+        "History",
+        "English A"
+      ],
+      "iaRecords": 18,
+      "eeRecords": 8,
+      "tokRecords": 12,
+      "casRecords": 24
+    }
+  },
+  "adultPersonas": {
+    "teacher": {
+      "workloadProfile": "steady-planning",
+      "notificationMode": "digest-first",
+      "device": "laptop"
+    },
+    "specialist": {
+      "workloadProfile": "rapid-context-switching",
+      "notificationMode": "mobile-priority",
+      "device": "phone"
+    },
+    "coordinator": {
+      "workloadProfile": "oversight-and-escalation",
+      "notificationMode": "queue-focused",
+      "device": "desktop"
+    },
+    "director": {
+      "workloadProfile": "cross-programme governance",
+      "notificationMode": "summary-first",
+      "device": "desktop"
+    }
+  },
+  "learnerPersonas": {
+    "primary": {
+      "reflectionCadence": "daily",
+      "device": "tablet",
+      "guardianLinked": true
+    },
+    "middle_years": {
+      "reflectionCadence": "weekly",
+      "device": "laptop",
+      "guardianLinked": true
+    },
+    "diploma": {
+      "reflectionCadence": "milestone",
+      "device": "laptop",
+      "guardianLinked": true
+    }
+  },
+  "guardianPersonas": {
+    "standard": {
+      "locale": "en",
+      "digestCadence": "weekly_digest",
+      "householdSize": 1
+    },
+    "multilingual": {
+      "locale": "es",
+      "digestCadence": "weekly_digest",
+      "householdSize": 1
+    },
+    "multichild": {
+      "locale": "en",
+      "digestCadence": "fortnightly",
+      "householdSize": 2
+    }
+  },
+  "artifactFactories": {
+    "evidence": [
+      "validated",
+      "pending_review",
+      "guardian_visible"
+    ],
+    "stories": [
+      "draft",
+      "ready_for_digest",
+      "published"
+    ],
+    "reports": [
+      "draft",
+      "signed_off",
+      "released"
+    ],
+    "operationalQueues": [
+      "review",
+      "publishing",
+      "migration",
+      "exceptions"
+    ]
+  },
+  "migrations": {
+    "toddle": {
+      "connectors": [
+        "curriculum",
+        "poi",
+        "stories"
+      ],
+      "failureModes": [
+        "mapping_gap",
+        "relationship_missing"
+      ]
+    },
+    "managebac": {
+      "connectors": [
+        "dp_core",
+        "reporting",
+        "ia"
+      ],
+      "failureModes": [
+        "date_conflict",
+        "record_duplication"
+      ]
+    }
+  },
+  "searchScale": {
+    "unitDocuments": 1200,
+    "evidenceItems": 4000,
+    "comments": 2400,
+    "stories": 900,
+    "reports": 600,
+    "operationalRecords": 850
+  }
+}

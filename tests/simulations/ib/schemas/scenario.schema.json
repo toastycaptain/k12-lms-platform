@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "required": [
+    "taskId",
+    "scenarioId",
+    "title",
+    "roleKey",
+    "programmeKey",
+    "cadence",
+    "routePath",
+    "heading",
+    "keywords"
+  ],
+  "properties": {
+    "taskId": {
+      "type": "number"
+    },
+    "scenarioId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "roleKey": {
+      "type": "string"
+    },
+    "programmeKey": {
+      "type": "string"
+    },
+    "cadence": {
+      "type": "string"
+    },
+    "routePath": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

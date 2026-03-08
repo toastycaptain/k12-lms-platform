@@ -5,7 +5,7 @@ export default function NewMypInterdisciplinaryPage() {
     <IbPlannerCreatePage
       title="Create MYP interdisciplinary record"
       description="Launch a live interdisciplinary planning record with the shared MYP workflow and schema."
-      routeBuilder={(documentId) => `/ib/myp/interdisciplinary/${documentId}`}
+      routeTemplate="/ib/myp/interdisciplinary/:id"
       preferredDocumentType="ib_myp_interdisciplinary_unit"
       fallbackDocumentType="unit_plan"
       preferredSchemaKey="ib.myp.interdisciplinary@v2"

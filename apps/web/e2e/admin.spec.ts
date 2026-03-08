@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { loginAsAdmin, signOutTestSession } from "./helpers/auth";
 import { cleanupTestData, seedTestData } from "./helpers/seed";
 
-const apiBaseUrl = process.env.E2E_API_BASE_URL || "http://localhost:4000";
+const apiBaseUrl =
+  process.env.E2E_API_BASE_URL || `http://localhost:${process.env.E2E_API_PORT || "4200"}`;
 
 interface AiProviderConfigRow {
   id: number;

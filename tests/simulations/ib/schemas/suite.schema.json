@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "required": [
+    "taskId",
+    "suiteId",
+    "title",
+    "suiteType"
+  ],
+  "properties": {
+    "taskId": {
+      "type": "number"
+    },
+    "suiteId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "suiteType": {
+      "type": "string"
+    },
+    "scenarioIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

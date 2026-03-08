@@ -1,0 +1,151 @@
+{
+  "runId": "playwright-smoke",
+  "generatedAt": "2026-03-08T02:12:24.944Z",
+  "scenarioCount": 16,
+  "results": [
+    {
+      "taskId": 515,
+      "scenarioId": "515-pyp-homeroom-daily-planning-day",
+      "title": "Pyp Homeroom Daily Planning Day",
+      "roleKey": "pyp_homeroom_teacher",
+      "status": "pass",
+      "durationMs": 1393,
+      "path": "/ib/home"
+    },
+    {
+      "taskId": 523,
+      "scenarioId": "523-pyp-specialist-multi-class-day",
+      "title": "Pyp Specialist Multi Class Day",
+      "roleKey": "pyp_specialist_teacher",
+      "status": "pass",
+      "durationMs": 305,
+      "path": "/ib/specialist"
+    },
+    {
+      "taskId": 530,
+      "scenarioId": "530-pyp-coordinator-poi-governance",
+      "title": "Pyp Coordinator Poi Governance",
+      "roleKey": "pyp_coordinator",
+      "status": "pass",
+      "durationMs": 147,
+      "path": "/ib/pyp/poi"
+    },
+    {
+      "taskId": 536,
+      "scenarioId": "536-myp-subject-teacher-unit-creation-and-editing",
+      "title": "Myp Subject Teacher Unit Creation And Editing",
+      "roleKey": "myp_subject_teacher",
+      "status": "pass",
+      "durationMs": 301,
+      "path": "/ib/myp/units/new"
+    },
+    {
+      "taskId": 544,
+      "scenarioId": "544-myp-coordinator-programme-overview-and-coverage",
+      "title": "Myp Coordinator Programme Overview And Coverage",
+      "roleKey": "myp_coordinator",
+      "status": "pass",
+      "durationMs": 157,
+      "path": "/ib/myp/coverage"
+    },
+    {
+      "taskId": 550,
+      "scenarioId": "550-dp-subject-teacher-course-map-maintenance",
+      "title": "Dp Subject Teacher Course Map Maintenance",
+      "roleKey": "dp_subject_teacher",
+      "status": "pass",
+      "durationMs": 201,
+      "path": "/ib/dp/courses/new"
+    },
+    {
+      "taskId": 558,
+      "scenarioId": "558-dp-coordinator-ia-programme-health",
+      "title": "Dp Coordinator Ia Programme Health",
+      "roleKey": "dp_coordinator",
+      "status": "pass",
+      "durationMs": 149,
+      "path": "/ib/dp/coordinator"
+    },
+    {
+      "taskId": 564,
+      "scenarioId": "564-cas-advisor-experience-review-flow",
+      "title": "Cas Advisor Experience Review Flow",
+      "roleKey": "cas_advisor",
+      "status": "pass",
+      "durationMs": 147,
+      "path": "/ib/projects-core/dp/cas"
+    },
+    {
+      "taskId": 568,
+      "scenarioId": "568-ee-supervisor-meeting-logging-and-milestones",
+      "title": "Ee Supervisor Meeting Logging And Milestones",
+      "roleKey": "ee_supervisor",
+      "status": "pass",
+      "durationMs": 149,
+      "path": "/ib/projects-core/dp/ee"
+    },
+    {
+      "taskId": 572,
+      "scenarioId": "572-tok-teacher-essay-and-exhibition-management",
+      "title": "Tok Teacher Essay And Exhibition Management",
+      "roleKey": "tok_teacher",
+      "status": "pass",
+      "durationMs": 152,
+      "path": "/ib/projects-core/dp/tok"
+    },
+    {
+      "taskId": 576,
+      "scenarioId": "576-ib-director-global-programme-health",
+      "title": "Ib Director Global Programme Health",
+      "roleKey": "ib_director",
+      "status": "pass",
+      "durationMs": 331,
+      "path": "/ib/home"
+    },
+    {
+      "taskId": 582,
+      "scenarioId": "582-primary-student-daily-learning-journey",
+      "title": "Primary Student Daily Learning Journey",
+      "roleKey": "primary_student",
+      "status": "pass",
+      "durationMs": 305,
+      "path": "/ib/student/home"
+    },
+    {
+      "taskId": 585,
+      "scenarioId": "585-middle-years-student-unit-and-project-journey",
+      "title": "Middle Years Student Unit And Project Journey",
+      "roleKey": "middle_years_student",
+      "status": "pass",
+      "durationMs": 187,
+      "path": "/ib/student/projects"
+    },
+    {
+      "taskId": 587,
+      "scenarioId": "587-diploma-student-ia-ee-tok-cas-dashboard",
+      "title": "Diploma Student Ia Ee Tok Cas Dashboard",
+      "roleKey": "diploma_student",
+      "status": "pass",
+      "durationMs": 297,
+      "path": "/ib/student/home"
+    },
+    {
+      "taskId": 590,
+      "scenarioId": "590-guardian-digest-and-home-feed",
+      "title": "Guardian Digest And Home Feed",
+      "roleKey": "guardian",
+      "status": "pass",
+      "durationMs": 301,
+      "path": "/ib/guardian/home"
+    },
+    {
+      "taskId": 594,
+      "scenarioId": "594-guardian-multi-child-household-workflow",
+      "title": "Guardian Multi Child Household Workflow",
+      "roleKey": "guardian_multichild",
+      "status": "pass",
+      "durationMs": 193,
+      "path": "/ib/guardian/home"
+    }
+  ]
+}

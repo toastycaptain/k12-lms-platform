@@ -62,6 +62,83 @@ namespace :e2e do
       last_name: "Guardian",
       role: :guardian,
     )
+    coordinator = ensure_user!(
+      tenant: tenant,
+      email: "coordinator@e2e.local",
+      first_name: "E2E",
+      last_name: "Coordinator",
+      role: :admin,
+    )
+    director = ensure_user!(
+      tenant: tenant,
+      email: "director@e2e.local",
+      first_name: "E2E",
+      last_name: "Director",
+      role: :admin,
+    )
+    myp_teacher = ensure_user!(
+      tenant: tenant,
+      email: "myp-teacher@e2e.local",
+      first_name: "E2E",
+      last_name: "MYP Teacher",
+      role: :teacher,
+    )
+    dp_teacher = ensure_user!(
+      tenant: tenant,
+      email: "dp-teacher@e2e.local",
+      first_name: "E2E",
+      last_name: "DP Teacher",
+      role: :teacher,
+    )
+    cas_advisor = ensure_user!(
+      tenant: tenant,
+      email: "cas-advisor@e2e.local",
+      first_name: "E2E",
+      last_name: "CAS Advisor",
+      role: :teacher,
+    )
+    ee_supervisor = ensure_user!(
+      tenant: tenant,
+      email: "ee-supervisor@e2e.local",
+      first_name: "E2E",
+      last_name: "EE Supervisor",
+      role: :teacher,
+    )
+    tok_teacher = ensure_user!(
+      tenant: tenant,
+      email: "tok-teacher@e2e.local",
+      first_name: "E2E",
+      last_name: "TOK Teacher",
+      role: :teacher,
+    )
+    primary_student = ensure_user!(
+      tenant: tenant,
+      email: "primary-student@e2e.local",
+      first_name: "E2E",
+      last_name: "Primary Student",
+      role: :student,
+    )
+    middle_years_student = ensure_user!(
+      tenant: tenant,
+      email: "middle-student@e2e.local",
+      first_name: "E2E",
+      last_name: "Middle Student",
+      role: :student,
+    )
+    diploma_student = ensure_user!(
+      tenant: tenant,
+      email: "diploma-student@e2e.local",
+      first_name: "E2E",
+      last_name: "Diploma Student",
+      role: :student,
+    )
+    guardian_multi = ensure_user!(
+      tenant: tenant,
+      email: "guardian-multi@e2e.local",
+      first_name: "E2E",
+      last_name: "Guardian Multi",
+      role: :guardian,
+    )
 
     academic_year = AcademicYear.find_or_create_by!(tenant: tenant, name: "2025-2026") do |record|
       record.start_date = Date.new(2025, 8, 1)
@@ -90,6 +167,40 @@ namespace :e2e do
       record.term = term
     end
 
+    pyp_course = Course.find_or_create_by!(tenant: tenant, name: "E2E PYP Inquiry") do |record|
+      record.code = "E2E-PYP-001"
+      record.description = "Seeded PYP inquiry course for Phase 11 flows"
+      record.academic_year = academic_year
+      record.school = school
+    end
+    pyp_course.update!(academic_year: academic_year, school: school) if pyp_course.academic_year_id != academic_year.id || pyp_course.school_id != school.id
+
+    myp_course = Course.find_or_create_by!(tenant: tenant, name: "E2E MYP Humanities") do |record|
+      record.code = "E2E-MYP-001"
+      record.description = "Seeded MYP course for coordinator and project workflows"
+      record.academic_year = academic_year
+      record.school = school
+    end
+    myp_course.update!(academic_year: academic_year, school: school) if myp_course.academic_year_id != academic_year.id || myp_course.school_id != school.id
+
+    dp_course = Course.find_or_create_by!(tenant: tenant, name: "E2E DP Biology") do |record|
+      record.code = "E2E-DP-001"
+      record.description = "Seeded DP course for IA, TOK, EE, and CAS smoke coverage"
+      record.academic_year = academic_year
+      record.school = school
+    end
+    dp_course.update!(academic_year: academic_year, school: school) if dp_course.academic_year_id != academic_year.id || dp_course.school_id != school.id
+
+    pyp_section = Section.find_or_create_by!(tenant: tenant, course: pyp_course, name: "E2E PYP Homeroom") do |record|
+      record.term = term
+    end
+    myp_section = Section.find_or_create_by!(tenant: tenant, course: myp_course, name: "E2E MYP Year 3") do |record|
+      record.term = term
+    end
+    dp_section = Section.find_or_create_by!(tenant: tenant, course: dp_course, name: "E2E DP Year 1") do |record|
+      record.term = term
+    end
+
     Enrollment.find_or_create_by!(tenant: tenant, section: section, user: teacher) do |record|
       record.role = "teacher"
     end
@@ -100,6 +211,41 @@ namespace :e2e do
       record.role = "student"
     end
     GuardianLink.find_or_create_by!(tenant: tenant, guardian: guardian, student: student) do |record|
+      record.relationship = "parent"
+      record.status = "active"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: pyp_section, user: teacher) do |record|
+      record.role = "teacher"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: pyp_section, user: primary_student) do |record|
+      record.role = "student"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: myp_section, user: myp_teacher) do |record|
+      record.role = "teacher"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: myp_section, user: middle_years_student) do |record|
+      record.role = "student"
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: dp_section, user: dp_teacher) do |record|
+      record.role = "teacher"
+    end
+    [cas_advisor, ee_supervisor, tok_teacher].each do |teacher_user|
+      Enrollment.find_or_create_by!(tenant: tenant, section: dp_section, user: teacher_user) do |record|
+        record.role = "teacher"
+      end
+    end
+    Enrollment.find_or_create_by!(tenant: tenant, section: dp_section, user: diploma_student) do |record|
+      record.role = "student"
+    end
+    GuardianLink.find_or_create_by!(tenant: tenant, guardian: guardian, student: primary_student) do |record|
+      record.relationship = "parent"
+      record.status = "active"
+    end
+    GuardianLink.find_or_create_by!(tenant: tenant, guardian: guardian_multi, student: primary_student) do |record|
+      record.relationship = "parent"
+      record.status = "active"
+    end
+    GuardianLink.find_or_create_by!(tenant: tenant, guardian: guardian_multi, student: middle_years_student) do |record|
       record.relationship = "parent"
       record.status = "active"
     end
@@ -175,6 +321,27 @@ namespace :e2e do
       record.kind = "programme_scope"
       record.settings = {}
     end
+    myp_planning_context = PlanningContext.find_or_create_by!(tenant: tenant, school: school, academic_year: academic_year, name: "MYP Year 3") do |record|
+      record.created_by = coordinator
+      record.kind = "programme_scope"
+      record.settings = {}
+    end
+    dp_planning_context = PlanningContext.find_or_create_by!(tenant: tenant, school: school, academic_year: academic_year, name: "DP Year 1") do |record|
+      record.created_by = director
+      record.kind = "programme_scope"
+      record.settings = {}
+    end
+    {
+      planning_context => pyp_course,
+      myp_planning_context => myp_course,
+      dp_planning_context => dp_course
+    }.each do |context, linked_course|
+      PlanningContextCourse.find_or_create_by!(
+        tenant: tenant,
+        planning_context: context,
+        course: linked_course
+      )
+    end
 
     IbProgrammeSetting.find_or_create_by!(tenant: tenant, school: planning_context.school, programme: "PYP") do |record|
       record.updated_by = admin
@@ -182,6 +349,18 @@ namespace :e2e do
       record.review_owner_role = "curriculum_lead"
       record.thresholds = IbProgrammeSetting::DEFAULT_THRESHOLDS
       record.metadata = {}
+    end
+    {
+      "MYP" => coordinator,
+      "DP" => director
+    }.each do |programme, owner|
+      IbProgrammeSetting.find_or_create_by!(tenant: tenant, school: school, programme: programme) do |record|
+        record.updated_by = owner
+        record.cadence_mode = "weekly_digest"
+        record.review_owner_role = "curriculum_lead"
+        record.thresholds = IbProgrammeSetting::DEFAULT_THRESHOLDS
+        record.metadata = {}
+      end
     end
 
     pyp_document = CurriculumDocument.find_or_create_by!(
@@ -208,14 +387,38 @@ namespace :e2e do
       )
     end
 
+    myp_document = CurriculumDocument.find_or_create_by!(
+      tenant: tenant,
+      school: school,
+      academic_year: academic_year,
+      planning_context: myp_planning_context,
+      title: "E2E MYP Sustainable Systems Unit"
+    ) do |record|
+      record.created_by = myp_teacher
+      record.document_type = "ib_myp_unit"
+      record.status = "draft"
+      record.pack_key = "ib_continuum_v1"
+      record.pack_version = "2026.2"
+      record.schema_key = "ib.myp.unit@v2"
+      record.settings = {}
+      record.metadata = {}
+    end
+    if myp_document.current_version.nil?
+      myp_document.create_version!(
+        title: myp_document.title,
+        content: { "statement_of_inquiry" => "Systems become more stable when communities can explain their trade-offs." },
+        created_by: myp_teacher,
+      )
+    end
+
     dp_document = CurriculumDocument.find_or_create_by!(
       tenant: tenant,
-      school: planning_context.school,
+      school: school,
       academic_year: academic_year,
-      planning_context: planning_context,
+      planning_context: dp_planning_context,
       title: "E2E DP Biology Course Map"
     ) do |record|
-      record.created_by = teacher
+      record.created_by = dp_teacher
       record.document_type = "ib_dp_course_map"
       record.status = "draft"
       record.pack_key = "ib_continuum_v1"
@@ -228,7 +431,7 @@ namespace :e2e do
       dp_document.create_version!(
         title: dp_document.title,
         content: { "overview" => "Semester map for DP Biology." },
-        created_by: teacher,
+        created_by: dp_teacher,
       )
     end
 
@@ -376,12 +579,13 @@ namespace :e2e do
 
     operational_record = IbOperationalRecord.find_or_create_by!(
       tenant: tenant,
-      school: planning_context.school,
+      school: school,
       title: "E2E DP risk review"
     ) do |record|
-      record.planning_context = planning_context
+      record.planning_context = dp_planning_context
       record.curriculum_document = dp_document
-      record.owner = admin
+      record.owner = coordinator
+      record.student = diploma_student
       record.programme = "DP"
       record.record_family = "dp_core"
       record.subtype = "coordinator_risk"
@@ -392,12 +596,13 @@ namespace :e2e do
       record.summary = "A seeded coordinator risk item for smoke coverage."
       record.next_action = "Confirm course-map pacing."
       record.route_hint = "/ib/dp/coordinator"
-      record.metadata = { "seeded_by_id" => admin.id, "guardian_visible" => true, "guardian_prompt" => "Review the next biology milestone together." }
+      record.metadata = { "seeded_by_id" => coordinator.id, "guardian_visible" => true, "guardian_prompt" => "Review the next biology milestone together." }
     end
     operational_record.update!(
-      planning_context: planning_context,
+      planning_context: dp_planning_context,
       curriculum_document: dp_document,
-      owner: admin,
+      owner: coordinator,
+      student: diploma_student,
       programme: "DP",
       record_family: "dp_core",
       subtype: "coordinator_risk",
@@ -408,10 +613,84 @@ namespace :e2e do
       next_action: "Confirm course-map pacing.",
       route_hint: "/ib/dp/coordinator",
       metadata: operational_record.metadata.merge(
-        "seeded_by_id" => admin.id,
+        "seeded_by_id" => coordinator.id,
         "guardian_visible" => true,
         "guardian_prompt" => "Review the next biology milestone together."
       )
+    )
+
+    myp_project_record = IbOperationalRecord.find_or_create_by!(
+      tenant: tenant,
+      school: school,
+      title: "E2E MYP Community Project"
+    ) do |record|
+      record.planning_context = myp_planning_context
+      record.curriculum_document = myp_document
+      record.owner = myp_teacher
+      record.student = middle_years_student
+      record.programme = "MYP"
+      record.record_family = "myp_project"
+      record.subtype = "community_project"
+      record.status = "in_progress"
+      record.priority = "normal"
+      record.risk_level = "watch"
+      record.due_on = 3.weeks.from_now.to_date
+      record.summary = "Seeded MYP project record for interdisciplinary and service workflows."
+      record.next_action = "Review criteria progress and advisor feedback."
+      record.route_hint = "/ib/myp/projects"
+      record.metadata = { "guardian_visible" => true }
+    end
+    myp_project_record.update!(
+      planning_context: myp_planning_context,
+      curriculum_document: myp_document,
+      owner: myp_teacher,
+      student: middle_years_student,
+      programme: "MYP",
+      record_family: "myp_project",
+      subtype: "community_project",
+      status: "in_progress",
+      priority: "normal",
+      risk_level: "watch",
+      next_action: "Review criteria progress and advisor feedback.",
+      route_hint: "/ib/myp/projects",
+      metadata: myp_project_record.metadata.merge("guardian_visible" => true)
+    )
+
+    dp_core_record = IbOperationalRecord.find_or_create_by!(
+      tenant: tenant,
+      school: school,
+      title: "E2E DP Core Milestone"
+    ) do |record|
+      record.planning_context = dp_planning_context
+      record.curriculum_document = dp_document
+      record.owner = dp_teacher
+      record.student = diploma_student
+      record.programme = "DP"
+      record.record_family = "dp_ee"
+      record.subtype = "checkpoint"
+      record.status = "watch"
+      record.priority = "high"
+      record.risk_level = "watch"
+      record.due_on = 10.days.from_now.to_date
+      record.summary = "Seeded DP milestone for advisor, supervisor, and guardian flows."
+      record.next_action = "Submit the next EE checkpoint and TOK reflection."
+      record.route_hint = "/ib/dp/coordinator"
+      record.metadata = { "guardian_visible" => true }
+    end
+    dp_core_record.update!(
+      planning_context: dp_planning_context,
+      curriculum_document: dp_document,
+      owner: dp_teacher,
+      student: diploma_student,
+      programme: "DP",
+      record_family: "dp_ee",
+      subtype: "checkpoint",
+      status: "watch",
+      priority: "high",
+      risk_level: "watch",
+      next_action: "Submit the next EE checkpoint and TOK reflection.",
+      route_hint: "/ib/dp/coordinator",
+      metadata: dp_core_record.metadata.merge("guardian_visible" => true)
     )
 
     question_bank = QuestionBank.find_or_create_by!(tenant: tenant, title: "E2E Biology Question Bank") do |record|
@@ -458,10 +737,21 @@ namespace :e2e do
 
     puts "E2E fixtures ready for tenant '#{tenant.slug}'."
     puts "  Admin:   #{admin.email}"
+    puts "  Coordinator: #{coordinator.email}"
+    puts "  Director: #{director.email}"
     puts "  Teacher: #{teacher.email}"
     puts "  Specialist: #{specialist.email}"
+    puts "  MYP Teacher: #{myp_teacher.email}"
+    puts "  DP Teacher: #{dp_teacher.email}"
+    puts "  CAS Advisor: #{cas_advisor.email}"
+    puts "  EE Supervisor: #{ee_supervisor.email}"
+    puts "  TOK Teacher: #{tok_teacher.email}"
     puts "  Student: #{student.email}"
+    puts "  Primary Student: #{primary_student.email}"
+    puts "  Middle Years Student: #{middle_years_student.email}"
+    puts "  Diploma Student: #{diploma_student.email}"
     puts "  Guardian: #{guardian.email}"
+    puts "  Guardian Multi: #{guardian_multi.email}"
   ensure
     Current.tenant = nil
   end

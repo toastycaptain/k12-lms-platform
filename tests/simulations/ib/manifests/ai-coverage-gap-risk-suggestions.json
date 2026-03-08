@@ -1,0 +1,12 @@
+{
+  "taskId": 611,
+  "suiteId": "ai-coverage-gap-risk-suggestions",
+  "title": "Ai Assist Coverage Gap Detection And Risk Suggestions",
+  "suiteType": "ai",
+  "scenarioIds": [
+    "532-pyp-coordinator-theme-balance-and-gap-detection",
+    "546-myp-coordinator-atl-and-criteria-balance-analysis",
+    "560-dp-coordinator-submission-readiness-and-risk"
+  ],
+  "aiWorkflow": "coverage_gap_detection"
+}

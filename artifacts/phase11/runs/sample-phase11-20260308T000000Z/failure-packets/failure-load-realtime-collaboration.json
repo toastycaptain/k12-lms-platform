@@ -1,0 +1,18 @@
+{
+  "packetId": "failure-load-realtime-collaboration",
+  "suiteId": "load-realtime-collaboration",
+  "severity": "high",
+  "category": "performance_regression",
+  "suspectedArea": "Reduce collaboration polling and move more presence work into compact aggregated payloads.",
+  "evidence": {
+    "suiteId": "load-realtime-collaboration",
+    "scenarioIds": [
+      "519-pyp-homeroom-specialist-collaboration",
+      "526-pyp-specialist-co-planning-and-commenting",
+      "539-myp-subject-teacher-interdisciplinary-co-planning",
+      "552-dp-subject-teacher-draft-feedback-and-versioning"
+    ],
+    "summaryPath": "summaries/task-603.md",
+    "metricsPath": "summary.json"
+  }
+}
